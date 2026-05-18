@@ -1,0 +1,6 @@
+target_removed_percent,actual_removed_percent,weights_left,test_error_percent,snr_threshold,include_bias,prune_rho,rho_prune_value,samples
+0,0.0,2392800,2.62,-inf,False,True,-20.0,1
+50,50.0,1196400,2.62,1.079111099243164,False,True,-20.0,1
+75,75.0,598200,2.969999999999995,1.8855124711990356,False,True,-20.0,1
+95,95.0,119640,16.200000000000003,3.340867519378662,False,True,-20.0,1
+98,97.9999582079572,47857,40.400000000000006,4.092471599578857,False,True,-20.0,1
