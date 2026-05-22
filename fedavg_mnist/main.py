@@ -8,7 +8,8 @@ import numpy as np
 import torch
 from omegaconf import DictConfig
 
-from flwr_baselines.publications.fedavg_mnist import client, utils
+import client
+import utils
 
 DEVICE: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
