@@ -61,7 +61,7 @@ def build_hyper(hidden_units: int) -> bbbmod.BBB_Hyper:
     hyper = bbbmod.BBB_Hyper()
     hyper.dataset = "mnist"
     hyper.hidden_units = hidden_units
-    bbbmod.apply_paper_hyperparams(hyper)
+    bbbmod.apply_default_prior_for_hidden_units(hyper)
     return hyper
 
 
