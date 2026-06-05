@@ -1,0 +1,543 @@
+[2026-06-02 20:52:24,064][flwr][WARNING] - DEPRECATED FEATURE: flwr.simulation.start_simulation() is deprecated.
+	Instead, use the `flwr run` CLI command to start a local simulation in your Flower app, as shown for example below:
+
+		$ flwr new  # Create a new Flower app from a template
+
+		$ flwr run  # Run the Flower app in Simulation Mode
+
+	Using `start_simulation()` is deprecated.
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+[2026-06-02 20:52:24,065][flwr][INFO] - Starting Flower simulation, config: num_rounds=50, no round_timeout
+[2026-06-02 20:52:26,094][flwr][INFO] - Flower VCE: Ray initialized with resources: {'node:203.249.64.186': 1.0, 'node:__internal_head__': 1.0, 'memory': 166674894848.0, 'object_store_memory': 71432097792.0, 'CPU': 48.0, 'GPU': 2.0, 'accelerator_type:G': 1.0}
+[2026-06-02 20:52:26,094][flwr][INFO] - Optimize your simulation with Flower VCE: https://flower.ai/docs/framework/how-to-run-simulations.html
+[2026-06-02 20:52:26,094][flwr][INFO] - Flower VCE: Resources for each Virtual Client: {'num_cpus': 1.0, 'num_gpus': 0.0}
+[2026-06-02 20:52:26,168][flwr][INFO] - Flower VCE: Creating VirtualClientEngineActorPool with 48 actors
+[2026-06-02 20:52:26,169][flwr][INFO] - [INIT]
+[2026-06-02 20:52:26,169][flwr][INFO] - Using initial global parameters provided by strategy
+[2026-06-02 20:52:26,169][flwr][INFO] - Starting evaluation of initial global parameters
+[2026-06-02 20:52:27,982][flwr][INFO] - initial parameters (loss, other metrics): 2.4686138236999513, {'accuracy': 0.1036, 'Nt': 0, 'distortion': nan, 'rho_ref': 0.0}
+[2026-06-02 20:52:27,983][flwr][INFO] - 
+[2026-06-02 20:52:27,983][flwr][INFO] - [ROUND 1]
+[2026-06-02 20:52:28,226][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:53:16,497][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:53:16,532][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:53:16,553][flwr][INFO] - 
+[2026-06-02 20:53:16,553][flwr][INFO] - [ROUND 2]
+[2026-06-02 20:53:16,739][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:54:01,053][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:54:01,086][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:54:01,087][flwr][INFO] - 
+[2026-06-02 20:54:01,087][flwr][INFO] - [ROUND 3]
+[2026-06-02 20:54:01,240][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:54:44,878][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:54:44,922][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:54:44,922][flwr][INFO] - 
+[2026-06-02 20:54:44,922][flwr][INFO] - [ROUND 4]
+[2026-06-02 20:54:45,079][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:55:29,583][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:55:29,618][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:55:29,618][flwr][INFO] - 
+[2026-06-02 20:55:29,618][flwr][INFO] - [ROUND 5]
+[2026-06-02 20:55:29,793][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:56:14,565][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:56:15,692][flwr][INFO] - fit progress: (5, 2.258772649002075, {'accuracy': 0.1601, 'Nt': 1505, 'distortion': 0.2390358413813663, 'rho_ref': 2.6123622121011096e-05}, 227.7096779793501)
+[2026-06-02 20:56:15,693][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:56:15,693][flwr][INFO] - 
+[2026-06-02 20:56:15,693][flwr][INFO] - [ROUND 6]
+[2026-06-02 20:56:15,879][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:56:58,602][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:56:58,634][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:56:58,634][flwr][INFO] - 
+[2026-06-02 20:56:58,634][flwr][INFO] - [ROUND 7]
+[2026-06-02 20:56:58,779][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:57:41,687][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:57:41,719][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:57:41,719][flwr][INFO] - 
+[2026-06-02 20:57:41,719][flwr][INFO] - [ROUND 8]
+[2026-06-02 20:57:41,868][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:58:25,544][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:58:25,577][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:58:25,577][flwr][INFO] - 
+[2026-06-02 20:58:25,577][flwr][INFO] - [ROUND 9]
+[2026-06-02 20:58:25,763][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:59:09,567][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:59:09,604][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:59:09,604][flwr][INFO] - 
+[2026-06-02 20:59:09,604][flwr][INFO] - [ROUND 10]
+[2026-06-02 20:59:09,799][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 20:59:53,047][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 20:59:54,077][flwr][INFO] - fit progress: (10, 2.252350331497192, {'accuracy': 0.152, 'Nt': 3010, 'distortion': 0.12087070737582235, 'rho_ref': 1.5913284816943754e-05}, 446.0941189862788)
+[2026-06-02 20:59:54,077][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:59:54,077][flwr][INFO] - 
+[2026-06-02 20:59:54,077][flwr][INFO] - [ROUND 11]
+[2026-06-02 20:59:54,237][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:00:38,464][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:00:38,497][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:00:38,497][flwr][INFO] - 
+[2026-06-02 21:00:38,497][flwr][INFO] - [ROUND 12]
+[2026-06-02 21:00:38,649][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:01:22,352][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:01:22,390][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:01:22,390][flwr][INFO] - 
+[2026-06-02 21:01:22,390][flwr][INFO] - [ROUND 13]
+[2026-06-02 21:01:22,601][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:02:05,120][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:02:05,160][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:02:05,160][flwr][INFO] - 
+[2026-06-02 21:02:05,160][flwr][INFO] - [ROUND 14]
+[2026-06-02 21:02:05,322][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:02:48,700][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:02:48,734][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:02:48,734][flwr][INFO] - 
+[2026-06-02 21:02:48,734][flwr][INFO] - [ROUND 15]
+[2026-06-02 21:02:48,927][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:03:33,045][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:03:34,160][flwr][INFO] - fit progress: (15, 2.2331755439758303, {'accuracy': 0.1652, 'Nt': 4515, 'distortion': 0.07677012742319557, 'rho_ref': 1.4674173445922245e-05}, 666.1769983619452)
+[2026-06-02 21:03:34,160][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:03:34,160][flwr][INFO] - 
+[2026-06-02 21:03:34,160][flwr][INFO] - [ROUND 16]
+[2026-06-02 21:03:34,346][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:04:17,147][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:04:17,184][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:04:17,185][flwr][INFO] - 
+[2026-06-02 21:04:17,185][flwr][INFO] - [ROUND 17]
+[2026-06-02 21:04:17,364][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:05:01,726][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:05:01,759][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:05:01,759][flwr][INFO] - 
+[2026-06-02 21:05:01,759][flwr][INFO] - [ROUND 18]
+[2026-06-02 21:05:01,908][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:05:44,988][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:05:45,020][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:05:45,020][flwr][INFO] - 
+[2026-06-02 21:05:45,020][flwr][INFO] - [ROUND 19]
+[2026-06-02 21:05:45,172][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:06:30,508][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:06:30,540][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:06:30,540][flwr][INFO] - 
+[2026-06-02 21:06:30,540][flwr][INFO] - [ROUND 20]
+[2026-06-02 21:06:30,691][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:07:13,607][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:07:14,826][flwr][INFO] - fit progress: (20, 2.2520616554260253, {'accuracy': 0.1626, 'Nt': 6020, 'distortion': 0.05687692424470854, 'rho_ref': 1.4043936468100684e-05}, 886.8432465903461)
+[2026-06-02 21:07:14,826][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:07:14,826][flwr][INFO] - 
+[2026-06-02 21:07:14,826][flwr][INFO] - [ROUND 21]
+[2026-06-02 21:07:14,983][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:07:58,013][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:07:58,049][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:07:58,049][flwr][INFO] - 
+[2026-06-02 21:07:58,049][flwr][INFO] - [ROUND 22]
+[2026-06-02 21:07:58,209][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:08:42,204][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:08:42,245][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:08:42,246][flwr][INFO] - 
+[2026-06-02 21:08:42,246][flwr][INFO] - [ROUND 23]
+[2026-06-02 21:08:42,446][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:09:25,353][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:09:25,385][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:09:25,385][flwr][INFO] - 
+[2026-06-02 21:09:25,385][flwr][INFO] - [ROUND 24]
+[2026-06-02 21:09:25,537][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:10:09,088][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:10:09,120][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:10:09,120][flwr][INFO] - 
+[2026-06-02 21:10:09,120][flwr][INFO] - [ROUND 25]
+[2026-06-02 21:10:09,302][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:10:52,455][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:10:53,535][flwr][INFO] - fit progress: (25, 2.226570147705078, {'accuracy': 0.1611, 'Nt': 7525, 'distortion': 0.0511689006990164, 'rho_ref': 1.4681269352401723e-05}, 1105.5524403974414)
+[2026-06-02 21:10:53,535][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:10:53,536][flwr][INFO] - 
+[2026-06-02 21:10:53,536][flwr][INFO] - [ROUND 26]
+[2026-06-02 21:10:53,683][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:11:37,903][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:11:37,936][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:11:37,936][flwr][INFO] - 
+[2026-06-02 21:11:37,936][flwr][INFO] - [ROUND 27]
+[2026-06-02 21:11:38,117][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:12:21,212][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:12:21,249][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:12:21,249][flwr][INFO] - 
+[2026-06-02 21:12:21,249][flwr][INFO] - [ROUND 28]
+[2026-06-02 21:12:21,409][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:13:05,675][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:13:05,708][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:13:05,708][flwr][INFO] - 
+[2026-06-02 21:13:05,708][flwr][INFO] - [ROUND 29]
+[2026-06-02 21:13:05,859][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:13:49,951][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:13:49,986][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:13:49,986][flwr][INFO] - 
+[2026-06-02 21:13:49,986][flwr][INFO] - [ROUND 30]
+[2026-06-02 21:13:50,154][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:14:34,063][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:14:35,297][flwr][INFO] - fit progress: (30, 2.2265384017944334, {'accuracy': 0.167, 'Nt': 9030, 'distortion': 0.05246791530703186, 'rho_ref': 1.5686827155946986e-05}, 1327.3142064660788)
+[2026-06-02 21:14:35,297][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:14:35,297][flwr][INFO] - 
+[2026-06-02 21:14:35,297][flwr][INFO] - [ROUND 31]
+[2026-06-02 21:14:35,449][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:15:18,792][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:15:18,825][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:15:18,825][flwr][INFO] - 
+[2026-06-02 21:15:18,825][flwr][INFO] - [ROUND 32]
+[2026-06-02 21:15:18,985][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:16:01,920][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:16:01,953][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:16:01,953][flwr][INFO] - 
+[2026-06-02 21:16:01,953][flwr][INFO] - [ROUND 33]
+[2026-06-02 21:16:02,176][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:16:46,373][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:16:46,404][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:16:46,405][flwr][INFO] - 
+[2026-06-02 21:16:46,405][flwr][INFO] - [ROUND 34]
+[2026-06-02 21:16:46,561][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:17:30,089][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:17:30,121][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:17:30,122][flwr][INFO] - 
+[2026-06-02 21:17:30,122][flwr][INFO] - [ROUND 35]
+[2026-06-02 21:17:30,271][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:18:14,161][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:18:15,312][flwr][INFO] - fit progress: (35, 2.2190106773376463, {'accuracy': 0.1669, 'Nt': 10535, 'distortion': 0.04755244230888707, 'rho_ref': 1.3149986817337735e-05}, 1547.3294280208647)
+[2026-06-02 21:18:15,312][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:18:15,313][flwr][INFO] - 
+[2026-06-02 21:18:15,313][flwr][INFO] - [ROUND 36]
+[2026-06-02 21:18:15,456][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:18:59,857][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:18:59,889][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:18:59,890][flwr][INFO] - 
+[2026-06-02 21:18:59,890][flwr][INFO] - [ROUND 37]
+[2026-06-02 21:19:00,049][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:19:44,748][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:19:44,781][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:19:44,781][flwr][INFO] - 
+[2026-06-02 21:19:44,781][flwr][INFO] - [ROUND 38]
+[2026-06-02 21:19:44,974][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:20:29,311][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:20:29,348][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:20:29,348][flwr][INFO] - 
+[2026-06-02 21:20:29,348][flwr][INFO] - [ROUND 39]
+[2026-06-02 21:20:29,497][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:21:12,624][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:21:12,656][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:21:12,656][flwr][INFO] - 
+[2026-06-02 21:21:12,656][flwr][INFO] - [ROUND 40]
+[2026-06-02 21:21:12,801][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:21:56,943][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:21:58,080][flwr][INFO] - fit progress: (40, 2.234663779449463, {'accuracy': 0.1633, 'Nt': 12040, 'distortion': 0.053490962771028785, 'rho_ref': 1.328757576582533e-05}, 1770.0969418250024)
+[2026-06-02 21:21:58,080][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:21:58,080][flwr][INFO] - 
+[2026-06-02 21:21:58,080][flwr][INFO] - [ROUND 41]
+[2026-06-02 21:21:58,225][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:22:42,593][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:22:42,625][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:22:42,626][flwr][INFO] - 
+[2026-06-02 21:22:42,626][flwr][INFO] - [ROUND 42]
+[2026-06-02 21:22:42,828][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:23:27,540][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:23:27,575][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:23:27,576][flwr][INFO] - 
+[2026-06-02 21:23:27,576][flwr][INFO] - [ROUND 43]
+[2026-06-02 21:23:27,750][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:24:11,316][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:24:11,348][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:24:11,348][flwr][INFO] - 
+[2026-06-02 21:24:11,348][flwr][INFO] - [ROUND 44]
+[2026-06-02 21:24:11,501][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:24:55,512][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:24:55,551][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:24:55,551][flwr][INFO] - 
+[2026-06-02 21:24:55,551][flwr][INFO] - [ROUND 45]
+[2026-06-02 21:24:55,704][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:25:39,841][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:25:40,960][flwr][INFO] - fit progress: (45, 2.229345997238159, {'accuracy': 0.1623, 'Nt': 13545, 'distortion': 0.04918538891015328, 'rho_ref': 1.5054849355517107e-05}, 1992.9773311465979)
+[2026-06-02 21:25:40,960][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:25:40,960][flwr][INFO] - 
+[2026-06-02 21:25:40,960][flwr][INFO] - [ROUND 46]
+[2026-06-02 21:25:41,111][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:26:23,346][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:26:23,381][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:26:23,381][flwr][INFO] - 
+[2026-06-02 21:26:23,381][flwr][INFO] - [ROUND 47]
+[2026-06-02 21:26:23,533][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:27:06,772][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:27:06,805][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:27:06,805][flwr][INFO] - 
+[2026-06-02 21:27:06,805][flwr][INFO] - [ROUND 48]
+[2026-06-02 21:27:06,969][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:27:50,418][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:27:50,450][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:27:50,450][flwr][INFO] - 
+[2026-06-02 21:27:50,451][flwr][INFO] - [ROUND 49]
+[2026-06-02 21:27:50,613][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:28:35,031][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:28:35,064][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:28:35,065][flwr][INFO] - 
+[2026-06-02 21:28:35,065][flwr][INFO] - [ROUND 50]
+[2026-06-02 21:28:35,217][flwr][INFO] - configure_fit: strategy sampled 24 clients (out of 24)
+[2026-06-02 21:29:20,185][flwr][INFO] - aggregate_fit: received 24 results and 0 failures
+[2026-06-02 21:29:21,230][flwr][INFO] - fit progress: (50, 2.2195433517456054, {'accuracy': 0.1679, 'Nt': 15050, 'distortion': 0.040324725476024274, 'rho_ref': 1.3183867389353183e-05}, 2213.2471155673265)
+[2026-06-02 21:29:21,230][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 21:29:21,230][flwr][INFO] - 
+[2026-06-02 21:29:21,230][flwr][INFO] - [SUMMARY]
+[2026-06-02 21:29:21,230][flwr][INFO] - Run finished 50 round(s) in 2213.25s
+[2026-06-02 21:29:21,232][flwr][INFO] - 	History (loss, centralized):
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 0: 2.4686138236999513
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 5: 2.258772649002075
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 10: 2.252350331497192
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 15: 2.2331755439758303
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 20: 2.2520616554260253
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 25: 2.226570147705078
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 30: 2.2265384017944334
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 35: 2.2190106773376463
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 40: 2.234663779449463
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 45: 2.229345997238159
+[2026-06-02 21:29:21,232][flwr][INFO] - 		round 50: 2.2195433517456054
+[2026-06-02 21:29:21,232][flwr][INFO] - 	History (metrics, distributed, fit):
+[2026-06-02 21:29:21,232][flwr][INFO] - 	{'N_symbols_per_round': [(1, 301),
+[2026-06-02 21:29:21,232][flwr][INFO] - 	                         (2, 301),
+[2026-06-02 21:29:21,232][flwr][INFO] - 	                         (3, 301),
+[2026-06-02 21:29:21,232][flwr][INFO] - 	                         (4, 301),
+[2026-06-02 21:29:21,232][flwr][INFO] - 	                         (5, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (6, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (7, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (8, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (9, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (10, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (11, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (12, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (13, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (14, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (15, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (16, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (17, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (18, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (19, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (20, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (21, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (22, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (23, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (24, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (25, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (26, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (27, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (28, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (29, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (30, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (31, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (32, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (33, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (34, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (35, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (36, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (37, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (38, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (39, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (40, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (41, 301),
+[2026-06-02 21:29:21,233][flwr][INFO] - 	                         (42, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (43, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (44, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (45, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (46, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (47, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (48, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (49, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	                         (50, 301)],
+[2026-06-02 21:29:21,234][flwr][INFO] - 	 'Nt': [(1, 301),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (2, 602),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (3, 903),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (4, 1204),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (5, 1505),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (6, 1806),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (7, 2107),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (8, 2408),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (9, 2709),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (10, 3010),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (11, 3311),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (12, 3612),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (13, 3913),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (14, 4214),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (15, 4515),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (16, 4816),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (17, 5117),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (18, 5418),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (19, 5719),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (20, 6020),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (21, 6321),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (22, 6622),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (23, 6923),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (24, 7224),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (25, 7525),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (26, 7826),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (27, 8127),
+[2026-06-02 21:29:21,234][flwr][INFO] - 	        (28, 8428),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (29, 8729),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (30, 9030),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (31, 9331),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (32, 9632),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (33, 9933),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (34, 10234),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (35, 10535),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (36, 10836),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (37, 11137),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (38, 11438),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (39, 11739),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (40, 12040),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (41, 12341),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (42, 12642),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (43, 12943),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (44, 13244),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (45, 13545),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (46, 13846),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (47, 14147),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (48, 14448),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (49, 14749),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	        (50, 15050)],
+[2026-06-02 21:29:21,235][flwr][INFO] - 	 'distortion': [(1, 0.38580054773900374),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (2, 0.26658551071510056),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (3, 0.17086445716110335),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (4, 0.2738069727159749),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (5, 0.2390358413813663),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (6, 0.22222189873707998),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (7, 0.18972445699322119),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (8, 0.15276148751591911),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (9, 0.11901200872857119),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (10, 0.12087070737582235),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (11, 0.09976168802022668),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (12, 0.09410483974759624),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (13, 0.08038889948172338),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (14, 0.0731744872803169),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (15, 0.07677012742319557),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (16, 0.07218023813913835),
+[2026-06-02 21:29:21,235][flwr][INFO] - 	                (17, 0.06265836353186455),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (18, 0.05998218765606424),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (19, 0.06111741331161125),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (20, 0.05687692424470854),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (21, 0.05597397298910089),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (22, 0.058653611914970635),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (23, 0.054917442219125506),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (24, 0.058208868203073666),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (25, 0.0511689006990164),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (26, 0.05544249666573531),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (27, 0.047280367293855534),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (28, 0.05104023136674378),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (29, 0.05067189377556914),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (30, 0.05246791530703186),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (31, 0.04582165649897747),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (32, 0.05076239937435671),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (33, 0.05443482052368166),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (34, 0.053201302828703737),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (35, 0.04755244230888707),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (36, 0.04934021782366448),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (37, 0.046644878653304245),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (38, 0.048461934796994025),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (39, 0.043425301577597254),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (40, 0.053490962771028785),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (41, 0.04880937065897936),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (42, 0.04679955794414044),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (43, 0.04184047056263091),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (44, 0.04151248081676451),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (45, 0.04918538891015328),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (46, 0.04330411098899535),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (47, 0.04169968459838664),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (48, 0.04360121122893819),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (49, 0.044599801057877884),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	                (50, 0.040324725476024274)],
+[2026-06-02 21:29:21,236][flwr][INFO] - 	 'rho_ref': [(1, 0.00017125082411160962),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	             (2, 0.00010432740048099471),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	             (3, 8.662628996995023e-05),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	             (4, 3.78255614025499e-05),
+[2026-06-02 21:29:21,236][flwr][INFO] - 	             (5, 2.6123622121011096e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (6, 2.224907491719051e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (7, 1.7115337322391155e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (8, 1.8750885551924452e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (9, 1.960330992531951e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (10, 1.5913284816943754e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (11, 1.5718750616680714e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (12, 1.5296682219082994e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (13, 1.5038058505452123e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (14, 1.5138880476398642e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (15, 1.4674173445922245e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (16, 1.5779171539869653e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (17, 1.5140767152318232e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (18, 1.4983460969324768e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (19, 1.5209639641626134e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (20, 1.4043936468100684e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (21, 1.644684144231153e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (22, 1.578132798175259e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (23, 1.4226212761455117e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (24, 1.4721469966936939e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (25, 1.4681269352401723e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (26, 1.308997120369916e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (27, 1.31935351092687e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (28, 1.4495298167002091e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (29, 1.515110273735548e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (30, 1.5686827155946986e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (31, 1.435219620584393e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (32, 1.5630870344437384e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (33, 1.614410100620368e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (34, 1.3254027751873269e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (35, 1.3149986817337735e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (36, 1.468211018937479e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (37, 1.4862915360440485e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (38, 1.4287932916649254e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (39, 1.4273410296966628e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (40, 1.328757576582533e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (41, 1.4566008880898296e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (42, 1.3954393164965942e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (43, 1.526138243390552e-05),
+[2026-06-02 21:29:21,237][flwr][INFO] - 	             (44, 1.414716650058202e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (45, 1.5054849355517107e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (46, 1.3955354547886234e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (47, 1.2473989265670582e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (48, 1.6347608183820218e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (49, 1.4803759002757387e-05),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	             (50, 1.3183867389353183e-05)]}
+[2026-06-02 21:29:21,238][flwr][INFO] - 	History (metrics, centralized):
+[2026-06-02 21:29:21,238][flwr][INFO] - 	{'Nt': [(0, 0),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (5, 1505),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (10, 3010),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (15, 4515),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (20, 6020),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (25, 7525),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (30, 9030),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (35, 10535),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (40, 12040),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (45, 13545),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	        (50, 15050)],
+[2026-06-02 21:29:21,238][flwr][INFO] - 	 'accuracy': [(0, 0.1036),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (5, 0.1601),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (10, 0.152),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (15, 0.1652),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (20, 0.1626),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (25, 0.1611),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (30, 0.167),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (35, 0.1669),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (40, 0.1633),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (45, 0.1623),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	              (50, 0.1679)],
+[2026-06-02 21:29:21,238][flwr][INFO] - 	 'distortion': [(0, nan),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (5, 0.2390358413813663),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (10, 0.12087070737582235),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (15, 0.07677012742319557),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (20, 0.05687692424470854),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (25, 0.0511689006990164),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (30, 0.05246791530703186),
+[2026-06-02 21:29:21,238][flwr][INFO] - 	                (35, 0.04755244230888707),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	                (40, 0.053490962771028785),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	                (45, 0.04918538891015328),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	                (50, 0.040324725476024274)],
+[2026-06-02 21:29:21,239][flwr][INFO] - 	 'rho_ref': [(0, 0.0),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (5, 2.6123622121011096e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (10, 1.5913284816943754e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (15, 1.4674173445922245e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (20, 1.4043936468100684e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (25, 1.4681269352401723e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (30, 1.5686827155946986e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (35, 1.3149986817337735e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (40, 1.328757576582533e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (45, 1.5054849355517107e-05),
+[2026-06-02 21:29:21,239][flwr][INFO] - 	             (50, 1.3183867389353183e-05)]}
+[2026-06-02 21:29:21,239][flwr][INFO] - 

@@ -1,0 +1,72 @@
+[2026-06-02 20:42:43,150][flwr][WARNING] - DEPRECATED FEATURE: flwr.simulation.start_simulation() is deprecated.
+	Instead, use the `flwr run` CLI command to start a local simulation in your Flower app, as shown for example below:
+
+		$ flwr new  # Create a new Flower app from a template
+
+		$ flwr run  # Run the Flower app in Simulation Mode
+
+	Using `start_simulation()` is deprecated.
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+[2026-06-02 20:42:43,151][flwr][INFO] - Starting Flower simulation, config: num_rounds=5, no round_timeout
+[2026-06-02 20:42:45,255][flwr][INFO] - Flower VCE: Ray initialized with resources: {'CPU': 48.0, 'memory': 166744315495.0, 'node:203.249.64.186': 1.0, 'GPU': 2.0, 'node:__internal_head__': 1.0, 'accelerator_type:G': 1.0, 'object_store_memory': 71461849497.0}
+[2026-06-02 20:42:45,256][flwr][INFO] - Optimize your simulation with Flower VCE: https://flower.ai/docs/framework/how-to-run-simulations.html
+[2026-06-02 20:42:45,256][flwr][INFO] - Flower VCE: Resources for each Virtual Client: {'num_cpus': 1.0, 'num_gpus': 0.0}
+[2026-06-02 20:42:45,358][flwr][INFO] - Flower VCE: Creating VirtualClientEngineActorPool with 48 actors
+[2026-06-02 20:42:45,359][flwr][INFO] - [INIT]
+[2026-06-02 20:42:45,359][flwr][INFO] - Using initial global parameters provided by strategy
+[2026-06-02 20:42:45,359][flwr][INFO] - Starting evaluation of initial global parameters
+[2026-06-02 20:42:47,124][flwr][INFO] - initial parameters (loss, other metrics): 2.4686138236999513, {'accuracy': 0.1036, 'Nt': 0, 'distortion': nan, 'rho_ref': 0.0}
+[2026-06-02 20:42:47,124][flwr][INFO] - 
+[2026-06-02 20:42:47,124][flwr][INFO] - [ROUND 1]
+[2026-06-02 20:42:47,394][flwr][INFO] - configure_fit: strategy sampled 48 clients (out of 48)
+[2026-06-02 20:43:41,645][flwr][INFO] - aggregate_fit: received 48 results and 0 failures
+[2026-06-02 20:43:41,745][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:43:41,746][flwr][INFO] - 
+[2026-06-02 20:43:41,746][flwr][INFO] - [ROUND 2]
+[2026-06-02 20:43:41,957][flwr][INFO] - configure_fit: strategy sampled 48 clients (out of 48)
+[2026-06-02 20:44:46,190][flwr][INFO] - aggregate_fit: received 48 results and 0 failures
+[2026-06-02 20:44:46,321][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:44:46,321][flwr][INFO] - 
+[2026-06-02 20:44:46,321][flwr][INFO] - [ROUND 3]
+[2026-06-02 20:44:46,652][flwr][INFO] - configure_fit: strategy sampled 48 clients (out of 48)
+[2026-06-02 20:45:52,850][flwr][INFO] - aggregate_fit: received 48 results and 0 failures
+[2026-06-02 20:45:52,908][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:45:52,908][flwr][INFO] - 
+[2026-06-02 20:45:52,908][flwr][INFO] - [ROUND 4]
+[2026-06-02 20:45:53,079][flwr][INFO] - configure_fit: strategy sampled 48 clients (out of 48)
+[2026-06-02 20:46:57,600][flwr][INFO] - aggregate_fit: received 48 results and 0 failures
+[2026-06-02 20:46:57,660][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:46:57,660][flwr][INFO] - 
+[2026-06-02 20:46:57,660][flwr][INFO] - [ROUND 5]
+[2026-06-02 20:46:57,834][flwr][INFO] - configure_fit: strategy sampled 48 clients (out of 48)
+[2026-06-02 20:48:02,123][flwr][INFO] - aggregate_fit: received 48 results and 0 failures
+[2026-06-02 20:48:03,389][flwr][INFO] - fit progress: (5, 2.2510718521118163, {'accuracy': 0.1626, 'Nt': 1505, 'distortion': 0.22826579487029725, 'rho_ref': 2.608847275728557e-05}, 316.2649149745703)
+[2026-06-02 20:48:03,389][flwr][INFO] - configure_evaluate: no clients selected, skipping evaluation
+[2026-06-02 20:48:03,390][flwr][INFO] - 
+[2026-06-02 20:48:03,390][flwr][INFO] - [SUMMARY]
+[2026-06-02 20:48:03,390][flwr][INFO] - Run finished 5 round(s) in 316.27s
+[2026-06-02 20:48:03,390][flwr][INFO] - 	History (loss, centralized):
+[2026-06-02 20:48:03,390][flwr][INFO] - 		round 0: 2.4686138236999513
+[2026-06-02 20:48:03,390][flwr][INFO] - 		round 5: 2.2510718521118163
+[2026-06-02 20:48:03,390][flwr][INFO] - 	History (metrics, distributed, fit):
+[2026-06-02 20:48:03,390][flwr][INFO] - 	{'N_symbols_per_round': [(1, 301), (2, 301), (3, 301), (4, 301), (5, 301)],
+[2026-06-02 20:48:03,390][flwr][INFO] - 	 'Nt': [(1, 301), (2, 602), (3, 903), (4, 1204), (5, 1505)],
+[2026-06-02 20:48:03,390][flwr][INFO] - 	 'distortion': [(1, 0.38580054789161344),
+[2026-06-02 20:48:03,390][flwr][INFO] - 	                (2, 0.27770695911353144),
+[2026-06-02 20:48:03,390][flwr][INFO] - 	                (3, 0.18597943404995246),
+[2026-06-02 20:48:03,390][flwr][INFO] - 	                (4, 0.2866491151426938),
+[2026-06-02 20:48:03,391][flwr][INFO] - 	                (5, 0.22826579487029725)],
+[2026-06-02 20:48:03,391][flwr][INFO] - 	 'rho_ref': [(1, 0.00017125082411160962),
+[2026-06-02 20:48:03,391][flwr][INFO] - 	             (2, 9.746867384676278e-05),
+[2026-06-02 20:48:03,391][flwr][INFO] - 	             (3, 7.820014575610341e-05),
+[2026-06-02 20:48:03,391][flwr][INFO] - 	             (4, 3.52411097970907e-05),
+[2026-06-02 20:48:03,391][flwr][INFO] - 	             (5, 2.608847275728557e-05)]}
+[2026-06-02 20:48:03,391][flwr][INFO] - 	History (metrics, centralized):
+[2026-06-02 20:48:03,391][flwr][INFO] - 	{'Nt': [(0, 0), (5, 1505)],
+[2026-06-02 20:48:03,391][flwr][INFO] - 	 'accuracy': [(0, 0.1036), (5, 0.1626)],
+[2026-06-02 20:48:03,391][flwr][INFO] - 	 'distortion': [(0, nan), (5, 0.22826579487029725)],
+[2026-06-02 20:48:03,391][flwr][INFO] - 	 'rho_ref': [(0, 0.0), (5, 2.608847275728557e-05)]}
+[2026-06-02 20:48:03,391][flwr][INFO] - 

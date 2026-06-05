@@ -1,0 +1,9 @@
+- num_rounds=100
+- m0_values=[160]
+- num_devices=300
+- num_flower_clients=24
+- client_cpus=1
+- client_gpus=0
+- eval_every=5
+- lr=0.02
+- output_dir=outputs/lr_002_m0_160_100

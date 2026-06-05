@@ -1,0 +1,8 @@
+- num_rounds=5
+- m0_values=[160]
+- num_devices=300
+- num_flower_clients=24
+- client_cpus=1
+- client_gpus=0
+- eval_every=5
+- output_dir=outputs/bench_grouped_24
