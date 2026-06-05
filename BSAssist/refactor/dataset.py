@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from pathlib import Path
 from typing import Dict, List, Sequence, Tuple
 
@@ -40,16 +41,44 @@ def partition_cifar10_non_iid(
     - Edge-device local dataset sizes are Poisson-like and imbalanced.
     - No BS sample is reused by edge devices.
     """
-    rng = np.random.default_rng(cfg.seed)
+    rng = np.random.default_rng(cfg.split_seed)
     all_indices = np.arange(len(trainset))
-    rng.shuffle(all_indices)
 
     if max_m0 >= len(trainset):
         raise ValueError("max_m0 must be smaller than the CIFAR-10 training size")
 
-    bs_indices = all_indices[:max_m0]
-    remaining_indices = all_indices[max_m0:]
     targets = np.asarray(getattr(trainset, "targets"), dtype=np.int64)
+
+    if cfg.bs_stratified:
+        # Nested, class-balanced BS cache: the prefixes used for |M0|=20, 160,
+        # and 1600 all approximately follow the global CIFAR-10 distribution.
+        # We interleave labels instead of shuffling all selected BS samples so
+        # that slicing full_bs_dataset.indices[:m0] stays class-balanced.
+        class_lists = []
+        max_per_class = int(math.ceil(max_m0 / 10))
+        for label in range(10):
+            label_indices = np.where(targets == label)[0]
+            label_indices = rng.permutation(label_indices)
+            class_lists.append(label_indices[:max_per_class].tolist())
+
+        nested = []
+        for pos in range(max_per_class):
+            label_order = rng.permutation(10)
+            for label in label_order:
+                if pos < len(class_lists[int(label)]):
+                    nested.append(int(class_lists[int(label)][pos]))
+                if len(nested) >= max_m0:
+                    break
+            if len(nested) >= max_m0:
+                break
+        bs_indices = np.asarray(nested[:max_m0], dtype=np.int64)
+    else:
+        shuffled = rng.permutation(all_indices)
+        bs_indices = shuffled[:max_m0]
+
+    bs_set = set(int(i) for i in bs_indices.tolist())
+    remaining_indices = np.asarray([int(i) for i in all_indices if int(i) not in bs_set], dtype=np.int64)
+    remaining_indices = rng.permutation(remaining_indices)
 
     class_bins: Dict[int, List[int]] = {label: [] for label in range(10)}
     for idx in remaining_indices:
@@ -97,7 +126,7 @@ def partition_cifar10_non_iid(
 
 def sample_client_distances(cfg: SimConfig) -> np.ndarray:
     """Uniform device placement inside the BS coverage disk."""
-    rng = np.random.default_rng(cfg.seed + 999)
+    rng = np.random.default_rng(cfg.split_seed + 999)
     return np.clip(cfg.coverage_m * np.sqrt(rng.random(cfg.num_devices)), 10.0, cfg.coverage_m)
 
 

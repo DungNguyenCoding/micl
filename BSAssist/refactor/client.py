@@ -80,13 +80,13 @@ class GroupedOtaClient(fl.client.NumPyClient):
 
             # Each physical device starts from the same theta'_t.
             model.set_parameters(self.net, parameters, self.device)
-            train_seed = self.cfg.seed + 2_000_003 * server_round + did
+            train_seed = self.cfg.runtime_seed + 2_000_003 * server_round + did
             model.train(self.net, trainloader, self.device, self.cfg, deterministic_seed=train_seed)
             after = model.get_parameters(self.net)
             delta_flat = (model.flatten_parameters(after) - before_flat).astype(np.float32, copy=False)
 
             weight = len(trainset) / max(global_examples, 1)
-            round_seed = self.cfg.seed + 1_000_003 * server_round + did
+            round_seed = self.cfg.runtime_seed + 1_000_003 * server_round + did
             rx, ideal = simulate_device_ota_contribution(
                 delta_flat=delta_flat,
                 dataset_weight=weight,

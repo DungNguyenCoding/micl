@@ -17,40 +17,33 @@ from config import SimConfig
 
 
 class Cifar10CNN(nn.Module):
-    """CNN with exactly D = 307,498 communicated trainable parameters.
+    """7-layer CIFAR-10 CNN with D = 307,498 trainable parameters.
 
-    The architecture uses six 3x3 convolutional layers and one linear classifier.
-    BatchNorm layers are stateless/non-affine so they do not add communicated
-    parameters, which keeps D aligned with the CIFAR-10 target screenshot.
+    This paper-like variant uses six 3x3 convolution layers and one linear
+    classifier. It intentionally removes BatchNorm and Dropout from the earlier
+    refactor because the ICC Fig. 1 paper only specifies a 7-layer CNN with
+    D=307,498, and extra stochastic regularization can change the |M0| accuracy
+    ordering even when the OTA distortion trend is correct.
     """
 
     def __init__(self) -> None:
         super().__init__()
         self.features = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Conv2d(32, 32, kernel_size=3, padding=1),
-            nn.BatchNorm2d(32, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2),
-            nn.Dropout(p=0.2),
             nn.Conv2d(32, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Conv2d(64, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2),
-            nn.Dropout(p=0.3),
             nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128, affine=False, track_running_stats=False),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(2, 2),
-            nn.Dropout(p=0.4),
         )
         self.classifier = nn.Linear(128 * 4 * 4, 10)
 

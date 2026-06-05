@@ -47,7 +47,7 @@ def main(cfg: DictConfig) -> None:
     if not m0_values:
         raise ValueError("m0_values cannot be empty")
 
-    model.set_seed(sim_cfg.seed)
+    model.set_seed(sim_cfg.runtime_seed)
     model.configure_torch_threads(sim_cfg.torch_threads)
     device = model.resolve_device(sim_cfg.device)
 

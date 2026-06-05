@@ -83,7 +83,7 @@ class BsDatasetAssistedOtaStrategy(FedAvg):
         self.rho_ref: float = 0.0
         self.last_distortion: float = float("nan")
         self.history_rows: List[Dict[str, float]] = []
-        self.rng = np.random.default_rng(cfg.seed + 77)
+        self.rng = np.random.default_rng(cfg.runtime_seed + 77)
 
         super().__init__(
             fraction_fit=1.0,
@@ -104,7 +104,7 @@ class BsDatasetAssistedOtaStrategy(FedAvg):
         """Perform BS local update and send theta'_t, |M|, rho_ref,t to clients."""
         current_params = parameters_to_ndarrays(parameters)
         model.set_parameters(self.bs_model, current_params, self.device)
-        bs_seed = self.cfg.seed + 3_000_003 * server_round
+        bs_seed = self.cfg.runtime_seed + 3_000_003 * server_round
         model.train(self.bs_model, self.bs_loader, self.device, self.cfg, deterministic_seed=bs_seed)
         bs_updated = model.get_parameters(self.bs_model)
 
