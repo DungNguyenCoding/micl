@@ -88,6 +88,19 @@ def main(cfg: DictConfig) -> None:
     dataset.save_split_summary(split_path, full_bs_dataset, client_datasets)
     print(f"Saved data split summary: {split_path}")
 
+    # Pure visualization: the simulation uses only 1D BS-device distances.
+    # This assigns deterministic angles only to draw a radar-style map.
+    utils.save_device_distance_visualization(
+        distances_m=client_distances,
+        coverage_m=sim_cfg.coverage_m,
+        output_dir=output_dir,
+        filename_prefix="device_distribution_fig1",
+        active_radii_m=[sim_cfg.coverage_m],
+        angle_seed=sim_cfg.split_seed + 2026,
+        label_devices=(sim_cfg.num_devices <= 50),
+        ring_step_m=50.0,
+    )
+
     client_fn = client.gen_client_fn(
         device_groups=device_groups,
         client_datasets=client_datasets,

@@ -1,20 +1,16 @@
-# Paper-like grouped Flower simulation for Fig. 1 of:
-# "Over-the-Air Aggregation-Based Federated Learning in Cache-Enabled Wireless Edge Networks"
-# This keeps Flower, K=300 physical devices, CIFAR-10, D=307,498, F=1024, and Algorithm 2.
+# Paper-like grouped Flower OTA-FL config for Fig. 1.
+# main.py uses m0_values for Fig. 1.
 
-# Experiment length and output
-# Fig. 1 goes to about 300,000 symbol transmissions; N=301, so 1000 rounds ~= 301,000 Nt.
 num_rounds: 1000
 m0_values: [1600, 160, 20]
+
 data_dir: ./data
-output_dir: ./outputs/fig1_paperlike
+output_dir: outputs/fig1_cov550
 plot: true
 
 # Physical OTA-FL setting
 num_devices: 300
 num_flower_clients: 24
-# The ICC paper is internally inconsistent: Table I says 400 m, while the text says 550 m.
-# Use 550 m to match the Section IV text; rerun with coverage_m=400 for the table setting.
 coverage_m: 550.0
 num_subchannels: 1024
 max_symbol_power_dbm: 20.0
@@ -26,11 +22,9 @@ path_loss_exp: 4.0
 mean_client_size: 160
 min_client_size: 10
 classes_per_client: 3
-# Stratified nested BS cache makes |M0|=20/160/1600 all follow the CIFAR-10 class distribution.
 bs_stratified: true
 
-# Local training candidate for paper-like Fig. 1 reproduction.
-# The paper does not disclose these exactly; E=1 makes BS-dataset communication effects more visible.
+# Local training
 local_epochs: 1
 batch_size: 32
 lr: 0.02
@@ -50,8 +44,7 @@ cache_clients: true
 eval_every: 1
 track_distortion: true
 
-# Reproducibility. Keep split_seed fixed when averaging over runtime_seed.
+# Reproducibility
 split_seed: 42
 runtime_seed: 42
-# Backward compatibility: old code/commands that pass seed=... still work.
 seed: 42

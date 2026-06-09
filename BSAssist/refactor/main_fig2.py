@@ -40,6 +40,7 @@ from torch.utils.data import Subset
 import client
 import dataset
 import model
+import utils
 from config import build_sim_config
 from strategy import BsDatasetAssistedOtaStrategy
 from utils_fig2 import plot_fig2_histories
@@ -215,6 +216,20 @@ def main(cfg: DictConfig) -> None:
     client_distances, used_distance_seed = _sample_fig2_distances(sim_cfg, cfg, active_radii)
     all_client_sizes = [len(ds) for ds in client_datasets]
     print(f"Using Fig. 2 device-distance seed: {used_distance_seed}")
+
+    # Pure visualization: the simulation uses only 1D BS-device distances.
+    # This assigns deterministic angles only to draw a radar-style map and
+    # highlights the active radii used in Fig. 2.
+    utils.save_device_distance_visualization(
+        distances_m=client_distances,
+        coverage_m=sim_cfg.coverage_m,
+        output_dir=output_dir,
+        filename_prefix="device_distribution_fig2",
+        active_radii_m=active_radii,
+        angle_seed=used_distance_seed + 2026,
+        label_devices=(sim_cfg.num_devices <= 50),
+        ring_step_m=50.0,
+    )
 
     split_path = output_dir / "data_split_summary.csv"
     dataset.save_split_summary(split_path, full_bs_dataset, client_datasets)
