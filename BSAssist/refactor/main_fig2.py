@@ -57,6 +57,55 @@ def _list_float(values: Any) -> list[float]:
     return [float(values)]
 
 
+def _sample_distances_with_seed(num_devices: int, coverage_m: float, seed: int) -> np.ndarray:
+    """Sample device distances uniformly in a disk using the same law as Fig. 1.
+
+    For a uniform spatial distribution over a disk, the radius is R*sqrt(U).
+    The 10 m lower clip avoids unrealistically tiny path loss, matching the
+    existing dataset.sample_client_distances helper.
+    """
+    rng = np.random.default_rng(int(seed) + 999)
+    return np.clip(float(coverage_m) * np.sqrt(rng.random(int(num_devices))), 10.0, float(coverage_m))
+
+
+def _active_counts_for_radii(distances: np.ndarray, radii: Sequence[float]) -> dict[float, int]:
+    return {float(r): int(np.sum(distances <= float(r))) for r in radii}
+
+
+def _sample_fig2_distances(sim_cfg, cfg, active_radii: Sequence[float]) -> tuple[np.ndarray, int]:
+    """Sample Fig. 2 distances and optionally reroll seed if a small radius is empty.
+
+    With only 300 devices uniformly placed in a 550 m disk, the expected number
+    inside 50 m is 300*(50/550)^2 ~= 2.48, so some seeds contain zero devices.
+    This helper keeps Fig. 1 untouched and only gives Fig. 2 a separate distance
+    seed/resampling path.
+    """
+    base_seed = int(getattr(cfg, "fig2_distance_seed", sim_cfg.split_seed))
+    min_active = int(getattr(cfg, "fig2_min_active_devices_per_radius", 1))
+    auto_resample = bool(getattr(cfg, "fig2_auto_resample_distance_seed", True))
+    max_tries = int(getattr(cfg, "fig2_max_distance_seed_tries", 10_000))
+
+    for offset in range(max_tries if auto_resample else 1):
+        seed = base_seed + offset
+        distances = _sample_distances_with_seed(sim_cfg.num_devices, sim_cfg.coverage_m, seed)
+        counts = _active_counts_for_radii(distances, active_radii)
+        if all(counts[float(r)] >= min_active for r in active_radii):
+            if offset > 0:
+                print(
+                    f"Fig. 2 distance seed {base_seed} had too few active devices; "
+                    f"using seed {seed} with counts {counts}"
+                )
+            else:
+                print(f"Fig. 2 distance seed {seed} selected with counts {counts}")
+            return distances, seed
+
+    raise RuntimeError(
+        "Could not sample a Fig. 2 device placement satisfying "
+        f"min_active={min_active} for radii={list(active_radii)} after {max_tries} tries. "
+        "Reduce fig2_min_active_devices_per_radius or increase num_devices."
+    )
+
+
 def _split_device_ids(device_ids: Sequence[int], num_groups: int) -> list[list[int]]:
     """Split a selected set of physical device IDs across Flower virtual clients."""
     ids = [int(x) for x in device_ids]
@@ -160,8 +209,12 @@ def main(cfg: DictConfig) -> None:
         cfg=sim_cfg,
         max_m0=fig2_m0,
     )
-    client_distances = dataset.sample_client_distances(sim_cfg)
+    # Fig. 2 uses its own optional distance seed/resampling logic. This leaves
+    # the Fig. 1 main.py path untouched, but prevents the 50 m case from failing
+    # when a random 300-device placement inside 550 m contains no close device.
+    client_distances, used_distance_seed = _sample_fig2_distances(sim_cfg, cfg, active_radii)
     all_client_sizes = [len(ds) for ds in client_datasets]
+    print(f"Using Fig. 2 device-distance seed: {used_distance_seed}")
 
     split_path = output_dir / "data_split_summary.csv"
     dataset.save_split_summary(split_path, full_bs_dataset, client_datasets)
@@ -175,7 +228,8 @@ def main(cfg: DictConfig) -> None:
         if not active_ids:
             raise RuntimeError(
                 f"No active devices found within radius {r} m. "
-                "Increase the active radius or num_devices."
+                "Set fig2_auto_resample_distance_seed=true, use a different "
+                "fig2_distance_seed, or increase num_devices."
             )
         active_ids_by_radius[float(r)] = active_ids
         print(

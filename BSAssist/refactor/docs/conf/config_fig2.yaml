@@ -44,3 +44,13 @@ track_distortion: true
 split_seed: 42
 runtime_seed: 42
 seed: 42
+
+# Device-distance sampling controls for Fig. 2 only. These do not affect Fig. 1.
+# With 300 devices uniformly placed in a 550 m disk, the expected number inside
+# 50 m is only about 2.48, and seed 42 can produce zero. Keep the CIFAR/data split
+# fixed with split_seed while allowing distance placement to be resampled until
+# every active radius has at least this many devices.
+fig2_distance_seed: 42
+fig2_auto_resample_distance_seed: true
+fig2_min_active_devices_per_radius: 1
+fig2_max_distance_seed_tries: 10000
