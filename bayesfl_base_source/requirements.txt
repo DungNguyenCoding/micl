@@ -1,0 +1,10 @@
+# Flower legacy simulation API is used to match the referenced MICL projects.
+# If using Flower >=1.32 ClientApp/ServerApp, port main.py/strategy.py accordingly.
+flwr[simulation]>=1.13,<1.27
+ray>=2.9,<3
+pyro-ppl>=1.9
+numpy>=1.24
+pandas>=2.0
+matplotlib>=3.7
+torch>=2.1
+torchvision>=0.16

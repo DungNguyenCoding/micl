@@ -1,0 +1,166 @@
+"""Pyro-based mean-field variational local learning for Bayesian FL.
+
+The implementation is deliberately small and explicit: it models an MLP's
+weights and biases as latent variables and uses ``AutoDiagonalNormal`` to learn
+a diagonal Gaussian posterior. This makes the arrays sent through Flower directly
+comparable to the diagonal Gaussian arrays used by the online Laplace method.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Dict, List, Sequence, Tuple
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+from torch.utils.data import DataLoader
+
+from config import RunConfig
+
+
+@dataclass
+class BayesianMlpSpec:
+    input_dim: int
+    hidden_dims: List[int]
+    num_classes: int
+    names: List[str]
+    shapes: List[Tuple[int, ...]]
+
+    @property
+    def latent_dim(self) -> int:
+        return int(sum(np.prod(shape) for shape in self.shapes))
+
+
+def build_mlp_spec(input_shape: Sequence[int], num_classes: int, hidden_dims: Sequence[int]) -> BayesianMlpSpec:
+    """Return latent-site names/shapes matching ``model.MLP`` parameter order."""
+    input_dim = int(np.prod(tuple(input_shape)))
+    dims = [input_dim] + [int(x) for x in hidden_dims] + [int(num_classes)]
+    names: List[str] = []
+    shapes: List[Tuple[int, ...]] = []
+    for layer_idx in range(len(dims) - 1):
+        names.extend([f"w{layer_idx}", f"b{layer_idx}"])
+        shapes.extend([(dims[layer_idx + 1], dims[layer_idx]), (dims[layer_idx + 1],)])
+    return BayesianMlpSpec(input_dim=input_dim, hidden_dims=list(hidden_dims), num_classes=int(num_classes), names=names, shapes=shapes)
+
+
+def split_flat(flat: np.ndarray | torch.Tensor, spec: BayesianMlpSpec, device: torch.device) -> Dict[str, torch.Tensor]:
+    """Split a flat latent vector into a dictionary keyed by Pyro site names."""
+    flat_t = torch.as_tensor(flat, dtype=torch.float32, device=device).flatten()
+    if flat_t.numel() != spec.latent_dim:
+        raise ValueError(f"Expected latent dim {spec.latent_dim}, got {flat_t.numel()}")
+    out: Dict[str, torch.Tensor] = {}
+    cursor = 0
+    for name, shape in zip(spec.names, spec.shapes):
+        n = int(np.prod(shape))
+        out[name] = flat_t[cursor : cursor + n].view(shape)
+        cursor += n
+    return out
+
+
+def _softplus_inverse(x: torch.Tensor) -> torch.Tensor:
+    """Numerically stable inverse of softplus for positive tensors."""
+    x = torch.clamp(x, min=1.0e-8)
+    return x + torch.log(-torch.expm1(-x))
+
+
+def _make_pyro_model(spec: BayesianMlpSpec, prior_loc: Dict[str, torch.Tensor], prior_scale: Dict[str, torch.Tensor]):
+    """Create a Pyro model closure."""
+    import pyro
+    import pyro.distributions as dist
+
+    def bnn_model(x: torch.Tensor, y: torch.Tensor | None = None) -> torch.Tensor:
+        x = torch.flatten(x, start_dim=1)
+        num_layers = len(spec.shapes) // 2
+        for layer_idx in range(num_layers):
+            w_name = f"w{layer_idx}"
+            b_name = f"b{layer_idx}"
+            w = pyro.sample(w_name, dist.Normal(prior_loc[w_name], prior_scale[w_name]).to_event(2))
+            b = pyro.sample(b_name, dist.Normal(prior_loc[b_name], prior_scale[b_name]).to_event(1))
+            x = F.linear(x, w, b)
+            if layer_idx < num_layers - 1:
+                x = F.relu(x)
+        logits = x
+        with pyro.plate("data", logits.shape[0]):
+            pyro.sample("obs", dist.Categorical(logits=logits), obs=y)
+        return logits
+
+    return bnn_model
+
+
+def train_vi_local(
+    trainloader: DataLoader,
+    input_shape: Sequence[int],
+    num_classes: int,
+    hidden_dims: Sequence[int],
+    global_loc: np.ndarray,
+    global_scale: np.ndarray,
+    device: torch.device,
+    cfg: RunConfig,
+    seed: int,
+) -> tuple[np.ndarray, np.ndarray, float]:
+    """Run local Pyro SVI and return posterior loc/scale as flat arrays."""
+    import pyro
+    from pyro.infer import SVI, Trace_ELBO
+    from pyro.infer.autoguide import AutoDiagonalNormal
+    from pyro.infer.autoguide.initialization import init_to_value
+    from pyro.optim import Adam
+
+    pyro.clear_param_store()
+    pyro.set_rng_seed(int(seed))
+
+    spec = build_mlp_spec(input_shape=input_shape, num_classes=num_classes, hidden_dims=hidden_dims)
+    loc_state = split_flat(global_loc, spec, device)
+    scale_np = np.maximum(np.asarray(global_scale, dtype=np.float32), float(cfg.vi_min_scale))
+    scale_state = split_flat(scale_np, spec, device)
+    bnn_model = _make_pyro_model(spec, loc_state, scale_state)
+    guide = AutoDiagonalNormal(
+        bnn_model,
+        init_loc_fn=init_to_value(values=loc_state),
+        init_scale=float(cfg.vi_init_scale),
+    )
+
+    # Initialize guide parameters before trying to seed its scale vector.
+    first_batch = next(iter(trainloader), None)
+    if first_batch is None:
+        return np.asarray(global_loc, dtype=np.float32), scale_np, 0.0
+    x0, y0 = first_batch
+    x0 = x0.to(device)
+    y0 = y0.to(device)
+    guide(x0, y0)
+
+    # AutoDiagonalNormal stores a single flat mean and scale. We initialize both
+    # from the global posterior so prior iteration is warm-started.
+    try:
+        pyro.param("AutoDiagonalNormal.loc").data.copy_(torch.as_tensor(global_loc, dtype=torch.float32, device=device))
+        constrained_scale = pyro.param("AutoDiagonalNormal.scale")
+        constrained_scale.data.copy_(torch.as_tensor(scale_np, dtype=torch.float32, device=device))
+        if hasattr(constrained_scale, "unconstrained"):
+            constrained_scale.unconstrained().data.copy_(_softplus_inverse(torch.as_tensor(scale_np, dtype=torch.float32, device=device)))
+    except Exception:
+        # Pyro versions differ slightly in how constrained parameters are exposed.
+        # The guide remains valid because prior_loc/prior_scale are still the
+        # global posterior parameters.
+        pass
+
+    svi = SVI(
+        bnn_model,
+        guide,
+        Adam({"lr": float(cfg.vi_lr)}),
+        Trace_ELBO(num_particles=int(cfg.vi_particles)),
+    )
+
+    loss_sum = 0.0
+    steps = 0
+    for _epoch in range(int(cfg.local_epochs)):
+        for x, y in trainloader:
+            x = x.to(device, non_blocking=True)
+            y = y.to(device, non_blocking=True)
+            loss_sum += float(svi.step(x, y))
+            steps += 1
+
+    posterior = guide.get_posterior()
+    loc = posterior.loc.detach().cpu().numpy().astype(np.float32, copy=True)
+    scale = posterior.scale.detach().cpu().numpy().astype(np.float32, copy=True)
+    scale = np.maximum(scale, float(cfg.vi_min_scale)).astype(np.float32, copy=False)
+    return loc, scale, loss_sum / max(steps, 1)
