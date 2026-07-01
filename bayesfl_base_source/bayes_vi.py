@@ -160,7 +160,17 @@ def train_vi_local(
             steps += 1
 
     posterior = guide.get_posterior()
-    loc = posterior.loc.detach().cpu().numpy().astype(np.float32, copy=True)
-    scale = posterior.scale.detach().cpu().numpy().astype(np.float32, copy=True)
+
+    base_dist = getattr(posterior, "base_dist", posterior)
+
+    if hasattr(base_dist, "loc") and hasattr(base_dist, "scale"):
+        loc_t = base_dist.loc
+        scale_t = base_dist.scale
+    else:
+        loc_t = posterior.mean
+        scale_t = getattr(posterior, "stddev", torch.sqrt(posterior.variance))
+
+    loc = loc_t.detach().cpu().numpy().astype(np.float32, copy=True)
+    scale = scale_t.detach().cpu().numpy().astype(np.float32, copy=True)
     scale = np.maximum(scale, float(cfg.vi_min_scale)).astype(np.float32, copy=False)
     return loc, scale, loss_sum / max(steps, 1)
