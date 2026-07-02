@@ -1,0 +1,345 @@
+2026-07-01 14:23:16,228 | INFO | Starting Bayesian FL source run
+2026-07-01 14:23:16,228 | INFO | Flower version: 1.29.0
+2026-07-01 14:23:16,228 | INFO | Method=vi dataset=mnist model=mlp
+2026-07-01 14:23:16,228 | INFO | Physical devices=300 Flower virtual clients=24 client_fraction=0.1000
+2026-07-01 14:23:16,229 | INFO | Output directory: /home/micl/DungNDH/micl/bayesfl_base_source/outputs/vi_mnist_noniid_unbalanced
+2026-07-01 14:23:17,200 | INFO | Loaded dataset with input_shape=(1, 28, 28) num_classes=10
+2026-07-01 14:23:17,200 | INFO | Saved device/data summary to outputs/vi_mnist_noniid_unbalanced/device_summary.csv
+2026-07-01 14:23:17,201 | INFO | Initial payload arrays: [(159010,), (159010,)]
+2026-07-01 14:23:17,203 | INFO | Flower client_resources={'num_cpus': 1.0, 'num_gpus': 0.0}
+2026-07-01 14:23:17,309 | WARNING | DEPRECATED FEATURE: flwr.simulation.start_simulation() is deprecated.
+	Instead, use the `flwr run` CLI command to start a local simulation in your Flower app, as shown for example below:
+
+		$ flwr new  # Create a new Flower app from a template
+
+		$ flwr run  # Run the Flower app in Simulation Mode
+
+	Using `start_simulation()` is deprecated.
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+2026-07-01 14:23:17,310 | INFO | Starting Flower simulation, config: num_rounds=20, no round_timeout
+2026-07-01 14:23:19,621 | INFO | Flower VCE: Ray initialized with resources: {'node:203.249.64.186': 1.0, 'CPU': 48.0, 'GPU': 2.0, 'node:__internal_head__': 1.0, 'memory': 161768932148.0, 'accelerator_type:G': 1.0, 'object_store_memory': 69329542348.0}
+2026-07-01 14:23:19,621 | INFO | Optimize your simulation with Flower VCE: https://flower.ai/docs/framework/how-to-run-simulations.html
+2026-07-01 14:23:19,621 | INFO | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1.0, 'num_gpus': 0.0}
+2026-07-01 14:23:19,702 | INFO | Flower VCE: Creating VirtualClientEngineActorPool with 48 actors
+2026-07-01 14:23:19,703 | INFO | [INIT]
+2026-07-01 14:23:19,703 | INFO | Using initial global parameters provided by strategy
+2026-07-01 14:23:19,703 | INFO | Starting evaluation of initial global parameters
+2026-07-01 14:23:21,264 | INFO | initial parameters (loss, other metrics): 2.342842985534668, {'accuracy': 0.1022, 'selected_count': 0, 'active_physical_devices': 0}
+2026-07-01 14:23:21,265 | INFO | 
+2026-07-01 14:23:21,265 | INFO | [ROUND 1]
+2026-07-01 14:23:21,266 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:26,685 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:27,620 | INFO | fit progress: (1, 2.309402318572998, {'accuracy': 0.1527, 'selected_count': 30, 'active_physical_devices': 30}, 6.3557317443192005)
+2026-07-01 14:23:27,620 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:27,621 | INFO | 
+2026-07-01 14:23:27,621 | INFO | [ROUND 2]
+2026-07-01 14:23:27,621 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:29,315 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:30,305 | INFO | fit progress: (2, 2.2919481735229494, {'accuracy': 0.1668, 'selected_count': 30, 'active_physical_devices': 30}, 9.040372919291258)
+2026-07-01 14:23:30,305 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:30,305 | INFO | 
+2026-07-01 14:23:30,305 | INFO | [ROUND 3]
+2026-07-01 14:23:30,306 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:32,616 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:33,512 | INFO | fit progress: (3, 2.265771036148071, {'accuracy': 0.186, 'selected_count': 30, 'active_physical_devices': 30}, 12.247294191271067)
+2026-07-01 14:23:33,512 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:33,512 | INFO | 
+2026-07-01 14:23:33,512 | INFO | [ROUND 4]
+2026-07-01 14:23:33,514 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:35,615 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:36,539 | INFO | fit progress: (4, 2.2118323822021484, {'accuracy': 0.2146, 'selected_count': 30, 'active_physical_devices': 30}, 15.274387940764427)
+2026-07-01 14:23:36,539 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:36,539 | INFO | 
+2026-07-01 14:23:36,539 | INFO | [ROUND 5]
+2026-07-01 14:23:36,540 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:38,648 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:39,617 | INFO | fit progress: (5, 2.1829010681152345, {'accuracy': 0.2455, 'selected_count': 30, 'active_physical_devices': 30}, 18.35217533633113)
+2026-07-01 14:23:39,617 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:39,617 | INFO | 
+2026-07-01 14:23:39,617 | INFO | [ROUND 6]
+2026-07-01 14:23:39,618 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:41,730 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:42,623 | INFO | fit progress: (6, 2.1565906978607177, {'accuracy': 0.221, 'selected_count': 30, 'active_physical_devices': 30}, 21.358650159090757)
+2026-07-01 14:23:42,623 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:42,623 | INFO | 
+2026-07-01 14:23:42,623 | INFO | [ROUND 7]
+2026-07-01 14:23:42,624 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:44,608 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:45,531 | INFO | fit progress: (7, 2.1395396717071535, {'accuracy': 0.2333, 'selected_count': 30, 'active_physical_devices': 30}, 24.26627255231142)
+2026-07-01 14:23:45,531 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:45,531 | INFO | 
+2026-07-01 14:23:45,531 | INFO | [ROUND 8]
+2026-07-01 14:23:45,532 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:47,156 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:48,161 | INFO | fit progress: (8, 2.109319637680054, {'accuracy': 0.3434, 'selected_count': 30, 'active_physical_devices': 30}, 26.896509557962418)
+2026-07-01 14:23:48,162 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:48,162 | INFO | 
+2026-07-01 14:23:48,162 | INFO | [ROUND 9]
+2026-07-01 14:23:48,164 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:49,885 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:50,776 | INFO | fit progress: (9, 2.0677596607208253, {'accuracy': 0.389, 'selected_count': 30, 'active_physical_devices': 30}, 29.511772748082876)
+2026-07-01 14:23:50,776 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:50,777 | INFO | 
+2026-07-01 14:23:50,777 | INFO | [ROUND 10]
+2026-07-01 14:23:50,777 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:53,237 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:54,126 | INFO | fit progress: (10, 2.0373759044647217, {'accuracy': 0.4043, 'selected_count': 30, 'active_physical_devices': 30}, 32.861613877117634)
+2026-07-01 14:23:54,126 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:54,126 | INFO | 
+2026-07-01 14:23:54,126 | INFO | [ROUND 11]
+2026-07-01 14:23:54,127 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:56,271 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:23:57,195 | INFO | fit progress: (11, 2.0088466339111326, {'accuracy': 0.4537, 'selected_count': 30, 'active_physical_devices': 30}, 35.93074860423803)
+2026-07-01 14:23:57,196 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:23:57,196 | INFO | 
+2026-07-01 14:23:57,196 | INFO | [ROUND 12]
+2026-07-01 14:23:57,197 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:23:59,662 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:00,612 | INFO | fit progress: (12, 1.9763186573028564, {'accuracy': 0.4556, 'selected_count': 30, 'active_physical_devices': 30}, 39.347348518669605)
+2026-07-01 14:24:00,612 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:00,612 | INFO | 
+2026-07-01 14:24:00,612 | INFO | [ROUND 13]
+2026-07-01 14:24:00,614 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:02,383 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:03,292 | INFO | fit progress: (13, 1.9623513347625732, {'accuracy': 0.4233, 'selected_count': 30, 'active_physical_devices': 30}, 42.027449406683445)
+2026-07-01 14:24:03,292 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:03,292 | INFO | 
+2026-07-01 14:24:03,293 | INFO | [ROUND 14]
+2026-07-01 14:24:03,294 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:05,298 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:06,214 | INFO | fit progress: (14, 1.9324927129745484, {'accuracy': 0.431, 'selected_count': 30, 'active_physical_devices': 30}, 44.949412535876036)
+2026-07-01 14:24:06,214 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:06,214 | INFO | 
+2026-07-01 14:24:06,214 | INFO | [ROUND 15]
+2026-07-01 14:24:06,215 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:08,416 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:09,361 | INFO | fit progress: (15, 1.9225400993347168, {'accuracy': 0.396, 'selected_count': 30, 'active_physical_devices': 30}, 48.09682819992304)
+2026-07-01 14:24:09,362 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:09,362 | INFO | 
+2026-07-01 14:24:09,362 | INFO | [ROUND 16]
+2026-07-01 14:24:09,363 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:11,197 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:12,103 | INFO | fit progress: (16, 1.8762494197845458, {'accuracy': 0.4706, 'selected_count': 30, 'active_physical_devices': 30}, 50.83845740929246)
+2026-07-01 14:24:12,103 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:12,103 | INFO | 
+2026-07-01 14:24:12,103 | INFO | [ROUND 17]
+2026-07-01 14:24:12,104 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:13,814 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:14,729 | INFO | fit progress: (17, 1.8709366584777831, {'accuracy': 0.4228, 'selected_count': 30, 'active_physical_devices': 30}, 53.464065320789814)
+2026-07-01 14:24:14,729 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:14,729 | INFO | 
+2026-07-01 14:24:14,729 | INFO | [ROUND 18]
+2026-07-01 14:24:14,730 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:16,706 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:17,647 | INFO | fit progress: (18, 1.8427879638671876, {'accuracy': 0.468, 'selected_count': 30, 'active_physical_devices': 30}, 56.382911790162325)
+2026-07-01 14:24:17,648 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:17,648 | INFO | 
+2026-07-01 14:24:17,648 | INFO | [ROUND 19]
+2026-07-01 14:24:17,648 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:19,593 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:20,492 | INFO | fit progress: (19, 1.809896327972412, {'accuracy': 0.5735, 'selected_count': 30, 'active_physical_devices': 30}, 59.227544866502285)
+2026-07-01 14:24:20,492 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:20,492 | INFO | 
+2026-07-01 14:24:20,492 | INFO | [ROUND 20]
+2026-07-01 14:24:20,493 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-01 14:24:22,140 | INFO | aggregate_fit: received 24 results and 0 failures
+2026-07-01 14:24:23,064 | INFO | fit progress: (20, 1.7910464742660523, {'accuracy': 0.6255, 'selected_count': 30, 'active_physical_devices': 30}, 61.79994247853756)
+2026-07-01 14:24:23,065 | INFO | configure_evaluate: no clients selected, skipping evaluation
+2026-07-01 14:24:23,065 | INFO | 
+2026-07-01 14:24:23,065 | INFO | [SUMMARY]
+2026-07-01 14:24:23,065 | INFO | Run finished 20 round(s) in 61.80s
+2026-07-01 14:24:23,066 | INFO | 	History (loss, centralized):
+2026-07-01 14:24:23,066 | INFO | 		round 0: 2.342842985534668
+2026-07-01 14:24:23,066 | INFO | 		round 1: 2.309402318572998
+2026-07-01 14:24:23,066 | INFO | 		round 2: 2.2919481735229494
+2026-07-01 14:24:23,067 | INFO | 		round 3: 2.265771036148071
+2026-07-01 14:24:23,067 | INFO | 		round 4: 2.2118323822021484
+2026-07-01 14:24:23,067 | INFO | 		round 5: 2.1829010681152345
+2026-07-01 14:24:23,067 | INFO | 		round 6: 2.1565906978607177
+2026-07-01 14:24:23,067 | INFO | 		round 7: 2.1395396717071535
+2026-07-01 14:24:23,067 | INFO | 		round 8: 2.109319637680054
+2026-07-01 14:24:23,067 | INFO | 		round 9: 2.0677596607208253
+2026-07-01 14:24:23,067 | INFO | 		round 10: 2.0373759044647217
+2026-07-01 14:24:23,067 | INFO | 		round 11: 2.0088466339111326
+2026-07-01 14:24:23,067 | INFO | 		round 12: 1.9763186573028564
+2026-07-01 14:24:23,067 | INFO | 		round 13: 1.9623513347625732
+2026-07-01 14:24:23,067 | INFO | 		round 14: 1.9324927129745484
+2026-07-01 14:24:23,067 | INFO | 		round 15: 1.9225400993347168
+2026-07-01 14:24:23,067 | INFO | 		round 16: 1.8762494197845458
+2026-07-01 14:24:23,067 | INFO | 		round 17: 1.8709366584777831
+2026-07-01 14:24:23,067 | INFO | 		round 18: 1.8427879638671876
+2026-07-01 14:24:23,067 | INFO | 		round 19: 1.809896327972412
+2026-07-01 14:24:23,067 | INFO | 		round 20: 1.7910464742660523
+2026-07-01 14:24:23,067 | INFO | 	History (metrics, distributed, fit):
+2026-07-01 14:24:23,067 | INFO | 	{'active_physical_devices': [(1, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (2, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (3, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (4, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (5, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (6, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (7, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (8, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (9, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (10, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (11, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (12, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (13, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (14, 30),
+2026-07-01 14:24:23,067 | INFO | 	                             (15, 30),
+2026-07-01 14:24:23,068 | INFO | 	                             (16, 30),
+2026-07-01 14:24:23,068 | INFO | 	                             (17, 30),
+2026-07-01 14:24:23,068 | INFO | 	                             (18, 30),
+2026-07-01 14:24:23,068 | INFO | 	                             (19, 30),
+2026-07-01 14:24:23,068 | INFO | 	                             (20, 30)],
+2026-07-01 14:24:23,068 | INFO | 	 'active_virtual_clients': [(1, 17),
+2026-07-01 14:24:23,068 | INFO | 	                            (2, 17),
+2026-07-01 14:24:23,068 | INFO | 	                            (3, 15),
+2026-07-01 14:24:23,068 | INFO | 	                            (4, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (5, 16),
+2026-07-01 14:24:23,068 | INFO | 	                            (6, 17),
+2026-07-01 14:24:23,068 | INFO | 	                            (7, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (8, 17),
+2026-07-01 14:24:23,068 | INFO | 	                            (9, 20),
+2026-07-01 14:24:23,068 | INFO | 	                            (10, 19),
+2026-07-01 14:24:23,068 | INFO | 	                            (11, 16),
+2026-07-01 14:24:23,068 | INFO | 	                            (12, 20),
+2026-07-01 14:24:23,068 | INFO | 	                            (13, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (14, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (15, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (16, 17),
+2026-07-01 14:24:23,068 | INFO | 	                            (17, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (18, 18),
+2026-07-01 14:24:23,068 | INFO | 	                            (19, 16),
+2026-07-01 14:24:23,068 | INFO | 	                            (20, 20)],
+2026-07-01 14:24:23,068 | INFO | 	 'selected_count': [(1, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (2, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (3, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (4, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (5, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (6, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (7, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (8, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (9, 30),
+2026-07-01 14:24:23,068 | INFO | 	                    (10, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (11, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (12, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (13, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (14, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (15, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (16, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (17, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (18, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (19, 30),
+2026-07-01 14:24:23,069 | INFO | 	                    (20, 30)],
+2026-07-01 14:24:23,069 | INFO | 	 'total_examples': [(1, 8078),
+2026-07-01 14:24:23,069 | INFO | 	                    (2, 4369),
+2026-07-01 14:24:23,069 | INFO | 	                    (3, 8468),
+2026-07-01 14:24:23,069 | INFO | 	                    (4, 8800),
+2026-07-01 14:24:23,069 | INFO | 	                    (5, 5929),
+2026-07-01 14:24:23,069 | INFO | 	                    (6, 6594),
+2026-07-01 14:24:23,069 | INFO | 	                    (7, 5740),
+2026-07-01 14:24:23,069 | INFO | 	                    (8, 3999),
+2026-07-01 14:24:23,069 | INFO | 	                    (9, 6177),
+2026-07-01 14:24:23,069 | INFO | 	                    (10, 6874),
+2026-07-01 14:24:23,069 | INFO | 	                    (11, 7876),
+2026-07-01 14:24:23,069 | INFO | 	                    (12, 8780),
+2026-07-01 14:24:23,069 | INFO | 	                    (13, 8564),
+2026-07-01 14:24:23,069 | INFO | 	                    (14, 5558),
+2026-07-01 14:24:23,069 | INFO | 	                    (15, 8034),
+2026-07-01 14:24:23,069 | INFO | 	                    (16, 7286),
+2026-07-01 14:24:23,069 | INFO | 	                    (17, 4986),
+2026-07-01 14:24:23,069 | INFO | 	                    (18, 6036),
+2026-07-01 14:24:23,069 | INFO | 	                    (19, 4154),
+2026-07-01 14:24:23,069 | INFO | 	                    (20, 4528)],
+2026-07-01 14:24:23,069 | INFO | 	 'train_loss': [(1, 405.4541281842789),
+2026-07-01 14:24:23,069 | INFO | 	                (2, 283.11910885449504),
+2026-07-01 14:24:23,069 | INFO | 	                (3, 385.12976195673303),
+2026-07-01 14:24:23,069 | INFO | 	                (4, 437.48991665833324),
+2026-07-01 14:24:23,069 | INFO | 	                (5, 314.4339373587649),
+2026-07-01 14:24:23,069 | INFO | 	                (6, 426.40183780785844),
+2026-07-01 14:24:23,070 | INFO | 	                (7, 346.1123436121958),
+2026-07-01 14:24:23,070 | INFO | 	                (8, 348.5737206242002),
+2026-07-01 14:24:23,070 | INFO | 	                (9, 396.3003267152559),
+2026-07-01 14:24:23,070 | INFO | 	                (10, 423.88366958735804),
+2026-07-01 14:24:23,070 | INFO | 	                (11, 387.4455930476238),
+2026-07-01 14:24:23,070 | INFO | 	                (12, 398.00627591117063),
+2026-07-01 14:24:23,070 | INFO | 	                (13, 405.60179915715366),
+2026-07-01 14:24:23,070 | INFO | 	                (14, 298.05012812340436),
+2026-07-01 14:24:23,070 | INFO | 	                (15, 409.00158088351407),
+2026-07-01 14:24:23,070 | INFO | 	                (16, 357.36519569770184),
+2026-07-01 14:24:23,070 | INFO | 	                (17, 350.7384799450089),
+2026-07-01 14:24:23,070 | INFO | 	                (18, 304.5920933901269),
+2026-07-01 14:24:23,070 | INFO | 	                (19, 234.45919095610523),
+2026-07-01 14:24:23,070 | INFO | 	                (20, 288.41974197247873)]}
+2026-07-01 14:24:23,070 | INFO | 	History (metrics, centralized):
+2026-07-01 14:24:23,070 | INFO | 	{'accuracy': [(0, 0.1022),
+2026-07-01 14:24:23,070 | INFO | 	              (1, 0.1527),
+2026-07-01 14:24:23,070 | INFO | 	              (2, 0.1668),
+2026-07-01 14:24:23,070 | INFO | 	              (3, 0.186),
+2026-07-01 14:24:23,070 | INFO | 	              (4, 0.2146),
+2026-07-01 14:24:23,070 | INFO | 	              (5, 0.2455),
+2026-07-01 14:24:23,070 | INFO | 	              (6, 0.221),
+2026-07-01 14:24:23,070 | INFO | 	              (7, 0.2333),
+2026-07-01 14:24:23,070 | INFO | 	              (8, 0.3434),
+2026-07-01 14:24:23,070 | INFO | 	              (9, 0.389),
+2026-07-01 14:24:23,070 | INFO | 	              (10, 0.4043),
+2026-07-01 14:24:23,070 | INFO | 	              (11, 0.4537),
+2026-07-01 14:24:23,070 | INFO | 	              (12, 0.4556),
+2026-07-01 14:24:23,070 | INFO | 	              (13, 0.4233),
+2026-07-01 14:24:23,070 | INFO | 	              (14, 0.431),
+2026-07-01 14:24:23,070 | INFO | 	              (15, 0.396),
+2026-07-01 14:24:23,070 | INFO | 	              (16, 0.4706),
+2026-07-01 14:24:23,070 | INFO | 	              (17, 0.4228),
+2026-07-01 14:24:23,070 | INFO | 	              (18, 0.468),
+2026-07-01 14:24:23,070 | INFO | 	              (19, 0.5735),
+2026-07-01 14:24:23,071 | INFO | 	              (20, 0.6255)],
+2026-07-01 14:24:23,071 | INFO | 	 'active_physical_devices': [(0, 0),
+2026-07-01 14:24:23,071 | INFO | 	                             (1, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (2, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (3, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (4, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (5, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (6, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (7, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (8, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (9, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (10, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (11, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (12, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (13, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (14, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (15, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (16, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (17, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (18, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (19, 30),
+2026-07-01 14:24:23,071 | INFO | 	                             (20, 30)],
+2026-07-01 14:24:23,071 | INFO | 	 'selected_count': [(0, 0),
+2026-07-01 14:24:23,071 | INFO | 	                    (1, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (2, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (3, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (4, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (5, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (6, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (7, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (8, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (9, 30),
+2026-07-01 14:24:23,071 | INFO | 	                    (10, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (11, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (12, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (13, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (14, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (15, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (16, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (17, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (18, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (19, 30),
+2026-07-01 14:24:23,072 | INFO | 	                    (20, 30)]}
+2026-07-01 14:24:23,072 | INFO | 
+2026-07-01 14:24:23,088 | INFO | Saved metrics: outputs/vi_mnist_noniid_unbalanced/metrics.csv
+2026-07-01 14:24:23,088 | INFO | Saved selected-client log: outputs/vi_mnist_noniid_unbalanced/selected_clients.csv
+2026-07-01 14:24:23,088 | INFO | Saved final model: outputs/vi_mnist_noniid_unbalanced/final_model.pt
+2026-07-01 14:24:23,088 | INFO | Done
