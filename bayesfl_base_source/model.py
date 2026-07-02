@@ -1,10 +1,11 @@
-"""Torch models and parameter utilities shared by all FL methods."""
+"""Torch models, local training, evaluation, and parameter utilities."""
 
 from __future__ import annotations
 
 import os
 import random
-from typing import Iterable, List, Sequence, Tuple
+from dataclasses import dataclass
+from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -99,6 +100,19 @@ def parameter_shapes(net: nn.Module) -> list[tuple[int, ...]]:
     return [tuple(p.shape) for p in trainable_parameters(net)]
 
 
+def parameter_metadata(net: nn.Module) -> list[dict[str, object]]:
+    """Return stable flat slices for trainable named parameters."""
+    rows: list[dict[str, object]] = []
+    cursor = 0
+    for name, param in net.named_parameters():
+        if not param.requires_grad:
+            continue
+        n = int(param.numel())
+        rows.append({"name": name, "shape": tuple(param.shape), "start": cursor, "end": cursor + n, "num_params": n})
+        cursor += n
+    return rows
+
+
 def num_parameters(net: nn.Module) -> int:
     return int(sum(p.numel() for p in trainable_parameters(net)))
 
@@ -137,6 +151,22 @@ def build_optimizer(cfg: RunConfig, net: nn.Module) -> torch.optim.Optimizer:
     return torch.optim.SGD(params, lr=cfg.lr, momentum=cfg.momentum, weight_decay=cfg.weight_decay)
 
 
+def _stat(arr: np.ndarray | None, key: str) -> dict[str, float]:
+    if arr is None:
+        return {f"{key}_mean": float("nan"), f"{key}_std": float("nan"), f"{key}_p50": float("nan"), f"{key}_p90": float("nan"), f"{key}_max": float("nan")}
+    x = np.asarray(arr, dtype=np.float64).reshape(-1)
+    x = x[np.isfinite(x)]
+    if x.size == 0:
+        return _stat(None, key)
+    return {
+        f"{key}_mean": float(x.mean()),
+        f"{key}_std": float(x.std()),
+        f"{key}_p50": float(np.percentile(x, 50)),
+        f"{key}_p90": float(np.percentile(x, 90)),
+        f"{key}_max": float(x.max()),
+    }
+
+
 def train_deterministic(
     net: nn.Module,
     trainloader: DataLoader,
@@ -146,20 +176,28 @@ def train_deterministic(
     prior_precision: np.ndarray | None = None,
     prior_lambda: float = 0.0,
     collect_fisher: bool = False,
-) -> tuple[float, np.ndarray | None]:
-    """Train a deterministic model locally.
+) -> tuple[float, np.ndarray | None, dict[str, float]]:
+    """Train a deterministic model locally and return a rich training summary.
 
-    If ``collect_fisher`` is true, return the average squared task-loss gradient,
-    which is used as the diagonal empirical Fisher in the OLA/FOLA method.
+    Returns:
+        ``(avg_total_loss, fisher_diag_or_none, stats)``. ``avg_total_loss`` is
+        the optimized local objective, while ``stats['task_loss']`` is the pure
+        data likelihood/cross-entropy component. For OLA/FOLA, ``prior_loss`` is
+        the prior-iteration quadratic penalty before multiplying by
+        ``ola_prior_lambda``.
     """
     net.to(device)
     net.train()
     optimizer = build_optimizer(cfg, net)
     params = trainable_parameters(net)
     fisher_accum: torch.Tensor | None = None
-    steps = 0
-    loss_sum = 0.0
+    fisher_steps = 0
+    task_loss_sum = 0.0
+    prior_loss_sum = 0.0
+    total_loss_sum = 0.0
+    correct = 0
     example_sum = 0
+    batch_count = 0
 
     prior_mu_t: torch.Tensor | None = None
     prior_precision_t: torch.Tensor | None = None
@@ -180,7 +218,7 @@ def train_deterministic(
                 if cfg.fisher_clip > 0:
                     grad_flat = torch.clamp(grad_flat, min=-cfg.fisher_clip, max=cfg.fisher_clip)
                 fisher_accum = grad_flat.pow(2) if fisher_accum is None else fisher_accum + grad_flat.pow(2)
-                steps += 1
+                fisher_steps += 1
 
             prior_loss = torch.tensor(0.0, device=device)
             if prior_mu_t is not None and prior_precision_t is not None:
@@ -192,17 +230,37 @@ def train_deterministic(
             total_loss.backward()
             optimizer.step()
 
-            loss_sum += float(task_loss.detach().cpu()) * int(y.size(0))
-            example_sum += int(y.size(0))
+            batch_n = int(y.size(0))
+            batch_count += 1
+            example_sum += batch_n
+            task_loss_sum += float(task_loss.detach().cpu()) * batch_n
+            prior_loss_sum += float(prior_loss.detach().cpu()) * batch_n
+            total_loss_sum += float(total_loss.detach().cpu()) * batch_n
+            correct += int((logits.argmax(dim=1) == y).sum().item())
 
-    avg_loss = loss_sum / max(example_sum, 1)
+    avg_task_loss = task_loss_sum / max(example_sum, 1)
+    avg_prior_loss = prior_loss_sum / max(example_sum, 1)
+    avg_total_loss = total_loss_sum / max(example_sum, 1)
     fisher_np: np.ndarray | None = None
     if collect_fisher:
-        if fisher_accum is None or steps == 0:
+        if fisher_accum is None or fisher_steps == 0:
             fisher_np = np.zeros(num_parameters(net), dtype=np.float32)
         else:
-            fisher_np = (fisher_accum / float(steps)).detach().cpu().numpy().astype(np.float32)
-    return avg_loss, fisher_np
+            fisher_np = (fisher_accum / float(fisher_steps)).detach().cpu().numpy().astype(np.float32)
+
+    stats: dict[str, float] = {
+        "train_loss": float(avg_total_loss),
+        "task_loss": float(avg_task_loss),
+        "prior_loss": float(avg_prior_loss),
+        "regularization_loss": float(float(prior_lambda) * avg_prior_loss),
+        "accuracy_local_train_estimate": float(correct / max(example_sum, 1)),
+        "loss_local_train_estimate": float(avg_task_loss),
+        "num_batches": float(batch_count),
+        "num_examples_seen": float(example_sum),
+    }
+    if fisher_np is not None:
+        stats.update(_stat(fisher_np, "ola_fisher"))
+    return avg_total_loss, fisher_np, stats
 
 
 @torch.no_grad()

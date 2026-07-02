@@ -98,8 +98,14 @@ def train_vi_local(
     device: torch.device,
     cfg: RunConfig,
     seed: int,
-) -> tuple[np.ndarray, np.ndarray, float]:
-    """Run local Pyro SVI and return posterior loc/scale as flat arrays."""
+) -> tuple[np.ndarray, np.ndarray, float, dict[str, float]]:
+    """Run local Pyro SVI and return posterior loc/scale and metrics.
+
+    The returned metrics include an ELBO/free-energy proxy from Pyro SVI and a
+    closed-form diagonal-Gaussian KL between the learned local posterior and the
+    incoming global posterior/prior. This gives the log files enough information
+    to plot VI complexity-vs-likelihood behavior later.
+    """
     import pyro
     from pyro.infer import SVI, Trace_ELBO
     from pyro.infer.autoguide import AutoDiagonalNormal
@@ -123,7 +129,7 @@ def train_vi_local(
     # Initialize guide parameters before trying to seed its scale vector.
     first_batch = next(iter(trainloader), None)
     if first_batch is None:
-        return np.asarray(global_loc, dtype=np.float32), scale_np, 0.0
+        return np.asarray(global_loc, dtype=np.float32), scale_np, 0.0, {"vi_elbo_loss": 0.0}
     x0, y0 = first_batch
     x0 = x0.to(device)
     y0 = y0.to(device)
@@ -173,4 +179,28 @@ def train_vi_local(
     loc = loc_t.detach().cpu().numpy().astype(np.float32, copy=True)
     scale = scale_t.detach().cpu().numpy().astype(np.float32, copy=True)
     scale = np.maximum(scale, float(cfg.vi_min_scale)).astype(np.float32, copy=False)
-    return loc, scale, loss_sum / max(steps, 1)
+
+    prior_loc = np.asarray(global_loc, dtype=np.float64).reshape(-1)
+    prior_scale = np.maximum(np.asarray(global_scale, dtype=np.float64).reshape(-1), float(cfg.vi_min_scale))
+    loc64 = loc.astype(np.float64, copy=False).reshape(-1)
+    scale64 = np.maximum(scale.astype(np.float64, copy=False).reshape(-1), float(cfg.vi_min_scale))
+    kl_terms = (scale64 ** 2 + (loc64 - prior_loc) ** 2) / (prior_scale ** 2) - 1.0 + 2.0 * (np.log(prior_scale) - np.log(scale64))
+    vi_kl = float(0.5 * np.sum(kl_terms))
+    snr = np.abs(loc64) / (scale64 + 1.0e-12)
+    stats = {
+        "vi_elbo_loss": float(loss_sum / max(steps, 1)),
+        "vi_kl_loss": vi_kl,
+        "vi_kl_per_param": float(vi_kl / max(loc64.size, 1)),
+        "vi_likelihood_loss": float("nan"),
+        "vi_complexity_cost": vi_kl,
+        "vi_loc_l2": float(np.linalg.norm(loc64)),
+        "vi_scale_mean": float(scale64.mean()),
+        "vi_scale_std": float(scale64.std()),
+        "vi_scale_p50": float(np.percentile(scale64, 50)),
+        "vi_scale_p90": float(np.percentile(scale64, 90)),
+        "vi_scale_max": float(scale64.max()),
+        "vi_snr_raw_mean": float(snr.mean()),
+        "vi_snr_raw_p50": float(np.percentile(snr, 50)),
+        "vi_snr_raw_p90": float(np.percentile(snr, 90)),
+    }
+    return loc, scale, loss_sum / max(steps, 1), stats

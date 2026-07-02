@@ -18,6 +18,7 @@ from torch.utils.data import DataLoader, Dataset, Subset, random_split
 from torchvision import datasets, transforms
 
 from config import RunConfig
+from observability import SCHEMA_VERSION, entropy_from_counts, kl_to_global, label_metadata
 
 
 @dataclass
@@ -347,33 +348,91 @@ def sample_device_positions(
     return np.asarray(rows, dtype=np.float64)
 
 
-def save_device_summary(path: str | Path, bundle: DataBundle) -> None:
-    """Save physical-device metadata to CSV."""
+def save_client_data_summary(path: str | Path, bundle: DataBundle, cfg: RunConfig) -> None:
+    """Save static per-physical-client data heterogeneity metadata."""
+    output = Path(path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    ent, kl, dominant, dominant_frac = label_metadata(bundle.label_counts)
+    num_classes = bundle.label_counts.shape[1]
+    fieldnames = [
+        "schema_version", "run_id", "physical_client_id", "virtual_client_id", "num_examples", "train_examples", "val_examples",
+    ] + [f"label_{c}_count" for c in range(num_classes)] + [
+        "label_entropy", "dominant_label", "dominant_label_fraction", "kl_to_global_label_distribution", "is_iid", "is_balanced", "noniid_alpha", "unbalanced_alpha",
+    ]
+    with output.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        gid_lookup = {did: gid for gid, members in enumerate(bundle.device_groups) for did in members}
+        for did in range(len(bundle.trainsets)):
+            row = {
+                "schema_version": SCHEMA_VERSION,
+                "run_id": "",
+                "physical_client_id": int(did),
+                "virtual_client_id": int(gid_lookup[did]),
+                "num_examples": int(bundle.client_sizes[did]),
+                "train_examples": int(len(bundle.trainsets[did])),
+                "val_examples": int(len(bundle.valsets[did])),
+                "label_entropy": float(ent[did]),
+                "dominant_label": int(dominant[did]),
+                "dominant_label_fraction": float(dominant_frac[did]),
+                "kl_to_global_label_distribution": float(kl[did]),
+                "is_iid": bool(cfg.iid),
+                "is_balanced": bool(cfg.balanced),
+                "noniid_alpha": float(cfg.noniid_alpha),
+                "unbalanced_alpha": float(cfg.unbalanced_alpha),
+            }
+            for c in range(num_classes):
+                row[f"label_{c}_count"] = int(bundle.label_counts[did, c])
+            writer.writerow(row)
+
+
+def save_device_summary(path: str | Path, bundle: DataBundle, cfg: RunConfig | None = None) -> None:
+    """Save physical-device geometry and static metadata to CSV.
+
+    ``utils.py radar`` still reads ``radius_m``, ``angle_rad`` and
+    ``virtual_client_id`` from this file, while future wireless selectors can use
+    the placeholder channel columns.
+    """
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
     num_classes = bundle.label_counts.shape[1]
+    ent, kl, dominant, dominant_frac = label_metadata(bundle.label_counts)
     with output.open("w", newline="") as f:
         fieldnames = [
-            "device_id",
-            "virtual_client_id",
-            "num_examples",
-            "radius_m",
-            "angle_rad",
-            "x_m",
-            "y_m",
+            "schema_version", "run_id", "physical_client_id", "device_id", "virtual_client_id", "num_examples", "radius_m", "distance_m", "angle_rad", "x_m", "y_m",
+            "device_group_size", "hardware_class", "max_compute_flops", "battery_level_init", "mobility_class", "default_channel_gain", "default_pathloss_db", "default_noise_power",
+            "label_entropy", "dominant_label", "dominant_label_fraction", "kl_to_global_label_distribution",
         ] + [f"label_{c}" for c in range(num_classes)]
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
+        group_sizes = {gid: len(members) for gid, members in enumerate(bundle.device_groups)}
         for row in bundle.device_positions:
             did = int(row[0])
+            gid = int(row[1])
             values = {
-                "device_id": did,
-                "virtual_client_id": int(row[1]),
+                "schema_version": SCHEMA_VERSION,
+                "run_id": "",
+                "physical_client_id": did,
+                "device_id": did,  # backward-compatible alias
+                "virtual_client_id": gid,
                 "num_examples": int(bundle.client_sizes[did]),
                 "radius_m": float(row[2]),
+                "distance_m": float(row[2]),
                 "angle_rad": float(row[3]),
                 "x_m": float(row[4]),
                 "y_m": float(row[5]),
+                "device_group_size": int(group_sizes.get(gid, 0)),
+                "hardware_class": "synthetic",
+                "max_compute_flops": "",
+                "battery_level_init": "",
+                "mobility_class": "static",
+                "default_channel_gain": "",
+                "default_pathloss_db": "",
+                "default_noise_power": "",
+                "label_entropy": float(ent[did]),
+                "dominant_label": int(dominant[did]),
+                "dominant_label_fraction": float(dominant_frac[did]),
+                "kl_to_global_label_distribution": float(kl[did]),
             }
             for c in range(num_classes):
                 values[f"label_{c}"] = int(bundle.label_counts[did, c])

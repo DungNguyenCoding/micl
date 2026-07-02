@@ -40,7 +40,16 @@ class RunConfig:
     data_dir: str = "./data"
     num_rounds: int = 5
     eval_every: int = 1
-    save_every: int = 0
+    heavy_eval_every: int = 5
+    local_eval_every: int = 0
+    local_eval_fraction: float = 1.0
+    eval_mc_samples: int = 1
+    calibration_bins: int = 15
+    snr_hist_bins: int = 80
+    save_posterior_every: int = 0
+    save_prediction_snapshots: bool = False
+    metrics_level: str = "bayes"  # basic | bayes | full
+    save_every: int = 0  # deprecated alias; prefer save_posterior_every
     seed: int = 42
 
     # Federated population
@@ -127,7 +136,16 @@ def parse_args() -> RunConfig:
     parser.add_argument("--data_dir", default=RunConfig.data_dir)
     parser.add_argument("--num_rounds", type=int, default=RunConfig.num_rounds)
     parser.add_argument("--eval_every", type=int, default=RunConfig.eval_every)
-    parser.add_argument("--save_every", type=int, default=RunConfig.save_every)
+    parser.add_argument("--heavy_eval_every", type=int, default=RunConfig.heavy_eval_every)
+    parser.add_argument("--local_eval_every", type=int, default=RunConfig.local_eval_every)
+    parser.add_argument("--local_eval_fraction", type=float, default=RunConfig.local_eval_fraction)
+    parser.add_argument("--eval_mc_samples", type=int, default=RunConfig.eval_mc_samples)
+    parser.add_argument("--calibration_bins", type=int, default=RunConfig.calibration_bins)
+    parser.add_argument("--snr_hist_bins", type=int, default=RunConfig.snr_hist_bins)
+    parser.add_argument("--save_posterior_every", type=int, default=RunConfig.save_posterior_every)
+    parser.add_argument("--save_prediction_snapshots", type=str2bool, default=RunConfig.save_prediction_snapshots)
+    parser.add_argument("--metrics_level", choices=["basic", "bayes", "full"], default=RunConfig.metrics_level)
+    parser.add_argument("--save_every", type=int, default=RunConfig.save_every, help="Deprecated alias; prefer --save_posterior_every")
     parser.add_argument("--seed", type=int, default=RunConfig.seed)
 
     parser.add_argument("--num_devices", type=int, default=RunConfig.num_devices)
@@ -186,6 +204,20 @@ def parse_args() -> RunConfig:
         raise ValueError("The Pyro VI scaffold currently supports --model mlp. Use --model mlp for --method vi.")
     if cfg.eval_every <= 0:
         raise ValueError("eval_every must be positive")
+    if cfg.heavy_eval_every <= 0:
+        raise ValueError("heavy_eval_every must be positive")
+    if cfg.local_eval_every < 0:
+        raise ValueError("local_eval_every must be non-negative; use 0 to disable")
+    if not 0 < cfg.local_eval_fraction <= 1:
+        raise ValueError("local_eval_fraction must be in (0, 1]")
+    if cfg.eval_mc_samples <= 0:
+        raise ValueError("eval_mc_samples must be positive")
+    if cfg.calibration_bins <= 0:
+        raise ValueError("calibration_bins must be positive")
+    if cfg.snr_hist_bins <= 1:
+        raise ValueError("snr_hist_bins must be at least 2")
+    if cfg.save_posterior_every == 0 and cfg.save_every > 0:
+        cfg.save_posterior_every = cfg.save_every
     if cfg.local_epochs <= 0:
         raise ValueError("local_epochs must be positive")
 

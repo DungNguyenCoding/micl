@@ -75,7 +75,8 @@ def main() -> None:
     save_config_csv(cfg, output_dir)
 
     bundle = dataset.load_federated_data(cfg)
-    dataset.save_device_summary(output_dir / "device_summary.csv", bundle)
+    dataset.save_device_summary(output_dir / "device_summary.csv", bundle, cfg)
+    dataset.save_client_data_summary(output_dir / "client_data_summary.csv", bundle, cfg)
     logging.info("Loaded dataset with input_shape=%s num_classes=%d", bundle.input_shape, bundle.num_classes)
     logging.info("Saved device/data summary to %s", output_dir / "device_summary.csv")
 
@@ -85,6 +86,7 @@ def main() -> None:
     client_fn = client.gen_client_fn(
         device_groups=bundle.device_groups,
         trainsets=bundle.trainsets,
+        valsets=bundle.valsets,
         cfg=cfg,
         input_shape=bundle.input_shape,
         num_classes=bundle.num_classes,
@@ -97,6 +99,10 @@ def main() -> None:
         input_shape=bundle.input_shape,
         num_classes=bundle.num_classes,
         output_dir=output_dir,
+        client_sizes=bundle.client_sizes,
+        label_counts=bundle.label_counts,
+        device_positions=bundle.device_positions,
+        device_groups=bundle.device_groups,
     )
 
     client_resources = {"num_cpus": float(cfg.client_cpus), "num_gpus": float(cfg.client_gpus)}
@@ -119,11 +125,10 @@ def main() -> None:
                 "Install the pinned requirements in requirements.txt or port main.py to Flower's newer ClientApp/ServerApp runtime."
             ) from exc
 
-    metrics_path = strategy.save_history_csv()
-    selection_path = strategy.save_selection_csv()
     model_path = strategy.save_model()
-    logging.info("Saved metrics: %s", metrics_path)
-    logging.info("Saved selected-client log: %s", selection_path)
+    metric_paths = strategy.save_all_metrics(final_model_path=model_path)
+    for name, path in metric_paths.items():
+        logging.info("Saved %s: %s", name, path)
     logging.info("Saved final model: %s", model_path)
     logging.info("Done")
 

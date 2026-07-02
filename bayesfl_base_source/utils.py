@@ -158,9 +158,30 @@ def plot_mixed_metrics(
 
 
 def plot_active_clients(selection_csv: str | Path, output_dir: str | Path) -> Path:
+    """Plot selected-client count per round.
+
+    Accepts either selection_summary.csv (one row per round) or
+    selected_clients.csv (one row per selected device per round).
+    """
     rows = _read_csv_rows(selection_csv)
-    rounds = _column_as_float(rows, "round", selection_csv)
-    selected = _column_as_float(rows, "selected_count", selection_csv)
+    grouped: dict[float, list[float]] = {}
+    if rows and "selected_count" in rows[0]:
+        for row in rows:
+            if row.get("round", "") == "":
+                continue
+            rnd = float(row["round"])
+            val = float(row.get("selected_count", "1") or 1)
+            grouped.setdefault(rnd, []).append(val)
+        rounds = sorted(grouped)
+        selected = [max(grouped[r]) for r in rounds]
+    else:
+        for row in rows:
+            if row.get("round", "") == "":
+                continue
+            rnd = float(row["round"])
+            grouped.setdefault(rnd, []).append(1.0)
+        rounds = sorted(grouped)
+        selected = [sum(grouped[r]) for r in rounds]
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -196,6 +217,99 @@ def plot_device_radar(device_summary_csv: str | Path, output_dir: str | Path) ->
     out_path = out_dir / "device_distribution_radar.png"
     return _save_figure(fig, out_path)
 
+
+
+def _filter_rows(rows: Rows, **filters: object) -> Rows:
+    out: Rows = []
+    for row in rows:
+        keep = True
+        for key, expected in filters.items():
+            if expected is None:
+                continue
+            if str(row.get(key, "")) != str(expected):
+                keep = False
+                break
+        if keep:
+            out.append(row)
+    return out
+
+
+def plot_snr_histogram(
+    snr_csv: str | Path,
+    output_dir: str | Path,
+    round_idx: int | None = None,
+    layer_name: str = "all",
+    value_space: str = "db",
+) -> list[Path]:
+    """Plot SNR density and CDF from snr_histograms.csv."""
+    rows = _read_csv_rows(snr_csv)
+    if round_idx is None:
+        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
+        if not available:
+            raise ValueError(f"No round values found in {snr_csv}")
+        round_idx = max(available)
+    rows = _filter_rows(rows, round=round_idx, layer_name=layer_name, value_space=value_space)
+    if not rows:
+        raise ValueError(f"No SNR rows for round={round_idx}, layer={layer_name}, value_space={value_space}")
+    rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
+    centers = [float(r["bin_center"]) for r in rows]
+    density = [float(r["density"]) for r in rows]
+    cdf = [float(r["cdf"]) for r in rows]
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    suffix = f"round_{round_idx:04d}_{layer_name}_{value_space}"
+    paths: list[Path] = []
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.plot(centers, density)
+    ax.set_xlabel(f"SNR ({value_space})")
+    ax.set_ylabel("Density")
+    ax.set_title(f"SNR density / {layer_name} / round {round_idx}")
+    ax.grid(True, alpha=0.3)
+    paths.append(_save_figure(fig, out_dir / f"snr_density_{suffix}.png"))
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.plot(centers, cdf)
+    ax.set_xlabel(f"SNR ({value_space})")
+    ax.set_ylabel("CDF")
+    ax.set_title(f"SNR CDF / {layer_name} / round {round_idx}")
+    ax.grid(True, alpha=0.3)
+    paths.append(_save_figure(fig, out_dir / f"snr_cdf_{suffix}.png"))
+    return paths
+
+
+def plot_calibration(calibration_csv: str | Path, output_dir: str | Path, round_idx: int | None = None, eval_scope: str = "global_test") -> Path:
+    """Plot a reliability diagram from calibration_bins.csv."""
+    rows = _read_csv_rows(calibration_csv)
+    if round_idx is None:
+        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
+        if not available:
+            raise ValueError(f"No round values found in {calibration_csv}")
+        round_idx = max(available)
+    rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
+    if not rows:
+        raise ValueError(f"No calibration rows for round={round_idx}, eval_scope={eval_scope}")
+    rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
+    centers = [(float(r["bin_left"]) + float(r["bin_right"])) / 2.0 for r in rows]
+    acc = [float(r["bin_accuracy"]) if r.get("bin_accuracy", "") != "" else 0.0 for r in rows]
+    conf = [float(r["bin_confidence"]) if r.get("bin_confidence", "") != "" else 0.0 for r in rows]
+    width = (float(rows[0]["bin_right"]) - float(rows[0]["bin_left"])) if rows else 0.05
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.bar(centers, acc, width=width * 0.9, alpha=0.7, label="accuracy")
+    ax.plot([0, 1], [0, 1], linestyle="--", label="perfect calibration")
+    ax.plot(centers, conf, marker="o", linewidth=1.5, label="confidence")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.set_xlabel("Confidence")
+    ax.set_ylabel("Accuracy")
+    ax.set_title(f"Reliability diagram / round {round_idx}")
+    ax.grid(True, alpha=0.3)
+    ax.legend()
+    return _save_figure(fig, out_dir / f"calibration_round_{round_idx:04d}_{eval_scope}.png")
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline PNG plotting for Bayesian FL runs")
@@ -233,6 +347,19 @@ def main() -> None:
     radar_parser.add_argument("--device_summary", required=True, help="Path to device_summary.csv")
     radar_parser.add_argument("--output_dir", default="plots")
 
+    snr_parser = sub.add_parser("snr", help="Plot SNR density/CDF from snr_histograms.csv")
+    snr_parser.add_argument("--snr", required=True, help="Path to snr_histograms.csv")
+    snr_parser.add_argument("--output_dir", default="plots")
+    snr_parser.add_argument("--round", type=int, default=None)
+    snr_parser.add_argument("--layer", default="all")
+    snr_parser.add_argument("--value_space", choices=["raw", "db"], default="db")
+
+    cal_parser = sub.add_parser("calibration", help="Plot reliability diagram from calibration_bins.csv")
+    cal_parser.add_argument("--calibration", required=True, help="Path to calibration_bins.csv")
+    cal_parser.add_argument("--output_dir", default="plots")
+    cal_parser.add_argument("--round", type=int, default=None)
+    cal_parser.add_argument("--eval_scope", default="global_test")
+
     args = parser.parse_args()
     if args.command == "metric":
         print(plot_metric(args.history, args.metric, args.output_dir))
@@ -243,6 +370,11 @@ def main() -> None:
         print(plot_active_clients(args.selection, args.output_dir))
     elif args.command == "radar":
         print(plot_device_radar(args.device_summary, args.output_dir))
+    elif args.command == "snr":
+        for path in plot_snr_histogram(args.snr, args.output_dir, args.round, args.layer, args.value_space):
+            print(path)
+    elif args.command == "calibration":
+        print(plot_calibration(args.calibration, args.output_dir, args.round, args.eval_scope))
 
 
 if __name__ == "__main__":
