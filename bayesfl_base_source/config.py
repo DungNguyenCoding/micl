@@ -44,6 +44,9 @@ class RunConfig:
     local_eval_every: int = 0
     local_eval_fraction: float = 1.0
     eval_mc_samples: int = 1
+    # Scales posterior sigma during MC predictive evaluation.
+    # Use a small value for OLA/FOLA when diagonal precision is not calibrated.
+    posterior_sample_scale: float = 1.0
     calibration_bins: int = 15
     snr_hist_bins: int = 80
     save_posterior_every: int = 0
@@ -140,6 +143,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--local_eval_every", type=int, default=RunConfig.local_eval_every)
     parser.add_argument("--local_eval_fraction", type=float, default=RunConfig.local_eval_fraction)
     parser.add_argument("--eval_mc_samples", type=int, default=RunConfig.eval_mc_samples)
+    parser.add_argument("--posterior_sample_scale", type=float, default=RunConfig.posterior_sample_scale)
     parser.add_argument("--calibration_bins", type=int, default=RunConfig.calibration_bins)
     parser.add_argument("--snr_hist_bins", type=int, default=RunConfig.snr_hist_bins)
     parser.add_argument("--save_posterior_every", type=int, default=RunConfig.save_posterior_every)
@@ -212,6 +216,8 @@ def parse_args() -> RunConfig:
         raise ValueError("local_eval_fraction must be in (0, 1]")
     if cfg.eval_mc_samples <= 0:
         raise ValueError("eval_mc_samples must be positive")
+    if cfg.posterior_sample_scale < 0:
+        raise ValueError("posterior_sample_scale must be non-negative")
     if cfg.calibration_bins <= 0:
         raise ValueError("calibration_bins must be positive")
     if cfg.snr_hist_bins <= 1:

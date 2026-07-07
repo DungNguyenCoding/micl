@@ -152,6 +152,13 @@ METRICS_FIELDS: List[str] = [
     # Global deterministic/probabilistic performance
     "global_accuracy", "global_error_rate", "global_loss", "global_nll", "global_brier", "global_ece", "global_mce",
     "global_mean_confidence", "global_mean_entropy", "global_num_eval_examples",
+    # Deterministic posterior-mean evaluation. For FedAvg this equals global_*;
+    # for VI/OLA this evaluates theta=mu without posterior sampling.
+    "global_mean_accuracy", "global_mean_loss", "global_mean_nll", "global_mean_brier", "global_mean_ece", "global_mean_mce",
+    "global_mean_prediction_confidence", "global_mean_prediction_entropy",
+    # Monte Carlo posterior-predictive evaluation with posterior_sample_scale.
+    "global_mc_accuracy", "global_mc_loss", "global_mc_nll", "global_mc_brier", "global_mc_ece", "global_mc_mce",
+    "global_mc_mean_confidence", "global_mc_mean_entropy", "global_mc_posterior_sample_scale",
     # Bayesian predictive uncertainty
     "global_mc_samples", "global_predictive_entropy", "global_expected_entropy", "global_mutual_information",
     "global_aleatoric_uncertainty", "global_epistemic_uncertainty", "global_predictive_variance_mean", "global_predictive_variance_std",
@@ -295,6 +302,7 @@ def base_round_row(cfg: RunConfig, run_id: str, round_idx: int) -> Dict[str, Any
         "eval_every": int(cfg.eval_every),
         "heavy_eval_every": int(cfg.heavy_eval_every),
         "eval_mc_samples": int(cfg.eval_mc_samples),
+        "posterior_sample_scale": float(cfg.posterior_sample_scale),
         "vi_prior_scale": float(cfg.vi_prior_scale),
         "vi_min_scale": float(cfg.vi_min_scale),
         "vi_particles": int(cfg.vi_particles),
@@ -554,12 +562,15 @@ def evaluate_payload(
     eval_scope: str,
     run_id: str,
     round_idx: int,
+    posterior_sample_scale: float | None = None,
     physical_client_id: int | str = "",
     virtual_client_id: int | str = "",
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """Evaluate payload with optional posterior Monte Carlo prediction."""
     mu, sigma, _precision = posterior_arrays(cfg, payload)
-    is_bayes = sigma is not None and int(mc_samples) > 1
+    sample_scale = float(cfg.posterior_sample_scale if posterior_sample_scale is None else posterior_sample_scale)
+    # Keep deterministic mean evaluation as an explicit option.
+    # If sample_scale == 0, all posterior samples collapse to theta=mu.
     samples = max(1, int(mc_samples)) if sigma is not None else 1
     bins = max(1, int(cfg.calibration_bins))
     bin_count = np.zeros(bins, dtype=np.int64)
@@ -586,9 +597,9 @@ def evaluate_payload(
         probs_samples: List[torch.Tensor] = []
         entropy_samples: List[torch.Tensor] = []
         for s in range(samples):
-            if sigma is not None and samples > 1:
+            if sigma is not None and samples > 1 and sample_scale > 0.0:
                 eps = np.random.normal(0.0, 1.0, size=mu.shape).astype(np.float32)
-                flat = mu + sigma * eps
+                flat = mu + sample_scale * sigma * eps
             else:
                 flat = mu
             model.set_flat_parameters(eval_model, flat, device)
@@ -703,6 +714,7 @@ def evaluate_payload(
         "mean_entropy": float(entropy_mean),
         "num_eval_examples": int(total),
         "mc_samples": int(samples),
+        "posterior_sample_scale": float(sample_scale) if sigma is not None else nan(),
         "predictive_entropy": float(entropy_mean),
         "expected_entropy": float(expected_entropy_mean) if samples > 1 else nan(),
         "mutual_information": float(mi),

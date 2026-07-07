@@ -427,19 +427,47 @@ class GroupedBayesStrategy(FedAvg):
             return None
         eval_start = time.perf_counter()
         payload = parameters_to_ndarrays(parameters)
-        global_metrics, calibration_rows = obs.evaluate_payload(
+        # Always evaluate the posterior mean deterministically.
+        # For OLA/FOLA this is the first sanity metric: theta = mu.
+        mean_metrics, mean_calibration_rows = obs.evaluate_payload(
             cfg=self.cfg,
             payload=payload,
             input_shape=self.input_shape,
             num_classes=self.num_classes,
             dataloader=self.testloader,
             device=self.device,
-            mc_samples=int(self.cfg.eval_mc_samples),
+            mc_samples=1,
+            posterior_sample_scale=0.0,
             eval_scope="global_test",
             run_id=self.run_id,
             round_idx=int(server_round),
         )
-        self.calibration_rows.extend(calibration_rows)
+
+        # Separately evaluate Bayesian MC prediction when a posterior exists.
+        # posterior_sample_scale is critical for OLA/FOLA because raw diagonal
+        # Laplace sigma can be far too large for direct sampling.
+        if int(self.cfg.eval_mc_samples) > 1 and self.cfg.method in {"vi", "ola"}:
+            mc_metrics, mc_calibration_rows = obs.evaluate_payload(
+                cfg=self.cfg,
+                payload=payload,
+                input_shape=self.input_shape,
+                num_classes=self.num_classes,
+                dataloader=self.testloader,
+                device=self.device,
+                mc_samples=int(self.cfg.eval_mc_samples),
+                posterior_sample_scale=float(self.cfg.posterior_sample_scale),
+                eval_scope="global_test_mc",
+                run_id=self.run_id,
+                round_idx=int(server_round),
+            )
+        else:
+            mc_metrics, mc_calibration_rows = mean_metrics, []
+
+        # Existing global_* fields are now stable comparison metrics based on
+        # posterior mean evaluation. MC metrics are stored under global_mc_*.
+        global_metrics = mean_metrics
+        self.calibration_rows.extend(mean_calibration_rows)
+        self.calibration_rows.extend(mc_calibration_rows)
         posterior_metrics = obs.posterior_global_metrics(self.cfg, payload)
         do_heavy = server_round == int(self.cfg.num_rounds) or server_round == 0 or server_round % int(self.cfg.heavy_eval_every) == 0
         posterior_snapshot_path = ""
@@ -456,27 +484,46 @@ class GroupedBayesStrategy(FedAvg):
                 "selected_count": int(self.last_selection.selected_count),
                 "round_time_sec": float(time.perf_counter() - self.round_start_time.get(int(server_round), eval_start)),
                 "eval_time_sec": float(time.perf_counter() - eval_start),
-                "global_accuracy": float(global_metrics["accuracy"]),
-                "global_error_rate": float(global_metrics["error_rate"]),
-                "global_loss": float(global_metrics["loss"]),
-                "global_nll": float(global_metrics["nll"]),
-                "global_brier": float(global_metrics["brier"]),
-                "global_ece": float(global_metrics["ece"]),
-                "global_mce": float(global_metrics["mce"]),
-                "global_mean_confidence": float(global_metrics["mean_confidence"]),
-                "global_mean_entropy": float(global_metrics["mean_entropy"]),
-                "global_num_eval_examples": int(global_metrics["num_eval_examples"]),
-                "global_mc_samples": int(global_metrics["mc_samples"]),
-                "global_predictive_entropy": float(global_metrics["predictive_entropy"]),
-                "global_expected_entropy": float(global_metrics["expected_entropy"]),
-                "global_mutual_information": float(global_metrics["mutual_information"]),
-                "global_aleatoric_uncertainty": float(global_metrics["aleatoric_uncertainty"]),
-                "global_epistemic_uncertainty": float(global_metrics["epistemic_uncertainty"]),
-                "global_predictive_variance_mean": float(global_metrics["predictive_variance_mean"]),
-                "global_predictive_variance_std": float(global_metrics["predictive_variance_std"]),
+                "global_accuracy": float(mean_metrics["accuracy"]),
+                "global_error_rate": float(mean_metrics["error_rate"]),
+                "global_loss": float(mean_metrics["loss"]),
+                "global_nll": float(mean_metrics["nll"]),
+                "global_brier": float(mean_metrics["brier"]),
+                "global_ece": float(mean_metrics["ece"]),
+                "global_mce": float(mean_metrics["mce"]),
+                "global_mean_confidence": float(mean_metrics["mean_confidence"]),
+                "global_mean_entropy": float(mean_metrics["mean_entropy"]),
+                "global_num_eval_examples": int(mean_metrics["num_eval_examples"]),
+                # Explicit posterior-mean metric names
+                "global_mean_accuracy": float(mean_metrics["accuracy"]),
+                "global_mean_loss": float(mean_metrics["loss"]),
+                "global_mean_nll": float(mean_metrics["nll"]),
+                "global_mean_brier": float(mean_metrics["brier"]),
+                "global_mean_ece": float(mean_metrics["ece"]),
+                "global_mean_mce": float(mean_metrics["mce"]),
+                "global_mean_prediction_confidence": float(mean_metrics["mean_confidence"]),
+                "global_mean_prediction_entropy": float(mean_metrics["mean_entropy"]),
+                # Explicit posterior-MC metric names
+                "global_mc_accuracy": float(mc_metrics["accuracy"]),
+                "global_mc_loss": float(mc_metrics["loss"]),
+                "global_mc_nll": float(mc_metrics["nll"]),
+                "global_mc_brier": float(mc_metrics["brier"]),
+                "global_mc_ece": float(mc_metrics["ece"]),
+                "global_mc_mce": float(mc_metrics["mce"]),
+                "global_mc_mean_confidence": float(mc_metrics["mean_confidence"]),
+                "global_mc_mean_entropy": float(mc_metrics["mean_entropy"]),
+                "global_mc_posterior_sample_scale": float(mc_metrics.get("posterior_sample_scale", obs.nan())),
+                "global_mc_samples": int(mc_metrics["mc_samples"]),
+                "global_predictive_entropy": float(mc_metrics["predictive_entropy"]),
+                "global_expected_entropy": float(mc_metrics["expected_entropy"]),
+                "global_mutual_information": float(mc_metrics["mutual_information"]),
+                "global_aleatoric_uncertainty": float(mc_metrics["aleatoric_uncertainty"]),
+                "global_epistemic_uncertainty": float(mc_metrics["epistemic_uncertainty"]),
+                "global_predictive_variance_mean": float(mc_metrics["predictive_variance_mean"]),
+                "global_predictive_variance_std": float(mc_metrics["predictive_variance_std"]),
                 # Backward-compatible aliases
-                "accuracy": float(global_metrics["accuracy"]),
-                "loss": float(global_metrics["loss"]),
+                "accuracy": float(mean_metrics["accuracy"]),
+                "loss": float(mean_metrics["loss"]),
                 "train_loss": float(self.last_fit_metrics.get("train_loss", 0.0)),
                 "posterior_snapshot_path": posterior_snapshot_path,
                 "snr_histogram_path": "snr_histograms.csv" if self.snr_histogram_rows else "",
@@ -503,12 +550,13 @@ class GroupedBayesStrategy(FedAvg):
         self.history_rows.append(row)
         print(
             f"[round={server_round:04d} method={self.cfg.method}] "
-            f"acc={row['global_accuracy']:.4f} loss={row['global_loss']:.4f} ece={row['global_ece']:.4f} "
+            f"mean_acc={row['global_mean_accuracy']:.4f} mean_loss={row['global_mean_loss']:.4f} "
+            f"mc_acc={row['global_mc_accuracy']:.4f} mc_loss={row['global_mc_loss']:.4f} ece={row['global_ece']:.4f} "
             f"active_physical={row.get('active_physical_devices', 0)} virtual={row.get('active_virtual_clients', 0)}"
         )
-        return float(global_metrics["loss"]), {
-            "accuracy": float(global_metrics["accuracy"]),
-            "global_ece": float(global_metrics["ece"]),
+        return float(mean_metrics["loss"]), {
+            "accuracy": float(mean_metrics["accuracy"]),
+            "global_ece": float(mean_metrics["ece"]),
             "selected_count": int(self.last_selection.selected_count),
             "active_physical_devices": int(self.last_fit_metrics.get("active_physical_devices", 0)),
         }
