@@ -1,0 +1,357 @@
+nohup: ignoring input
+[device] CUDA available: CUDA_VISIBLE_DEVICES=0, client_gpus=0.5
+torch: 2.11.0+cu128
+cuda_available: True
+cuda_device_count: 1
+cuda_device_0: NVIDIA GeForce RTX 5090
+
+============================================================
+[run] vi_lr0p002_b16_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b16_e1
+[log] logs/vi_lr0p002_b16_e1.log
+============================================================
+[ok] vi_lr0p002_b16_e1
+
+============================================================
+[run] vi_lr0p002_b16_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b16_e2
+[log] logs/vi_lr0p002_b16_e2.log
+============================================================
+[ok] vi_lr0p002_b16_e2
+
+============================================================
+[run] vi_lr0p002_b16_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b16_e5
+[log] logs/vi_lr0p002_b16_e5.log
+============================================================
+[ok] vi_lr0p002_b16_e5
+
+============================================================
+[run] vi_lr0p002_b32_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b32_e1
+[log] logs/vi_lr0p002_b32_e1.log
+============================================================
+[ok] vi_lr0p002_b32_e1
+
+============================================================
+[run] vi_lr0p002_b32_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b32_e2
+[log] logs/vi_lr0p002_b32_e2.log
+============================================================
+[ok] vi_lr0p002_b32_e2
+
+============================================================
+[run] vi_lr0p002_b32_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b32_e5
+[log] logs/vi_lr0p002_b32_e5.log
+============================================================
+[ok] vi_lr0p002_b32_e5
+
+============================================================
+[run] vi_lr0p002_b64_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b64_e1
+[log] logs/vi_lr0p002_b64_e1.log
+============================================================
+[ok] vi_lr0p002_b64_e1
+
+============================================================
+[run] vi_lr0p002_b64_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b64_e2
+[log] logs/vi_lr0p002_b64_e2.log
+============================================================
+[ok] vi_lr0p002_b64_e2
+
+============================================================
+[run] vi_lr0p002_b64_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b64_e5
+[log] logs/vi_lr0p002_b64_e5.log
+============================================================
+[ok] vi_lr0p002_b64_e5
+
+============================================================
+[run] vi_lr0p002_b128_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b128_e1
+[log] logs/vi_lr0p002_b128_e1.log
+============================================================
+[ok] vi_lr0p002_b128_e1
+
+============================================================
+[run] vi_lr0p002_b128_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b128_e2
+[log] logs/vi_lr0p002_b128_e2.log
+============================================================
+[ok] vi_lr0p002_b128_e2
+
+============================================================
+[run] vi_lr0p002_b128_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b128_e5
+[log] logs/vi_lr0p002_b128_e5.log
+============================================================
+[ok] vi_lr0p002_b128_e5
+
+============================================================
+[run] vi_lr0p001_b16_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b16_e1
+[log] logs/vi_lr0p001_b16_e1.log
+============================================================
+[ok] vi_lr0p001_b16_e1
+
+============================================================
+[run] vi_lr0p001_b16_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b16_e2
+[log] logs/vi_lr0p001_b16_e2.log
+============================================================
+[ok] vi_lr0p001_b16_e2
+
+============================================================
+[run] vi_lr0p001_b16_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b16_e5
+[log] logs/vi_lr0p001_b16_e5.log
+============================================================
+[ok] vi_lr0p001_b16_e5
+
+============================================================
+[run] vi_lr0p001_b32_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b32_e1
+[log] logs/vi_lr0p001_b32_e1.log
+============================================================
+[ok] vi_lr0p001_b32_e1
+
+============================================================
+[run] vi_lr0p001_b32_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b32_e2
+[log] logs/vi_lr0p001_b32_e2.log
+============================================================
+[ok] vi_lr0p001_b32_e2
+
+============================================================
+[run] vi_lr0p001_b32_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b32_e5
+[log] logs/vi_lr0p001_b32_e5.log
+============================================================
+[ok] vi_lr0p001_b32_e5
+
+============================================================
+[run] vi_lr0p001_b64_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b64_e1
+[log] logs/vi_lr0p001_b64_e1.log
+============================================================
+[ok] vi_lr0p001_b64_e1
+
+============================================================
+[run] vi_lr0p001_b64_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b64_e2
+[log] logs/vi_lr0p001_b64_e2.log
+============================================================
+[ok] vi_lr0p001_b64_e2
+
+============================================================
+[run] vi_lr0p001_b64_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b64_e5
+[log] logs/vi_lr0p001_b64_e5.log
+============================================================
+[ok] vi_lr0p001_b64_e5
+
+============================================================
+[run] vi_lr0p001_b128_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b128_e1
+[log] logs/vi_lr0p001_b128_e1.log
+============================================================
+[ok] vi_lr0p001_b128_e1
+
+============================================================
+[run] vi_lr0p001_b128_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b128_e2
+[log] logs/vi_lr0p001_b128_e2.log
+============================================================
+[ok] vi_lr0p001_b128_e2
+
+============================================================
+[run] vi_lr0p001_b128_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p001_b128_e5
+[log] logs/vi_lr0p001_b128_e5.log
+============================================================
+[ok] vi_lr0p001_b128_e5
+
+============================================================
+[run] vi_lr0p0005_b16_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b16_e1
+[log] logs/vi_lr0p0005_b16_e1.log
+============================================================
+[ok] vi_lr0p0005_b16_e1
+
+============================================================
+[run] vi_lr0p0005_b16_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b16_e2
+[log] logs/vi_lr0p0005_b16_e2.log
+============================================================
+[ok] vi_lr0p0005_b16_e2
+
+============================================================
+[run] vi_lr0p0005_b16_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b16_e5
+[log] logs/vi_lr0p0005_b16_e5.log
+============================================================
+[ok] vi_lr0p0005_b16_e5
+
+============================================================
+[run] vi_lr0p0005_b32_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b32_e1
+[log] logs/vi_lr0p0005_b32_e1.log
+============================================================
+[ok] vi_lr0p0005_b32_e1
+
+============================================================
+[run] vi_lr0p0005_b32_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b32_e2
+[log] logs/vi_lr0p0005_b32_e2.log
+============================================================
+[ok] vi_lr0p0005_b32_e2
+
+============================================================
+[run] vi_lr0p0005_b32_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b32_e5
+[log] logs/vi_lr0p0005_b32_e5.log
+============================================================
+[ok] vi_lr0p0005_b32_e5
+
+============================================================
+[run] vi_lr0p0005_b64_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b64_e1
+[log] logs/vi_lr0p0005_b64_e1.log
+============================================================
+[ok] vi_lr0p0005_b64_e1
+
+============================================================
+[run] vi_lr0p0005_b64_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b64_e2
+[log] logs/vi_lr0p0005_b64_e2.log
+============================================================
+[ok] vi_lr0p0005_b64_e2
+
+============================================================
+[run] vi_lr0p0005_b64_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b64_e5
+[log] logs/vi_lr0p0005_b64_e5.log
+============================================================
+[ok] vi_lr0p0005_b64_e5
+
+============================================================
+[run] vi_lr0p0005_b128_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b128_e1
+[log] logs/vi_lr0p0005_b128_e1.log
+============================================================
+[ok] vi_lr0p0005_b128_e1
+
+============================================================
+[run] vi_lr0p0005_b128_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b128_e2
+[log] logs/vi_lr0p0005_b128_e2.log
+============================================================
+[ok] vi_lr0p0005_b128_e2
+
+============================================================
+[run] vi_lr0p0005_b128_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0005_b128_e5
+[log] logs/vi_lr0p0005_b128_e5.log
+============================================================
+[ok] vi_lr0p0005_b128_e5
+
+============================================================
+[run] vi_lr0p0002_b16_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b16_e1
+[log] logs/vi_lr0p0002_b16_e1.log
+============================================================
+[ok] vi_lr0p0002_b16_e1
+
+============================================================
+[run] vi_lr0p0002_b16_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b16_e2
+[log] logs/vi_lr0p0002_b16_e2.log
+============================================================
+[ok] vi_lr0p0002_b16_e2
+
+============================================================
+[run] vi_lr0p0002_b16_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b16_e5
+[log] logs/vi_lr0p0002_b16_e5.log
+============================================================
+[ok] vi_lr0p0002_b16_e5
+
+============================================================
+[run] vi_lr0p0002_b32_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b32_e1
+[log] logs/vi_lr0p0002_b32_e1.log
+============================================================
+[ok] vi_lr0p0002_b32_e1
+
+============================================================
+[run] vi_lr0p0002_b32_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b32_e2
+[log] logs/vi_lr0p0002_b32_e2.log
+============================================================
+[ok] vi_lr0p0002_b32_e2
+
+============================================================
+[run] vi_lr0p0002_b32_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b32_e5
+[log] logs/vi_lr0p0002_b32_e5.log
+============================================================
+[ok] vi_lr0p0002_b32_e5
+
+============================================================
+[run] vi_lr0p0002_b64_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b64_e1
+[log] logs/vi_lr0p0002_b64_e1.log
+============================================================
+[ok] vi_lr0p0002_b64_e1
+
+============================================================
+[run] vi_lr0p0002_b64_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b64_e2
+[log] logs/vi_lr0p0002_b64_e2.log
+============================================================
+[ok] vi_lr0p0002_b64_e2
+
+============================================================
+[run] vi_lr0p0002_b64_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b64_e5
+[log] logs/vi_lr0p0002_b64_e5.log
+============================================================
+[ok] vi_lr0p0002_b64_e5
+
+============================================================
+[run] vi_lr0p0002_b128_e1
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b128_e1
+[log] logs/vi_lr0p0002_b128_e1.log
+============================================================
+[ok] vi_lr0p0002_b128_e1
+
+============================================================
+[run] vi_lr0p0002_b128_e2
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b128_e2
+[log] logs/vi_lr0p0002_b128_e2.log
+============================================================
+[ok] vi_lr0p0002_b128_e2
+
+============================================================
+[run] vi_lr0p0002_b128_e5
+[out] outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p0002_b128_e5
+[log] logs/vi_lr0p0002_b128_e5.log
+============================================================
+[ok] vi_lr0p0002_b128_e5
+[ranking] outputs/tune_vi_mnist_noniid_unbalanced/sweep_ranking.csv
+[best] {'run_label': 'vi_lr0p002_b128_e5', 'status': 'ok', 'method': 'vi', 'vi_lr': '0.002', 'batch_size': '128', 'local_epochs': '5', 'client_fraction': '0.05', 'num_rounds': '60', 'final_round': '60', 'final_global_accuracy': '0.8086', 'final_global_loss': '0.6901062373161316', 'final_global_ece': '0.1528147747993469', 'final_global_nll': '0.6901062373161316', 'final_local_accuracy_weighted': '0.9733061589940184', 'final_posterior_sigma_mean': '0.06767305887395851', 'final_posterior_snr_raw_p50': '0.35259000510682725', 'output_dir': 'outputs/tune_vi_mnist_noniid_unbalanced/vi_lr0p002_b128_e5'}
+plots/tune_vi_mnist_noniid_unbalanced/top5/mix_global_accuracy_round.png
+plots/tune_vi_mnist_noniid_unbalanced/top5/mix_global_loss_round.png
+plots/tune_vi_mnist_noniid_unbalanced/top5/mix_global_ece_round.png
+plots/tune_vi_mnist_noniid_unbalanced/top5/mix_posterior_sigma_mean_round.png
+plots/tune_vi_mnist_noniid_unbalanced/top5/mix_posterior_snr_raw_p50_round.png
+
+============================================================
+VI sweep finished. elapsed_seconds=32716
+Results:  outputs/tune_vi_mnist_noniid_unbalanced/sweep_results.csv
+Ranking:  outputs/tune_vi_mnist_noniid_unbalanced/sweep_ranking.csv
+Top5 args:outputs/tune_vi_mnist_noniid_unbalanced/top5_runs.args
+Plots:    plots/tune_vi_mnist_noniid_unbalanced/top5
+============================================================
