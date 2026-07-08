@@ -1,0 +1,539 @@
+nohup: ignoring input
+[device] CUDA available: CUDA_VISIBLE_DEVICES=0, client_gpus=0.25
+torch: 2.11.0+cu128
+cuda_available: True
+cuda_device_count: 1
+cuda_device_0: NVIDIA GeForce RTX 5090
+[grid] GRID_MODE=full; total_runs=72
+[grid] LRS=0.005 0.002 0.001
+[grid] BATCH_SIZES=32 64
+[grid] LOCAL_EPOCHS=1 2
+[grid] OLA_PRIOR_LAMBDAS=0.001 0.01 0.05
+[grid] PRECISION_INITS=0.001 0.01
+[grid] FISHER_CLIPS=10.0
+[grid] POSTERIOR_SAMPLE_SCALE=0.001
+
+============================================================
+[run 1/72] ola_lr0p005_b32_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 2/72] ola_lr0p005_b32_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 3/72] ola_lr0p005_b32_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 4/72] ola_lr0p005_b32_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 5/72] ola_lr0p005_b32_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 6/72] ola_lr0p005_b32_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 7/72] ola_lr0p005_b32_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 8/72] ola_lr0p005_b32_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 9/72] ola_lr0p005_b32_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 10/72] ola_lr0p005_b32_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 11/72] ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 12/72] ola_lr0p005_b32_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b32_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b32_e2_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 13/72] ola_lr0p005_b64_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 14/72] ola_lr0p005_b64_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 15/72] ola_lr0p005_b64_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 16/72] ola_lr0p005_b64_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 17/72] ola_lr0p005_b64_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 18/72] ola_lr0p005_b64_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 19/72] ola_lr0p005_b64_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 20/72] ola_lr0p005_b64_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 21/72] ola_lr0p005_b64_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 22/72] ola_lr0p005_b64_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 23/72] ola_lr0p005_b64_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 24/72] ola_lr0p005_b64_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b64_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p005_b64_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p005_b64_e2_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 25/72] ola_lr0p002_b32_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 26/72] ola_lr0p002_b32_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 27/72] ola_lr0p002_b32_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 28/72] ola_lr0p002_b32_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 29/72] ola_lr0p002_b32_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 30/72] ola_lr0p002_b32_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 31/72] ola_lr0p002_b32_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 32/72] ola_lr0p002_b32_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 33/72] ola_lr0p002_b32_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 34/72] ola_lr0p002_b32_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 35/72] ola_lr0p002_b32_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 36/72] ola_lr0p002_b32_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b32_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b32_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b32_e2_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 37/72] ola_lr0p002_b64_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 38/72] ola_lr0p002_b64_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 39/72] ola_lr0p002_b64_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 40/72] ola_lr0p002_b64_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 41/72] ola_lr0p002_b64_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 42/72] ola_lr0p002_b64_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 43/72] ola_lr0p002_b64_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 44/72] ola_lr0p002_b64_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 45/72] ola_lr0p002_b64_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 46/72] ola_lr0p002_b64_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 47/72] ola_lr0p002_b64_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 48/72] ola_lr0p002_b64_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p002_b64_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p002_b64_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p002_b64_e2_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 49/72] ola_lr0p001_b32_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 50/72] ola_lr0p001_b32_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 51/72] ola_lr0p001_b32_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 52/72] ola_lr0p001_b32_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 53/72] ola_lr0p001_b32_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 54/72] ola_lr0p001_b32_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 55/72] ola_lr0p001_b32_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 56/72] ola_lr0p001_b32_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 57/72] ola_lr0p001_b32_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 58/72] ola_lr0p001_b32_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 59/72] ola_lr0p001_b32_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 60/72] ola_lr0p001_b32_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b32_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b32_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b32_e2_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 61/72] ola_lr0p001_b64_e1_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 62/72] ola_lr0p001_b64_e1_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 63/72] ola_lr0p001_b64_e1_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 64/72] ola_lr0p001_b64_e1_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 65/72] ola_lr0p001_b64_e1_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 66/72] ola_lr0p001_b64_e1_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e1_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e1_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e1_lam0p05_pinit0p01_fclip10p0
+
+============================================================
+[run 67/72] ola_lr0p001_b64_e2_lam0p001_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p001_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p001_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p001_pinit0p001_fclip10p0
+
+============================================================
+[run 68/72] ola_lr0p001_b64_e2_lam0p001_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p001_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p001_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p001_pinit0p01_fclip10p0
+
+============================================================
+[run 69/72] ola_lr0p001_b64_e2_lam0p01_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p01_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p01_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p01_pinit0p001_fclip10p0
+
+============================================================
+[run 70/72] ola_lr0p001_b64_e2_lam0p01_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p01_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p01_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p01_pinit0p01_fclip10p0
+
+============================================================
+[run 71/72] ola_lr0p001_b64_e2_lam0p05_pinit0p001_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p05_pinit0p001_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p05_pinit0p001_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p05_pinit0p001_fclip10p0
+
+============================================================
+[run 72/72] ola_lr0p001_b64_e2_lam0p05_pinit0p01_fclip10p0
+[out] outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p001_b64_e2_lam0p05_pinit0p01_fclip10p0
+[log] logs/ola_lr0p001_b64_e2_lam0p05_pinit0p01_fclip10p0.log
+============================================================
+[ok] ola_lr0p001_b64_e2_lam0p05_pinit0p01_fclip10p0
+[ranking] outputs/tune_ola_mnist_noniid_unbalanced_fixed/sweep_ranking.csv
+[best] {'run_label': 'ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0', 'status': 'ok', 'method': 'ola', 'lr': '0.005', 'batch_size': '32', 'local_epochs': '2', 'ola_prior_lambda': '0.05', 'precision_init': '0.001', 'precision_floor': '1e-8', 'fisher_clip': '10.0', 'posterior_sample_scale': '0.001', 'client_fraction': '0.05', 'num_rounds': '60', 'final_round': '60', 'final_global_accuracy': '0.8857', 'final_global_mean_accuracy': '0.8857', 'final_global_mc_accuracy': '0.8739', 'final_global_loss': '0.41371913380622866', 'final_global_mean_loss': '0.41371913380622866', 'final_global_mc_loss': '0.4758689946174622', 'final_global_ece': '0.08579570754617452', 'final_global_mean_ece': '0.08579570754617452', 'final_global_mc_ece': '0.12252052957862616', 'final_global_nll': '0.41371913380622866', 'final_local_accuracy_weighted': '0.9821329925680836', 'final_posterior_sigma_mean': '30.566372547724093', 'final_posterior_snr_raw_p50': '0.0005892351964109288', 'output_dir': 'outputs/tune_ola_mnist_noniid_unbalanced_fixed/ola_lr0p005_b32_e2_lam0p05_pinit0p001_fclip10p0'}
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_accuracy_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mean_accuracy_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mc_accuracy_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_loss_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mean_loss_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mc_loss_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_ece_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mean_ece_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_global_mc_ece_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_posterior_sigma_mean_round.png
+plots/tune_ola_mnist_noniid_unbalanced_fixed/top5/mix_posterior_snr_raw_p50_round.png
+
+============================================================
+Improved OLA sweep finished. elapsed_seconds=34233
+Results:    outputs/tune_ola_mnist_noniid_unbalanced_fixed/sweep_results.csv
+Ranking:    outputs/tune_ola_mnist_noniid_unbalanced_fixed/sweep_ranking.csv
+Top args:   outputs/tune_ola_mnist_noniid_unbalanced_fixed/top5_runs.args
+Plots:      plots/tune_ola_mnist_noniid_unbalanced_fixed/top5
+============================================================
