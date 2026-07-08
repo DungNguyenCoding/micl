@@ -1,4 +1,0 @@
-schema_version,run_id,round,method,selection_policy,selected_count,available_count,selected_fraction,selected_examples,selected_examples_fraction,selected_label_entropy_mean,selected_label_entropy_std,selected_kl_to_global_label_mean,selected_distance_m_mean,selected_distance_m_std,selected_channel_snr_db_mean,selected_channel_snr_db_std,selection_score_mean,selection_score_std
-bayesfl_observability_v1,smoke_ola_mnist,1,ola,random,6,30,0.2,6848,0.12678429267028307,1.2209098244608934,0.22213069677691905,1.1112815269660592,316.95817051842295,172.17421763497265,,,,
-bayesfl_observability_v1,smoke_ola_mnist,2,ola,random,6,30,0.2,11317,0.20952363319941494,1.314166387075614,0.22386988835272323,0.9824226298607491,292.242813522492,139.9113117261485,,,,
-bayesfl_observability_v1,smoke_ola_mnist,3,ola,random,6,30,0.2,4072,0.07538925814155852,1.1192878017658399,0.2482811359953555,1.2163955809728473,425.9842745904419,112.94259772606397,,,,
