@@ -18,6 +18,7 @@ from flwr.server.client_proxy import ClientProxy
 from flwr.server.strategy import FedAvg
 from torch.utils.data import DataLoader
 
+import compression
 import model
 import observability as obs
 from config import RunConfig
@@ -78,6 +79,7 @@ class GroupedBayesStrategy(FedAvg):
         self.posterior_summary_rows: list[dict[str, Any]] = []
         self.snr_histogram_rows: list[dict[str, Any]] = []
         self.aggregation_rows: list[dict[str, Any]] = []
+        self.sparse_comm_rows: list[dict[str, Any]] = []
         self.last_selection = SelectionResult(0, [], cfg.selector)
         self.last_fit_metrics: dict[str, Any] = {}
         self.round_start_time: dict[int, float] = {}
@@ -275,6 +277,9 @@ class GroupedBayesStrategy(FedAvg):
         self.aggregate_time_sec = time.perf_counter() - aggregate_start
         self.client_train_rows.extend(round_client_train_rows)
         self.client_eval_rows.extend(round_client_eval_rows)
+        for row in round_client_train_rows:
+            if bool(row.get("sparse_comm_enabled", False)):
+                self.sparse_comm_rows.append(dict(row))
 
         client_summary = obs.summarize_client_rows(round_client_train_rows)
         eval_summary = obs.summarize_eval_rows(round_client_eval_rows)
@@ -321,6 +326,38 @@ class GroupedBayesStrategy(FedAvg):
                     "posterior_product_sigma_mean": float(np.mean(_sigma_tmp)) if _sigma_tmp is not None else obs.nan(),
                 }
 
+        sparse_rows = [r for r in round_client_train_rows if bool(r.get("sparse_comm_enabled", False))]
+        sparse_metrics: dict[str, Any] = {
+            "sparse_comm_enabled": bool(len(sparse_rows) > 0),
+            "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_ratio": float(self.cfg.sparse_ratio),
+            "sparse_warmup_rounds": int(self.cfg.sparse_warmup_rounds),
+        }
+        if sparse_rows:
+            sent = np.asarray([obs.float_or_nan(r.get("sparse_num_params_sent", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            totalp = np.asarray([obs.float_or_nan(r.get("sparse_num_params_total", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            sent = sent[np.isfinite(sent)]
+            totalp = totalp[np.isfinite(totalp)]
+            dense_params = int(totalp.sum()) if totalp.size else 0
+            sent_params = int(sent.sum()) if sent.size else 0
+            # Dense product posterior communication uses two float32 arrays per physical client.
+            # Sparse mode sends one int64 index and three float32 values per selected coordinate.
+            dense_bytes = int(dense_params * 2 * 4)
+            index_bytes = int(sent_params * 8)
+            value_bytes = int(sent_params * 3 * 4)
+            sparse_bytes = int(index_bytes + value_bytes)
+            sparse_metrics.update({
+                "communication_dense_params": dense_params,
+                "communication_sent_params_total": sent_params,
+                "communication_sent_params_mean": float(sent.mean()) if sent.size else obs.nan(),
+                "communication_compression_ratio": float(sent_params / max(dense_params, 1)),
+                "communication_dense_bytes": dense_bytes,
+                "communication_sparse_bytes": sparse_bytes,
+                "communication_index_bytes": index_bytes,
+                "communication_value_bytes": value_bytes,
+                "communication_saving_ratio": float(1.0 - sparse_bytes / max(dense_bytes, 1)),
+            })
+
         self.last_fit_metrics = {
             "total_examples": int(total_examples),
             "selected_examples": int(total_examples),
@@ -336,6 +373,7 @@ class GroupedBayesStrategy(FedAvg):
         self.last_fit_metrics.update(client_summary)
         self.last_fit_metrics.update(eval_summary)
         self.last_fit_metrics.update(agg_weight_stats)
+        self.last_fit_metrics.update(sparse_metrics)
         self.last_fit_metrics.update({k: v for k, v in agg_row.items() if k.startswith("aggregation_") or k.startswith("posterior_product_")})
 
         metrics: Metrics = {k: v for k, v in self.last_fit_metrics.items() if isinstance(v, (int, float, str, bool))}
@@ -382,24 +420,75 @@ class GroupedBayesStrategy(FedAvg):
         total_examples: int,
         return_scale: bool,
     ) -> NDArrays:
-        precision_sum: np.ndarray | None = None
-        precision_mu_sum: np.ndarray | None = None
+        """Aggregate dense or sparse precision-weighted local posteriors.
+
+        Dense payload format from clients:
+            [sum_n n * precision_n, sum_n n * precision_n * mu_n]
+
+        Sparse payload format from clients:
+            [indices, first_values, second_values, count_values]
+
+        For sparse payloads, missing coordinates mean "no new posterior
+        evidence". The server therefore keeps the previous global posterior for
+        those coordinates instead of forcing them to zero.
+        """
+        old_mu, old_sigma, old_precision = obs.posterior_arrays(self.cfg, self.latest_payload)
+        size = int(old_mu.size)
+        if old_precision is None:
+            old_precision = 1.0 / np.maximum(np.asarray(old_sigma, dtype=np.float64) ** 2, float(self.cfg.precision_floor))
+        old_precision = np.maximum(np.asarray(old_precision, dtype=np.float64), float(self.cfg.precision_floor))
+
+        first_sum = np.zeros(size, dtype=np.float64)
+        second_sum = np.zeros(size, dtype=np.float64)
+        count_sum = np.zeros(size, dtype=np.float64)
+        sparse_mode = False
+
         for _client, fit_res in active_results:
             arrays = parameters_to_ndarrays(fit_res.parameters)
-            local_precision_sum = np.asarray(arrays[0], dtype=np.float64)
-            local_precision_mu_sum = np.asarray(arrays[1], dtype=np.float64)
-            precision_sum = local_precision_sum if precision_sum is None else precision_sum + local_precision_sum
-            precision_mu_sum = local_precision_mu_sum if precision_mu_sum is None else precision_mu_sum + local_precision_mu_sum
-        assert precision_sum is not None and precision_mu_sum is not None
-        precision_safe = np.maximum(precision_sum, float(self.cfg.precision_floor))
-        mu = precision_mu_sum / precision_safe
-        global_precision = np.maximum(precision_sum / float(total_examples), float(self.cfg.precision_floor))
+            if len(arrays) >= 4:
+                sparse_mode = True
+                idx = np.asarray(arrays[0], dtype=np.int64).reshape(-1)
+                if idx.size == 0:
+                    continue
+                first_sum[idx] += np.asarray(arrays[1], dtype=np.float64).reshape(-1)
+                second_sum[idx] += np.asarray(arrays[2], dtype=np.float64).reshape(-1)
+                count_sum[idx] += np.asarray(arrays[3], dtype=np.float64).reshape(-1)
+            else:
+                local_first = np.asarray(arrays[0], dtype=np.float64).reshape(-1)
+                local_second = np.asarray(arrays[1], dtype=np.float64).reshape(-1)
+                first_sum += local_first
+                second_sum += local_second
+                count_sum += float(fit_res.num_examples)
+
+        mask = count_sum > 0
+        if not np.any(mask):
+            return [np.asarray(x, dtype=np.float32).copy() for x in self.latest_payload]
+
+        mu = np.asarray(old_mu, dtype=np.float64).copy() if sparse_mode else np.zeros(size, dtype=np.float64)
+        global_precision = old_precision.copy() if sparse_mode else np.zeros(size, dtype=np.float64)
+
+        precision_safe = np.maximum(first_sum[mask], float(self.cfg.precision_floor))
+        mu[mask] = second_sum[mask] / precision_safe
+        global_precision[mask] = np.maximum(first_sum[mask] / np.maximum(count_sum[mask], 1.0), float(self.cfg.precision_floor))
+
+        if not sparse_mode:
+            # Dense path should have evidence everywhere, but protect any rare zero-count coordinate.
+            missing = ~mask
+            if np.any(missing):
+                mu[missing] = old_mu[missing]
+                global_precision[missing] = old_precision[missing]
+
+        updated_ratio = float(np.mean(mask))
+        self.last_fit_metrics["sparse_comm_enabled"] = bool(sparse_mode)
+        self.last_fit_metrics["sparse_updated_params"] = int(np.sum(mask))
+        self.last_fit_metrics["sparse_total_params"] = int(size)
+        self.last_fit_metrics["sparse_updated_ratio"] = updated_ratio
         self.last_fit_metrics["posterior_product_precision_mean"] = float(global_precision.mean())
         self.last_fit_metrics["posterior_product_precision_std"] = float(global_precision.std())
         self.last_fit_metrics["posterior_product_mu_norm"] = float(np.linalg.norm(mu.astype(np.float64)))
-        self.last_fit_metrics["posterior_product_sigma_mean"] = float(np.sqrt(1.0 / global_precision).mean())
+        self.last_fit_metrics["posterior_product_sigma_mean"] = float(np.sqrt(1.0 / np.maximum(global_precision, float(self.cfg.precision_floor))).mean())
         if return_scale:
-            scale = np.sqrt(1.0 / global_precision)
+            scale = np.sqrt(1.0 / np.maximum(global_precision, float(self.cfg.precision_floor)))
             scale = np.maximum(scale, float(self.cfg.vi_min_scale))
             return [mu.astype(np.float32), scale.astype(np.float32)]
         return [mu.astype(np.float32), global_precision.astype(np.float32)]
@@ -615,6 +704,7 @@ class GroupedBayesStrategy(FedAvg):
         paths["posterior_summary"] = obs.write_csv(self.output_dir / "posterior_summary.csv", self.posterior_summary_rows, obs.POSTERIOR_SUMMARY_FIELDS)
         paths["snr_histograms"] = obs.write_csv(self.output_dir / "snr_histograms.csv", self.snr_histogram_rows, obs.SNR_HISTOGRAM_FIELDS)
         paths["aggregation_diagnostics"] = obs.write_csv(self.output_dir / "aggregation_diagnostics.csv", self.aggregation_rows, obs.AGGREGATION_FIELDS)
+        paths["sparse_comm_metrics"] = obs.write_csv(self.output_dir / "sparse_comm_metrics.csv", self.sparse_comm_rows, obs.SPARSE_COMM_FIELDS)
         paths["run_summary"] = obs.write_csv(self.output_dir / "run_summary.csv", [self._build_run_summary(final_model_path)], obs.RUN_SUMMARY_FIELDS)
         # Empty optional post-hoc file header so downstream scripts can rely on it.
         paths["pruning_eval"] = obs.write_csv(self.output_dir / "pruning_eval.csv", [], obs.PRUNING_EVAL_FIELDS)

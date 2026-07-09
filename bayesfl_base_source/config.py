@@ -98,6 +98,14 @@ class RunConfig:
     vi_particles: int = 1
     vi_lr: float = 1.0e-3
 
+    # Sparse Bayesian communication / BBB-style pruning experiments
+    sparse_comm: bool = False
+    sparse_metric: str = "update_snr"  # snr | update_snr | precision_update | kl
+    sparse_ratio: float = 1.0
+    sparse_warmup_rounds: int = 0
+    sparse_min_keep: int = 1
+    sparse_apply_to: str = "vi,ola"
+
     # Flower/Ray runtime control
     client_cpus: float = 1.0
     client_gpus: float = 0.0
@@ -186,6 +194,13 @@ def parse_args() -> RunConfig:
     parser.add_argument("--vi_particles", type=int, default=RunConfig.vi_particles)
     parser.add_argument("--vi_lr", type=float, default=RunConfig.vi_lr)
 
+    parser.add_argument("--sparse_comm", type=str2bool, default=RunConfig.sparse_comm)
+    parser.add_argument("--sparse_metric", choices=["snr", "update_snr", "precision_update", "kl"], default=RunConfig.sparse_metric)
+    parser.add_argument("--sparse_ratio", type=float, default=RunConfig.sparse_ratio)
+    parser.add_argument("--sparse_warmup_rounds", type=int, default=RunConfig.sparse_warmup_rounds)
+    parser.add_argument("--sparse_min_keep", type=int, default=RunConfig.sparse_min_keep)
+    parser.add_argument("--sparse_apply_to", default=RunConfig.sparse_apply_to, help="Comma-separated methods using sparse comm, e.g. vi,ola")
+
     parser.add_argument("--client_cpus", type=float, default=RunConfig.client_cpus)
     parser.add_argument("--client_gpus", type=float, default=RunConfig.client_gpus)
     parser.add_argument("--num_workers", type=int, default=RunConfig.num_workers)
@@ -206,6 +221,20 @@ def parse_args() -> RunConfig:
         raise ValueError("num_virtual_clients cannot exceed num_devices")
     if cfg.method == "vi" and cfg.model != "mlp":
         raise ValueError("The Pyro VI scaffold currently supports --model mlp. Use --model mlp for --method vi.")
+    if not 0 < cfg.sparse_ratio <= 1:
+        raise ValueError("sparse_ratio must be in (0, 1]")
+    if cfg.sparse_warmup_rounds < 0:
+        raise ValueError("sparse_warmup_rounds must be >= 0")
+    if cfg.sparse_min_keep < 1:
+        raise ValueError("sparse_min_keep must be >= 1")
+    if cfg.sparse_comm and cfg.method not in {x.strip() for x in str(cfg.sparse_apply_to).split(",") if x.strip()}:
+        raise ValueError("sparse_comm=True but cfg.method is not listed in --sparse_apply_to")
+    if cfg.sparse_comm and cfg.method == "ola" and cfg.sparse_metric not in {"precision_update", "update_snr", "snr", "kl"}:
+        raise ValueError("Unsupported OLA sparse_metric")
+    if cfg.sparse_comm and cfg.method == "vi" and cfg.sparse_metric not in {"update_snr", "snr", "kl"}:
+        raise ValueError("Recommended VI sparse_metric values: update_snr, snr, kl")
+    if cfg.sparse_comm and cfg.method == "vi" and cfg.bayes_aggregation != "product":
+        raise ValueError("Sparse VI communication currently supports --bayes_aggregation product")
     if cfg.eval_every <= 0:
         raise ValueError("eval_every must be positive")
     if cfg.heavy_eval_every <= 0:

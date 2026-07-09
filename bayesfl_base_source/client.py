@@ -14,6 +14,7 @@ from flwr.common.typing import NDArrays, Scalar
 from torch.utils.data import DataLoader, Dataset
 
 import bayes_vi
+import compression
 import model
 from config import RunConfig
 from observability import SCHEMA_VERSION, array_stats, snr_values, vector_cosine
@@ -144,6 +145,28 @@ class GroupedBayesClient(fl.client.NumPyClient):
             "local_mc_samples": 1,
         }
 
+
+    def _use_sparse_comm(self, server_round: int) -> bool:
+        """Whether this client should send sparse Bayesian payloads in this round."""
+        if not bool(self.cfg.sparse_comm):
+            return False
+        allowed = {x.strip() for x in str(self.cfg.sparse_apply_to).split(",") if x.strip()}
+        if self.cfg.method not in allowed:
+            return False
+        return int(server_round) > int(self.cfg.sparse_warmup_rounds)
+
+    def _empty_product_payload(self, size: int, sparse: bool) -> NDArrays:
+        """Empty product-aggregation response for a group with no active devices."""
+        if sparse:
+            return [
+                np.asarray([], dtype=np.int64),
+                np.asarray([], dtype=np.float32),
+                np.asarray([], dtype=np.float32),
+                np.asarray([], dtype=np.float32),
+            ]
+        zeros = np.zeros(int(size), dtype=np.float32)
+        return [zeros.copy(), zeros.copy()]
+
     def _fit_fedavg(self, parameters: NDArrays, active_ids: Sequence[int], server_round: int) -> tuple[NDArrays, int, dict[str, object]]:
         global_mu = np.asarray(parameters[0], dtype=np.float32)
         if not active_ids:
@@ -192,16 +215,22 @@ class GroupedBayesClient(fl.client.NumPyClient):
     def _fit_ola(self, parameters: NDArrays, active_ids: Sequence[int], server_round: int) -> tuple[NDArrays, int, dict[str, object]]:
         global_mu = np.asarray(parameters[0], dtype=np.float32)
         global_precision = np.maximum(np.asarray(parameters[1], dtype=np.float32), float(self.cfg.precision_floor))
+        use_sparse = self._use_sparse_comm(server_round)
         if not active_ids:
-            return [np.zeros_like(global_precision), np.zeros_like(global_precision)], 0, {"train_loss": 0.0, "client_train_rows": [], "client_eval_rows": [], "group_metrics": {}}
+            return self._empty_product_payload(global_mu.size, use_sparse), 0, {"train_loss": 0.0, "client_train_rows": [], "client_eval_rows": [], "group_metrics": {}}
 
         precision_count_sum = np.zeros_like(global_precision, dtype=np.float64)
         precision_mu_count_sum = np.zeros_like(global_precision, dtype=np.float64)
+        evidence_count_sum = np.zeros_like(global_precision, dtype=np.float64)
         total_examples = 0
         loss_sum = 0.0
         train_rows: list[dict[str, object]] = []
         eval_rows: list[dict[str, object]] = []
         round_idx = max(int(server_round), 1)
+        sparse_sent_total = 0
+        sparse_total_params = 0
+        sparse_thresholds: list[float] = []
+
         for did in active_ids:
             local_model = model.build_model(self.cfg, self.input_shape, self.num_classes).to(self.device)
             model.set_flat_parameters(local_model, global_mu, self.device)
@@ -226,11 +255,44 @@ class GroupedBayesClient(fl.client.NumPyClient):
             local_sigma = np.sqrt(1.0 / local_precision)
             local_snr, _ = snr_values(local_mu, local_sigma)
             n = len(self.trainsets[did])
-            precision_count_sum += float(n) * local_precision.astype(np.float64, copy=False)
-            precision_mu_count_sum += float(n) * (local_precision * local_mu).astype(np.float64, copy=False)
+            update = local_mu - global_mu
+
+            first_dense = float(n) * local_precision.astype(np.float64, copy=False)
+            second_dense = float(n) * (local_precision * local_mu).astype(np.float64, copy=False)
+            count_dense = np.full_like(global_precision, fill_value=float(n), dtype=np.float64)
+            sparse_pack = None
+            if use_sparse:
+                global_sigma = np.sqrt(1.0 / np.maximum(global_precision, float(self.cfg.precision_floor)))
+                score = compression.score_for_sparse_metric(
+                    metric=str(self.cfg.sparse_metric),
+                    local_mu=local_mu,
+                    global_mu=global_mu,
+                    local_sigma=local_sigma,
+                    local_precision=local_precision,
+                    global_sigma=global_sigma,
+                )
+                sparse_pack = compression.pack_sparse_contribution(
+                    first_dense=first_dense,
+                    second_dense=second_dense,
+                    count_dense=count_dense,
+                    scores=score,
+                    ratio=float(self.cfg.sparse_ratio),
+                    min_keep=int(self.cfg.sparse_min_keep),
+                )
+                idx = sparse_pack.indices
+                precision_count_sum[idx] += sparse_pack.first_values.astype(np.float64, copy=False)
+                precision_mu_count_sum[idx] += sparse_pack.second_values.astype(np.float64, copy=False)
+                evidence_count_sum[idx] += sparse_pack.count_values.astype(np.float64, copy=False)
+                sparse_sent_total += int(sparse_pack.sent_params)
+                sparse_total_params += int(sparse_pack.total_params)
+                sparse_thresholds.append(float(sparse_pack.threshold))
+            else:
+                precision_count_sum += first_dense
+                precision_mu_count_sum += second_dense
+                evidence_count_sum += count_dense
+
             total_examples += int(n)
             loss_sum += float(train_loss) * int(n)
-            update = local_mu - global_mu
             row = self._base_client_row(did, server_round, n)
             row.update(stats)
             row.update(
@@ -247,34 +309,65 @@ class GroupedBayesClient(fl.client.NumPyClient):
             row.update({k.replace("posterior_precision_", "ola_precision_"): v for k, v in array_stats(local_precision, "posterior_precision").items()})
             row.update({k.replace("posterior_sigma_", "ola_sigma_"): v for k, v in array_stats(local_sigma, "posterior_sigma").items()})
             row.update({k.replace("posterior_snr_raw_", "ola_snr_raw_"): v for k, v in array_stats(local_snr, "posterior_snr_raw").items()})
+            row.update(
+                compression.sparse_row_metrics(
+                    enabled=use_sparse,
+                    metric=str(self.cfg.sparse_metric),
+                    ratio=float(self.cfg.sparse_ratio),
+                    warmup_rounds=int(self.cfg.sparse_warmup_rounds),
+                    pack=sparse_pack,
+                    update=update,
+                    mask_indices=None if sparse_pack is None else sparse_pack.indices,
+                )
+            )
             train_rows.append(row)
             erow = self._maybe_eval_local_model(did, server_round, local_model)
             if erow is not None:
                 eval_rows.append(erow)
-        return [precision_count_sum.astype(np.float32), precision_mu_count_sum.astype(np.float32)], total_examples, {
+
+        if use_sparse:
+            idx = np.where(evidence_count_sum > 0)[0].astype(np.int64, copy=False)
+            payload = [
+                idx,
+                precision_count_sum[idx].astype(np.float32, copy=False),
+                precision_mu_count_sum[idx].astype(np.float32, copy=False),
+                evidence_count_sum[idx].astype(np.float32, copy=False),
+            ]
+        else:
+            payload = [precision_count_sum.astype(np.float32), precision_mu_count_sum.astype(np.float32)]
+        group_metrics = {
+            "sparse_comm_enabled": bool(use_sparse),
+            "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_ratio": float(self.cfg.sparse_ratio),
+            "sparse_group_sent_params": int(sparse_sent_total),
+            "sparse_group_total_params": int(sparse_total_params),
+            "sparse_group_compression_ratio": float(sparse_sent_total / max(sparse_total_params, 1)) if use_sparse else float("nan"),
+            "sparse_group_threshold_mean": float(np.mean(sparse_thresholds)) if sparse_thresholds else float("nan"),
+        }
+        return payload, total_examples, {
             "train_loss": loss_sum / max(total_examples, 1),
             "client_train_rows": train_rows,
             "client_eval_rows": eval_rows,
-            "group_metrics": {},
+            "group_metrics": group_metrics,
         }
 
     def _fit_vi(self, parameters: NDArrays, active_ids: Sequence[int], server_round: int) -> tuple[NDArrays, int, dict[str, object]]:
         global_loc = np.asarray(parameters[0], dtype=np.float32)
         global_scale = np.maximum(np.asarray(parameters[1], dtype=np.float32), float(self.cfg.vi_min_scale))
+        use_sparse = self._use_sparse_comm(server_round)
         if not active_ids:
-            zeros = np.zeros_like(global_loc)
-            return [zeros, zeros], 0, {"train_loss": 0.0, "client_train_rows": [], "client_eval_rows": [], "group_metrics": {}}
+            return self._empty_product_payload(global_loc.size, use_sparse), 0, {"train_loss": 0.0, "client_train_rows": [], "client_eval_rows": [], "group_metrics": {}}
 
         total_examples = 0
         loss_sum = 0.0
         train_rows: list[dict[str, object]] = []
         eval_rows: list[dict[str, object]] = []
-        if self.cfg.bayes_aggregation == "product":
-            first_sum = np.zeros_like(global_loc, dtype=np.float64)  # n * precision
-            second_sum = np.zeros_like(global_loc, dtype=np.float64)  # n * precision * loc
-        else:
-            first_sum = np.zeros_like(global_loc, dtype=np.float64)  # n * loc
-            second_sum = np.zeros_like(global_loc, dtype=np.float64)  # n * (var + loc^2)
+        first_sum = np.zeros_like(global_loc, dtype=np.float64)
+        second_sum = np.zeros_like(global_loc, dtype=np.float64)
+        evidence_count_sum = np.zeros_like(global_loc, dtype=np.float64)
+        sparse_sent_total = 0
+        sparse_total_params = 0
+        sparse_thresholds: list[float] = []
 
         for did in active_ids:
             loader = self._loader_for(did)
@@ -291,17 +384,49 @@ class GroupedBayesClient(fl.client.NumPyClient):
                 seed=seed,
             )
             n = len(self.trainsets[did])
+            update = loc - global_loc
+            precision = 1.0 / np.maximum(scale * scale, float(self.cfg.vi_min_scale) ** 2)
             if self.cfg.bayes_aggregation == "product":
-                precision = 1.0 / np.maximum(scale * scale, float(self.cfg.vi_min_scale) ** 2)
-                first_sum += float(n) * precision.astype(np.float64, copy=False)
-                second_sum += float(n) * (precision * loc).astype(np.float64, copy=False)
+                first_dense = float(n) * precision.astype(np.float64, copy=False)
+                second_dense = float(n) * (precision * loc).astype(np.float64, copy=False)
             else:
                 var = scale * scale
-                first_sum += float(n) * loc.astype(np.float64, copy=False)
-                second_sum += float(n) * (var + loc * loc).astype(np.float64, copy=False)
+                first_dense = float(n) * loc.astype(np.float64, copy=False)
+                second_dense = float(n) * (var + loc * loc).astype(np.float64, copy=False)
+            count_dense = np.full_like(global_loc, fill_value=float(n), dtype=np.float64)
+
+            sparse_pack = None
+            if use_sparse:
+                score = compression.score_for_sparse_metric(
+                    metric=str(self.cfg.sparse_metric),
+                    local_mu=loc,
+                    global_mu=global_loc,
+                    local_sigma=scale,
+                    local_precision=precision,
+                    global_sigma=global_scale,
+                )
+                sparse_pack = compression.pack_sparse_contribution(
+                    first_dense=first_dense,
+                    second_dense=second_dense,
+                    count_dense=count_dense,
+                    scores=score,
+                    ratio=float(self.cfg.sparse_ratio),
+                    min_keep=int(self.cfg.sparse_min_keep),
+                )
+                idx = sparse_pack.indices
+                first_sum[idx] += sparse_pack.first_values.astype(np.float64, copy=False)
+                second_sum[idx] += sparse_pack.second_values.astype(np.float64, copy=False)
+                evidence_count_sum[idx] += sparse_pack.count_values.astype(np.float64, copy=False)
+                sparse_sent_total += int(sparse_pack.sent_params)
+                sparse_total_params += int(sparse_pack.total_params)
+                sparse_thresholds.append(float(sparse_pack.threshold))
+            else:
+                first_sum += first_dense
+                second_sum += second_dense
+                evidence_count_sum += count_dense
+
             total_examples += int(n)
             loss_sum += float(loss) * int(n)
-            update = loc - global_loc
             row = self._base_client_row(did, server_round, n)
             row.update(
                 {
@@ -317,6 +442,17 @@ class GroupedBayesClient(fl.client.NumPyClient):
                 }
             )
             row.update(vi_stats)
+            row.update(
+                compression.sparse_row_metrics(
+                    enabled=use_sparse,
+                    metric=str(self.cfg.sparse_metric),
+                    ratio=float(self.cfg.sparse_ratio),
+                    warmup_rounds=int(self.cfg.sparse_warmup_rounds),
+                    pack=sparse_pack,
+                    update=update,
+                    mask_indices=None if sparse_pack is None else sparse_pack.indices,
+                )
+            )
             train_rows.append(row)
             # Evaluate VI mean parameters on local validation if requested.
             val_loader = self._val_loader_for(did)
@@ -342,11 +478,30 @@ class GroupedBayesClient(fl.client.NumPyClient):
                         "local_mc_samples": 1,
                     }
                 )
-        return [first_sum.astype(np.float32), second_sum.astype(np.float32)], total_examples, {
+        if use_sparse:
+            idx = np.where(evidence_count_sum > 0)[0].astype(np.int64, copy=False)
+            payload = [
+                idx,
+                first_sum[idx].astype(np.float32, copy=False),
+                second_sum[idx].astype(np.float32, copy=False),
+                evidence_count_sum[idx].astype(np.float32, copy=False),
+            ]
+        else:
+            payload = [first_sum.astype(np.float32), second_sum.astype(np.float32)]
+        group_metrics = {
+            "sparse_comm_enabled": bool(use_sparse),
+            "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_ratio": float(self.cfg.sparse_ratio),
+            "sparse_group_sent_params": int(sparse_sent_total),
+            "sparse_group_total_params": int(sparse_total_params),
+            "sparse_group_compression_ratio": float(sparse_sent_total / max(sparse_total_params, 1)) if use_sparse else float("nan"),
+            "sparse_group_threshold_mean": float(np.mean(sparse_thresholds)) if sparse_thresholds else float("nan"),
+        }
+        return payload, total_examples, {
             "train_loss": loss_sum / max(total_examples, 1),
             "client_train_rows": train_rows,
             "client_eval_rows": eval_rows,
-            "group_metrics": {},
+            "group_metrics": group_metrics,
         }
 
     def evaluate(self, parameters: NDArrays, config: Dict[str, Scalar]) -> Tuple[float, int, Dict[str, Scalar]]:

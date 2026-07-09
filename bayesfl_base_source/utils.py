@@ -12,10 +12,18 @@ import csv
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
 
+import numpy as np
+import torch
+
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+import dataset
+import model
+import observability as obs
+from config import RunConfig, str2bool
 
 
 Rows = List[Dict[str, str]]
@@ -143,8 +151,7 @@ def plot_mixed_metrics(
 
         if plotted == 0:
             plt.close(fig)
-            print(f"[skip] No runs contained usable data for metric {metric!r}")
-            continue
+            raise ValueError(f"No runs contained metric {metric!r}")
 
         ax.set_xlabel("Round")
         ax.set_ylabel(metric)
@@ -243,45 +250,15 @@ def plot_snr_histogram(
     value_space: str = "db",
 ) -> list[Path]:
     """Plot SNR density and CDF from snr_histograms.csv."""
-    all_rows = _read_csv_rows(snr_csv)
-    candidate_rows = [
-        r for r in all_rows
-        if r.get("layer_name", "") == layer_name and r.get("value_space", "") == value_space
-    ]
-    if not candidate_rows:
-        available_layers = sorted({r.get("layer_name", "") for r in all_rows})
-        available_spaces = sorted({r.get("value_space", "") for r in all_rows})
-        print(
-            f"[skip] No SNR rows for layer={layer_name}, value_space={value_space}. "
-            f"Available layers={available_layers}, value_spaces={available_spaces}"
-        )
-        return []
-
-    available = sorted({int(float(r["round"])) for r in candidate_rows if r.get("round", "") != ""})
-    if not available:
-        print(f"[skip] No SNR round values found in {snr_csv}")
-        return []
-
+    rows = _read_csv_rows(snr_csv)
     if round_idx is None:
-        chosen_round = max(available)
-    elif int(round_idx) in available:
-        chosen_round = int(round_idx)
-    else:
-        # SNR histograms are often written only every heavy_eval_every/save interval.
-        # Use the nearest available round instead of crashing. Prefer the previous
-        # saved round on a tie so a best-round request remains conservative.
-        requested = int(round_idx)
-        chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
-        print(
-            f"[info] SNR round {requested} not available in {snr_csv}; "
-            f"using nearest available round {chosen_round}. Available rounds: {available[:5]}...{available[-5:]}"
-        )
-
-    rows = [r for r in candidate_rows if int(float(r.get("round", "nan"))) == chosen_round]
+        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
+        if not available:
+            raise ValueError(f"No round values found in {snr_csv}")
+        round_idx = max(available)
+    rows = _filter_rows(rows, round=round_idx, layer_name=layer_name, value_space=value_space)
     if not rows:
-        print(f"[skip] No SNR rows for round={chosen_round}, layer={layer_name}, value_space={value_space}")
-        return []
-    round_idx = chosen_round
+        raise ValueError(f"No SNR rows for round={round_idx}, layer={layer_name}, value_space={value_space}")
     rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
     centers = [float(r["bin_center"]) for r in rows]
     density = [float(r["density"]) for r in rows]
@@ -318,20 +295,10 @@ def plot_calibration(calibration_csv: str | Path, output_dir: str | Path, round_
         if not available:
             raise ValueError(f"No round values found in {calibration_csv}")
         round_idx = max(available)
-    filtered_rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
-    if not filtered_rows:
-        scoped = [r for r in rows if r.get("eval_scope", "") == eval_scope]
-        available = sorted({int(float(r["round"])) for r in scoped if r.get("round", "") != ""})
-        if available:
-            requested = int(round_idx)
-            chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
-            print(f"[info] calibration round {requested} not available; using nearest available round {chosen_round}")
-            round_idx = chosen_round
-            filtered_rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
-    if not filtered_rows:
-        print(f"[skip] No calibration rows for round={round_idx}, eval_scope={eval_scope}")
-        return Path(output_dir) / f"calibration_round_{int(round_idx):04d}_{eval_scope}.png"
-    rows = sorted(filtered_rows, key=lambda r: int(float(r["bin_id"])))
+    rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
+    if not rows:
+        raise ValueError(f"No calibration rows for round={round_idx}, eval_scope={eval_scope}")
+    rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
     centers = [(float(r["bin_left"]) + float(r["bin_right"])) / 2.0 for r in rows]
     acc = [float(r["bin_accuracy"]) if r.get("bin_accuracy", "") != "" else 0.0 for r in rows]
     conf = [float(r["bin_confidence"]) if r.get("bin_confidence", "") != "" else 0.0 for r in rows]
@@ -560,19 +527,13 @@ def plot_posterior_layer_metric(
 
 def _client_rows_for_round(client_csv: str | Path, round_idx: int | None) -> tuple[Rows, int]:
     rows = _read_csv_rows(client_csv)
-    available = sorted({int(float(r["round"])) for r in rows if r.get("round", "") != ""})
-    if not available:
-        raise ValueError(f"No round values found in {client_csv}")
     if round_idx is None:
-        chosen_round = max(available)
-    elif int(round_idx) in available:
-        chosen_round = int(round_idx)
-    else:
-        requested = int(round_idx)
-        chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
-        print(f"[info] client metric round {requested} not available in {client_csv}; using nearest {chosen_round}")
-    filtered = _filter_rows(rows, round=chosen_round)
-    return filtered, int(chosen_round)
+        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
+        if not available:
+            raise ValueError(f"No round values found in {client_csv}")
+        round_idx = max(available)
+    filtered = _filter_rows(rows, round=round_idx)
+    return filtered, int(round_idx)
 
 
 def plot_client_boxplots(
@@ -769,6 +730,216 @@ def plot_characteristics(
     raise ValueError("--method for characteristics must be 'ola' or 'vi'")
 
 
+
+# ---------------------------------------------------------------------------
+# BBB-style post-hoc SNR pruning for Bayesian FL
+# ---------------------------------------------------------------------------
+
+def _parse_config_csv(run_dir: str | Path) -> RunConfig:
+    """Load a RunConfig from config.csv with best-effort type restoration."""
+    cfg = RunConfig()
+    path = Path(run_dir) / "config.csv"
+    if not path.exists():
+        return cfg
+    with path.open(newline="") as f:
+        for row in csv.DictReader(f):
+            key = row.get("key", "")
+            value = row.get("value", "")
+            if not key or not hasattr(cfg, key):
+                continue
+            current = getattr(cfg, key)
+            if value == "":
+                continue
+            try:
+                if isinstance(current, bool):
+                    parsed = str2bool(value)
+                elif isinstance(current, int) and not isinstance(current, bool):
+                    parsed = int(float(value))
+                elif isinstance(current, float):
+                    parsed = float(value)
+                else:
+                    parsed = value
+                setattr(cfg, key, parsed)
+            except Exception:
+                setattr(cfg, key, value)
+    return cfg
+
+
+def _load_posterior_snapshot(run_dir: str | Path, round_arg: str | int | None = "final") -> tuple[Path, dict]:
+    snap_dir = Path(run_dir) / "posterior_snapshots"
+    if str(round_arg or "final").lower() == "final":
+        candidates = [snap_dir / "final.pt", Path(run_dir) / "final_model.pt"]
+        for path in candidates:
+            if path.exists():
+                return path, torch.load(path, map_location="cpu")
+        raise FileNotFoundError(f"No final posterior snapshot found under {snap_dir}")
+    r = int(round_arg)
+    path = snap_dir / f"round_{r:04d}.pt"
+    if not path.exists():
+        # Choose nearest saved snapshot.
+        snapshots = sorted(snap_dir.glob("round_*.pt"))
+        if not snapshots:
+            raise FileNotFoundError(f"No round snapshots found under {snap_dir}")
+        rounds = []
+        for pth in snapshots:
+            try:
+                rounds.append((abs(int(pth.stem.split("_")[-1]) - r), pth))
+            except Exception:
+                pass
+        if not rounds:
+            raise FileNotFoundError(f"No valid round snapshots found under {snap_dir}")
+        path = sorted(rounds, key=lambda x: x[0])[0][1]
+        print(f"[info] requested pruning round {r} not available; using nearest snapshot {path.name}")
+    return path, torch.load(path, map_location="cpu")
+
+
+def _payload_from_checkpoint(cfg: RunConfig, ckpt: dict) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
+    """Return mu/sigma/precision arrays from final_model.pt or posterior snapshot."""
+    if "global" in ckpt:
+        glob = ckpt["global"]
+        mu = glob.get("mu_flat")
+        sigma = glob.get("sigma_flat")
+        precision = glob.get("precision_flat")
+        mu_np = mu.detach().cpu().numpy().astype(np.float32) if torch.is_tensor(mu) else np.asarray(mu, dtype=np.float32)
+        sigma_np = None if sigma is None else (sigma.detach().cpu().numpy().astype(np.float32) if torch.is_tensor(sigma) else np.asarray(sigma, dtype=np.float32))
+        precision_np = None if precision is None else (precision.detach().cpu().numpy().astype(np.float32) if torch.is_tensor(precision) else np.asarray(precision, dtype=np.float32))
+        return mu_np, sigma_np, precision_np
+    payload = ckpt.get("payload")
+    if payload is None:
+        raise ValueError("Checkpoint does not contain posterior payload")
+    arrs = [np.asarray(x, dtype=np.float32) for x in payload]
+    mu, sigma, precision = obs.posterior_arrays(cfg, arrs)
+    return mu.astype(np.float32), None if sigma is None else sigma.astype(np.float32), None if precision is None else precision.astype(np.float32)
+
+
+def run_posthoc_pruning(
+    run_dir: str | Path,
+    output_dir: str | Path | None,
+    fractions: Sequence[float],
+    round_arg: str | int | None = "final",
+    device_arg: str = "auto",
+    layer_name: str = "all",
+) -> Path:
+    """Evaluate BBB-style low-SNR pruning from a saved posterior snapshot.
+
+    This reproduces the logic of BBB Table 2 in the FL setting: sort weights by
+    posterior SNR = |mu| / sigma, remove the lowest-SNR fraction, and evaluate
+    the pruned posterior-mean model.
+    """
+    run_dir = Path(run_dir)
+    out_dir = Path(output_dir) if output_dir is not None else run_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cfg = _parse_config_csv(run_dir)
+    cfg.output_dir = str(run_dir)
+    if device_arg != "auto":
+        cfg.device = device_arg
+    # Keep evaluation deterministic and reasonably fast.
+    cfg.num_workers = 0
+    cfg.val_ratio = 0.0
+    device = model.resolve_device(cfg.device)
+    snapshot_path, ckpt = _load_posterior_snapshot(run_dir, round_arg)
+    mu, sigma, precision = _payload_from_checkpoint(cfg, ckpt)
+    if sigma is None and precision is not None:
+        sigma = np.sqrt(1.0 / np.maximum(precision, float(cfg.precision_floor))).astype(np.float32)
+    if sigma is None:
+        raise ValueError("Post-hoc Bayesian pruning requires posterior sigma/precision; FedAvg checkpoint is not supported.")
+
+    actual_round = int(ckpt.get("round", cfg.num_rounds)) if isinstance(ckpt, dict) else int(cfg.num_rounds)
+    snr = np.abs(mu.astype(np.float64)) / (sigma.astype(np.float64) + 1.0e-12)
+    num_params = int(mu.size)
+    bundle = dataset.load_federated_data(cfg)
+    rows: list[dict[str, object]] = []
+    for frac in fractions:
+        frac_f = float(frac)
+        frac_f = min(max(frac_f, 0.0), 0.999999)
+        if frac_f <= 0:
+            keep_mask = np.ones(num_params, dtype=bool)
+            threshold_raw = float(np.min(snr))
+        else:
+            threshold_raw = float(np.percentile(snr, frac_f * 100.0))
+            keep_mask = snr > threshold_raw
+            # If ties remove too much, keep exactly ceil((1-frac)*N) largest.
+            target_keep = max(1, int(np.ceil((1.0 - frac_f) * num_params)))
+            if int(keep_mask.sum()) != target_keep:
+                idx = np.argsort(snr)[-target_keep:]
+                keep_mask = np.zeros(num_params, dtype=bool)
+                keep_mask[idx] = True
+        pruned_mu = mu.copy()
+        pruned_mu[~keep_mask] = 0.0
+        payload = [pruned_mu]
+        if cfg.method == "vi":
+            payload.append(sigma.astype(np.float32))
+        elif cfg.method == "ola":
+            if precision is None:
+                precision = 1.0 / np.maximum(sigma * sigma, float(cfg.precision_floor))
+            payload.append(precision.astype(np.float32))
+        metrics, _cal = obs.evaluate_payload(
+            cfg=cfg,
+            payload=payload,
+            input_shape=bundle.input_shape,
+            num_classes=bundle.num_classes,
+            dataloader=bundle.testloader,
+            device=device,
+            mc_samples=1,
+            posterior_sample_scale=0.0,
+            eval_scope="posthoc_prune_global_test",
+            run_id=run_dir.name,
+            round_idx=actual_round,
+        )
+        rows.append(
+            {
+                "schema_version": obs.SCHEMA_VERSION,
+                "run_id": run_dir.name,
+                "round": actual_round,
+                "method": cfg.method,
+                "layer_name": layer_name,
+                "threshold_type": "snr_percentile",
+                "threshold_raw": threshold_raw,
+                "threshold_db": float(20.0 * np.log10(threshold_raw + 1.0e-12)),
+                "prune_fraction": frac_f,
+                "kept_fraction": float(np.mean(keep_mask)),
+                "num_params_total": num_params,
+                "num_params_kept": int(keep_mask.sum()),
+                "num_params_pruned": int(num_params - keep_mask.sum()),
+                "accuracy_after_prune": metrics.get("accuracy", ""),
+                "loss_after_prune": metrics.get("loss", ""),
+                "nll_after_prune": metrics.get("nll", ""),
+                "ece_after_prune": metrics.get("ece", ""),
+                "brier_after_prune": metrics.get("brier", ""),
+                "mean_confidence_after_prune": metrics.get("mean_confidence", ""),
+                "mean_entropy_after_prune": metrics.get("mean_entropy", ""),
+                "posterior_snapshot_path": str(snapshot_path),
+            }
+        )
+    out_path = out_dir / "pruning_eval.csv"
+    obs.write_csv(out_path, rows, obs.PRUNING_EVAL_FIELDS)
+    return out_path
+
+
+def plot_pruning_eval(pruning_csv: str | Path, output_dir: str | Path) -> list[Path]:
+    rows = _read_csv_rows(pruning_csv)
+    if not rows:
+        print(f"[skip] no rows in {pruning_csv}")
+        return []
+    fractions = [float(r["prune_fraction"]) for r in rows]
+    outputs: list[Path] = []
+    out_dir = Path(output_dir)
+    for metric in ["accuracy_after_prune", "loss_after_prune", "ece_after_prune", "num_params_kept"]:
+        vals = []
+        for r in rows:
+            try:
+                vals.append(float(r.get(metric, "")))
+            except Exception:
+                vals.append(float("nan"))
+        fig, ax = plt.subplots(figsize=(7, 4))
+        ax.plot(fractions, vals, marker="o")
+        ax.set_xlabel("Pruned fraction (lowest posterior SNR)")
+        ax.set_ylabel(metric)
+        ax.set_title(f"BBB-style SNR pruning: {metric}")
+        ax.grid(True, alpha=0.3)
+        outputs.append(_save_figure(fig, out_dir / f"pruning_{metric}.png"))
+    return outputs
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline PNG plotting for Bayesian FL runs")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -839,6 +1010,17 @@ def main() -> None:
     char_parser.add_argument("--best_round", type=int, default=None, help="Best accuracy round, used for layer/client snapshots")
     char_parser.add_argument("--best_ece_round", type=int, default=None, help="Best ECE round, used for layer snapshots")
 
+    prune_parser = sub.add_parser("prune", help="Post-hoc BBB-style low-SNR pruning from a Bayesian posterior snapshot")
+    prune_parser.add_argument("--run", required=True, help="Run directory containing config.csv and posterior_snapshots/final.pt")
+    prune_parser.add_argument("--output_dir", default=None, help="Directory for pruning_eval.csv; defaults to the run directory")
+    prune_parser.add_argument("--fractions", nargs="+", type=float, default=[0.0, 0.5, 0.75, 0.9, 0.95, 0.98])
+    prune_parser.add_argument("--round", default="final", help="Snapshot round or final")
+    prune_parser.add_argument("--device", choices=["auto", "cpu", "cuda"], default="auto")
+
+    prune_plot_parser = sub.add_parser("prune-plot", help="Plot pruning_eval.csv")
+    prune_plot_parser.add_argument("--pruning", required=True, help="Path to pruning_eval.csv")
+    prune_plot_parser.add_argument("--output_dir", default="plots/pruning")
+
     args = parser.parse_args()
     if args.command == "metric":
         print(plot_metric(args.history, args.metric, args.output_dir))
@@ -863,6 +1045,11 @@ def main() -> None:
             print(path)
     elif args.command == "characteristics":
         for path in plot_characteristics(args.run, args.method, args.output_dir, args.final_round, args.best_round, args.best_ece_round):
+            print(path)
+    elif args.command == "prune":
+        print(run_posthoc_pruning(args.run, args.output_dir, args.fractions, args.round, args.device))
+    elif args.command == "prune-plot":
+        for path in plot_pruning_eval(args.pruning, args.output_dir):
             print(path)
 
 

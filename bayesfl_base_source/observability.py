@@ -203,6 +203,13 @@ METRICS_FIELDS: List[str] = [
     "aggregation_weight_entropy", "aggregation_weight_max", "aggregation_weight_min", "aggregation_error_proxy",
     "aggregation_energy_before", "aggregation_energy_after", "posterior_product_precision_mean", "posterior_product_precision_std",
     "posterior_product_mu_norm", "posterior_product_sigma_mean",
+    # Sparse Bayesian communication metrics
+    "sparse_comm_enabled", "sparse_metric", "sparse_ratio", "sparse_warmup_rounds", "sparse_min_keep",
+    "sparse_updated_params", "sparse_total_params", "sparse_updated_ratio",
+    "sparse_num_params_sent_mean", "sparse_num_params_sent_std", "sparse_compression_ratio_mean", "sparse_compression_ratio_std",
+    "sparse_threshold_mean", "sparse_threshold_std", "sparse_score_mean_mean", "sparse_score_p50_mean", "sparse_score_p90_mean",
+    "communication_dense_params", "communication_sent_params_mean", "communication_sent_params_total", "communication_compression_ratio",
+    "communication_dense_bytes", "communication_sparse_bytes", "communication_index_bytes", "communication_value_bytes", "communication_saving_ratio",
     # Data/selection and future wireless summaries
     "selected_label_entropy_mean", "selected_label_entropy_std", "selected_label_entropy_min", "selected_label_entropy_max",
     "selected_kl_to_global_label_mean", "selected_kl_to_global_label_std", "selected_num_examples_mean", "selected_num_examples_std",
@@ -221,6 +228,9 @@ CLIENT_TRAIN_FIELDS = [
     "vi_snr_raw_mean", "vi_snr_raw_p50", "vi_snr_raw_p90",
     "ola_task_loss", "ola_prior_loss", "ola_fisher_mean", "ola_fisher_p50", "ola_fisher_p90", "ola_fisher_max", "ola_precision_mean",
     "ola_precision_p50", "ola_precision_p90", "ola_sigma_mean", "ola_sigma_p50", "ola_sigma_p90", "ola_snr_raw_mean", "ola_snr_raw_p50", "ola_snr_raw_p90",
+    "sparse_comm_enabled", "sparse_metric", "sparse_ratio", "sparse_warmup_rounds", "sparse_num_params_total", "sparse_num_params_sent",
+    "sparse_compression_ratio", "sparse_threshold", "sparse_score_mean", "sparse_score_p50", "sparse_score_p90",
+    "sparse_sent_update_l2", "sparse_dropped_update_l2", "sparse_sent_update_fraction_l2",
     "channel_snr_db", "pathloss_db", "rate_mbps", "delay_ms", "energy_j", "ota_contribution_norm", "digital_payload_bytes", "communication_success",
 ]
 
@@ -271,13 +281,25 @@ COMMUNICATION_FIELDS = [
     "schema_version", "run_id", "round", "physical_client_id", "virtual_client_id", "selected", "selection_policy", "distance_m", "angle_rad", "channel_gain", "channel_snr_db", "pathloss_db", "noise_power", "tx_power", "rate_mbps", "delay_ms", "energy_j", "outage", "analog_ota_enabled", "ota_noise_power", "ota_distortion", "ota_mse", "ota_contribution_norm", "digital_enabled", "packet_error_rate", "payload_bytes", "communication_success",
 ]
 
+SPARSE_COMM_FIELDS = [
+    "schema_version", "run_id", "round", "method", "physical_client_id", "virtual_client_id", "num_examples",
+    "sparse_comm_enabled", "sparse_metric", "sparse_ratio", "sparse_warmup_rounds",
+    "sparse_num_params_total", "sparse_num_params_sent", "sparse_compression_ratio", "sparse_threshold",
+    "sparse_score_mean", "sparse_score_p50", "sparse_score_p90",
+    "sparse_sent_update_l2", "sparse_dropped_update_l2", "sparse_sent_update_fraction_l2",
+    "update_l2_norm", "label_entropy", "kl_to_global_label_distribution",
+]
+
 RUN_SUMMARY_FIELDS = [
     "schema_version", "run_id", "method", "dataset", "model", "iid", "balanced", "noniid_alpha", "unbalanced_alpha", "num_devices", "num_virtual_clients", "client_fraction", "num_rounds", "local_epochs", "batch_size", "lr", "seed", "final_global_accuracy", "final_global_loss", "final_global_nll", "final_global_ece", "final_local_accuracy_weighted", "best_global_accuracy", "best_global_accuracy_round", "best_global_ece", "best_global_ece_round", "final_posterior_sigma_mean", "final_posterior_snr_raw_p50", "final_posterior_snr_frac_gt_1", "total_time_sec", "mean_round_time_sec", "final_model_path",
 ]
 
 
 PRUNING_EVAL_FIELDS = [
-    "schema_version", "run_id", "round", "method", "layer_name", "threshold_type", "threshold_raw", "threshold_db", "prune_fraction", "kept_fraction", "num_params_total", "num_params_kept", "num_params_pruned", "accuracy_after_prune", "loss_after_prune", "nll_after_prune", "ece_after_prune", "brier_after_prune",
+    "schema_version", "run_id", "round", "method", "layer_name", "threshold_type", "threshold_raw", "threshold_db",
+    "prune_fraction", "kept_fraction", "num_params_total", "num_params_kept", "num_params_pruned",
+    "accuracy_after_prune", "loss_after_prune", "nll_after_prune", "ece_after_prune", "brier_after_prune",
+    "mean_confidence_after_prune", "mean_entropy_after_prune", "posterior_snapshot_path",
 ]
 
 def base_round_row(cfg: RunConfig, run_id: str, round_idx: int) -> Dict[str, Any]:
@@ -302,6 +324,11 @@ def base_round_row(cfg: RunConfig, run_id: str, round_idx: int) -> Dict[str, Any
         "eval_every": int(cfg.eval_every),
         "heavy_eval_every": int(cfg.heavy_eval_every),
         "eval_mc_samples": int(cfg.eval_mc_samples),
+        "sparse_comm_enabled": bool(cfg.sparse_comm),
+        "sparse_metric": str(cfg.sparse_metric),
+        "sparse_ratio": float(cfg.sparse_ratio),
+        "sparse_warmup_rounds": int(cfg.sparse_warmup_rounds),
+        "sparse_min_keep": int(cfg.sparse_min_keep),
         "posterior_sample_scale": float(cfg.posterior_sample_scale),
         "vi_prior_scale": float(cfg.vi_prior_scale),
         "vi_min_scale": float(cfg.vi_min_scale),
@@ -748,6 +775,12 @@ def summarize_client_rows(rows: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         ("vi_elbo_loss", "vi_elbo_loss"), ("vi_kl_loss", "vi_kl_loss"), ("vi_likelihood_loss", "vi_likelihood_loss"),
         ("ola_prior_loss", "ola_prior_loss"), ("ola_task_loss", "ola_task_loss"), ("ola_fisher_mean", "ola_fisher"),
         ("ola_precision_mean", "ola_precision"), ("ola_sigma_mean", "ola_sigma"),
+        ("sparse_num_params_sent", "sparse_num_params_sent"),
+        ("sparse_compression_ratio", "sparse_compression_ratio"),
+        ("sparse_threshold", "sparse_threshold"),
+        ("sparse_score_mean", "sparse_score_mean"),
+        ("sparse_score_p50", "sparse_score_p50"),
+        ("sparse_score_p90", "sparse_score_p90"),
     ]:
         arr = values(key)
         if arr.size:
