@@ -1,0 +1,2 @@
+baseline_dense_run=outputs/final_compare_mnist_noniid_unbalanced/vi_seed42
+baseline_link=outputs/sparse_comm_mnist_noniid_unbalanced/vi_prune000_dense_baseline_seed42

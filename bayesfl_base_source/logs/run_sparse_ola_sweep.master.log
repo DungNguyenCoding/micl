@@ -1,0 +1,44 @@
+nohup: ignoring input
+===== Sparse OLA sweep =====
+ROOT_DIR=/home/micl/DungNDH/micl/bayesfl_base_source
+SEED=42
+DEVICE=cuda
+CLIENT_GPUS=0.25
+OUTPUT_ROOT=outputs/sparse_comm_mnist_noniid_unbalanced
+LOG_DIR=logs/sparse_comm_mnist_noniid_unbalanced
+PRUNE_FRACTIONS=0.0 0.5 0.75 0.9 0.95 0.98
+SPARSE_METRIC=precision_update
+SPARSE_WARMUP_ROUNDS=20
+SPARSE_MIN_KEEP=100
+SKIP_EXISTING=true
+[baseline] prune_fraction=0.0 uses dense OLA run: outputs/sparse_comm_mnist_noniid_unbalanced/ola_prune000_dense_baseline_seed42 -> outputs/final_compare_mnist_noniid_unbalanced/ola_seed42
+[skip-run] prune_fraction=0.0 is dense baseline; not rerunning sparse OLA.
+[skip-existing] outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune050_keep050_seed42
+[skip-existing] outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune075_keep025_seed42
+[skip-existing] outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune090_keep010_seed42
+===== Running sparse OLA: prune_fraction=0.95, keep/send ratio=0.050000 =====
+Output: outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune095_keep005_seed42
+Log:    logs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune095_keep005_seed42.log
+[done] ola_precision_update_prune095_keep005_seed42
+===== Running sparse OLA: prune_fraction=0.98, keep/send ratio=0.020000 =====
+Output: outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune098_keep002_seed42
+Log:    logs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune098_keep002_seed42.log
+[done] ola_precision_update_prune098_keep002_seed42
+===== Sparse OLA sweep finished =====
+Manifest: outputs/sparse_comm_mnist_noniid_unbalanced/ola_sparse_sweep_manifest_seed42.csv
+Outputs:
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune050_keep050_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune075_keep025_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune090_keep010_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune095_keep005_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune098_keep002_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_prune000_dense_baseline_seed42
+= Sparse OLA sweep finished =====
+Manifest: outputs/sparse_comm_mnist_noniid_unbalanced/ola_sparse_sweep_manifest_seed42.csv
+Outputs:
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune050_keep050_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune075_keep025_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune090_keep010_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune095_keep005_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune098_keep002_seed42
+outputs/sparse_comm_mnist_noniid_unbalanced/ola_prune000_dense_baseline_seed42
