@@ -143,7 +143,8 @@ def plot_mixed_metrics(
 
         if plotted == 0:
             plt.close(fig)
-            raise ValueError(f"No runs contained metric {metric!r}")
+            print(f"[skip] No runs contained usable data for metric {metric!r}")
+            continue
 
         ax.set_xlabel("Round")
         ax.set_ylabel(metric)
@@ -242,15 +243,45 @@ def plot_snr_histogram(
     value_space: str = "db",
 ) -> list[Path]:
     """Plot SNR density and CDF from snr_histograms.csv."""
-    rows = _read_csv_rows(snr_csv)
+    all_rows = _read_csv_rows(snr_csv)
+    candidate_rows = [
+        r for r in all_rows
+        if r.get("layer_name", "") == layer_name and r.get("value_space", "") == value_space
+    ]
+    if not candidate_rows:
+        available_layers = sorted({r.get("layer_name", "") for r in all_rows})
+        available_spaces = sorted({r.get("value_space", "") for r in all_rows})
+        print(
+            f"[skip] No SNR rows for layer={layer_name}, value_space={value_space}. "
+            f"Available layers={available_layers}, value_spaces={available_spaces}"
+        )
+        return []
+
+    available = sorted({int(float(r["round"])) for r in candidate_rows if r.get("round", "") != ""})
+    if not available:
+        print(f"[skip] No SNR round values found in {snr_csv}")
+        return []
+
     if round_idx is None:
-        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
-        if not available:
-            raise ValueError(f"No round values found in {snr_csv}")
-        round_idx = max(available)
-    rows = _filter_rows(rows, round=round_idx, layer_name=layer_name, value_space=value_space)
+        chosen_round = max(available)
+    elif int(round_idx) in available:
+        chosen_round = int(round_idx)
+    else:
+        # SNR histograms are often written only every heavy_eval_every/save interval.
+        # Use the nearest available round instead of crashing. Prefer the previous
+        # saved round on a tie so a best-round request remains conservative.
+        requested = int(round_idx)
+        chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
+        print(
+            f"[info] SNR round {requested} not available in {snr_csv}; "
+            f"using nearest available round {chosen_round}. Available rounds: {available[:5]}...{available[-5:]}"
+        )
+
+    rows = [r for r in candidate_rows if int(float(r.get("round", "nan"))) == chosen_round]
     if not rows:
-        raise ValueError(f"No SNR rows for round={round_idx}, layer={layer_name}, value_space={value_space}")
+        print(f"[skip] No SNR rows for round={chosen_round}, layer={layer_name}, value_space={value_space}")
+        return []
+    round_idx = chosen_round
     rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
     centers = [float(r["bin_center"]) for r in rows]
     density = [float(r["density"]) for r in rows]
@@ -287,10 +318,20 @@ def plot_calibration(calibration_csv: str | Path, output_dir: str | Path, round_
         if not available:
             raise ValueError(f"No round values found in {calibration_csv}")
         round_idx = max(available)
-    rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
-    if not rows:
-        raise ValueError(f"No calibration rows for round={round_idx}, eval_scope={eval_scope}")
-    rows = sorted(rows, key=lambda r: int(float(r["bin_id"])))
+    filtered_rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
+    if not filtered_rows:
+        scoped = [r for r in rows if r.get("eval_scope", "") == eval_scope]
+        available = sorted({int(float(r["round"])) for r in scoped if r.get("round", "") != ""})
+        if available:
+            requested = int(round_idx)
+            chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
+            print(f"[info] calibration round {requested} not available; using nearest available round {chosen_round}")
+            round_idx = chosen_round
+            filtered_rows = _filter_rows(rows, round=round_idx, eval_scope=eval_scope)
+    if not filtered_rows:
+        print(f"[skip] No calibration rows for round={round_idx}, eval_scope={eval_scope}")
+        return Path(output_dir) / f"calibration_round_{int(round_idx):04d}_{eval_scope}.png"
+    rows = sorted(filtered_rows, key=lambda r: int(float(r["bin_id"])))
     centers = [(float(r["bin_left"]) + float(r["bin_right"])) / 2.0 for r in rows]
     acc = [float(r["bin_accuracy"]) if r.get("bin_accuracy", "") != "" else 0.0 for r in rows]
     conf = [float(r["bin_confidence"]) if r.get("bin_confidence", "") != "" else 0.0 for r in rows]
@@ -519,13 +560,19 @@ def plot_posterior_layer_metric(
 
 def _client_rows_for_round(client_csv: str | Path, round_idx: int | None) -> tuple[Rows, int]:
     rows = _read_csv_rows(client_csv)
+    available = sorted({int(float(r["round"])) for r in rows if r.get("round", "") != ""})
+    if not available:
+        raise ValueError(f"No round values found in {client_csv}")
     if round_idx is None:
-        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
-        if not available:
-            raise ValueError(f"No round values found in {client_csv}")
-        round_idx = max(available)
-    filtered = _filter_rows(rows, round=round_idx)
-    return filtered, int(round_idx)
+        chosen_round = max(available)
+    elif int(round_idx) in available:
+        chosen_round = int(round_idx)
+    else:
+        requested = int(round_idx)
+        chosen_round = min(available, key=lambda r: (abs(r - requested), r > requested))
+        print(f"[info] client metric round {requested} not available in {client_csv}; using nearest {chosen_round}")
+    filtered = _filter_rows(rows, round=chosen_round)
+    return filtered, int(chosen_round)
 
 
 def plot_client_boxplots(
