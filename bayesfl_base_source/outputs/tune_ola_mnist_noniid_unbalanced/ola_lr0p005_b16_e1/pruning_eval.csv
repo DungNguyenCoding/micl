@@ -1,1 +1,0 @@
-schema_version,run_id,round,method,layer_name,threshold_type,threshold_raw,threshold_db,prune_fraction,kept_fraction,num_params_total,num_params_kept,num_params_pruned,accuracy_after_prune,loss_after_prune,nll_after_prune,ece_after_prune,brier_after_prune
