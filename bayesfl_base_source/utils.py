@@ -311,6 +311,417 @@ def plot_calibration(calibration_csv: str | Path, output_dir: str | Path, round_
     ax.legend()
     return _save_figure(fig, out_dir / f"calibration_round_{round_idx:04d}_{eval_scope}.png")
 
+
+# -----------------------------------------------------------------------------
+# Method-characteristic plotting helpers
+# -----------------------------------------------------------------------------
+
+def _to_float_or_none(value: str | None) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        val = float(value)
+    except Exception:
+        return None
+    # NaN guard without importing numpy
+    if val != val:
+        return None
+    return val
+
+
+def _series_for_metric(rows: Rows, metric: str) -> tuple[list[float], list[float]]:
+    rounds: list[float] = []
+    values: list[float] = []
+    if not rows or metric not in rows[0]:
+        return rounds, values
+    for row in rows:
+        rnd = _to_float_or_none(row.get("round"))
+        val = _to_float_or_none(row.get(metric))
+        if rnd is None or val is None:
+            continue
+        rounds.append(rnd)
+        values.append(val)
+    return rounds, values
+
+
+def _plot_series_group(
+    rows: Rows,
+    metrics: Sequence[str],
+    output_dir: str | Path,
+    filename: str,
+    title: str,
+    ylabel: str | None = None,
+) -> Path | None:
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    plotted = 0
+    for metric in metrics:
+        rounds, values = _series_for_metric(rows, metric)
+        if not rounds or not values:
+            print(f"[skip] characteristic metric not available: {metric}")
+            continue
+        ax.plot(rounds, values, marker="o", markersize=2.5, linewidth=1.4, label=metric)
+        plotted += 1
+
+    if plotted == 0:
+        plt.close(fig)
+        print(f"[skip] no characteristic data for {filename}")
+        return None
+
+    ax.set_xlabel("Round")
+    ax.set_ylabel(ylabel or "Value")
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=8)
+    return _save_figure(fig, out_dir / filename)
+
+
+def _plot_computed_metric(
+    rows: Rows,
+    output_dir: str | Path,
+    filename: str,
+    title: str,
+    ylabel: str,
+    series: Sequence[tuple[str, str, str, str]],
+) -> Path | None:
+    """Plot computed series.
+
+    Each series tuple is (label, numerator_metric, denominator_metric, operation).
+    Supported operations: gap, ratio, diff, abs_gap.
+    For gap/diff, value = numerator - denominator.
+    For ratio, value = numerator / denominator.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    plotted = 0
+
+    for label, metric_a, metric_b, op in series:
+        rounds: list[float] = []
+        values: list[float] = []
+        if not rows or metric_a not in rows[0] or metric_b not in rows[0]:
+            print(f"[skip] computed metric requires {metric_a} and {metric_b}")
+            continue
+        for row in rows:
+            rnd = _to_float_or_none(row.get("round"))
+            a = _to_float_or_none(row.get(metric_a))
+            b = _to_float_or_none(row.get(metric_b))
+            if rnd is None or a is None or b is None:
+                continue
+            if op in {"gap", "diff"}:
+                val = a - b
+            elif op == "abs_gap":
+                val = abs(a - b)
+            elif op == "ratio":
+                if abs(b) < 1e-12:
+                    continue
+                val = a / b
+            else:
+                raise ValueError(f"Unknown computed op: {op}")
+            rounds.append(rnd)
+            values.append(val)
+
+        if not rounds:
+            print(f"[skip] no data for computed series {label}")
+            continue
+        ax.plot(rounds, values, marker="o", markersize=2.5, linewidth=1.4, label=label)
+        plotted += 1
+
+    if plotted == 0:
+        plt.close(fig)
+        print(f"[skip] no computed characteristic data for {filename}")
+        return None
+
+    ax.set_xlabel("Round")
+    ax.set_ylabel(ylabel)
+    ax.set_title(title)
+    ax.grid(True, alpha=0.3)
+    ax.legend(fontsize=8)
+    return _save_figure(fig, out_dir / filename)
+
+
+def _infer_round(rows: Rows, preferred_round: int | None) -> int | None:
+    if preferred_round is not None:
+        return int(preferred_round)
+    rounds = [int(float(r.get("round", "nan"))) for r in rows if _to_float_or_none(r.get("round")) is not None]
+    return max(rounds) if rounds else None
+
+
+def _posterior_rows_for_round(posterior_csv: str | Path, round_idx: int | None, scope: str = "global") -> tuple[Rows, int]:
+    rows = _read_csv_rows(posterior_csv)
+    available = sorted(
+        {int(float(r["round"])) for r in rows if r.get("round", "") != "" and (not scope or r.get("scope", "") == scope)}
+    )
+    if not available:
+        available = sorted({int(float(r["round"])) for r in rows if r.get("round", "") != ""})
+    if not available:
+        raise ValueError(f"No round values found in {posterior_csv}")
+
+    if round_idx is None:
+        chosen_round = max(available)
+    elif int(round_idx) in available:
+        chosen_round = int(round_idx)
+    else:
+        # posterior_summary is usually written only at save_posterior_every rounds.
+        # For requested best-accuracy/ECE rounds, use the nearest saved posterior round.
+        chosen_round = min(available, key=lambda r: (abs(r - int(round_idx)), r > int(round_idx)))
+        print(f"[info] posterior round {round_idx} not available in {posterior_csv}; using nearest saved round {chosen_round}")
+
+    filtered = _filter_rows(rows, round=chosen_round, scope=scope)
+    if not filtered:
+        filtered = _filter_rows(rows, round=chosen_round)
+    return filtered, int(chosen_round)
+
+
+def plot_posterior_layer_metric(
+    posterior_csv: str | Path,
+    output_dir: str | Path,
+    metric: str,
+    round_idx: int | None = None,
+    scope: str = "global",
+    filename_prefix: str = "posterior_layer",
+) -> Path | None:
+    """Bar plot for one posterior_summary.csv metric across layers."""
+    rows, round_idx = _posterior_rows_for_round(posterior_csv, round_idx, scope)
+    usable = []
+    for row in rows:
+        layer = row.get("layer_name", "")
+        if not layer or layer == "all":
+            continue
+        val = _to_float_or_none(row.get(metric))
+        if val is None:
+            continue
+        usable.append((layer, val))
+
+    if not usable:
+        print(f"[skip] no layer posterior metric {metric} for round={round_idx}")
+        return None
+
+    # Keep layer order from CSV and shorten labels for readability.
+    labels = [x[0] for x in usable]
+    values = [x[1] for x in usable]
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    fig, ax = plt.subplots(figsize=(9, 4.8))
+    x = list(range(len(labels)))
+    ax.bar(x, values)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=45, ha="right", fontsize=8)
+    ax.set_ylabel(metric)
+    ax.set_title(f"Layer-wise {metric} / round {round_idx}")
+    ax.grid(True, axis="y", alpha=0.3)
+    fig.subplots_adjust(bottom=0.35, left=0.12, right=0.98, top=0.90)
+    return _save_figure(fig, out_dir / f"{filename_prefix}_{metric}_round_{round_idx:04d}.png")
+
+
+def _client_rows_for_round(client_csv: str | Path, round_idx: int | None) -> tuple[Rows, int]:
+    rows = _read_csv_rows(client_csv)
+    if round_idx is None:
+        available = [int(float(r["round"])) for r in rows if r.get("round", "") != ""]
+        if not available:
+            raise ValueError(f"No round values found in {client_csv}")
+        round_idx = max(available)
+    filtered = _filter_rows(rows, round=round_idx)
+    return filtered, int(round_idx)
+
+
+def plot_client_boxplots(
+    client_csv: str | Path,
+    output_dir: str | Path,
+    metrics: Sequence[str],
+    round_idx: int | None = None,
+    filename_prefix: str = "client_distribution",
+) -> list[Path]:
+    """Create boxplots over client-level metrics for one round."""
+    rows, round_idx = _client_rows_for_round(client_csv, round_idx)
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+
+    for metric in metrics:
+        values = []
+        if rows and metric not in rows[0]:
+            print(f"[skip] client metric not available: {metric}")
+            continue
+        for row in rows:
+            val = _to_float_or_none(row.get(metric))
+            if val is not None:
+                values.append(val)
+        if not values:
+            print(f"[skip] no client values for metric {metric} at round {round_idx}")
+            continue
+        fig, ax = plt.subplots(figsize=(5, 4.5))
+        ax.boxplot(values, vert=True, showmeans=True)
+        ax.set_xticks([1])
+        ax.set_xticklabels([metric], rotation=15, ha="right")
+        ax.set_ylabel(metric)
+        ax.set_title(f"Client distribution / {metric} / round {round_idx}")
+        ax.grid(True, axis="y", alpha=0.3)
+        fig.subplots_adjust(bottom=0.22, left=0.18, right=0.95, top=0.88)
+        paths.append(_save_figure(fig, out_dir / f"{filename_prefix}_{metric}_round_{round_idx:04d}.png"))
+    return paths
+
+
+def plot_ola_characteristics(
+    run_dir: str | Path,
+    output_dir: str | Path,
+    final_round: int | None = None,
+    best_round: int | None = None,
+    best_ece_round: int | None = None,
+) -> list[Path]:
+    """Generate OLA-specific plots from one OLA run directory."""
+    run_dir = Path(run_dir)
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = _read_csv_rows(run_dir / "metrics.csv")
+    final_round = _infer_round(rows, final_round)
+    paths: list[Path] = []
+
+    plot_specs = [
+        ("ola_mean_vs_mc_accuracy.png", "OLA posterior mean vs MC accuracy", "Accuracy", ["global_accuracy", "global_mean_accuracy", "global_mc_accuracy"]),
+        ("ola_mean_vs_mc_loss.png", "OLA posterior mean vs MC loss", "Loss", ["global_loss", "global_mean_loss", "global_mc_loss"]),
+        ("ola_uncertainty_decomposition.png", "OLA predictive uncertainty decomposition", "Uncertainty", ["global_predictive_entropy", "global_expected_entropy", "global_mutual_information", "global_epistemic_uncertainty", "global_aleatoric_uncertainty"]),
+        ("ola_loss_decomposition.png", "OLA task/prior/train loss decomposition", "Loss", ["ola_task_loss_mean", "ola_prior_loss_mean", "train_loss"]),
+        ("ola_fisher_precision.png", "OLA Fisher and precision summaries", "Value", ["ola_fisher_mean", "ola_precision_mean", "posterior_precision_mean", "posterior_product_precision_mean"]),
+        ("ola_sigma_uncertainty.png", "OLA sigma / posterior uncertainty", "Sigma", ["ola_sigma_mean", "ola_sigma_p50", "ola_sigma_p90", "posterior_sigma_mean", "posterior_sigma_p50", "posterior_sigma_p90"]),
+        ("ola_snr_summary.png", "OLA posterior SNR summaries", "SNR", ["posterior_snr_raw_mean", "posterior_snr_raw_p50", "posterior_snr_raw_p90", "posterior_snr_frac_gt_1", "posterior_snr_frac_lt_1"]),
+        ("ola_global_local_accuracy.png", "OLA global vs local accuracy", "Accuracy", ["global_accuracy", "local_accuracy_weighted", "local_accuracy_mean"]),
+        ("ola_calibration_confidence_entropy.png", "OLA calibration, confidence, entropy", "Value", ["global_ece", "global_mean_ece", "global_mc_ece", "global_mean_confidence", "global_mean_entropy"]),
+    ]
+    for filename, title, ylabel, metrics in plot_specs:
+        p = _plot_series_group(rows, metrics, out_dir, filename, title, ylabel)
+        if p is not None:
+            paths.append(p)
+
+    computed_specs = [
+        ("ola_mean_mc_accuracy_gap.png", "OLA posterior mean - MC accuracy gap", "Accuracy gap", [("mean_acc - mc_acc", "global_mean_accuracy", "global_mc_accuracy", "gap")]),
+        ("ola_mean_mc_loss_gap.png", "OLA posterior mean - MC loss gap", "Loss gap", [("mean_loss - mc_loss", "global_mean_loss", "global_mc_loss", "gap")]),
+        ("ola_local_global_accuracy_gap.png", "OLA local - global accuracy gap", "Accuracy gap", [("local_weighted - global", "local_accuracy_weighted", "global_accuracy", "gap")]),
+        ("ola_prior_task_ratio.png", "OLA prior/task loss ratio", "Ratio", [("prior_loss / task_loss", "ola_prior_loss_mean", "ola_task_loss_mean", "ratio")]),
+    ]
+    for filename, title, ylabel, series in computed_specs:
+        p = _plot_computed_metric(rows, out_dir, filename, title, ylabel, series)
+        if p is not None:
+            paths.append(p)
+
+    # Layer-wise posterior characteristics.
+    posterior_csv = run_dir / "posterior_summary.csv"
+    if posterior_csv.exists():
+        for rnd_name, rnd in [("final", final_round), ("best_acc", best_round), ("best_ece", best_ece_round)]:
+            if rnd is None:
+                continue
+            layer_dir = out_dir / f"layer_{rnd_name}"
+            for metric in ["sigma_mean", "precision_mean", "snr_raw_p50", "snr_raw_p90"]:
+                p = plot_posterior_layer_metric(posterior_csv, layer_dir, metric, rnd, filename_prefix=f"ola_layer_{rnd_name}")
+                if p is not None:
+                    paths.append(p)
+
+    # Client-level distributions.
+    client_csv = run_dir / "client_train_metrics.csv"
+    if client_csv.exists():
+        for rnd_name, rnd in [("final", final_round), ("best_acc", best_round)]:
+            if rnd is None:
+                continue
+            paths.extend(
+                plot_client_boxplots(
+                    client_csv,
+                    out_dir / f"client_{rnd_name}",
+                    ["task_loss", "prior_loss", "update_l2_norm", "ola_fisher_mean", "ola_precision_mean", "ola_sigma_mean", "ola_snr_raw_p50"],
+                    rnd,
+                    filename_prefix=f"ola_client_{rnd_name}",
+                )
+            )
+    return paths
+
+
+def plot_vi_characteristics(
+    run_dir: str | Path,
+    output_dir: str | Path,
+    final_round: int | None = None,
+    best_round: int | None = None,
+    best_ece_round: int | None = None,
+) -> list[Path]:
+    """Generate VI-specific plots from one VI run directory."""
+    run_dir = Path(run_dir)
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = _read_csv_rows(run_dir / "metrics.csv")
+    final_round = _infer_round(rows, final_round)
+    paths: list[Path] = []
+
+    plot_specs = [
+        ("vi_mean_vs_mc_accuracy.png", "VI posterior mean vs MC accuracy", "Accuracy", ["global_accuracy", "global_mean_accuracy", "global_mc_accuracy"]),
+        ("vi_mean_vs_mc_loss.png", "VI posterior mean vs MC loss", "Loss", ["global_loss", "global_mean_loss", "global_mc_loss"]),
+        ("vi_uncertainty_decomposition.png", "VI predictive uncertainty decomposition", "Uncertainty", ["global_predictive_entropy", "global_expected_entropy", "global_mutual_information", "global_epistemic_uncertainty", "global_aleatoric_uncertainty"]),
+        ("vi_elbo_decomposition.png", "VI ELBO/KL/likelihood decomposition", "Loss", ["vi_elbo_loss_mean", "vi_kl_loss_mean", "vi_likelihood_loss_mean", "vi_complexity_cost_mean", "train_loss"]),
+        ("vi_scale_uncertainty.png", "VI scale / posterior uncertainty", "Scale/Sigma", ["vi_scale_mean", "vi_scale_p50", "vi_scale_p90", "posterior_sigma_mean", "posterior_sigma_p50", "posterior_sigma_p90"]),
+        ("vi_snr_summary.png", "VI posterior SNR summaries", "SNR", ["posterior_snr_raw_mean", "posterior_snr_raw_p50", "posterior_snr_raw_p90", "posterior_snr_frac_gt_1", "posterior_snr_frac_lt_1"]),
+        ("vi_global_local_accuracy.png", "VI global vs local accuracy", "Accuracy", ["global_accuracy", "local_accuracy_weighted", "local_accuracy_mean"]),
+        ("vi_calibration_confidence_entropy.png", "VI calibration, confidence, entropy", "Value", ["global_ece", "global_mean_ece", "global_mc_ece", "global_mean_confidence", "global_mean_entropy"]),
+    ]
+    for filename, title, ylabel, metrics in plot_specs:
+        p = _plot_series_group(rows, metrics, out_dir, filename, title, ylabel)
+        if p is not None:
+            paths.append(p)
+
+    computed_specs = [
+        ("vi_mean_mc_accuracy_gap.png", "VI posterior mean - MC accuracy gap", "Accuracy gap", [("mean_acc - mc_acc", "global_mean_accuracy", "global_mc_accuracy", "gap")]),
+        ("vi_mean_mc_loss_gap.png", "VI posterior mean - MC loss gap", "Loss gap", [("mean_loss - mc_loss", "global_mean_loss", "global_mc_loss", "gap")]),
+        ("vi_local_global_accuracy_gap.png", "VI local - global accuracy gap", "Accuracy gap", [("local_weighted - global", "local_accuracy_weighted", "global_accuracy", "gap")]),
+        ("vi_kl_likelihood_ratio.png", "VI KL/likelihood loss ratio", "Ratio", [("KL / likelihood", "vi_kl_loss_mean", "vi_likelihood_loss_mean", "ratio")]),
+    ]
+    for filename, title, ylabel, series in computed_specs:
+        p = _plot_computed_metric(rows, out_dir, filename, title, ylabel, series)
+        if p is not None:
+            paths.append(p)
+
+    posterior_csv = run_dir / "posterior_summary.csv"
+    if posterior_csv.exists():
+        for rnd_name, rnd in [("final", final_round), ("best_acc", best_round), ("best_ece", best_ece_round)]:
+            if rnd is None:
+                continue
+            layer_dir = out_dir / f"layer_{rnd_name}"
+            for metric in ["sigma_mean", "precision_mean", "snr_raw_p50", "snr_raw_p90"]:
+                p = plot_posterior_layer_metric(posterior_csv, layer_dir, metric, rnd, filename_prefix=f"vi_layer_{rnd_name}")
+                if p is not None:
+                    paths.append(p)
+
+    client_csv = run_dir / "client_train_metrics.csv"
+    if client_csv.exists():
+        for rnd_name, rnd in [("final", final_round), ("best_acc", best_round)]:
+            if rnd is None:
+                continue
+            paths.extend(
+                plot_client_boxplots(
+                    client_csv,
+                    out_dir / f"client_{rnd_name}",
+                    ["train_loss", "update_l2_norm", "vi_elbo_loss", "vi_kl_loss", "vi_likelihood_loss", "vi_scale_mean", "vi_snr_raw_p50"],
+                    rnd,
+                    filename_prefix=f"vi_client_{rnd_name}",
+                )
+            )
+    return paths
+
+
+def plot_characteristics(
+    run_dir: str | Path,
+    method: str,
+    output_dir: str | Path,
+    final_round: int | None = None,
+    best_round: int | None = None,
+    best_ece_round: int | None = None,
+) -> list[Path]:
+    method = method.lower().strip()
+    if method == "ola":
+        return plot_ola_characteristics(run_dir, output_dir, final_round, best_round, best_ece_round)
+    if method == "vi":
+        return plot_vi_characteristics(run_dir, output_dir, final_round, best_round, best_ece_round)
+    raise ValueError("--method for characteristics must be 'ola' or 'vi'")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline PNG plotting for Bayesian FL runs")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -340,7 +751,7 @@ def main() -> None:
     mix_parser.add_argument("--filename_prefix", default="mix")
 
     selected_parser = sub.add_parser("selected", help="Plot selected physical-client count per round")
-    selected_parser.add_argument("--selection", required=True, help="Path to selected_clients.csv")
+    selected_parser.add_argument("--selection", required=True, help="Path to selected_clients.csv or selection_summary.csv")
     selected_parser.add_argument("--output_dir", default="plots")
 
     radar_parser = sub.add_parser("radar", help="Plot device distribution radar chart")
@@ -360,6 +771,27 @@ def main() -> None:
     cal_parser.add_argument("--round", type=int, default=None)
     cal_parser.add_argument("--eval_scope", default="global_test")
 
+    layer_parser = sub.add_parser("posterior-layer", help="Plot layer-wise metric from posterior_summary.csv")
+    layer_parser.add_argument("--posterior", required=True, help="Path to posterior_summary.csv")
+    layer_parser.add_argument("--metric", required=True, help="Metric column, e.g. sigma_mean, snr_raw_p50")
+    layer_parser.add_argument("--round", type=int, default=None)
+    layer_parser.add_argument("--scope", default="global")
+    layer_parser.add_argument("--output_dir", default="plots")
+
+    client_parser = sub.add_parser("client-box", help="Plot client-level metric boxplots from client_train_metrics.csv")
+    client_parser.add_argument("--client_csv", required=True, help="Path to client_train_metrics.csv or client_eval_metrics.csv")
+    client_parser.add_argument("--metrics", nargs="+", required=True)
+    client_parser.add_argument("--round", type=int, default=None)
+    client_parser.add_argument("--output_dir", default="plots")
+
+    char_parser = sub.add_parser("characteristics", help="Generate method-specific OLA/VI characteristic plots")
+    char_parser.add_argument("--run", required=True, help="Run directory containing metrics.csv and related CSVs")
+    char_parser.add_argument("--method", required=True, choices=["ola", "vi"])
+    char_parser.add_argument("--output_dir", default="plots/characteristics")
+    char_parser.add_argument("--final_round", type=int, default=None)
+    char_parser.add_argument("--best_round", type=int, default=None, help="Best accuracy round, used for layer/client snapshots")
+    char_parser.add_argument("--best_ece_round", type=int, default=None, help="Best ECE round, used for layer snapshots")
+
     args = parser.parse_args()
     if args.command == "metric":
         print(plot_metric(args.history, args.metric, args.output_dir))
@@ -375,6 +807,16 @@ def main() -> None:
             print(path)
     elif args.command == "calibration":
         print(plot_calibration(args.calibration, args.output_dir, args.round, args.eval_scope))
+    elif args.command == "posterior-layer":
+        path = plot_posterior_layer_metric(args.posterior, args.output_dir, args.metric, args.round, args.scope)
+        if path is not None:
+            print(path)
+    elif args.command == "client-box":
+        for path in plot_client_boxplots(args.client_csv, args.output_dir, args.metrics, args.round):
+            print(path)
+    elif args.command == "characteristics":
+        for path in plot_characteristics(args.run, args.method, args.output_dir, args.final_round, args.best_round, args.best_ece_round):
+            print(path)
 
 
 if __name__ == "__main__":
