@@ -771,7 +771,7 @@ def _load_posterior_snapshot(run_dir: str | Path, round_arg: str | int | None = 
         candidates = [snap_dir / "final.pt", Path(run_dir) / "final_model.pt"]
         for path in candidates:
             if path.exists():
-                return path, torch.load(path, map_location="cpu")
+                return path, torch.load(path, map_location="cpu", weights_only=False)
         raise FileNotFoundError(f"No final posterior snapshot found under {snap_dir}")
     r = int(round_arg)
     path = snap_dir / f"round_{r:04d}.pt"
@@ -790,7 +790,7 @@ def _load_posterior_snapshot(run_dir: str | Path, round_arg: str | int | None = 
             raise FileNotFoundError(f"No valid round snapshots found under {snap_dir}")
         path = sorted(rounds, key=lambda x: x[0])[0][1]
         print(f"[info] requested pruning round {r} not available; using nearest snapshot {path.name}")
-    return path, torch.load(path, map_location="cpu")
+    return path, torch.load(path, map_location="cpu", weights_only=False)
 
 
 def _payload_from_checkpoint(cfg: RunConfig, ckpt: dict) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:

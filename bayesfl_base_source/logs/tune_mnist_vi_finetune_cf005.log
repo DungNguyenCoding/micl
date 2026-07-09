@@ -1,0 +1,369 @@
+nohup: ignoring input
+[device] CUDA available -> CUDA_VISIBLE_DEVICES=0, client_gpus=0.5
+[env] torch: 2.11.0+cu128
+[env] cuda_available: True
+[env] cuda_device_count: 1
+[env] cuda_device_0: NVIDIA GeForce RTX 5090
+[grid] GRID_MODE=full
+[grid] total_runs=36
+[grid] VI_LRS=0.002 0.003 0.005
+[grid] BATCH_SIZES=128 256
+[grid] LOCAL_EPOCHS=5 10
+[grid] VI_PRIOR_SCALES=0.02 0.05 0.10
+[grid] ROOT_DIR=outputs/tune_vi_mnist_noniid_unbalanced_finetune
+[grid] CLIENT_FRACTION=0.05, NUM_ROUNDS=60
+
+============================================================
+[run] vi_lr0p002_b128_e5_prior0p02
+      vi_lr=0.002, batch_size=128, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e5_prior0p02 acc= 0.8256 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p02
+
+============================================================
+[run] vi_lr0p002_b128_e5_prior0p05
+      vi_lr=0.002, batch_size=128, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e5_prior0p05 acc= 0.8582 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p05
+
+============================================================
+[run] vi_lr0p002_b128_e5_prior0p10
+      vi_lr=0.002, batch_size=128, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e5_prior0p05 acc= 0.8582 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p05
+
+============================================================
+[run] vi_lr0p002_b128_e10_prior0p02
+      vi_lr=0.002, batch_size=128, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e5_prior0p05 acc= 0.8582 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e5_prior0p05
+
+============================================================
+[run] vi_lr0p002_b128_e10_prior0p05
+      vi_lr=0.002, batch_size=128, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p05 acc= 0.8714 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p05
+
+============================================================
+[run] vi_lr0p002_b128_e10_prior0p10
+      vi_lr=0.002, batch_size=128, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p10 acc= 0.8724 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+
+============================================================
+[run] vi_lr0p002_b256_e5_prior0p02
+      vi_lr=0.002, batch_size=256, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p10 acc= 0.8724 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+
+============================================================
+[run] vi_lr0p002_b256_e5_prior0p05
+      vi_lr=0.002, batch_size=256, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p10 acc= 0.8724 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+
+============================================================
+[run] vi_lr0p002_b256_e5_prior0p10
+      vi_lr=0.002, batch_size=256, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p10 acc= 0.8724 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+
+============================================================
+[run] vi_lr0p002_b256_e10_prior0p02
+      vi_lr=0.002, batch_size=256, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b128_e10_prior0p10 acc= 0.8724 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+
+============================================================
+[run] vi_lr0p002_b256_e10_prior0p05
+      vi_lr=0.002, batch_size=256, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p002_b256_e10_prior0p10
+      vi_lr=0.002, batch_size=256, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e5_prior0p02
+      vi_lr=0.003, batch_size=128, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e5_prior0p05
+      vi_lr=0.003, batch_size=128, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e5_prior0p10
+      vi_lr=0.003, batch_size=128, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e10_prior0p02
+      vi_lr=0.003, batch_size=128, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e10_prior0p05
+      vi_lr=0.003, batch_size=128, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b128_e10_prior0p10
+      vi_lr=0.003, batch_size=128, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e5_prior0p02
+      vi_lr=0.003, batch_size=256, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e5_prior0p05
+      vi_lr=0.003, batch_size=256, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e5_prior0p10
+      vi_lr=0.003, batch_size=256, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e10_prior0p02
+      vi_lr=0.003, batch_size=256, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p002_b256_e10_prior0p05 acc= 0.8754 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e10_prior0p05
+      vi_lr=0.003, batch_size=256, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p003_b256_e10_prior0p10
+      vi_lr=0.003, batch_size=256, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e5_prior0p02
+      vi_lr=0.005, batch_size=128, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e5_prior0p05
+      vi_lr=0.005, batch_size=128, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e5_prior0p10
+      vi_lr=0.005, batch_size=128, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e10_prior0p02
+      vi_lr=0.005, batch_size=128, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e10_prior0p05
+      vi_lr=0.005, batch_size=128, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b128_e10_prior0p10
+      vi_lr=0.005, batch_size=128, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e5_prior0p02
+      vi_lr=0.005, batch_size=256, local_epochs=5, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p003_b256_e10_prior0p05 acc= 0.8765 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e5_prior0p05
+      vi_lr=0.005, batch_size=256, local_epochs=5, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e5_prior0p10
+      vi_lr=0.005, batch_size=256, local_epochs=5, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e10_prior0p02
+      vi_lr=0.005, batch_size=256, local_epochs=10, vi_prior_scale=0.02
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p02
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e10_prior0p05
+      vi_lr=0.005, batch_size=256, local_epochs=10, vi_prior_scale=0.05
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p05
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+
+============================================================
+[run] vi_lr0p005_b256_e10_prior0p10
+      vi_lr=0.005, batch_size=256, local_epochs=10, vi_prior_scale=0.10
+      output=outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p10
+============================================================
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[ranking] wrote outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+[ranking] best: vi_lr0p005_b256_e5_prior0p05 acc= 0.8807 dir= outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+
+============================================================
+[done] VI fine-tuning finished
+[done] elapsed_seconds=17710
+[done] results=outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_results.csv
+[done] ranking=outputs/tune_vi_mnist_noniid_unbalanced_finetune/sweep_ranking.csv
+[done] top5=outputs/tune_vi_mnist_noniid_unbalanced_finetune/top5_runs.args
+============================================================
+rank,score_accuracy,run_label,status,method,vi_lr,batch_size,local_epochs,vi_prior_scale,vi_init_scale,vi_particles,bayes_aggregation,client_fraction,num_rounds,final_round,final_global_accuracy,final_global_mean_accuracy,final_global_mc_accuracy,final_global_loss,final_global_ece,final_global_nll,final_local_accuracy_weighted,final_posterior_sigma_mean,final_posterior_snr_raw_p50,output_dir
+1,0.8807,vi_lr0p005_b256_e5_prior0p05,ok,vi,0.005,256,5,0.05,0.05,1,product,0.05,60,60,0.8807,0.8807,0.8808,0.42575620193481445,0.06818111385256058,0.42575620193481445,0.9733061589940185,0.08862051001684135,0.415641239389353,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e5_prior0p05
+2,0.8765,vi_lr0p003_b256_e10_prior0p05,ok,vi,0.003,256,10,0.05,0.05,1,product,0.05,60,60,0.8765,0.8765,0.8765,0.4058086198806763,0.03067861103415491,0.4058086198806763,0.9777998197226335,0.08008322084601319,0.3591215590030086,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p05
+3,0.8754,vi_lr0p002_b256_e10_prior0p05,ok,vi,0.002,256,10,0.05,0.05,1,product,0.05,60,60,0.8754,0.8754,0.8754,0.41245136814117433,0.04242901565581564,0.41245136814117433,0.9777998197226335,0.0692698296834868,0.35147917170448756,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p05
+4,0.8748,vi_lr0p003_b128_e10_prior0p10,ok,vi,0.003,128,10,0.10,0.05,1,product,0.05,60,60,0.8748,0.8748,0.8748,0.5043590871810913,0.10225606390014291,0.5043590871810913,0.9690371813018342,0.16630512291434307,0.22821404602162554,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e10_prior0p10
+5,0.8743,vi_lr0p003_b256_e5_prior0p05,ok,vi,0.003,256,5,0.05,0.05,1,product,0.05,60,60,0.8743,0.8743,0.8743,0.43705327205657957,0.06962693698853256,0.43705327205657957,0.9733061589940184,0.07144346294630495,0.3905525239184529,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e5_prior0p05
+6,0.8737,vi_lr0p003_b256_e10_prior0p10,ok,vi,0.003,256,10,0.10,0.05,1,product,0.05,60,60,0.8737,0.8737,0.8739,0.6069509164810181,0.16378025985956193,0.6069509164810181,0.960210347727769,0.1570321617856105,0.23728342412069137,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p10
+7,0.8724,vi_lr0p002_b128_e10_prior0p10,ok,vi,0.002,128,10,0.10,0.05,1,product,0.05,60,60,0.8724,0.8724,0.8722,0.5366822484970093,0.12866307661905885,0.5366822484970093,0.9645435205732193,0.14359196190805287,0.21443007171311357,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p10
+8,0.8714,vi_lr0p003_b128_e10_prior0p05,ok,vi,0.003,128,10,0.05,0.05,1,product,0.05,60,60,0.8714,0.8714,0.8714,0.4184328438282013,0.016520409551262806,0.4184328438282013,0.9644472278433204,0.08480817259069603,0.33236832981545206,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e10_prior0p05
+9,0.8714,vi_lr0p002_b128_e10_prior0p05,ok,vi,0.002,128,10,0.05,0.05,1,product,0.05,60,60,0.8714,0.8714,0.8714,0.4201657404899597,0.024757718972861758,0.4201657404899597,0.9777998197226335,0.07282766036109459,0.331380761711516,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b128_e10_prior0p05
+10,0.871,vi_lr0p005_b256_e10_prior0p02,ok,vi,0.005,256,10,0.02,0.05,1,product,0.05,60,60,0.871,0.871,0.871,0.4347952124595642,0.0571349122270942,0.4347952124595642,0.9689729861485684,0.042266449488357546,0.6049321794272833,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p02
+11,0.8708,vi_lr0p002_b256_e10_prior0p10,ok,vi,0.002,256,10,0.10,0.05,1,product,0.05,60,60,0.8708,0.8708,0.8708,0.6340847009658813,0.18841594160497188,0.6340847009658813,0.9644472278433205,0.13662759572080116,0.21747784741922443,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e10_prior0p10
+12,0.8692,vi_lr0p005_b256_e10_prior0p05,ok,vi,0.005,256,10,0.05,0.05,1,product,0.05,60,60,0.8692,0.8692,0.8693,0.4286705500602722,0.033556699852645346,0.4286705500602722,0.9733061589940185,0.10362240729522784,0.3579081734197823,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p05
+13,0.8675,vi_lr0p005_b128_e10_prior0p05,ok,vi,0.005,128,10,0.05,0.05,1,product,0.05,60,60,0.8675,0.8675,0.8676,0.4345588724136353,0.012749484376609353,0.4345588724136353,0.9556845894225211,0.10863307848978314,0.33131388192685307,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e10_prior0p05
+14,0.8638,vi_lr0p003_b256_e10_prior0p02,ok,vi,0.003,256,10,0.02,0.05,1,product,0.05,60,60,0.8638,0.8638,0.8638,0.4756888146877289,0.08850767172724006,0.4756888146877289,0.960100298893599,0.032408538890364325,0.671310384273069,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b256_e10_prior0p02
+15,0.8628,vi_lr0p002_b256_e5_prior0p05,ok,vi,0.002,256,5,0.05,0.05,1,product,0.05,60,60,0.8628,0.8628,0.8628,0.46972767782211305,0.0812774961873889,0.46972767782211305,0.9733061589940185,0.06371969528579725,0.36465521084692387,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p002_b256_e5_prior0p05
+16,0.8622,vi_lr0p003_b128_e5_prior0p05,ok,vi,0.003,128,5,0.05,0.05,1,product,0.05,60,60,0.8622,0.8622,0.8622,0.448660366153717,0.038174465477466606,0.448660366153717,0.9733061589940184,0.07753390175216006,0.36318703623550885,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p003_b128_e5_prior0p05
+17,0.8616,vi_lr0p005_b256_e10_prior0p10,ok,vi,0.005,256,10,0.10,0.05,1,product,0.05,60,60,0.8616,0.8616,0.8617,0.6124555148124695,0.1331283172860741,0.6124555148124695,0.9602745428810351,0.20102735895067206,0.2564011219290241,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b256_e10_prior0p10
+18,0.8602,vi_lr0p005_b128_e10_prior0p10,ok,vi,0.005,128,10,0.10,0.05,1,product,0.05,60,60,0.8602,0.8602,0.86,0.48864823093414306,0.0451446580156684,0.48864823093414306,0.9821329925680836,0.21119401150031555,0.24134240811452023,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e10_prior0p10
+19,0.8595,vi_lr0p005_b128_e5_prior0p05,ok,vi,0.005,128,5,0.05,0.05,1,product,0.05,60,60,0.8595,0.8595,0.8596,0.4563282472133636,0.028388033318519575,0.4563282472133636,0.9733061589940185,0.09900098745659443,0.36648195223941094,outputs/tune_vi_mnist_noniid_unbalanced_finetune/vi_lr0p005_b128_e5_prior0p05
