@@ -61,7 +61,7 @@ python utils.py mix \
     eval_time_sec \
   --output_dir "${OUT}/runtime"
 
-echo "===== VI Bayesian posterior plots ====="
+echo "===== VI Bayesian posterior plots with FedAvg reference where available ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
@@ -87,6 +87,15 @@ python utils.py mix \
     vi_scale_p50 \
     vi_scale_p90 \
   --output_dir "${OUT}/bayesian_posterior"
+
+echo "===== VI-specific characteristics dashboard ====="
+python utils.py characteristics \
+  --run "${VI}" \
+  --method vi \
+  --final_round 200 \
+  --best_round 106 \
+  --best_ece_round 42 \
+  --output_dir "${OUT}/vi_characteristics"
 
 echo "===== Selected-client plots ====="
 python utils.py selected \

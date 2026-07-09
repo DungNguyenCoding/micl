@@ -61,7 +61,7 @@ python utils.py mix \
     eval_time_sec \
   --output_dir "${OUT}/runtime"
 
-echo "===== OLA Bayesian posterior plots ====="
+echo "===== OLA Bayesian posterior plots with FedAvg reference where available ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
@@ -86,6 +86,15 @@ python utils.py mix \
     ola_precision_mean \
     ola_sigma_mean \
   --output_dir "${OUT}/bayesian_posterior"
+
+echo "===== OLA-specific characteristics dashboard ====="
+python utils.py characteristics \
+  --run "${OLA}" \
+  --method ola \
+  --final_round 200 \
+  --best_round 188 \
+  --best_ece_round 129 \
+  --output_dir "${OUT}/ola_characteristics"
 
 echo "===== Selected-client plots ====="
 python utils.py selected \
@@ -114,7 +123,24 @@ python utils.py calibration \
   --eval_scope global_test \
   --output_dir "${OUT}/calibration_ola_final"
 
+echo "===== Calibration plots: best accuracy round ====="
+# FedAvg best accuracy round = 183
+# OLA best accuracy round = 188
+python utils.py calibration \
+  --calibration "${FA}/calibration_bins.csv" \
+  --round 183 \
+  --eval_scope global_test \
+  --output_dir "${OUT}/calibration_fedavg_best_acc"
+
+python utils.py calibration \
+  --calibration "${OLA}/calibration_bins.csv" \
+  --round 188 \
+  --eval_scope global_test \
+  --output_dir "${OUT}/calibration_ola_best_acc"
+
 echo "===== Calibration plots: best ECE round ====="
+# FedAvg best ECE round = 129
+# OLA best ECE round = 129
 python utils.py calibration \
   --calibration "${FA}/calibration_bins.csv" \
   --round 129 \
