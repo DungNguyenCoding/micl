@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 import csv
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 import numpy as np
 import torch
@@ -27,6 +27,14 @@ from config import RunConfig, str2bool
 
 
 Rows = List[Dict[str, str]]
+
+
+def _trusted_torch_load(path: str | Path):
+    """Load trusted checkpoints from this project across PyTorch versions."""
+    try:
+        return torch.load(path, map_location="cpu", weights_only=False)
+    except TypeError:
+        return torch.load(path, map_location="cpu")
 
 
 def _read_csv_rows(csv_path: str | Path) -> Rows:
@@ -151,7 +159,8 @@ def plot_mixed_metrics(
 
         if plotted == 0:
             plt.close(fig)
-            raise ValueError(f"No runs contained metric {metric!r}")
+            print(f"[skip] No runs contained usable data for metric {metric!r}")
+            continue
 
         ax.set_xlabel("Round")
         ax.set_ylabel(metric)
@@ -771,7 +780,7 @@ def _load_posterior_snapshot(run_dir: str | Path, round_arg: str | int | None = 
         candidates = [snap_dir / "final.pt", Path(run_dir) / "final_model.pt"]
         for path in candidates:
             if path.exists():
-                return path, torch.load(path, map_location="cpu", weights_only=False)
+                return path, _trusted_torch_load(path)
         raise FileNotFoundError(f"No final posterior snapshot found under {snap_dir}")
     r = int(round_arg)
     path = snap_dir / f"round_{r:04d}.pt"
@@ -790,7 +799,7 @@ def _load_posterior_snapshot(run_dir: str | Path, round_arg: str | int | None = 
             raise FileNotFoundError(f"No valid round snapshots found under {snap_dir}")
         path = sorted(rounds, key=lambda x: x[0])[0][1]
         print(f"[info] requested pruning round {r} not available; using nearest snapshot {path.name}")
-    return path, torch.load(path, map_location="cpu", weights_only=False)
+    return path, _trusted_torch_load(path)
 
 
 def _payload_from_checkpoint(cfg: RunConfig, ckpt: dict) -> tuple[np.ndarray, np.ndarray | None, np.ndarray | None]:
@@ -940,6 +949,319 @@ def plot_pruning_eval(pruning_csv: str | Path, output_dir: str | Path) -> list[P
         outputs.append(_save_figure(fig, out_dir / f"pruning_{metric}.png"))
     return outputs
 
+
+# ---------------------------------------------------------------------------
+# Research diagnostics plots added for long-run Bayes-FL analysis
+# ---------------------------------------------------------------------------
+def _last_and_best(rows: Rows, metric: str = "global_accuracy") -> tuple[dict[str, str] | None, dict[str, str] | None]:
+    valid = [r for r in rows if r.get(metric, "") != ""]
+    if not valid:
+        return (rows[-1] if rows else None), None
+    if metric.endswith("ece") or metric.endswith("loss"):
+        best = min(valid, key=lambda r: float(r.get(metric, "inf")))
+    else:
+        best = max(valid, key=lambda r: float(r.get(metric, "-inf")))
+    return rows[-1] if rows else None, best
+
+
+def _series_or_none(rows: Rows, column: str) -> tuple[list[float], list[float]] | None:
+    if not rows or column not in rows[0] or "round" not in rows[0]:
+        return None
+    xs, ys = [], []
+    for r in rows:
+        if r.get("round", "") == "" or r.get(column, "") == "":
+            continue
+        try:
+            xs.append(float(r["round"]))
+            ys.append(float(r[column]))
+        except Exception:
+            continue
+    return (xs, ys) if xs and ys else None
+
+
+def _cumulative(values: Sequence[float]) -> list[float]:
+    out, total = [], 0.0
+    for v in values:
+        total += float(v)
+        out.append(total)
+    return out
+
+
+def plot_run_diagnostics(run_dir: str | Path, output_dir: str | Path | None = None) -> list[Path]:
+    """Generate extra diagnostic plots for one run.
+
+    These plots are designed to explain behavior like VI late-round degradation:
+    best-vs-final gap, posterior uncertainty/SNR, local-global gap, cumulative
+    communication, and accuracy over wall-clock time.
+    """
+    run = Path(run_dir)
+    out_dir = Path(output_dir) if output_dir is not None else run / "diagnostic_plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    rows = _read_csv_rows(run / "metrics.csv")
+    outputs: list[Path] = []
+    if not rows:
+        return outputs
+
+    final, best = _last_and_best(rows, "global_accuracy")
+    if final is not None and best is not None:
+        labels = ["best", "final"]
+        values = [float(best.get("global_accuracy", "nan")), float(final.get("global_accuracy", "nan"))]
+        fig, ax = plt.subplots(figsize=(5.5, 4))
+        ax.bar(labels, values)
+        ax.set_ylim(0.0, max(1.0, max(values) * 1.05))
+        ax.set_ylabel("global_accuracy")
+        ax.set_title(f"Best vs final accuracy (best round={best.get('round','')})")
+        ax.grid(True, axis="y", alpha=0.3)
+        outputs.append(_save_figure(fig, out_dir / "best_vs_final_accuracy.png"))
+
+    # Accuracy + posterior sigma + SNR p50 in one explanatory figure.
+    acc = _series_or_none(rows, "global_accuracy")
+    sigma = _series_or_none(rows, "posterior_sigma_mean")
+    snr = _series_or_none(rows, "posterior_snr_raw_p50")
+    if acc is not None:
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        ax.plot(acc[0], acc[1], marker="o", markersize=3, label="global_accuracy")
+        ax.set_xlabel("Round")
+        ax.set_ylabel("Accuracy")
+        ax.grid(True, alpha=0.3)
+        ax2 = ax.twinx()
+        if sigma is not None:
+            ax2.plot(sigma[0], sigma[1], linestyle="--", label="posterior_sigma_mean")
+        if snr is not None:
+            ax2.plot(snr[0], snr[1], linestyle=":", label="posterior_snr_raw_p50")
+        ax2.set_ylabel("Posterior diagnostic")
+        lines, labels = ax.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax.legend(lines + lines2, labels + labels2, loc="best")
+        ax.set_title("Accuracy with posterior uncertainty/SNR")
+        outputs.append(_save_figure(fig, out_dir / "accuracy_uncertainty_snr_overlay.png"))
+
+    # Local-global gap.
+    local = _series_or_none(rows, "local_accuracy_weighted")
+    if acc is not None and local is not None:
+        acc_map = dict(zip(acc[0], acc[1]))
+        xs, gap = [], []
+        for x, y in zip(local[0], local[1]):
+            if x in acc_map:
+                xs.append(x)
+                gap.append(float(y) - float(acc_map[x]))
+        if xs:
+            fig, ax = plt.subplots(figsize=(8, 4.5))
+            ax.plot(xs, gap, marker="o", markersize=3)
+            ax.axhline(0.0, linewidth=1)
+            ax.set_xlabel("Round")
+            ax.set_ylabel("local_accuracy_weighted - global_accuracy")
+            ax.set_title("Local-global accuracy gap")
+            ax.grid(True, alpha=0.3)
+            outputs.append(_save_figure(fig, out_dir / "local_global_accuracy_gap.png"))
+
+    # Cumulative communication.
+    dense_b = _series_or_none(rows, "communication_dense_bytes")
+    sparse_b = _series_or_none(rows, "communication_sparse_bytes")
+    if dense_b is not None or sparse_b is not None:
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        if dense_b is not None:
+            ax.plot(dense_b[0], _cumulative(dense_b[1]), label="cumulative_dense_bytes")
+        if sparse_b is not None:
+            ax.plot(sparse_b[0], _cumulative(sparse_b[1]), label="cumulative_sparse_bytes")
+        ax.set_xlabel("Round")
+        ax.set_ylabel("Cumulative bytes")
+        ax.set_title("Cumulative communication cost")
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+        outputs.append(_save_figure(fig, out_dir / "cumulative_communication_bytes.png"))
+
+    # Accuracy vs cumulative wall clock time.
+    time_s = _series_or_none(rows, "round_time_sec")
+    if acc is not None and time_s is not None:
+        t_map = dict(zip(time_s[0], time_s[1]))
+        xs, ys, total = [], [], 0.0
+        for r, a in zip(acc[0], acc[1]):
+            total += float(t_map.get(r, 0.0))
+            xs.append(total)
+            ys.append(a)
+        if xs:
+            fig, ax = plt.subplots(figsize=(8, 4.5))
+            ax.plot(xs, ys, marker="o", markersize=3)
+            ax.set_xlabel("Cumulative wall-clock seconds")
+            ax.set_ylabel("global_accuracy")
+            ax.set_title("Accuracy vs wall-clock time")
+            ax.grid(True, alpha=0.3)
+            outputs.append(_save_figure(fig, out_dir / "accuracy_vs_wall_time.png"))
+
+    return outputs
+
+
+def plot_compare_diagnostics(run_specs: Sequence[str], output_dir: str | Path) -> list[Path]:
+    """Create best/final comparison summary plots for multiple runs."""
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    summary_rows = []
+    for spec in run_specs:
+        label, history = _resolve_history_path(spec)
+        rows = _read_csv_rows(history)
+        if not rows:
+            continue
+        final, best = _last_and_best(rows, "global_accuracy")
+        _, best_ece = _last_and_best(rows, "global_ece")
+        if final is None or best is None:
+            continue
+        final_acc = float(final.get("global_accuracy", "nan"))
+        best_acc = float(best.get("global_accuracy", "nan"))
+        final_ece = float(final.get("global_ece", "nan")) if final.get("global_ece", "") != "" else float("nan")
+        summary_rows.append({
+            "label": label,
+            "final_round": final.get("round", ""),
+            "final_global_accuracy": final_acc,
+            "best_global_accuracy": best_acc,
+            "best_accuracy_round": best.get("round", ""),
+            "accuracy_drop_best_to_final": best_acc - final_acc,
+            "final_global_loss": float(final.get("global_loss", "nan")) if final.get("global_loss", "") != "" else float("nan"),
+            "final_global_ece": final_ece,
+            "best_global_ece": float(best_ece.get("global_ece", "nan")) if best_ece is not None and best_ece.get("global_ece", "") != "" else float("nan"),
+            "best_ece_round": best_ece.get("round", "") if best_ece is not None else "",
+        })
+    summary_path = write_simple_csv(out_dir / "best_final_summary.csv", summary_rows)
+    outputs = [summary_path]
+    if not summary_rows:
+        return outputs
+
+    labels = [r["label"] for r in summary_rows]
+    for key, title, ylabel in [
+        ("final_global_accuracy", "Final global accuracy", "Accuracy"),
+        ("best_global_accuracy", "Best global accuracy", "Accuracy"),
+        ("accuracy_drop_best_to_final", "Best-to-final accuracy drop", "Accuracy drop"),
+        ("final_global_ece", "Final ECE", "ECE"),
+        ("final_global_loss", "Final global loss", "Loss"),
+    ]:
+        vals = [float(r.get(key, float("nan"))) for r in summary_rows]
+        fig, ax = plt.subplots(figsize=(max(7, len(labels) * 1.4), 4.5))
+        ax.bar(labels, vals)
+        ax.set_title(title)
+        ax.set_ylabel(ylabel)
+        ax.grid(True, axis="y", alpha=0.3)
+        ax.tick_params(axis="x", rotation=35)
+        outputs.append(_save_figure(fig, out_dir / f"{key}.png"))
+
+    # Accuracy-calibration tradeoff.
+    xs = [float(r.get("final_global_ece", float("nan"))) for r in summary_rows]
+    ys = [float(r.get("final_global_accuracy", float("nan"))) for r in summary_rows]
+    if any(np.isfinite(xs)) and any(np.isfinite(ys)):
+        fig, ax = plt.subplots(figsize=(6, 5))
+        ax.scatter(xs, ys)
+        for label, x, y in zip(labels, xs, ys):
+            if np.isfinite(x) and np.isfinite(y):
+                ax.annotate(label, (x, y), fontsize=8)
+        ax.set_xlabel("Final ECE")
+        ax.set_ylabel("Final global accuracy")
+        ax.set_title("Accuracy-calibration tradeoff")
+        ax.grid(True, alpha=0.3)
+        outputs.append(_save_figure(fig, out_dir / "accuracy_calibration_tradeoff.png"))
+    return outputs
+
+
+def write_simple_csv(path: Path, rows: Sequence[Mapping[str, object]]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames: list[str] = []
+    for r in rows:
+        for k in r.keys():
+            if k not in fieldnames:
+                fieldnames.append(k)
+    with path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for r in rows:
+            writer.writerow(r)
+    return path
+
+
+def plot_client_heterogeneity(run_dir: str | Path, output_dir: str | Path | None = None) -> list[Path]:
+    """Plot client data heterogeneity against update/sparse behavior."""
+    run = Path(run_dir)
+    out_dir = Path(output_dir) if output_dir is not None else run / "heterogeneity_plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    train_csv = run / "client_train_metrics.csv"
+    if not train_csv.exists():
+        print(f"[skip] missing {train_csv}")
+        return []
+    rows = _read_csv_rows(train_csv)
+    outputs: list[Path] = []
+
+    def scatter(xcol: str, ycol: str, filename: str) -> None:
+        if not rows or xcol not in rows[0] or ycol not in rows[0]:
+            return
+        xs, ys = [], []
+        for r in rows:
+            if r.get(xcol, "") == "" or r.get(ycol, "") == "":
+                continue
+            try:
+                xs.append(float(r[xcol])); ys.append(float(r[ycol]))
+            except Exception:
+                pass
+        if not xs:
+            return
+        fig, ax = plt.subplots(figsize=(6, 5))
+        ax.scatter(xs, ys, s=10, alpha=0.45)
+        ax.set_xlabel(xcol)
+        ax.set_ylabel(ycol)
+        ax.set_title(f"{ycol} vs {xcol}")
+        ax.grid(True, alpha=0.3)
+        outputs.append(_save_figure(fig, out_dir / filename))
+
+    scatter("label_entropy", "update_l2_norm", "label_entropy_vs_update_l2.png")
+    scatter("kl_to_global_label_distribution", "update_l2_norm", "label_kl_vs_update_l2.png")
+    scatter("label_entropy", "sparse_num_params_sent", "label_entropy_vs_sparse_sent_params.png")
+    scatter("kl_to_global_label_distribution", "sparse_threshold", "label_kl_vs_sparse_threshold.png")
+    scatter("label_entropy", "local_epochs", "label_entropy_vs_local_epochs.png")
+    return outputs
+
+
+def plot_snr_evolution(snr_csv: str | Path, output_dir: str | Path, rounds: Sequence[int] | None = None, layer: str = "all", value_space: str = "db") -> list[Path]:
+    """Overlay SNR density/CDF for multiple rounds."""
+    rows = _read_csv_rows(snr_csv)
+    if not rows:
+        return []
+    available = sorted({int(float(r.get("round", "0"))) for r in rows if r.get("round", "") != ""})
+    if not available:
+        return []
+    if not rounds:
+        if len(available) <= 5:
+            chosen = available
+        else:
+            idxs = np.linspace(0, len(available) - 1, 5).round().astype(int)
+            chosen = [available[int(i)] for i in idxs]
+    else:
+        chosen = []
+        for requested in rounds:
+            nearest = min(available, key=lambda r: abs(r - int(requested)))
+            if nearest not in chosen:
+                chosen.append(nearest)
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    outputs: list[Path] = []
+    for kind in ["density", "cdf"]:
+        fig, ax = plt.subplots(figsize=(8, 4.5))
+        plotted = 0
+        for rnd in chosen:
+            sub = [r for r in rows if int(float(r.get("round", "-1"))) == rnd and r.get("layer_name") == layer and r.get("value_space") == value_space]
+            if not sub:
+                continue
+            xs = [float(r["bin_center"]) for r in sub]
+            ys = [float(r[kind]) for r in sub]
+            ax.plot(xs, ys, label=f"round {rnd}")
+            plotted += 1
+        if plotted:
+            ax.set_xlabel(f"SNR ({value_space})")
+            ax.set_ylabel(kind)
+            ax.set_title(f"SNR {kind} evolution ({layer})")
+            ax.grid(True, alpha=0.3)
+            ax.legend()
+            outputs.append(_save_figure(fig, out_dir / f"snr_{kind}_evolution_{layer}_{value_space}.png"))
+        else:
+            plt.close(fig)
+    return outputs
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline PNG plotting for Bayesian FL runs")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1010,6 +1332,25 @@ def main() -> None:
     char_parser.add_argument("--best_round", type=int, default=None, help="Best accuracy round, used for layer/client snapshots")
     char_parser.add_argument("--best_ece_round", type=int, default=None, help="Best ECE round, used for layer snapshots")
 
+    diag_parser = sub.add_parser("diagnostics", help="Generate extra explanatory plots for one run")
+    diag_parser.add_argument("--run", required=True, help="Run directory containing metrics.csv")
+    diag_parser.add_argument("--output_dir", default=None)
+
+    compare_diag_parser = sub.add_parser("compare-diagnostics", help="Best/final summary plots for multiple runs")
+    compare_diag_parser.add_argument("--runs", nargs="+", required=True, help="label=run_dir entries")
+    compare_diag_parser.add_argument("--output_dir", required=True)
+
+    het_parser = sub.add_parser("heterogeneity", help="Client heterogeneity vs update/sparse behavior plots")
+    het_parser.add_argument("--run", required=True)
+    het_parser.add_argument("--output_dir", default=None)
+
+    snr_evo_parser = sub.add_parser("snr-evolution", help="Overlay SNR density/CDF across rounds")
+    snr_evo_parser.add_argument("--snr", required=True)
+    snr_evo_parser.add_argument("--rounds", nargs="*", type=int, default=None)
+    snr_evo_parser.add_argument("--layer", default="all")
+    snr_evo_parser.add_argument("--value_space", choices=["raw", "db"], default="db")
+    snr_evo_parser.add_argument("--output_dir", default="plots/snr_evolution")
+
     prune_parser = sub.add_parser("prune", help="Post-hoc BBB-style low-SNR pruning from a Bayesian posterior snapshot")
     prune_parser.add_argument("--run", required=True, help="Run directory containing config.csv and posterior_snapshots/final.pt")
     prune_parser.add_argument("--output_dir", default=None, help="Directory for pruning_eval.csv; defaults to the run directory")
@@ -1045,6 +1386,18 @@ def main() -> None:
             print(path)
     elif args.command == "characteristics":
         for path in plot_characteristics(args.run, args.method, args.output_dir, args.final_round, args.best_round, args.best_ece_round):
+            print(path)
+    elif args.command == "diagnostics":
+        for path in plot_run_diagnostics(args.run, args.output_dir):
+            print(path)
+    elif args.command == "compare-diagnostics":
+        for path in plot_compare_diagnostics(args.runs, args.output_dir):
+            print(path)
+    elif args.command == "heterogeneity":
+        for path in plot_client_heterogeneity(args.run, args.output_dir):
+            print(path)
+    elif args.command == "snr-evolution":
+        for path in plot_snr_evolution(args.snr, args.output_dir, args.rounds, args.layer, args.value_space):
             print(path)
     elif args.command == "prune":
         print(run_posthoc_pruning(args.run, args.output_dir, args.fractions, args.round, args.device))

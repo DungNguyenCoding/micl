@@ -194,6 +194,7 @@ def train_deterministic(
     fisher_steps = 0
     task_loss_sum = 0.0
     prior_loss_sum = 0.0
+    prior_loss_raw_sum = 0.0
     total_loss_sum = 0.0
     correct = 0
     example_sum = 0
@@ -220,10 +221,12 @@ def train_deterministic(
                 fisher_accum = grad_flat.pow(2) if fisher_accum is None else fisher_accum + grad_flat.pow(2)
                 fisher_steps += 1
 
+            prior_loss_raw = torch.tensor(0.0, device=device)
             prior_loss = torch.tensor(0.0, device=device)
             if prior_mu_t is not None and prior_precision_t is not None:
                 flat = flatten_parameters_tensor(net)
-                prior_loss = 0.5 * torch.sum(prior_precision_t * (flat - prior_mu_t).pow(2)) / max(flat.numel(), 1)
+                prior_loss_raw = 0.5 * torch.sum(prior_precision_t * (flat - prior_mu_t).pow(2))
+                prior_loss = prior_loss_raw / max(flat.numel(), 1)
 
             total_loss = task_loss + float(prior_lambda) * prior_loss
             optimizer.zero_grad(set_to_none=True)
@@ -235,11 +238,13 @@ def train_deterministic(
             example_sum += batch_n
             task_loss_sum += float(task_loss.detach().cpu()) * batch_n
             prior_loss_sum += float(prior_loss.detach().cpu()) * batch_n
+            prior_loss_raw_sum += float(prior_loss_raw.detach().cpu()) * batch_n
             total_loss_sum += float(total_loss.detach().cpu()) * batch_n
             correct += int((logits.argmax(dim=1) == y).sum().item())
 
     avg_task_loss = task_loss_sum / max(example_sum, 1)
     avg_prior_loss = prior_loss_sum / max(example_sum, 1)
+    avg_prior_loss_raw = prior_loss_raw_sum / max(example_sum, 1)
     avg_total_loss = total_loss_sum / max(example_sum, 1)
     fisher_np: np.ndarray | None = None
     if collect_fisher:
@@ -252,7 +257,9 @@ def train_deterministic(
         "train_loss": float(avg_total_loss),
         "task_loss": float(avg_task_loss),
         "prior_loss": float(avg_prior_loss),
+        "prior_loss_raw": float(avg_prior_loss_raw),
         "regularization_loss": float(float(prior_lambda) * avg_prior_loss),
+        "regularization_loss_raw": float(float(prior_lambda) * avg_prior_loss_raw),
         "accuracy_local_train_estimate": float(correct / max(example_sum, 1)),
         "loss_local_train_estimate": float(avg_task_loss),
         "num_batches": float(batch_count),

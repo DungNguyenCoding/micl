@@ -97,6 +97,17 @@ class RunConfig:
     vi_min_scale: float = 1.0e-4
     vi_particles: int = 1
     vi_lr: float = 1.0e-3
+    # Optional VI stabilization for long non-IID runs.
+    # Example: --vi_lr_decay_milestones 80,120 --vi_lr_decay_gamma 0.5
+    vi_lr_decay_milestones: str = ""
+    vi_lr_decay_gamma: float = 1.0
+    # 0 disables clamping. When >0, local VI posterior scales are upper-clamped
+    # before being sent to the server. Useful when posterior uncertainty explodes.
+    vi_max_scale: float = 0.0
+
+    # Best-checkpoint tracking
+    save_best_checkpoints: bool = True
+    best_checkpoint_metric: str = "global_accuracy"  # global_accuracy | global_ece | global_loss
 
     # Sparse Bayesian communication / BBB-style pruning experiments
     sparse_comm: bool = False
@@ -193,6 +204,12 @@ def parse_args() -> RunConfig:
     parser.add_argument("--vi_min_scale", type=float, default=RunConfig.vi_min_scale)
     parser.add_argument("--vi_particles", type=int, default=RunConfig.vi_particles)
     parser.add_argument("--vi_lr", type=float, default=RunConfig.vi_lr)
+    parser.add_argument("--vi_lr_decay_milestones", default=RunConfig.vi_lr_decay_milestones, help="Comma-separated server rounds where VI lr is multiplied by --vi_lr_decay_gamma")
+    parser.add_argument("--vi_lr_decay_gamma", type=float, default=RunConfig.vi_lr_decay_gamma)
+    parser.add_argument("--vi_max_scale", type=float, default=RunConfig.vi_max_scale, help="Optional upper clamp for VI posterior scale; 0 disables")
+
+    parser.add_argument("--save_best_checkpoints", type=str2bool, default=RunConfig.save_best_checkpoints)
+    parser.add_argument("--best_checkpoint_metric", choices=["global_accuracy", "global_ece", "global_loss"], default=RunConfig.best_checkpoint_metric)
 
     parser.add_argument("--sparse_comm", type=str2bool, default=RunConfig.sparse_comm)
     parser.add_argument("--sparse_metric", choices=["snr", "update_snr", "precision_update", "kl"], default=RunConfig.sparse_metric)

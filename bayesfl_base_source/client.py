@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from typing import Callable, Dict, List, Mapping, Sequence, Tuple
 
 import flwr as fl
@@ -155,6 +156,20 @@ class GroupedBayesClient(fl.client.NumPyClient):
             return False
         return int(server_round) > int(self.cfg.sparse_warmup_rounds)
 
+    def _effective_vi_lr(self, server_round: int) -> float:
+        """Return VI learning rate after optional round-based decay."""
+        lr = float(self.cfg.vi_lr)
+        milestones_raw = str(getattr(self.cfg, "vi_lr_decay_milestones", "") or "")
+        if not milestones_raw.strip():
+            return lr
+        gamma = float(getattr(self.cfg, "vi_lr_decay_gamma", 1.0))
+        try:
+            milestones = [int(x.strip()) for x in milestones_raw.split(",") if x.strip()]
+        except Exception:
+            milestones = []
+        decay_count = sum(1 for m in milestones if int(server_round) >= int(m))
+        return float(lr * (gamma ** decay_count))
+
     def _empty_product_payload(self, size: int, sparse: bool) -> NDArrays:
         """Empty product-aggregation response for a group with no active devices."""
         if sparse:
@@ -304,6 +319,8 @@ class GroupedBayesClient(fl.client.NumPyClient):
                     "drift_from_global_before_l2": float(np.linalg.norm(update.astype(np.float64))),
                     "ola_task_loss": float(stats.get("task_loss", float("nan"))),
                     "ola_prior_loss": float(stats.get("prior_loss", float("nan"))),
+                    "ola_prior_loss_raw": float(stats.get("prior_loss_raw", float("nan"))),
+                    "ola_regularization_loss_raw": float(stats.get("regularization_loss_raw", float("nan"))),
                 }
             )
             row.update({k.replace("posterior_precision_", "ola_precision_"): v for k, v in array_stats(local_precision, "posterior_precision").items()})
@@ -368,6 +385,8 @@ class GroupedBayesClient(fl.client.NumPyClient):
         sparse_sent_total = 0
         sparse_total_params = 0
         sparse_thresholds: list[float] = []
+        effective_vi_lr = self._effective_vi_lr(server_round)
+        vi_cfg = replace(self.cfg, vi_lr=effective_vi_lr)
 
         for did in active_ids:
             loader = self._loader_for(did)
@@ -380,7 +399,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
                 global_loc=global_loc,
                 global_scale=global_scale,
                 device=self.device,
-                cfg=self.cfg,
+                cfg=vi_cfg,
                 seed=seed,
             )
             n = len(self.trainsets[did])
@@ -431,9 +450,10 @@ class GroupedBayesClient(fl.client.NumPyClient):
             row.update(
                 {
                     "train_loss": float(loss),
-                    "task_loss": float("nan"),
-                    "prior_loss": float(vi_stats.get("vi_kl_loss", float("nan"))),
-                    "regularization_loss": float(vi_stats.get("vi_kl_loss", float("nan"))),
+                    "task_loss": float(vi_stats.get("vi_likelihood_loss", float("nan"))),
+                    "prior_loss": float(vi_stats.get("vi_kl_loss_per_example", float("nan"))),
+                    "regularization_loss": float(vi_stats.get("vi_kl_loss_per_example", float("nan"))),
+                    "vi_effective_lr": float(effective_vi_lr),
                     "num_batches": float("nan"),
                     "update_l2_norm": float(np.linalg.norm(update.astype(np.float64))),
                     "update_linf_norm": float(np.max(np.abs(update))) if update.size else 0.0,

@@ -176,11 +176,13 @@ METRICS_FIELDS: List[str] = [
     "train_loss_mean", "train_loss_std", "task_loss_mean", "task_loss_std", "prior_loss_mean", "prior_loss_std",
     "regularization_loss_mean", "regularization_loss_std",
     # VI-specific
-    "vi_elbo_loss_mean", "vi_elbo_loss_std", "vi_kl_loss_mean", "vi_kl_loss_std", "vi_likelihood_loss_mean", "vi_likelihood_loss_std",
-    "vi_complexity_cost_mean", "vi_scale_mean", "vi_scale_std", "vi_scale_p50", "vi_scale_p90", "vi_scale_max",
+    "vi_elbo_loss_mean", "vi_elbo_loss_std", "vi_kl_loss_mean", "vi_kl_loss_std", "vi_kl_loss_per_example_mean", "vi_kl_loss_per_example_std",
+    "vi_kl_per_param_mean", "vi_likelihood_loss_mean", "vi_likelihood_loss_std", "vi_complexity_cost_mean", "vi_effective_lr_mean",
+    "vi_scale_mean", "vi_scale_std", "vi_scale_p50", "vi_scale_p90", "vi_scale_max",
     "vi_prior_scale", "vi_min_scale", "vi_particles", "vi_aggregation_mode",
     # OLA-specific
-    "ola_prior_lambda", "ola_prior_loss_mean", "ola_prior_loss_std", "ola_task_loss_mean", "ola_task_loss_std",
+    "ola_prior_lambda", "ola_prior_loss_mean", "ola_prior_loss_std", "ola_prior_loss_raw_mean", "ola_prior_loss_raw_std",
+    "ola_regularization_loss_raw_mean", "ola_task_loss_mean", "ola_task_loss_std", "ola_prior_task_ratio",
     "ola_fisher_mean", "ola_fisher_std", "ola_fisher_min", "ola_fisher_p10", "ola_fisher_p50", "ola_fisher_p90", "ola_fisher_max",
     "ola_precision_mean", "ola_precision_std", "ola_precision_min", "ola_precision_p10", "ola_precision_p50", "ola_precision_p90", "ola_precision_max",
     "ola_sigma_mean", "ola_sigma_std", "ola_sigma_p50", "ola_sigma_p90", "ola_sigma_max", "ola_gamma", "ola_online_weight_fisher", "ola_online_weight_prior",
@@ -207,7 +209,8 @@ METRICS_FIELDS: List[str] = [
     "sparse_comm_enabled", "sparse_metric", "sparse_ratio", "sparse_warmup_rounds", "sparse_min_keep",
     "sparse_updated_params", "sparse_total_params", "sparse_updated_ratio",
     "sparse_num_params_sent_mean", "sparse_num_params_sent_std", "sparse_compression_ratio_mean", "sparse_compression_ratio_std",
-    "sparse_threshold_mean", "sparse_threshold_std", "sparse_score_mean_mean", "sparse_score_p50_mean", "sparse_score_p90_mean",
+    "sparse_threshold_mean", "sparse_threshold_std", "sparse_score_mean_avg", "sparse_score_p50_avg", "sparse_score_p90_avg",
+    "sparse_score_mean_mean", "sparse_score_p50_mean", "sparse_score_p90_mean",
     "communication_dense_params", "communication_sent_params_mean", "communication_sent_params_total", "communication_compression_ratio",
     "communication_dense_bytes", "communication_sparse_bytes", "communication_index_bytes", "communication_value_bytes", "communication_saving_ratio",
     # Data/selection and future wireless summaries
@@ -224,9 +227,10 @@ CLIENT_TRAIN_FIELDS = [
     "train_loss", "task_loss", "prior_loss", "regularization_loss", "accuracy_local_train_estimate", "loss_local_train_estimate",
     "update_l2_norm", "update_linf_norm", "update_cosine_to_global", "drift_from_global_before_l2", "drift_from_global_after_l2",
     "label_entropy", "kl_to_global_label_distribution",
-    "vi_elbo_loss", "vi_kl_loss", "vi_likelihood_loss", "vi_complexity_cost", "vi_loc_l2", "vi_scale_mean", "vi_scale_p50", "vi_scale_p90", "vi_scale_max",
+    "vi_elbo_loss", "vi_kl_loss", "vi_kl_loss_per_example", "vi_kl_per_param", "vi_likelihood_loss", "vi_complexity_cost", "vi_effective_lr",
+    "vi_loc_l2", "vi_scale_mean", "vi_scale_p50", "vi_scale_p90", "vi_scale_max",
     "vi_snr_raw_mean", "vi_snr_raw_p50", "vi_snr_raw_p90",
-    "ola_task_loss", "ola_prior_loss", "ola_fisher_mean", "ola_fisher_p50", "ola_fisher_p90", "ola_fisher_max", "ola_precision_mean",
+    "ola_task_loss", "ola_prior_loss", "ola_prior_loss_raw", "ola_regularization_loss_raw", "ola_fisher_mean", "ola_fisher_p50", "ola_fisher_p90", "ola_fisher_max", "ola_precision_mean",
     "ola_precision_p50", "ola_precision_p90", "ola_sigma_mean", "ola_sigma_p50", "ola_sigma_p90", "ola_snr_raw_mean", "ola_snr_raw_p50", "ola_snr_raw_p90",
     "sparse_comm_enabled", "sparse_metric", "sparse_ratio", "sparse_warmup_rounds", "sparse_num_params_total", "sparse_num_params_sent",
     "sparse_compression_ratio", "sparse_threshold", "sparse_score_mean", "sparse_score_p50", "sparse_score_p90",
@@ -772,8 +776,11 @@ def summarize_client_rows(rows: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         ("update_l2_norm", "client_update_l2"), ("update_cosine_to_global", "client_update_cosine"),
         ("drift_from_global_after_l2", "client_drift_from_global_l2"),
         ("drift_from_global_after_cosine", "client_drift_from_global_cosine"),
-        ("vi_elbo_loss", "vi_elbo_loss"), ("vi_kl_loss", "vi_kl_loss"), ("vi_likelihood_loss", "vi_likelihood_loss"),
-        ("ola_prior_loss", "ola_prior_loss"), ("ola_task_loss", "ola_task_loss"), ("ola_fisher_mean", "ola_fisher"),
+        ("vi_elbo_loss", "vi_elbo_loss"), ("vi_kl_loss", "vi_kl_loss"), ("vi_kl_loss_per_example", "vi_kl_loss_per_example"),
+        ("vi_kl_per_param", "vi_kl_per_param"), ("vi_likelihood_loss", "vi_likelihood_loss"),
+        ("vi_complexity_cost", "vi_complexity_cost"), ("vi_effective_lr", "vi_effective_lr"),
+        ("ola_prior_loss", "ola_prior_loss"), ("ola_prior_loss_raw", "ola_prior_loss_raw"), ("ola_regularization_loss_raw", "ola_regularization_loss_raw"),
+        ("ola_task_loss", "ola_task_loss"), ("ola_fisher_mean", "ola_fisher"),
         ("ola_precision_mean", "ola_precision"), ("ola_sigma_mean", "ola_sigma"),
         ("sparse_num_params_sent", "sparse_num_params_sent"),
         ("sparse_compression_ratio", "sparse_compression_ratio"),
@@ -791,6 +798,19 @@ def summarize_client_rows(rows: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
             out[f"{out_prefix}_p50"] = percentile(arr, 50)
             out[f"{out_prefix}_p90"] = percentile(arr, 90)
             out[f"{out_prefix}_max"] = float(arr.max())
+    # Friendlier aliases for round-level sparse score summaries. The older
+    # automatic names remain in the CSV for backward compatibility.
+    for src, dst in [
+        ("sparse_score_mean_mean", "sparse_score_mean_avg"),
+        ("sparse_score_p50_mean", "sparse_score_p50_avg"),
+        ("sparse_score_p90_mean", "sparse_score_p90_avg"),
+    ]:
+        if src in out:
+            out[dst] = out[src]
+    if "ola_prior_loss_mean" in out and "ola_task_loss_mean" in out:
+        denom = float_or_nan(out.get("ola_task_loss_mean", nan()))
+        num = float_or_nan(out.get("ola_prior_loss_mean", nan()))
+        out["ola_prior_task_ratio"] = float(num / denom) if np.isfinite(num) and np.isfinite(denom) and abs(denom) > EPS else nan()
     return out
 
 

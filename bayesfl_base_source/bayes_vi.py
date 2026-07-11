@@ -58,6 +58,35 @@ def split_flat(flat: np.ndarray | torch.Tensor, spec: BayesianMlpSpec, device: t
     return out
 
 
+
+
+def logits_from_flat(flat: np.ndarray | torch.Tensor, x: torch.Tensor, spec: BayesianMlpSpec, device: torch.device) -> torch.Tensor:
+    """Deterministic forward pass through the posterior mean parameters."""
+    state = split_flat(flat, spec, device)
+    z = torch.flatten(x, start_dim=1)
+    num_layers = len(spec.shapes) // 2
+    for layer_idx in range(num_layers):
+        z = F.linear(z, state[f"w{layer_idx}"], state[f"b{layer_idx}"])
+        if layer_idx < num_layers - 1:
+            z = F.relu(z)
+    return z
+
+
+@torch.no_grad()
+def mean_posterior_nll(trainloader: DataLoader, flat_loc: np.ndarray, spec: BayesianMlpSpec, device: torch.device) -> float:
+    """Cross-entropy/NLL of the posterior mean on the local train data."""
+    total_loss = 0.0
+    total_examples = 0
+    for x, y in trainloader:
+        x = x.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True)
+        logits = logits_from_flat(flat_loc, x, spec, device)
+        loss = F.cross_entropy(logits, y, reduction="sum")
+        total_loss += float(loss.detach().cpu())
+        total_examples += int(y.numel())
+    return float(total_loss / max(total_examples, 1))
+
+
 def _softplus_inverse(x: torch.Tensor) -> torch.Tensor:
     """Numerically stable inverse of softplus for positive tensors."""
     x = torch.clamp(x, min=1.0e-8)
@@ -179,6 +208,8 @@ def train_vi_local(
     loc = loc_t.detach().cpu().numpy().astype(np.float32, copy=True)
     scale = scale_t.detach().cpu().numpy().astype(np.float32, copy=True)
     scale = np.maximum(scale, float(cfg.vi_min_scale)).astype(np.float32, copy=False)
+    if float(getattr(cfg, "vi_max_scale", 0.0)) > 0.0:
+        scale = np.minimum(scale, float(cfg.vi_max_scale)).astype(np.float32, copy=False)
 
     prior_loc = np.asarray(global_loc, dtype=np.float64).reshape(-1)
     prior_scale = np.maximum(np.asarray(global_scale, dtype=np.float64).reshape(-1), float(cfg.vi_min_scale))
@@ -186,13 +217,19 @@ def train_vi_local(
     scale64 = np.maximum(scale.astype(np.float64, copy=False).reshape(-1), float(cfg.vi_min_scale))
     kl_terms = (scale64 ** 2 + (loc64 - prior_loc) ** 2) / (prior_scale ** 2) - 1.0 + 2.0 * (np.log(prior_scale) - np.log(scale64))
     vi_kl = float(0.5 * np.sum(kl_terms))
+    n_examples = int(len(trainloader.dataset)) if hasattr(trainloader, "dataset") else 0
+    vi_kl_per_example = float(vi_kl / max(n_examples, 1))
+    vi_kl_per_param = float(vi_kl / max(loc64.size, 1))
+    vi_likelihood = mean_posterior_nll(trainloader, loc, spec, device)
     snr = np.abs(loc64) / (scale64 + 1.0e-12)
     stats = {
         "vi_elbo_loss": float(loss_sum / max(steps, 1)),
         "vi_kl_loss": vi_kl,
-        "vi_kl_per_param": float(vi_kl / max(loc64.size, 1)),
-        "vi_likelihood_loss": float("nan"),
-        "vi_complexity_cost": vi_kl,
+        "vi_kl_loss_per_example": vi_kl_per_example,
+        "vi_kl_per_param": vi_kl_per_param,
+        "vi_likelihood_loss": float(vi_likelihood),
+        "vi_complexity_cost": vi_kl_per_example,
+        "vi_effective_lr": float(cfg.vi_lr),
         "vi_loc_l2": float(np.linalg.norm(loc64)),
         "vi_scale_mean": float(scale64.mean()),
         "vi_scale_std": float(scale64.std()),

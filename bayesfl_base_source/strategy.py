@@ -6,7 +6,7 @@ import json
 import math
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import flwr as fl
 import numpy as np
@@ -82,6 +82,8 @@ class GroupedBayesStrategy(FedAvg):
         self.sparse_comm_rows: list[dict[str, Any]] = []
         self.last_selection = SelectionResult(0, [], cfg.selector)
         self.last_fit_metrics: dict[str, Any] = {}
+        self.best_records: dict[str, dict[str, Any]] = {}
+        self.best_checkpoint_paths: dict[str, str] = {}
         self.round_start_time: dict[int, float] = {}
         self.fit_start_time: dict[int, float] = {}
         self.aggregate_time_sec: float = 0.0
@@ -637,6 +639,8 @@ class GroupedBayesStrategy(FedAvg):
                     }
                 )
         self.history_rows.append(row)
+        if bool(getattr(self.cfg, "save_best_checkpoints", True)):
+            self._maybe_save_best_checkpoints(int(server_round), payload, row)
         print(
             f"[round={server_round:04d} method={self.cfg.method}] "
             f"mean_acc={row['global_mean_accuracy']:.4f} mean_loss={row['global_mean_loss']:.4f} "
@@ -685,6 +689,61 @@ class GroupedBayesStrategy(FedAvg):
             path,
         )
         return path
+
+
+    def _save_payload_checkpoint(self, path: Path, server_round: int, payload: Sequence[np.ndarray], row: Mapping[str, Any]) -> Path:
+        """Save a model/posterior checkpoint for a chosen best metric."""
+        path.parent.mkdir(parents=True, exist_ok=True)
+        mu, sigma, precision = obs.posterior_arrays(self.cfg, payload)
+        eval_model = model.build_model(self.cfg, self.input_shape, self.num_classes).to(self.device)
+        model.set_flat_parameters(eval_model, mu, self.device)
+        torch.save(
+            {
+                "schema_version": obs.SCHEMA_VERSION,
+                "run_id": self.run_id,
+                "round": int(server_round),
+                "method": self.cfg.method,
+                "dataset": self.cfg.dataset,
+                "model": self.cfg.model,
+                "metric_row": dict(row),
+                "payload": [np.asarray(x, dtype=np.float32) for x in payload],
+                "global": {
+                    "mu_flat": torch.as_tensor(mu, dtype=torch.float32),
+                    "sigma_flat": None if sigma is None else torch.as_tensor(sigma, dtype=torch.float32),
+                    "precision_flat": None if precision is None else torch.as_tensor(precision, dtype=torch.float32),
+                    "state_dict": eval_model.state_dict(),
+                },
+                "state_dict": eval_model.state_dict(),
+                "input_shape": self.input_shape,
+                "num_classes": self.num_classes,
+                "param_metadata": self.param_meta,
+            },
+            path,
+        )
+        return path
+
+    def _maybe_save_best_checkpoints(self, server_round: int, payload: Sequence[np.ndarray], row: Mapping[str, Any]) -> None:
+        """Track best accuracy/ECE/loss checkpoints during training."""
+        specs = {
+            "accuracy": ("global_accuracy", "max", "best_accuracy_model.pt"),
+            "ece": ("global_ece", "min", "best_ece_model.pt"),
+            "loss": ("global_loss", "min", "best_loss_model.pt"),
+        }
+        out_dir = self.output_dir / "best_checkpoints"
+        for name, (metric, direction, filename) in specs.items():
+            value = obs.float_or_nan(row.get(metric, obs.nan()))
+            if not np.isfinite(value):
+                continue
+            old = self.best_records.get(name)
+            if old is None:
+                improved = True
+            else:
+                old_value = obs.float_or_nan(old.get(metric, obs.nan()))
+                improved = value > old_value if direction == "max" else value < old_value
+            if improved:
+                self.best_records[name] = dict(row)
+                path = self._save_payload_checkpoint(out_dir / filename, server_round, payload, row)
+                self.best_checkpoint_paths[name] = str(path)
 
     # ------------------------------------------------------------------
     # Output files
@@ -754,6 +813,17 @@ class GroupedBayesStrategy(FedAvg):
             best_acc = max(self.history_rows, key=lambda x: float(x.get("global_accuracy", -1.0) or -1.0))
             row["best_global_accuracy"] = best_acc.get("global_accuracy", obs.nan())
             row["best_global_accuracy_round"] = best_acc.get("round", "")
+            final_acc = obs.float_or_nan(final.get("global_accuracy", obs.nan()))
+            best_acc_value = obs.float_or_nan(best_acc.get("global_accuracy", obs.nan()))
+            row["accuracy_drop_best_to_final"] = float(best_acc_value - final_acc) if np.isfinite(best_acc_value) and np.isfinite(final_acc) else obs.nan()
+            loss_rows = [r for r in self.history_rows if obs.is_finite_number(r.get("global_loss", obs.nan()))]
+            if loss_rows:
+                best_loss = min(loss_rows, key=lambda x: float(x.get("global_loss", math.inf)))
+                row["best_global_loss"] = best_loss.get("global_loss", obs.nan())
+                row["best_global_loss_round"] = best_loss.get("round", "")
+            row["best_accuracy_model_path"] = self.best_checkpoint_paths.get("accuracy", "")
+            row["best_ece_model_path"] = self.best_checkpoint_paths.get("ece", "")
+            row["best_loss_model_path"] = self.best_checkpoint_paths.get("loss", "")
             ece_rows = [r for r in self.history_rows if obs.is_finite_number(r.get("global_ece", obs.nan()))]
             if ece_rows:
                 best_ece = min(ece_rows, key=lambda x: float(x.get("global_ece", math.inf)))
