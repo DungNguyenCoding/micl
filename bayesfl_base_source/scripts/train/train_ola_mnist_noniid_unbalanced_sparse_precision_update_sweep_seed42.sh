@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Allow this script to be launched from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+
 # Step 3: Sparse OLA communication sweep
 # IMPORTANT SEMANTICS:
 #   The paper-style ratios below are PRUNE/DROP fractions.

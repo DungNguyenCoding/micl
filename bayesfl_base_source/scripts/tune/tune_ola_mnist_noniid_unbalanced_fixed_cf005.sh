@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Allow this script to be launched from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
 # Improved OLA/FOLA hyperparameter sweep for MNIST non-IID unbalanced.
 #
 # This version is designed after fixing OLA evaluation to separate:

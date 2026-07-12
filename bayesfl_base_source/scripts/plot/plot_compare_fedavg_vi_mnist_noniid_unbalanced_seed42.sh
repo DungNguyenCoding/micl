@@ -1,17 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Allow this script to be launched from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+
 FA="outputs/final_compare_mnist_noniid_unbalanced/fedavg_seed42"
-OLA="outputs/final_compare_mnist_noniid_unbalanced/ola_seed42"
-OUT="plots/final_compare_mnist_noniid_unbalanced/fa_vs_ola"
+VI="outputs/final_compare_mnist_noniid_unbalanced/vi_seed42"
+OUT="plots/final_compare_mnist_noniid_unbalanced/fa_vs_vi"
 
 mkdir -p "${OUT}"
 
-echo "===== FA vs OLA: performance plots ====="
+echo "===== FA vs VI: performance plots ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
-    ola="${OLA}" \
+    vi="${VI}" \
   --metrics \
     global_accuracy \
     global_mean_accuracy \
@@ -31,11 +37,11 @@ python utils.py mix \
     train_loss \
   --output_dir "${OUT}/performance"
 
-echo "===== FA vs OLA: FL dynamics plots ====="
+echo "===== FA vs VI: FL dynamics plots ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
-    ola="${OLA}" \
+    vi="${VI}" \
   --metrics \
     selected_count \
     selected_examples \
@@ -49,11 +55,11 @@ python utils.py mix \
     aggregation_weight_entropy \
   --output_dir "${OUT}/fl_dynamics"
 
-echo "===== FA vs OLA: runtime plots ====="
+echo "===== FA vs VI: runtime plots ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
-    ola="${OLA}" \
+    vi="${VI}" \
   --metrics \
     round_time_sec \
     fit_time_sec \
@@ -61,11 +67,11 @@ python utils.py mix \
     eval_time_sec \
   --output_dir "${OUT}/runtime"
 
-echo "===== OLA Bayesian posterior plots with FedAvg reference where available ====="
+echo "===== VI Bayesian posterior plots with FedAvg reference where available ====="
 python utils.py mix \
   --runs \
     fedavg="${FA}" \
-    ola="${OLA}" \
+    vi="${VI}" \
   --metrics \
     posterior_sigma_mean \
     posterior_sigma_p50 \
@@ -80,21 +86,22 @@ python utils.py mix \
     posterior_snr_db_p50 \
     posterior_snr_frac_lt_1 \
     posterior_snr_frac_gt_1 \
-    ola_prior_loss_mean \
-    ola_task_loss_mean \
-    ola_fisher_mean \
-    ola_precision_mean \
-    ola_sigma_mean \
+    vi_elbo_loss_mean \
+    vi_kl_loss_mean \
+    vi_likelihood_loss_mean \
+    vi_scale_mean \
+    vi_scale_p50 \
+    vi_scale_p90 \
   --output_dir "${OUT}/bayesian_posterior"
 
-echo "===== OLA-specific characteristics dashboard ====="
+echo "===== VI-specific characteristics dashboard ====="
 python utils.py characteristics \
-  --run "${OLA}" \
-  --method ola \
+  --run "${VI}" \
+  --method vi \
   --final_round 200 \
-  --best_round 188 \
-  --best_ece_round 129 \
-  --output_dir "${OUT}/ola_characteristics"
+  --best_round 106 \
+  --best_ece_round 42 \
+  --output_dir "${OUT}/vi_characteristics"
 
 echo "===== Selected-client plots ====="
 python utils.py selected \
@@ -102,8 +109,8 @@ python utils.py selected \
   --output_dir "${OUT}/selection_fedavg"
 
 python utils.py selected \
-  --selection "${OLA}/selection_summary.csv" \
-  --output_dir "${OUT}/selection_ola"
+  --selection "${VI}/selection_summary.csv" \
+  --output_dir "${OUT}/selection_vi"
 
 echo "===== Device radar plot, same for both methods ====="
 python utils.py radar \
@@ -118,14 +125,14 @@ python utils.py calibration \
   --output_dir "${OUT}/calibration_fedavg_final"
 
 python utils.py calibration \
-  --calibration "${OLA}/calibration_bins.csv" \
+  --calibration "${VI}/calibration_bins.csv" \
   --round 200 \
   --eval_scope global_test \
-  --output_dir "${OUT}/calibration_ola_final"
+  --output_dir "${OUT}/calibration_vi_final"
 
 echo "===== Calibration plots: best accuracy round ====="
 # FedAvg best accuracy round = 183
-# OLA best accuracy round = 188
+# VI best accuracy round = 106
 python utils.py calibration \
   --calibration "${FA}/calibration_bins.csv" \
   --round 183 \
@@ -133,14 +140,14 @@ python utils.py calibration \
   --output_dir "${OUT}/calibration_fedavg_best_acc"
 
 python utils.py calibration \
-  --calibration "${OLA}/calibration_bins.csv" \
-  --round 188 \
+  --calibration "${VI}/calibration_bins.csv" \
+  --round 106 \
   --eval_scope global_test \
-  --output_dir "${OUT}/calibration_ola_best_acc"
+  --output_dir "${OUT}/calibration_vi_best_acc"
 
 echo "===== Calibration plots: best ECE round ====="
 # FedAvg best ECE round = 129
-# OLA best ECE round = 129
+# VI best ECE round = 42
 python utils.py calibration \
   --calibration "${FA}/calibration_bins.csv" \
   --round 129 \
@@ -148,25 +155,32 @@ python utils.py calibration \
   --output_dir "${OUT}/calibration_fedavg_best_ece"
 
 python utils.py calibration \
-  --calibration "${OLA}/calibration_bins.csv" \
-  --round 129 \
+  --calibration "${VI}/calibration_bins.csv" \
+  --round 42 \
   --eval_scope global_test \
-  --output_dir "${OUT}/calibration_ola_best_ece"
+  --output_dir "${OUT}/calibration_vi_best_ece"
 
-echo "===== OLA SNR density/CDF plots ====="
+echo "===== VI SNR density/CDF plots ====="
 python utils.py snr \
-  --snr "${OLA}/snr_histograms.csv" \
+  --snr "${VI}/snr_histograms.csv" \
   --round 200 \
   --layer all \
   --value_space db \
-  --output_dir "${OUT}/snr_ola_final"
+  --output_dir "${OUT}/snr_vi_final"
 
 python utils.py snr \
-  --snr "${OLA}/snr_histograms.csv" \
-  --round 188 \
+  --snr "${VI}/snr_histograms.csv" \
+  --round 106 \
   --layer all \
   --value_space db \
-  --output_dir "${OUT}/snr_ola_best_acc"
+  --output_dir "${OUT}/snr_vi_best_acc"
 
-echo "===== FA vs OLA plot generation finished ====="
+python utils.py snr \
+  --snr "${VI}/snr_histograms.csv" \
+  --round 42 \
+  --layer all \
+  --value_space db \
+  --output_dir "${OUT}/snr_vi_best_ece"
+
+echo "===== FA vs VI plot generation finished ====="
 find "${OUT}" -type f -name "*.png" | sort

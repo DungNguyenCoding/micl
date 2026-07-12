@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Allow this script to be launched from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+
 # Fine-tune VI Bayesian FL on MNIST non-IID/unbalanced.
 # Goal: continue from the previous VI sweep where the best setting was at the
 # edge of the grid: vi_lr=0.002, batch_size=128, local_epochs=5.

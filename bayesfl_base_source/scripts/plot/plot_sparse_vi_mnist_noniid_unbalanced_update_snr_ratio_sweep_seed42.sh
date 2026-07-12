@@ -1,22 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Compare sparse communication ratios for one method: OLA.
+# Allow this script to be launched from any working directory.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+
+# Compare sparse communication ratios for one method: VI.
 # Note: in training, --sparse_ratio is the KEEP/SEND fraction.
 # The run names also include prune/drop fraction: prune075_keep025 means drop 75%, send 25%.
 
-METHOD="ola"
+METHOD="vi"
 SEED="${SEED:-42}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-outputs/sparse_comm_mnist_noniid_unbalanced}"
-PLOT_ROOT="${PLOT_ROOT:-plots/sparse_comm_mnist_noniid_unbalanced/ola_ratio_sweep}"
-DENSE_BASELINE="${DENSE_BASELINE:-outputs/final_compare_mnist_noniid_unbalanced/ola_seed42}"
+PLOT_ROOT="${PLOT_ROOT:-plots/sparse_comm_mnist_noniid_unbalanced/vi_ratio_sweep}"
+DENSE_BASELINE="${DENSE_BASELINE:-outputs/final_compare_mnist_noniid_unbalanced/vi_seed42}"
 FINAL_ROUND="${FINAL_ROUND:-200}"
 EVAL_SCOPE="${EVAL_SCOPE:-global_test}"
 
 mkdir -p "${PLOT_ROOT}" logs
 
 # Create/refresh dense baseline symlink if possible.
-BASELINE_LINK="${OUTPUT_ROOT}/ola_prune000_dense_baseline_seed${SEED}"
+BASELINE_LINK="${OUTPUT_ROOT}/vi_prune000_dense_baseline_seed${SEED}"
 if [[ -d "${DENSE_BASELINE}" ]]; then
   mkdir -p "${OUTPUT_ROOT}"
   ln -sfn "$(realpath "${DENSE_BASELINE}")" "${BASELINE_LINK}"
@@ -41,13 +47,13 @@ add_run() {
 }
 
 add_run "drop000_keep100" "0.0"  "1.00" "${BASELINE_LINK}"
-add_run "drop050_keep050" "0.5"  "0.50" "${OUTPUT_ROOT}/ola_precision_update_prune050_keep050_seed${SEED}"
-add_run "drop075_keep025" "0.75" "0.25" "${OUTPUT_ROOT}/ola_precision_update_prune075_keep025_seed${SEED}"
-add_run "drop090_keep010" "0.9"  "0.10" "${OUTPUT_ROOT}/ola_precision_update_prune090_keep010_seed${SEED}"
-add_run "drop095_keep005" "0.95" "0.05" "${OUTPUT_ROOT}/ola_precision_update_prune095_keep005_seed${SEED}"
-add_run "drop098_keep002" "0.98" "0.02" "${OUTPUT_ROOT}/ola_precision_update_prune098_keep002_seed${SEED}"
+add_run "drop050_keep050" "0.5"  "0.50" "${OUTPUT_ROOT}/vi_update_snr_prune050_keep050_seed${SEED}"
+add_run "drop075_keep025" "0.75" "0.25" "${OUTPUT_ROOT}/vi_update_snr_prune075_keep025_seed${SEED}"
+add_run "drop090_keep010" "0.9"  "0.10" "${OUTPUT_ROOT}/vi_update_snr_prune090_keep010_seed${SEED}"
+add_run "drop095_keep005" "0.95" "0.05" "${OUTPUT_ROOT}/vi_update_snr_prune095_keep005_seed${SEED}"
+add_run "drop098_keep002" "0.98" "0.02" "${OUTPUT_ROOT}/vi_update_snr_prune098_keep002_seed${SEED}"
 
-echo "===== OLA sparse-ratio sweep plotting ====="
+echo "===== VI sparse-ratio sweep plotting ====="
 echo "PLOT_ROOT=${PLOT_ROOT}"
 echo "SPECS_FILE=${SPECS_FILE}"
 echo "num_runs=${#RUN_ARGS[@]}"
@@ -91,7 +97,8 @@ run_mix "bayesian_posterior" \
   posterior_snr_raw_mean posterior_snr_raw_p50 posterior_snr_raw_p90 \
   posterior_snr_db_mean posterior_snr_db_p50 \
   posterior_snr_frac_lt_1 posterior_snr_frac_gt_1 \
-  ola_prior_loss_mean ola_task_loss_mean ola_fisher_mean ola_precision_mean ola_sigma_mean
+  vi_elbo_loss_mean vi_kl_loss_mean vi_likelihood_loss_mean \
+  vi_scale_mean vi_scale_p50 vi_scale_p90
 
 run_mix "sparse_diagnostics" \
   sparse_score_mean sparse_score_p50 sparse_score_p90 sparse_threshold_mean \
@@ -233,11 +240,8 @@ for spec in specs:
         "communication_dense_bytes_mean": mean_metric("communication_dense_bytes"),
         "posterior_sigma_mean_final": final_metric(["posterior_sigma_mean"]),
         "posterior_snr_raw_p50_final": final_metric(["posterior_snr_raw_p50"]),
-        "ola_prior_loss_mean_final": final_metric(["ola_prior_loss_mean"]),
-        "ola_task_loss_mean_final": final_metric(["ola_task_loss_mean"]),
-        "ola_fisher_mean_final": final_metric(["ola_fisher_mean"]),
-        "ola_precision_mean_final": final_metric(["ola_precision_mean"]),
-        "ola_sigma_mean_final": final_metric(["ola_sigma_mean"]),
+        "vi_elbo_loss_mean_final": final_metric(["vi_elbo_loss_mean"]),
+        "vi_kl_loss_mean_final": final_metric(["vi_kl_loss_mean"]),
     }
 
     # Dense baseline does not have sparse communication columns. Fill natural baseline values.
@@ -326,11 +330,8 @@ for metric, ylabel, filename in [
     ("communication_sent_params_mean_mean", "Mean sent parameters", "mean_sent_params_vs_drop_fraction.png"),
     ("posterior_sigma_mean_final", "Final posterior sigma mean", "posterior_sigma_mean_vs_drop_fraction.png"),
     ("posterior_snr_raw_p50_final", "Final posterior SNR raw p50", "posterior_snr_p50_vs_drop_fraction.png"),
-    ("ola_prior_loss_mean_final", "Final OLA prior loss mean", "ola_prior_loss_vs_drop_fraction.png"),
-    ("ola_task_loss_mean_final", "Final OLA task loss mean", "ola_task_loss_vs_drop_fraction.png"),
-    ("ola_fisher_mean_final", "Final OLA Fisher mean", "ola_fisher_vs_drop_fraction.png"),
-    ("ola_precision_mean_final", "Final OLA precision mean", "ola_precision_vs_drop_fraction.png"),
-    ("ola_sigma_mean_final", "Final OLA sigma mean", "ola_sigma_vs_drop_fraction.png"),
+    ("vi_elbo_loss_mean_final", "Final VI ELBO loss mean", "vi_elbo_loss_vs_drop_fraction.png"),
+    ("vi_kl_loss_mean_final", "Final VI KL loss mean", "vi_kl_loss_vs_drop_fraction.png"),
 ]:
     plot_vs_prune(metric, ylabel, filename)
 
@@ -387,5 +388,5 @@ if client_round_rows:
         print(path)
 PY
 
-echo "===== OLA sparse-ratio plotting finished ====="
+echo "===== VI sparse-ratio plotting finished ====="
 find "${PLOT_ROOT}" -type f \( -name "*.png" -o -name "*.csv" \) | sort

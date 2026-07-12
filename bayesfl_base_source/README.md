@@ -834,3 +834,122 @@ The placeholder `WirelessQualitySelector` in `selector.py` is the intended exten
 - hybrid data-importance and channel-quality scheduling.
 
 The source already saves `device_summary.csv`, `selected_clients.csv`, and `communication_metrics.csv` with stable columns so future wireless information can be added without redesigning the output schema.
+
+---
+
+## Shell script organization and nohup execution
+
+The repository keeps reusable execution scripts under `scripts/` instead of the source-code root.
+
+```text
+scripts/
+├── train/   # long-running training jobs that generate outputs/
+├── tune/    # hyperparameter sweeps that generate outputs/tune_*
+└── plot/    # offline plotting jobs that generate plots/
+```
+
+Each script name follows this pattern:
+
+```text
+<file_type>_<method>_<dataset>_<setting>_<hyperparameter_tag>[_seed].sh
+```
+
+Examples:
+
+```text
+scripts/train/train_fedavg_mnist_noniid_unbalanced_dense_seed42.sh
+scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh
+scripts/plot/plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh
+```
+
+All scripts automatically change directory to the repository root before running, so they can be launched from either the root folder or another working directory.
+
+### Common nohup pattern
+
+Long experiments should be launched with `nohup` so they continue after the terminal is closed.
+
+```bash
+mkdir -p logs
+nohup bash <script_path> > logs/<log_name>.log 2>&1 &
+```
+
+Example:
+
+```bash
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh \
+  > logs/train_vi_sparse_keep010_decay_seed42.log 2>&1 &
+```
+
+Monitor the log:
+
+```bash
+tail -f logs/train_vi_sparse_keep010_decay_seed42.log
+```
+
+Check whether a job is still running:
+
+```bash
+pgrep -af "main.py|scripts/"
+```
+
+Check GPU usage:
+
+```bash
+watch -n 2 nvidia-smi
+```
+
+Stop a running job if necessary:
+
+```bash
+pkill -f "train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42"
+```
+
+### Useful environment overrides
+
+Most training scripts support these common overrides:
+
+```bash
+SEED=43 bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+FORCE_DEVICE=cpu bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+FORCE_DEVICE=cuda CUDA_VISIBLE_DEVICES=0 CLIENT_GPUS=0.5 bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+```
+
+For sparse-ratio sweeps, the baseline dense run is usually reused for `drop000_keep100`, and the sparse runs write to:
+
+```text
+outputs/sparse_comm_mnist_noniid_unbalanced/
+```
+
+### Recommended reproduction order for the current validated MNIST stage
+
+1. Train dense final comparison runs:
+
+```bash
+nohup bash scripts/train/train_fedavg_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_fedavg_mnist_dense_seed42.log 2>&1 &
+nohup bash scripts/train/train_ola_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_ola_mnist_dense_seed42.log 2>&1 &
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_vi_mnist_dense_seed42.log 2>&1 &
+```
+
+2. Train sparse communication sweeps:
+
+```bash
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_sweep_seed42.sh > logs/train_vi_sparse_update_snr_sweep_seed42.log 2>&1 &
+nohup bash scripts/train/train_ola_mnist_noniid_unbalanced_sparse_precision_update_sweep_seed42.sh > logs/train_ola_sparse_precision_update_sweep_seed42.log 2>&1 &
+```
+
+3. Train stabilized VI variants:
+
+```bash
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_decay_seed42.sh > logs/train_vi_decay_seed42.log 2>&1 &
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh > logs/train_vi_sparse_keep010_decay_seed42.log 2>&1 &
+```
+
+4. Generate plots:
+
+```bash
+nohup bash scripts/plot/plot_compare_fedavg_ola_mnist_noniid_unbalanced_seed42.sh > logs/plot_compare_fedavg_ola_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_compare_fedavg_vi_mnist_noniid_unbalanced_seed42.sh > logs/plot_compare_fedavg_vi_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh > logs/plot_sparse_vi_ratio_sweep_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_sparse_ola_mnist_noniid_unbalanced_precision_update_ratio_sweep_seed42.sh > logs/plot_sparse_ola_ratio_sweep_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh > logs/plot_diagnostics_mnist_research_v1.log 2>&1 &
+```

@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
-mkdir -p logs outputs/sparse_comm_mnist_noniid_unbalanced
 
-FORCE_DEVICE="${FORCE_DEVICE:-auto}"
-CLIENT_GPUS="${CLIENT_GPUS:-0.25}"
+# Stabilized dense VI baseline: MNIST non-IID unbalanced, seed 42.
+# Adds LR decay + posterior-scale clamp to reduce late-round VI drift.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+mkdir -p logs outputs
+export PYTHONUNBUFFERED=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
+FORCE_DEVICE="${FORCE_DEVICE:-auto}"       # auto | cpu | cuda
+CLIENT_GPUS="${CLIENT_GPUS:-0.5}"
+SEED="${SEED:-42}"
+OUT_DIR="${OUT_DIR:-outputs/vi_mnist_stabilized_decay_seed${SEED}}"
+
 if [[ "${FORCE_DEVICE}" == "cpu" ]]; then
   DEVICE_ARGS=(--device cpu --client_gpus 0)
 elif [[ "${FORCE_DEVICE}" == "cuda" ]]; then
@@ -22,9 +38,8 @@ PY
   fi
 fi
 
-OUT="outputs/sparse_comm_mnist_noniid_unbalanced/ola_precision_update_prune000_keep100_control_seed42"
 python main.py \
-  --method ola \
+  --method vi \
   --dataset mnist \
   --model mlp \
   --iid false \
@@ -45,23 +60,21 @@ python main.py \
   --eval_mc_samples 5 \
   --posterior_sample_scale 0.001 \
   --metrics_level bayes \
+  "${DEVICE_ARGS[@]}" \
   --client_cpus 1 \
   --num_workers 0 \
   --torch_threads 1 \
-  --seed 42 \
-  --optimizer sgd \
-  --lr 0.005 \
-  --batch_size 32 \
-  --local_epochs 2 \
-  --ola_prior_lambda 0.05 \
-  --precision_init 0.001 \
-  --precision_floor 1e-8 \
-  --fisher_clip 10.0 \
-  --sparse_comm true \
-  --sparse_metric precision_update \
-  --sparse_ratio 1.0 \
-  --sparse_warmup_rounds 20 \
-  --sparse_min_keep 100 \
+  --seed "${SEED}" \
+  --vi_lr 0.005 \
+  --vi_lr_decay_milestones 80,120,160 \
+  --vi_lr_decay_gamma 0.5 \
+  --vi_max_scale 0.5 \
+  --vi_prior_scale 0.05 \
+  --vi_init_scale 0.05 \
+  --vi_min_scale 1e-5 \
+  --vi_particles 1 \
+  --bayes_aggregation product \
+  --batch_size 256 \
+  --local_epochs 5 \
   --save_best_checkpoints true \
-  "${DEVICE_ARGS[@]}" \
-  --output_dir "${OUT}"
+  --output_dir "${OUT_DIR}"

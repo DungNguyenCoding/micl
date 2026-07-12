@@ -1,9 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
-mkdir -p logs outputs/sparse_comm_mnist_noniid_unbalanced
 
-FORCE_DEVICE="${FORCE_DEVICE:-auto}"
+# Best current VI variant: sparse update-SNR communication keep010 + LR decay + scale clamp.
+# MNIST non-IID unbalanced, seed 42.
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "${REPO_ROOT}"
+
+mkdir -p logs outputs
+export PYTHONUNBUFFERED=1
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export NUMEXPR_NUM_THREADS=1
+
+FORCE_DEVICE="${FORCE_DEVICE:-auto}"       # auto | cpu | cuda
 CLIENT_GPUS="${CLIENT_GPUS:-0.5}"
+SEED="${SEED:-42}"
+OUT_DIR="${OUT_DIR:-outputs/vi_sparse_keep010_decay_seed${SEED}}"
+
 if [[ "${FORCE_DEVICE}" == "cpu" ]]; then
   DEVICE_ARGS=(--device cpu --client_gpus 0)
 elif [[ "${FORCE_DEVICE}" == "cuda" ]]; then
@@ -22,7 +38,6 @@ PY
   fi
 fi
 
-OUT="outputs/sparse_comm_mnist_noniid_unbalanced/vi_update_snr_prune000_keep100_control_seed42"
 python main.py \
   --method vi \
   --dataset mnist \
@@ -45,11 +60,15 @@ python main.py \
   --eval_mc_samples 5 \
   --posterior_sample_scale 0.001 \
   --metrics_level bayes \
+  "${DEVICE_ARGS[@]}" \
   --client_cpus 1 \
   --num_workers 0 \
   --torch_threads 1 \
-  --seed 42 \
+  --seed "${SEED}" \
   --vi_lr 0.005 \
+  --vi_lr_decay_milestones 80,120,160 \
+  --vi_lr_decay_gamma 0.5 \
+  --vi_max_scale 0.5 \
   --vi_prior_scale 0.05 \
   --vi_init_scale 0.05 \
   --vi_min_scale 1e-5 \
@@ -59,9 +78,8 @@ python main.py \
   --local_epochs 5 \
   --sparse_comm true \
   --sparse_metric update_snr \
-  --sparse_ratio 1.0 \
+  --sparse_ratio 0.10 \
   --sparse_warmup_rounds 20 \
   --sparse_min_keep 100 \
   --save_best_checkpoints true \
-  "${DEVICE_ARGS[@]}" \
-  --output_dir "${OUT}"
+  --output_dir "${OUT_DIR}"
