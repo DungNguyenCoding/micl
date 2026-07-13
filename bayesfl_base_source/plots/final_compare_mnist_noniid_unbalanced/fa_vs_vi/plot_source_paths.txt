@@ -1,0 +1,12 @@
+fedavg=outputs/final_compare_mnist_noniid_unbalanced/fedavg_seed42
+vi=outputs/vi_mnist_stabilized_decay_seed42
+fedavg_final_round=200
+fedavg_best_acc_round=183
+fedavg_best_ece_round=129
+vi_final_round=200
+vi_best_acc_round=142
+vi_best_ece_round=42
+vi_requested_best_acc_round=142
+vi_snr_best_acc_nearest_saved_round=140
+vi_requested_best_ece_round=42
+vi_snr_best_ece_nearest_saved_round=40
