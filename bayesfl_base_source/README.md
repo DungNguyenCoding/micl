@@ -1,476 +1,854 @@
-# Bayesian Federated Learning Source Structure
+# Bayesian Federated Learning Simulation Base Source
 
-This README explains the structure and purpose of the `bayesfl_base_source` codebase. It is intended as the first document to read before modifying or extending the research code.
+This source compares three training modes under the same grouped Flower simulation layout:
 
-The current repository is organized around a federated-learning experiment framework for comparing deterministic FedAvg, Variational Inference Bayesian FL, OLA/FOLA-style Bayesian FL, and sparse Bayesian communication. The code is designed to produce reproducible training outputs, diagnostic CSV files, posterior snapshots, and plots.
+- `fedavg`: deterministic Federated Averaging baseline.
+- `vi`: mean-field variational Bayesian FL using Pyro SVI and `AutoDiagonalNormal` over an MLP weight posterior.
+- `ola`: Online Laplace Approximation / FOLA-style Bayesian FL using diagonal empirical Fisher precision, Gaussian-product server aggregation, and prior-iteration local regularization.
+
+The main design choice is that **physical devices** and **Flower virtual clients** are separate. For example:
+
+```bash
+--num_devices 300 --num_virtual_clients 24 --client_fraction 0.1
+```
+
+selects about 30 physical devices per round, but launches at most 24 Flower/Ray client tasks per round. Each virtual client sequentially simulates the selected physical devices assigned to its group.
+
+This version adds a **Bayes-FL observability schema**. Training still writes only `.csv`, `.log`, and `.pt` files. PNG plots are generated later with `utils.py`.
 
 ---
 
-## 1. Top-level structure
+## Install
 
-```text
-bayesfl_base_source/
-├── README.md
-├── requirements.txt
-├── __init__.py
-├── .gitignore
-├── main.py
-├── config.py
-├── dataset.py
-├── model.py
-├── bayes_vi.py
-├── client.py
-├── strategy.py
-├── selector.py
-├── compression.py
-├── observability.py
-├── utils.py
-├── design/
-├── scripts/
-├── outputs/
-├── plots/
-└── logs/
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-| Path | Type | Purpose |
+The plotting utilities intentionally avoid Pandas. This reduces NumPy/Pandas binary compatibility issues in shared Conda environments.
+
+---
+
+## Quick smoke test
+
+```bash
+python main.py \
+  --method fedavg \
+  --dataset mnist \
+  --model mlp \
+  --num_devices 10 \
+  --num_virtual_clients 2 \
+  --client_fraction 0.2 \
+  --num_rounds 1 \
+  --local_epochs 1 \
+  --output_dir outputs/smoke_fedavg
+```
+
+---
+
+## Example runs
+
+### FedAvg, MNIST, IID balanced
+
+```bash
+python main.py \
+  --method fedavg \
+  --dataset mnist \
+  --model mlp \
+  --iid true \
+  --balanced true \
+  --num_devices 300 \
+  --num_virtual_clients 24 \
+  --client_fraction 0.1 \
+  --num_rounds 20 \
+  --local_epochs 1 \
+  --batch_size 32 \
+  --lr 0.05 \
+  --output_dir outputs/fedavg_mnist_iid
+```
+
+### Variational Bayesian FL, MNIST, non-IID unbalanced
+
+```bash
+python main.py \
+  --method vi \
+  --dataset mnist \
+  --model mlp \
+  --iid false \
+  --balanced false \
+  --noniid_alpha 0.1 \
+  --unbalanced_alpha 0.5 \
+  --num_devices 300 \
+  --num_virtual_clients 24 \
+  --client_fraction 0.1 \
+  --num_rounds 20 \
+  --local_epochs 1 \
+  --vi_lr 0.001 \
+  --vi_prior_scale 0.05 \
+  --bayes_aggregation product \
+  --output_dir outputs/vi_mnist_noniid_unbalanced
+```
+
+### Online Laplace/FOLA-style Bayesian FL, CIFAR-10
+
+```bash
+python main.py \
+  --method ola \
+  --dataset cifar10 \
+  --model mlp \
+  --iid false \
+  --balanced true \
+  --noniid_alpha 0.3 \
+  --num_devices 300 \
+  --num_virtual_clients 24 \
+  --client_fraction 0.1 \
+  --num_rounds 50 \
+  --local_epochs 1 \
+  --batch_size 32 \
+  --lr 0.02 \
+  --ola_prior_lambda 1.0 \
+  --output_dir outputs/ola_cifar10_noniid
+```
+
+---
+
+## New observability arguments
+
+These arguments control how much information is collected.
+
+| Argument | Default | Meaning |
+|---|---:|---|
+| `--eval_every` | `1` | Evaluate global model/posterior every N rounds. |
+| `--heavy_eval_every` | `5` | Save posterior summaries and SNR histograms every N rounds. |
+| `--local_eval_every` | `0` | Evaluate selected clients on their local validation set every N rounds. `0` disables this. |
+| `--val_ratio` | `0.0` | Fraction of each client's local data held out for local validation. Set this above 0 to populate `client_eval_metrics.csv`. |
+| `--eval_mc_samples` | `1` | Number of posterior samples for Bayesian predictive evaluation. Use `>1` for VI/OLA uncertainty decomposition. |
+| `--calibration_bins` | `15` | Number of bins used for ECE and reliability diagrams. |
+| `--snr_hist_bins` | `80` | Number of SNR histogram bins. |
+| `--save_posterior_every` | `0` | Save posterior snapshots every N rounds. Final snapshot is always saved. |
+| `--metrics_level` | `bayes` | `basic`, `bayes`, or `full`; controls heavy Bayesian summaries. |
+
+Recommended Bayesian evaluation run:
+
+```bash
+python main.py \
+  --method ola \
+  --dataset mnist \
+  --model mlp \
+  --iid false \
+  --noniid_alpha 0.1 \
+  --num_devices 100 \
+  --num_virtual_clients 10 \
+  --client_fraction 0.1 \
+  --num_rounds 20 \
+  --eval_mc_samples 5 \
+  --heavy_eval_every 5 \
+  --save_posterior_every 5 \
+  --val_ratio 0.1 \
+  --local_eval_every 5 \
+  --output_dir outputs/ola_mnist_observable
+```
+
+---
+
+# Output files
+
+A run now produces the following files:
+
+```text
+outputs/<run_name>/
+├── config.csv
+├── run_summary.csv
+├── metrics.csv
+├── client_data_summary.csv
+├── device_summary.csv
+├── selection_summary.csv
+├── selected_clients.csv
+├── client_train_metrics.csv
+├── client_eval_metrics.csv
+├── calibration_bins.csv
+├── posterior_summary.csv
+├── snr_histograms.csv
+├── aggregation_diagnostics.csv
+├── communication_metrics.csv
+├── pruning_eval.csv
+├── run.log
+├── final_model.pt
+└── posterior_snapshots/
+    ├── round_0005.pt
+    ├── round_0010.pt
+    └── final.pt
+```
+
+The schema version is stored as:
+
+```text
+bayesfl_observability_v1
+```
+
+Use blank/empty cells as `NaN`. A blank value means the metric is not applicable or was not computed. For example, FedAvg does not have posterior variance, so posterior uncertainty columns are blank.
+
+---
+
+# Main metric file: `metrics.csv`
+
+`metrics.csv` contains **one row per evaluated communication round**. It is the main file for mixed plots across methods or hyperparameters.
+
+## Identity/config columns
+
+| Column | Meaning |
+|---|---|
+| `schema_version` | Metric schema identifier. |
+| `run_id` | Output-folder based run name. |
+| `round` | Communication round. |
+| `method` | `fedavg`, `vi`, or `ola`. |
+| `dataset` | `mnist` or `cifar10`. |
+| `model` | `mlp` or `cnn`. |
+| `iid`, `balanced` | Dataset split flags. |
+| `noniid_alpha`, `unbalanced_alpha` | Heterogeneity controls. |
+| `num_devices` | Number of simulated physical clients. |
+| `num_virtual_clients` | Number of Flower/Ray virtual clients. |
+| `client_fraction` | Physical client sampling fraction. |
+| `selected_count` | Number of physical devices selected this round. |
+| `selected_examples` | Number of examples owned by selected devices. |
+| `total_examples` | Same as selected examples for the round aggregation. |
+| `local_epochs`, `batch_size`, `lr`, `seed` | Training configuration. |
+
+## Global performance submetrics
+
+These are computed on the centralized test set using the current global model/posterior.
+
+| Column | Meaning | Plot examples |
 |---|---|---|
-| `README.md` | Documentation | Overview of source-code structure, generated artifacts, and common usage. |
-| `requirements.txt` | Dependency file | Python dependencies required to run the framework. Install this before training. |
-| `__init__.py` | Package marker | Marks the folder as a Python package. |
-| `.gitignore` | Git config | Excludes generated artifacts such as logs, outputs, plots, caches, and large files as needed. |
-| `main.py` | Entry point | Main training entry point. Parses config, loads dataset, builds model, starts Flower simulation, and writes outputs. |
-| `config.py` | Configuration | Defines CLI arguments and the runtime configuration object used by training, strategy, client, and evaluation code. |
-| `dataset.py` | Data pipeline | Loads MNIST/CIFAR-style datasets, creates IID/non-IID splits, balanced/unbalanced client partitions, and device/client summaries. |
-| `model.py` | Models and deterministic training | Defines model architectures, deterministic train/eval utilities, loss functions, calibration metrics, and OLA/Fisher-related helpers. |
-| `bayes_vi.py` | Variational inference | Implements Bayes-by-Backprop / VI local training, posterior parameter handling, sampling, and VI-specific metrics. |
-| `client.py` | Flower client logic | Implements client-side local training for FedAvg, VI, and OLA/FOLA, including sparse communication payload construction. |
-| `strategy.py` | Server strategy | Implements server-side client selection, aggregation, global evaluation, posterior aggregation, sparse update handling, and checkpointing. |
-| `selector.py` | Client selection | Contains client-selection policies. Currently supports random selection and is the extension point for wireless/channel-aware selection. |
-| `compression.py` | Sparse communication | Implements Bayesian importance scores, sparse masks, sparse payload packing/unpacking, and communication metric helpers. |
-| `observability.py` | Logging and metrics | Writes CSV files, run summaries, posterior summaries, snapshots, calibration bins, and training/evaluation diagnostics. |
-| `utils.py` | Offline analysis and plotting | Provides CLI commands for plotting, calibration, SNR, sparse-ratio summaries, diagnostics, pruning, and heterogeneity analysis. |
-| `design/` | Design docs | Architecture/design documentation, diagrams, and source-code flow explanations. |
-| `scripts/` | Execution scripts | Curated shell scripts for training, tuning, and plotting. Use these for reproducible experiments. |
-| `outputs/` | Generated training outputs | Contains run folders created by `main.py`; each run folder stores CSV metrics, checkpoints, snapshots, and logs. |
-| `plots/` | Generated plots | Contains PNG/CSV analysis artifacts generated by `utils.py` and plotting scripts. |
-| `logs/` | Runtime logs | Stores nohup/stdout/stderr logs for training, tuning, and plotting jobs. |
+| `global_accuracy` | Global test accuracy. | accuracy/round, method comparison |
+| `global_loss` | Global negative log likelihood / cross entropy. | loss/round |
+| `global_error_rate` | `1 - global_accuracy`. | error/round |
+| `global_nll` | Mean negative log likelihood. | calibration/uncertainty comparison |
+| `global_brier` | Mean Brier score. | calibration comparison |
+| `global_ece` | Expected calibration error. | ECE/round |
+| `global_mce` | Maximum calibration error. | worst-bin calibration |
+| `global_mean_confidence` | Mean max softmax probability. | confidence/round |
+| `global_mean_entropy` | Mean predictive entropy. | predictive uncertainty/round |
+| `global_num_eval_examples` | Test examples evaluated. | sanity check |
+
+Backward-compatible aliases are also stored:
+
+| Alias | Same as |
+|---|---|
+| `accuracy` | `global_accuracy` |
+| `loss` | `global_loss` |
+| `train_loss` | selected-client mean training objective |
+
+## Bayesian predictive uncertainty submetrics
+
+These are most useful when `--eval_mc_samples > 1` for VI/OLA.
+
+| Column | Meaning |
+|---|---|
+| `global_mc_samples` | Number of posterior samples used for prediction. |
+| `global_predictive_entropy` | Entropy of the averaged predictive distribution. |
+| `global_expected_entropy` | Average entropy across sampled models. |
+| `global_mutual_information` | `predictive_entropy - expected_entropy`; epistemic uncertainty proxy. |
+| `global_aleatoric_uncertainty` | Same as expected entropy. |
+| `global_epistemic_uncertainty` | Same as mutual information. |
+| `global_predictive_variance_mean` | Mean probability variance across posterior samples. |
+| `global_predictive_variance_std` | Std of probability variance across posterior samples. |
+
+## Local evaluation submetrics
+
+These summarize `client_eval_metrics.csv`. They are populated when `--local_eval_every > 0` and `--val_ratio > 0`.
+
+| Column | Meaning |
+|---|---|
+| `local_eval_count` | Number of client models evaluated. |
+| `local_accuracy_weighted` | Example-weighted local validation accuracy. |
+| `local_accuracy_mean/std/min/p10/p25/p50/p75/p90/max` | Distribution of local validation accuracy. |
+| `local_loss_weighted` | Example-weighted local validation loss. |
+| `local_loss_mean/std/min/p50/max` | Distribution of local validation loss. |
+| `local_ece_mean/std` | Local calibration summary. |
+| `local_nll_mean` | Mean local NLL. |
+| `local_brier_mean` | Mean local Brier score. |
+
+## Local forgetting and drift proxy submetrics
+
+| Column | Meaning |
+|---|---|
+| `client_update_l2_mean/std/min/max` | Norm of local update from global before training. |
+| `client_update_cosine_mean` | Cosine between local parameter vector and incoming global vector. |
+| `client_drift_from_global_l2_mean/std` | Parameter drift proxy. |
+| `local_forgetting_proxy_mean/std/weighted` | Reserved for local/global performance-gap based forgetting. |
+| `local_global_loss_gap_mean` | Reserved local-vs-global loss gap. |
+| `local_global_acc_gap_mean` | Reserved local-vs-global accuracy gap. |
+
+## Training decomposition submetrics
+
+| Column | Meaning |
+|---|---|
+| `train_loss_mean/std` | Mean optimized local objective. |
+| `task_loss_mean/std` | Mean data likelihood / cross-entropy component. |
+| `prior_loss_mean/std` | Mean Bayesian prior/complexity regularizer. |
+| `regularization_loss_mean/std` | Regularizer after multiplying by its weight. |
+
+For FedAvg, `task_loss_mean` and `train_loss_mean` are the same. For OLA, `prior_loss_mean` is the prior-iteration quadratic penalty. For VI, `prior_loss_mean` records the local posterior KL/complexity proxy.
+
+## VI-specific submetrics
+
+| Column | Meaning |
+|---|---|
+| `vi_elbo_loss_mean/std` | Pyro SVI loss summary. |
+| `vi_kl_loss_mean/std` | Diagonal Gaussian KL from local posterior to incoming global posterior/prior. |
+| `vi_likelihood_loss_mean/std` | Reserved for explicit likelihood decomposition. |
+| `vi_complexity_cost_mean` | Same role as Bayes-by-Backprop complexity cost. |
+| `vi_scale_mean/std/p50/p90/max` | Posterior scale statistics. |
+| `vi_prior_scale` | Initial/global prior scale argument. |
+| `vi_min_scale` | Scale floor. |
+| `vi_particles` | ELBO particles. |
+| `vi_aggregation_mode` | `product` or `mean`. |
+
+## OLA/FOLA-specific submetrics
+
+| Column | Meaning |
+|---|---|
+| `ola_prior_lambda` | Prior-iteration regularization weight. |
+| `ola_prior_loss_mean/std` | Local prior loss summary. |
+| `ola_task_loss_mean/std` | Local task loss summary. |
+| `ola_fisher_mean/std/min/p10/p50/p90/max` | Diagonal empirical Fisher statistics. |
+| `ola_precision_mean/std/min/p10/p50/p90/max` | Posterior precision statistics. |
+| `ola_sigma_mean/std/p50/p90/max` | Posterior standard deviation implied by precision. |
+| `ola_gamma` | Initial precision constant. |
+| `ola_online_weight_fisher`, `ola_online_weight_prior` | Reserved for explicit online weighting diagnostics. |
+
+## Global posterior and SNR submetrics
+
+For VI:
+
+```text
+mu = posterior loc
+sigma = posterior scale
+precision = 1 / sigma^2
+```
+
+For OLA:
+
+```text
+mu = global mean
+precision = diagonal global precision
+sigma = sqrt(1 / precision)
+```
+
+| Column | Meaning |
+|---|---|
+| `posterior_available` | `1` for VI/OLA posterior uncertainty, `0` for FedAvg. |
+| `posterior_num_params` | Number of trainable parameters. |
+| `posterior_mu_l2` | L2 norm of posterior mean. |
+| `posterior_mu_abs_mean/std/p50/p90` | Absolute mean-weight statistics. |
+| `posterior_sigma_mean/std/min/p10/p25/p50/p75/p90/p95/max` | Posterior standard-deviation statistics. |
+| `posterior_precision_mean/std/min/p50/p90/max` | Diagonal precision statistics. |
+| `posterior_var_trace` | Sum of diagonal variances. |
+| `posterior_logdet_diag` | Sum of log diagonal variance. |
+| `posterior_entropy_diag_gaussian` | Entropy of diagonal Gaussian posterior. |
+| `posterior_snr_raw_*` | Signal-to-noise ratio statistics using `abs(mu) / sigma`. |
+| `posterior_snr_db_*` | `20 * log10(SNR)` statistics. |
+| `posterior_snr_frac_lt_1`, `posterior_snr_frac_gt_1`, etc. | Fraction of weights below/above SNR thresholds. |
+| `effective_params_snr_gt_1`, `effective_params_snr_gt_2`, `effective_params_snr_gt_5` | Effective parameter count under SNR thresholding. |
+
+## Aggregation submetrics
+
+| Column | Meaning |
+|---|---|
+| `aggregation_delta_l2` | Norm of global update this round. |
+| `aggregation_delta_linf` | Max absolute global parameter change. |
+| `aggregation_weight_entropy` | Entropy of selected-client aggregation weights. |
+| `aggregation_weight_min/max` | Min/max selected-client normalized aggregation weights. |
+| `posterior_product_precision_mean/std` | Product-aggregation precision summary for VI/OLA. |
+| `posterior_product_mu_norm` | Norm of product-aggregated mean. |
+| `posterior_product_sigma_mean` | Mean sigma implied by product precision. |
+
+## Dataset/selection and future wireless submetrics
+
+| Column | Meaning |
+|---|---|
+| `selected_label_entropy_mean/std/min/max` | Label-distribution entropy among selected clients. |
+| `selected_kl_to_global_label_mean/std` | Selected-client label KL to global distribution. |
+| `selected_num_examples_mean/std/min/max` | Selected-client data-size summary. |
+| `wireless_*`, `ota_*`, `digital_*` | Reserved placeholders for future analog OTA/digital communication experiments. |
 
 ---
 
-## 2. Core execution flow
+# Supporting CSV files
 
-A standard training run follows this source-code path:
+## `run_summary.csv`
 
-```text
-main.py
-  ├── config.py          # parse CLI arguments and build RunConfig
-  ├── dataset.py         # load dataset and split clients/devices
-  ├── model.py           # build model and deterministic utilities
-  ├── client.py          # define Flower client local training behavior
-  ├── strategy.py        # define server aggregation/evaluation behavior
-  ├── selector.py        # select physical/virtual clients per round
-  └── observability.py   # write metrics, snapshots, and summaries
-```
+One row per run. Use this for hyperparameter sweeps and final-result bar plots.
 
-For Bayesian methods:
+Important columns:
 
 ```text
-VI path:
-  client.py → bayes_vi.py → strategy.py → observability.py
-
-OLA/FOLA path:
-  client.py → model.py OLA/Fisher helpers → strategy.py → observability.py
-
-Sparse communication path:
-  client.py → compression.py → strategy.py → observability.py
+final_global_accuracy
+final_global_loss
+final_global_nll
+final_global_ece
+final_local_accuracy_weighted
+best_global_accuracy
+best_global_accuracy_round
+best_global_ece
+best_global_ece_round
+final_posterior_sigma_mean
+final_posterior_snr_raw_p50
+final_posterior_snr_frac_gt_1
+total_time_sec
+mean_round_time_sec
+final_model_path
 ```
 
-Use this flow when debugging. If a value is wrong in a CSV file, usually trace it in this order:
+## `client_data_summary.csv`
+
+One row per physical device. Use this to analyze non-IID and imbalance.
+
+Important columns:
 
 ```text
-config.py → client.py/model.py/bayes_vi.py → strategy.py → observability.py → utils.py
+physical_client_id
+virtual_client_id
+num_examples
+train_examples
+val_examples
+label_0_count ... label_9_count
+label_entropy
+dominant_label
+dominant_label_fraction
+kl_to_global_label_distribution
+is_iid
+is_balanced
+noniid_alpha
+unbalanced_alpha
 ```
 
----
+## `device_summary.csv`
 
-## 3. Python source files
+One row per physical device. Use this for radar/device plots and future wireless scheduling.
 
-### `main.py`
+Important columns:
 
-Main entry point for training and evaluation simulations.
+```text
+physical_client_id / device_id
+virtual_client_id
+radius_m / distance_m
+angle_rad
+x_m, y_m
+num_examples
+label_entropy
+dominant_label
+kl_to_global_label_distribution
+default_channel_gain
+default_pathloss_db
+default_noise_power
+```
 
-Responsibilities:
+`device_id` is kept as a backward-compatible alias.
 
-- Parse command-line arguments through `config.py`.
-- Set random seeds, device settings, and runtime options.
-- Load and partition data through `dataset.py`.
-- Build the model from `model.py`.
-- Configure Flower clients from `client.py`.
-- Configure the FL server strategy from `strategy.py`.
-- Start simulation and write results to `outputs/<run_name>/`.
+## `selection_summary.csv`
 
-Common usage:
+One row per round. Use this for selected-client-count and selected-client-heterogeneity plots.
+
+Important columns:
+
+```text
+round
+selection_policy
+selected_count
+available_count
+selected_fraction
+selected_examples
+selected_examples_fraction
+selected_label_entropy_mean
+selected_label_entropy_std
+selected_kl_to_global_label_mean
+selected_distance_m_mean
+selected_distance_m_std
+```
+
+## `selected_clients.csv`
+
+One row per selected physical device per round.
+
+Important columns:
+
+```text
+round
+physical_client_id
+virtual_client_id
+selected_count
+selection_policy
+selection_probability
+num_examples
+label_entropy
+dominant_label
+kl_to_global_label_distribution
+distance_m
+angle_rad
+channel_snr_db
+pathloss_db
+rate_mbps
+delay_ms
+energy_j
+```
+
+## `client_train_metrics.csv`
+
+One row per selected physical device per round. Use this for local-training diagnostics.
+
+Important columns:
+
+```text
+round
+method
+physical_client_id
+virtual_client_id
+num_examples
+train_loss
+task_loss
+prior_loss
+regularization_loss
+accuracy_local_train_estimate
+update_l2_norm
+update_linf_norm
+update_cosine_to_global
+drift_from_global_before_l2
+label_entropy
+kl_to_global_label_distribution
+vi_elbo_loss
+vi_kl_loss
+vi_scale_mean
+vi_snr_raw_p50
+ola_fisher_mean
+ola_precision_mean
+ola_sigma_mean
+ola_snr_raw_p50
+```
+
+## `client_eval_metrics.csv`
+
+One row per evaluated client per local-evaluation round. This file is populated only when:
 
 ```bash
-python main.py --method fedavg --dataset mnist --num_rounds 10 --output_dir outputs/debug_run
+--val_ratio > 0 --local_eval_every > 0
 ```
 
-For reproducible experiments, prefer the scripts in `scripts/train/` instead of manually writing long commands.
-
----
-
-### `config.py`
-
-Central configuration and CLI argument definition.
-
-Contains:
-
-- Dataset options: dataset name, IID/non-IID mode, non-IID alpha, balanced/unbalanced options.
-- FL options: number of devices, virtual clients, selected fraction, rounds, local epochs.
-- Model options: architecture, hidden size, device, workers, threads.
-- Bayesian options: VI prior scale, VI learning rate, VI scale clamp, posterior sampling scale, OLA/FOLA precision/Fisher options.
-- Sparse communication options: sparse enable flag, sparse metric, sparse ratio, warmup rounds, minimum kept parameters.
-- Observability options: output directory, evaluation frequency, heavy evaluation frequency, posterior snapshot frequency.
-
-Guideline for extension:
-
-- Add new CLI arguments here first.
-- Avoid hard-coding experiment parameters in `client.py`, `strategy.py`, or `utils.py`.
-- Keep default values conservative and compatible with smoke/debug runs.
-
----
-
-### `dataset.py`
-
-Dataset loading and client partitioning.
-
-Responsibilities:
-
-- Download/load datasets such as MNIST and CIFAR-10.
-- Create train/test/validation splits.
-- Create IID or Dirichlet non-IID client partitions.
-- Create balanced or unbalanced client data sizes.
-- Create physical device and virtual-client metadata.
-- Write data/device summaries used later by analysis scripts.
-
-Important outputs:
+Important columns:
 
 ```text
-client_data_summary.csv
-  Per-client data statistics: number of examples, label distribution, entropy, KL-to-global label distribution.
-
-device_summary.csv
-  Physical device and virtual-client assignment information.
+round
+physical_client_id
+virtual_client_id
+eval_scope
+num_eval_examples
+local_accuracy
+local_loss
+local_nll
+local_brier
+local_ece
+local_mean_confidence
+local_mean_entropy
+local_mc_samples
+num_examples_train
+label_entropy
+kl_to_global_label_distribution
 ```
 
-Guideline for extension:
+## `calibration_bins.csv`
 
-- Add new datasets here.
-- Add new partitioning methods here.
-- Keep all random partition logic controlled by the global seed.
+One row per calibration bin per evaluation round.
+
+Important columns:
+
+```text
+round
+eval_scope
+bin_id
+bin_left
+bin_right
+bin_count
+bin_accuracy
+bin_confidence
+bin_gap
+ece_contribution
+nll_mean
+brier_mean
+```
+
+Use this for reliability diagrams and ECE debugging.
+
+## `posterior_summary.csv`
+
+One row per round per layer/parameter group. Use this for layer-wise posterior uncertainty plots.
+
+Important columns:
+
+```text
+round
+scope
+layer_name
+num_params
+mu_mean
+mu_abs_mean
+mu_l2
+sigma_mean
+sigma_p50
+sigma_p90
+precision_mean
+precision_p90
+snr_raw_mean
+snr_raw_p50
+snr_raw_p90
+snr_db_mean
+snr_db_p50
+snr_frac_lt_1
+snr_frac_gt_1
+effective_params_snr_gt_1
+```
+
+## `snr_histograms.csv`
+
+One row per SNR histogram bin. Use this to reproduce Bayes-by-Backprop-style SNR density and CDF plots.
+
+Important columns:
+
+```text
+round
+layer_name
+value_space  # raw or db
+bin_id
+bin_left
+bin_right
+bin_center
+count
+density
+cdf
+total_count
+```
+
+## `aggregation_diagnostics.csv`
+
+One row per round. Use this for aggregation-error and update-drift analysis.
+
+Important columns:
+
+```text
+round
+aggregation_mode
+num_results_received
+num_failures
+total_selected_examples
+aggregation_weight_entropy
+aggregation_weight_min
+aggregation_weight_max
+global_before_l2
+global_after_l2
+aggregation_delta_l2
+aggregation_delta_linf
+aggregation_delta_cosine
+client_update_l2_mean
+client_update_l2_std
+client_update_cosine_mean
+```
+
+## `communication_metrics.csv`
+
+One row per selected device per round. Currently this stores placeholders for future wireless-aware selection.
+
+Important future columns:
+
+```text
+channel_gain
+channel_snr_db
+pathloss_db
+noise_power
+tx_power
+rate_mbps
+delay_ms
+energy_j
+analog_ota_enabled
+ota_noise_power
+ota_distortion
+ota_mse
+digital_enabled
+packet_error_rate
+payload_bytes
+communication_success
+```
+
+## `posterior_snapshots/*.pt`
+
+Each snapshot stores full posterior arrays for post-hoc analysis.
+
+```python
+{
+    "schema_version": "bayesfl_observability_v1",
+    "run_id": str,
+    "round": int,
+    "method": str,
+    "dataset": str,
+    "model": str,
+    "param_names": list[str],
+    "param_shapes": list[tuple],
+    "flat_slices": list[tuple],
+    "global": {
+        "mu_flat": Tensor,
+        "sigma_flat": Tensor or None,
+        "precision_flat": Tensor or None,
+        "state_dict": dict,
+    },
+    "payload": list[np.ndarray],
+    "summary": dict,
+}
+```
+
+Use snapshots for post-hoc SNR thresholds, posterior-distance analysis, or pruning experiments that were not planned before training.
 
 ---
 
-### `model.py`
+# Offline plotting
 
-Model architectures and deterministic training/evaluation utilities.
+Training does not create PNG files. Generate plots separately.
 
-Responsibilities:
-
-- Define neural network architectures such as MLP/CNN.
-- Convert between model parameters and Flower-compatible arrays.
-- Deterministic local training for FedAvg/OLA.
-- Deterministic evaluation metrics: accuracy, loss, NLL, Brier score, ECE, confidence, entropy.
-- OLA/FOLA helper logic such as Fisher/precision/sigma calculations.
-
-Used by:
-
-```text
-FedAvg local training
-OLA/FOLA local training
-Global deterministic evaluation
-Posterior mean evaluation
-Calibration evaluation
-```
-
-Guideline for extension:
-
-- Add new model architectures here.
-- Keep evaluation metric functions reusable by all methods.
-- Avoid placing FL aggregation logic here; aggregation belongs in `strategy.py`.
-
----
-
-### `bayes_vi.py`
-
-Variational Inference / Bayes-by-Backprop implementation.
-
-Responsibilities:
-
-- Maintain local posterior parameters, typically mean and scale.
-- Run local VI training on clients.
-- Compute VI losses such as ELBO, KL/complexity, and likelihood/data terms.
-- Provide posterior sampling / Monte Carlo prediction utilities.
-- Provide posterior statistics used by diagnostics and sparse communication.
-
-Key concepts:
-
-```text
-posterior mean:  mu
-posterior std:   sigma
-posterior SNR:   |mu| / sigma
-update SNR:      |local_mu - global_mu| / local_sigma
-```
-
-Guideline for extension:
-
-- Add new VI posterior families or priors here.
-- Add new Bayesian training losses here.
-- Keep sparse communication selection itself in `compression.py`, not inside VI training.
-
----
-
-### `client.py`
-
-Flower client implementation.
-
-Responsibilities:
-
-- Receive global parameters from the server.
-- Train locally depending on `method`:
-  - `fedavg`
-  - `vi`
-  - `ola`
-- Evaluate local metrics when requested.
-- Construct dense or sparse client payloads.
-- Report client-level metrics to the server.
-
-Sparse communication behavior:
-
-```text
-VI sparse communication:
-  score_i = |mu_local_i - mu_global_i| / (sigma_local_i + eps)
-
-OLA sparse communication:
-  score_i = |mu_local_i - mu_global_i| * precision_local_i
-```
-
-Guideline for extension:
-
-- Add method-specific client-side training behavior here.
-- Add client-side wireless/channel metadata only if it affects local behavior.
-- Keep server aggregation logic in `strategy.py`.
-
----
-
-### `strategy.py`
-
-Server-side FL strategy and aggregation.
-
-Responsibilities:
-
-- Select clients each round through `selector.py`.
-- Aggregate FedAvg weights.
-- Aggregate VI posterior information.
-- Aggregate OLA/FOLA posterior/Fisher/precision information.
-- Handle sparse updates by applying received coordinates and preserving unsent coordinates.
-- Evaluate global model and posterior predictive metrics.
-- Save final and best checkpoints.
-- Write round-level metrics through `observability.py`.
-
-Sparse aggregation rule:
-
-```text
-Received coordinates:
-  update global posterior using client evidence.
-
-Unsent coordinates:
-  keep previous global posterior state.
-```
-
-This is different from setting missing coordinates to zero.
-
-Guideline for extension:
-
-- Add new aggregation methods here.
-- Add global scheduling policies here only if they are server-side.
-- Keep client-local optimization in `client.py` / `bayes_vi.py` / `model.py`.
-
----
-
-### `selector.py`
-
-Client selection policy.
-
-Responsibilities:
-
-- Select physical/virtual clients per FL round.
-- Provide reproducible selection under a given seed.
-- Serve as the extension point for wireless-aware or importance-aware client scheduling.
-
-Current role:
-
-```text
-random client selection
-same selected client IDs across methods when seed and setting are identical
-```
-
-Guideline for extension:
-
-- Add channel-aware scheduling here.
-- Add importance-aware scheduling here.
-- Keep parameter-level sparse communication in `compression.py`.
-
----
-
-### `compression.py`
-
-Sparse Bayesian communication utilities.
-
-Responsibilities:
-
-- Compute parameter/update importance scores.
-- Select top-k coordinates.
-- Pack sparse payloads for client-to-server communication.
-- Unpack sparse payloads at the server.
-- Estimate communication cost and compression ratio.
-- Generate per-client sparse communication metrics.
-
-Supported sparse score ideas:
-
-```text
-snr:
-  |mu| / sigma
-
-update_snr:
-  |local_mu - global_mu| / local_sigma
-
-precision_update:
-  |local_mu - global_mu| * local_precision
-
-kl:
-  coordinate-wise diagonal Gaussian KL contribution
-```
-
-Important meaning:
-
-```text
-sparse_ratio = keep/send ratio
-```
-
-Example:
-
-```text
-sparse_ratio = 0.10
-means send only top 10% coordinates.
-```
-
-Guideline for extension:
-
-- Add new parameter-importance metrics here.
-- Add quantization or entropy-coding cost estimates here.
-- Keep wireless ratio selection outside this file if it depends on channel state; this file should only implement compression mechanics.
-
----
-
-### `observability.py`
-
-Metrics, logging, and artifact writing.
-
-Responsibilities:
-
-- Create output directories.
-- Write `config.csv`, `metrics.csv`, and other CSV diagnostics.
-- Write calibration bins.
-- Write posterior summaries and SNR histograms.
-- Write sparse communication metrics.
-- Write run summary.
-- Save posterior snapshots and checkpoints.
-
-Typical output files are described in [Section 7](#7-outputs-generated-training-artifacts).
-
-Guideline for extension:
-
-- Add new metrics here after they are produced by `client.py` or `strategy.py`.
-- Keep metric names stable because plotting scripts depend on them.
-- Prefer adding new columns instead of renaming old columns after experiments have been generated.
-
----
-
-### `utils.py`
-
-Offline plotting and analysis CLI.
-
-Responsibilities:
-
-- Plot mixed metric curves across runs.
-- Plot selected-client summaries.
-- Plot calibration diagrams.
-- Plot posterior SNR density/CDF.
-- Plot SNR evolution across rounds.
-- Plot sparse-ratio summaries.
-- Plot pruning results.
-- Plot best-vs-final diagnostics.
-- Plot heterogeneity diagnostics.
-
-Common usage pattern:
+## Single metric
 
 ```bash
-python utils.py <command> --help
+python utils.py metric \
+  --history outputs/ola_mnist_observable/metrics.csv \
+  --metric global_accuracy \
+  --output_dir plots/ola_mnist_observable
 ```
 
-Examples:
+Backward-compatible names still work:
 
 ```bash
-python utils.py mix --help
-python utils.py diagnostics --help
-python utils.py compare-diagnostics --help
-python utils.py snr-evolution --help
-python utils.py heterogeneity --help
+python utils.py metric --history outputs/ola_mnist_observable/metrics.csv --metric accuracy --output_dir plots/ola_mnist_observable
+python utils.py metric --history outputs/ola_mnist_observable/metrics.csv --metric loss --output_dir plots/ola_mnist_observable
 ```
 
-Guideline for extension:
+## Mixed method or hyperparameter comparison
 
-- Add new plotting commands here.
-- Keep plotting code offline; do not mix plotting into training code.
-- Use `outputs/` as input and write generated figures to `plots/`.
+```bash
+python utils.py mix \
+  --runs \
+    fedavg=outputs/fedavg_mnist_iid \
+    ola_lam1=outputs/ola_mnist_lam1 \
+    ola_lam01=outputs/ola_mnist_lam01 \
+    vi_prior005=outputs/vi_mnist_prior005 \
+  --metrics global_accuracy global_loss global_ece posterior_sigma_mean posterior_snr_raw_p50 \
+  --output_dir plots/compare_methods
+```
 
----
+The left side of `label=path` becomes the legend label.
 
-## 4. Design documentation
+## Selected clients per round
+
+```bash
+python utils.py selected \
+  --selection outputs/ola_mnist_observable/selection_summary.csv \
+  --output_dir plots/ola_mnist_observable
+```
+
+## Device radar plot
+
+```bash
+python utils.py radar \
+  --device_summary outputs/ola_mnist_observable/device_summary.csv \
+  --output_dir plots/ola_mnist_observable
+```
+
+## SNR density and CDF
+
+```bash
+python utils.py snr \
+  --snr outputs/ola_mnist_observable/snr_histograms.csv \
+  --round 20 \
+  --layer all \
+  --value_space db \
+  --output_dir plots/ola_mnist_observable
+```
+
+This creates:
 
 ```text
-design/
-└── README.md
+snr_density_round_0020_all_db.png
+snr_cdf_round_0020_all_db.png
 ```
 
-Purpose:
+## Reliability diagram
 
-- Documents architecture and design ideas.
-- Stores diagrams or design notes for the source code.
-- Should explain control flow and module responsibilities at a higher level than this README.
-
-Usage guideline:
-
-- Update `design/README.md` when adding a new research component or changing the architecture.
-- Keep algorithm motivation and diagrams there.
-- Keep this top-level `README.md` focused on structure and practical usage.
+```bash
+python utils.py calibration \
+  --calibration outputs/ola_mnist_observable/calibration_bins.csv \
+  --round 20 \
+  --eval_scope global_test \
+  --output_dir plots/ola_mnist_observable
+```
 
 ---
 
-## 5. Scripts
+# Method notes
+
+## FedAvg
+
+Each selected physical device starts from the global mean parameters, trains locally, and returns a deterministic model. Virtual clients average their assigned physical-device models before the server performs global weighted averaging.
+
+## VI
+
+Each selected physical device treats the incoming global `loc, scale` as the Gaussian prior over MLP weights. Pyro SVI learns a local diagonal Gaussian posterior. Server aggregation supports:
+
+- `--bayes_aggregation product`: diagonal Gaussian product aggregation.
+- `--bayes_aggregation mean`: moment-matched averaging.
+
+VI-specific metrics include posterior scale, KL/complexity cost, ELBO loss, and SNR summaries.
+
+## OLA/FOLA
+
+Each selected physical device trains a deterministic model with prior-iteration regularization:
+
+```text
+0.5 * (theta - mu_global)^T Precision_global (theta - mu_global)
+```
+
+It also accumulates squared task-loss gradients as a diagonal empirical Fisher estimate. The local precision is updated online using the communication round index. The server uses diagonal Gaussian-product aggregation.
+
+OLA-specific metrics include task/prior loss, empirical Fisher statistics, precision/sigma statistics, and SNR summaries.
+
+---
+
+# TODO: wireless-aware selection
+
+The current active policy is:
+
+```bash
+--selector random
+```
+
+The placeholder `WirelessQualitySelector` in `selector.py` is the intended extension point for:
+
+- analog over-the-air aggregation client selection,
+- digital uplink-rate/deadline-aware selection,
+- hybrid data-importance and channel-quality scheduling.
+
+The source already saves `device_summary.csv`, `selected_clients.csv`, and `communication_metrics.csv` with stable columns so future wireless information can be added without redesigning the output schema.
+
+---
+
+## Shell script organization and nohup execution
+
+The repository keeps reusable execution scripts under `scripts/` instead of the source-code root.
 
 ```text
 scripts/
-├── README.md
-├── train/
-├── tune/
-└── plot/
+├── train/   # long-running training jobs that generate outputs/
+├── tune/    # hyperparameter sweeps that generate outputs/tune_*
+└── plot/    # offline plotting jobs that generate plots/
 ```
 
-The `scripts/` folder contains curated shell scripts used to reproduce current experiments and plots.
-
-Naming convention:
+Each script name follows this pattern:
 
 ```text
 <file_type>_<method>_<dataset>_<setting>_<hyperparameter_tag>[_seed].sh
@@ -479,443 +857,99 @@ Naming convention:
 Examples:
 
 ```text
-train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh
-plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh
-tune_ola_mnist_noniid_unbalanced_fixed_cf005.sh
+scripts/train/train_fedavg_mnist_noniid_unbalanced_dense_seed42.sh
+scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh
+scripts/plot/plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh
 ```
 
-### `scripts/train/`
+All scripts automatically change directory to the repository root before running, so they can be launched from either the root folder or another working directory.
 
-Training scripts.
+### Common nohup pattern
 
-Current scripts:
-
-| Script | Purpose |
-|---|---|
-| `train_fedavg_mnist_noniid_unbalanced_dense_seed42.sh` | Dense FedAvg baseline for MNIST non-IID unbalanced setting. |
-| `train_ola_mnist_noniid_unbalanced_dense_seed42.sh` | Dense OLA/FOLA baseline for MNIST non-IID unbalanced setting. |
-| `train_vi_mnist_noniid_unbalanced_dense_seed42.sh` | Dense VI baseline for MNIST non-IID unbalanced setting. |
-| `train_vi_mnist_noniid_unbalanced_decay_seed42.sh` | Stabilized dense VI using learning-rate decay and posterior scale clamp. |
-| `train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh` | Current best VI-style run: sparse update-SNR keep 10% plus LR decay and scale clamp. |
-| `train_vi_mnist_noniid_unbalanced_sparse_update_snr_sweep_seed42.sh` | Sparse VI ratio sweep across several keep/drop ratios. |
-| `train_ola_mnist_noniid_unbalanced_sparse_precision_update_sweep_seed42.sh` | Sparse OLA ratio sweep using precision-update scoring. |
-
-Common usage:
+Long experiments should be launched with `nohup` so they continue after the terminal is closed.
 
 ```bash
 mkdir -p logs
+nohup bash <script_path> > logs/<log_name>.log 2>&1 &
+```
 
+Example:
+
+```bash
 nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh \
   > logs/train_vi_sparse_keep010_decay_seed42.log 2>&1 &
+```
 
+Monitor the log:
+
+```bash
 tail -f logs/train_vi_sparse_keep010_decay_seed42.log
 ```
 
-### `scripts/tune/`
-
-Hyperparameter tuning scripts.
-
-Current scripts:
-
-| Script | Purpose |
-|---|---|
-| `tune_vi_mnist_noniid_unbalanced_base_cf005.sh` | Initial VI tuning sweep for MNIST non-IID unbalanced setting. |
-| `tune_vi_mnist_noniid_unbalanced_finetune_cf005.sh` | VI fine-tuning sweep after narrowing promising settings. |
-| `tune_ola_mnist_noniid_unbalanced_fixed_cf005.sh` | OLA tuning sweep after fixing posterior mean/MC evaluation behavior. |
-
-Common usage:
+Check whether a job is still running:
 
 ```bash
-mkdir -p logs
-
-nohup bash scripts/tune/tune_vi_mnist_noniid_unbalanced_finetune_cf005.sh \
-  > logs/tune_vi_mnist_noniid_unbalanced_finetune_cf005.log 2>&1 &
-
-tail -f logs/tune_vi_mnist_noniid_unbalanced_finetune_cf005.log
+pgrep -af "main.py|scripts/"
 ```
 
-### `scripts/plot/`
-
-Plot generation scripts.
-
-Current scripts:
-
-| Script | Purpose |
-|---|---|
-| `plot_compare_fedavg_ola_mnist_noniid_unbalanced_seed42.sh` | Generate FedAvg-vs-OLA plots. |
-| `plot_compare_fedavg_vi_mnist_noniid_unbalanced_seed42.sh` | Generate FedAvg-vs-VI plots. |
-| `plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh` | Generate sparse VI ratio-sweep plots. |
-| `plot_sparse_ola_mnist_noniid_unbalanced_precision_update_ratio_sweep_seed42.sh` | Generate sparse OLA ratio-sweep plots. |
-| `plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh` | Generate research diagnostics: best/final, SNR evolution, heterogeneity, and stability comparisons. |
-| `plot_tuning_mnist_noniid_unbalanced_summary.sh` | Generate summary plots for tuning sweeps. |
-
-Common usage:
-
-```bash
-mkdir -p logs
-
-nohup bash scripts/plot/plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh \
-  > logs/plot_diagnostics_mnist_research_v1.log 2>&1 &
-
-tail -f logs/plot_diagnostics_mnist_research_v1.log
-```
-
-### General nohup workflow
-
-Use this pattern for long training or plotting jobs:
-
-```bash
-cd ~/DungNDH/micl/bayesfl_base_source
-mkdir -p logs
-
-nohup bash scripts/<train|tune|plot>/<script_name>.sh \
-  > logs/<clear_log_name>.log 2>&1 &
-```
-
-Monitor the job:
-
-```bash
-tail -f logs/<clear_log_name>.log
-```
-
-Check running jobs:
-
-```bash
-pgrep -af "main.py|scripts/|utils.py"
-```
-
-Check GPU:
+Check GPU usage:
 
 ```bash
 watch -n 2 nvidia-smi
 ```
 
-Stop a job if needed:
+Stop a running job if necessary:
 
 ```bash
-pkill -f "<unique_part_of_command>"
+pkill -f "train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42"
 ```
 
-Guideline:
+### Useful environment overrides
 
-- Run one heavy training sweep at a time unless GPUs/CPUs are explicitly isolated.
-- Plot scripts are usually cheaper than training scripts but can still consume CPU and disk I/O.
-- Keep log names short but descriptive.
+Most training scripts support these common overrides:
 
----
+```bash
+SEED=43 bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+FORCE_DEVICE=cpu bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+FORCE_DEVICE=cuda CUDA_VISIBLE_DEVICES=0 CLIENT_GPUS=0.5 bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh
+```
 
-## 6. Logs
+For sparse-ratio sweeps, the baseline dense run is usually reused for `drop000_keep100`, and the sparse runs write to:
 
 ```text
-logs/
-├── README.md
-├── *.log
-└── sparse_comm_mnist_noniid_unbalanced/
+outputs/sparse_comm_mnist_noniid_unbalanced/
 ```
 
-Purpose:
+### Recommended reproduction order for the current validated MNIST stage
 
-- Stores stdout/stderr from `nohup` jobs.
-- Stores master logs for sweep scripts.
-- Stores per-run logs for sparse communication sweeps.
-
-Usage guideline:
+1. Train dense final comparison runs:
 
 ```bash
-tail -f logs/<log_name>.log
+nohup bash scripts/train/train_fedavg_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_fedavg_mnist_dense_seed42.log 2>&1 &
+nohup bash scripts/train/train_ola_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_ola_mnist_dense_seed42.log 2>&1 &
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_dense_seed42.sh > logs/train_vi_mnist_dense_seed42.log 2>&1 &
 ```
 
-For sweep logs:
+2. Train sparse communication sweeps:
 
 ```bash
-tail -f logs/run_sparse_vi_sweep.master.log
-
-tail -f logs/sparse_comm_mnist_noniid_unbalanced/vi_update_snr_prune090_keep010_seed42.log
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_sweep_seed42.sh > logs/train_vi_sparse_update_snr_sweep_seed42.log 2>&1 &
+nohup bash scripts/train/train_ola_mnist_noniid_unbalanced_sparse_precision_update_sweep_seed42.sh > logs/train_ola_sparse_precision_update_sweep_seed42.log 2>&1 &
 ```
 
-Recommended practice:
-
-- Keep logs for completed experiments that support current results.
-- Move obsolete/debug logs to an archive folder if the directory becomes too crowded.
-- Do not use logs as the primary result source; use CSV files in `outputs/` for analysis.
-
----
-
-## 7. Outputs: generated training artifacts
-
-```text
-outputs/
-├── final_compare_mnist_noniid_unbalanced/
-├── sparse_comm_mnist_noniid_unbalanced/
-├── vi_mnist_stabilized_decay_seed42/
-└── vi_sparse_keep010_decay_seed42/
-```
-
-The `outputs/` folder is generated by training scripts and `main.py`. It should be treated as experiment output, not source code.
-
-### Major output groups
-
-| Folder | Meaning |
-|---|---|
-| `outputs/final_compare_mnist_noniid_unbalanced/` | Dense final comparison runs for FedAvg, OLA, and VI. |
-| `outputs/sparse_comm_mnist_noniid_unbalanced/` | Sparse communication ratio sweeps and keep100 control runs for VI/OLA. |
-| `outputs/vi_mnist_stabilized_decay_seed42/` | Stabilized dense VI using LR decay and posterior scale clamp. |
-| `outputs/vi_sparse_keep010_decay_seed42/` | Sparse VI keep010 with LR decay and scale clamp. |
-
-### Standard run-folder structure
-
-A typical run folder contains:
-
-```text
-outputs/<experiment>/<run_name>/
-├── config.csv
-├── metrics.csv
-├── run_summary.csv
-├── run.log
-├── final_model.pt
-├── best_checkpoints/
-├── posterior_snapshots/
-├── client_data_summary.csv
-├── device_summary.csv
-├── selection_summary.csv
-├── selected_clients.csv
-├── client_train_metrics.csv
-├── client_eval_metrics.csv
-├── communication_metrics.csv
-├── sparse_comm_metrics.csv
-├── aggregation_diagnostics.csv
-├── posterior_summary.csv
-├── snr_histograms.csv
-├── calibration_bins.csv
-└── pruning_eval.csv
-```
-
-Not every method produces every file. For example, FedAvg may not have meaningful Bayesian posterior metrics, and old dense baselines may not have sparse communication columns.
-
-### Important output files
-
-| File/folder | Purpose |
-|---|---|
-| `config.csv` | Stores the full run configuration. Use this to confirm hyperparameters. |
-| `metrics.csv` | Main round-level metrics. This is the primary file for accuracy/loss/ECE/runtime curves. |
-| `run_summary.csv` | Final and best metrics summary for a run. Useful for tables. |
-| `run.log` | Per-run log generated by the training process. |
-| `final_model.pt` | Final model checkpoint at the end of training. |
-| `best_checkpoints/` | Best checkpoint files such as best accuracy, best ECE, and best loss model. |
-| `posterior_snapshots/` | Saved posterior states at periodic rounds and final round. Used for SNR and pruning analysis. |
-| `client_data_summary.csv` | Per-client label/data distribution summary. Useful for non-IID and heterogeneity analysis. |
-| `device_summary.csv` | Physical device and virtual-client summary. Useful for verifying fair comparison. |
-| `selection_summary.csv` | Round-level selected-client statistics. |
-| `selected_clients.csv` | Per-round selected client IDs. Use this to verify identical selection across methods. |
-| `client_train_metrics.csv` | Per-client training metrics reported during local training. |
-| `client_eval_metrics.csv` | Per-client evaluation metrics when local evaluation is enabled. |
-| `communication_metrics.csv` | Communication-related metrics. |
-| `sparse_comm_metrics.csv` | Per-client sparse communication metrics. Present for sparse runs. |
-| `aggregation_diagnostics.csv` | Server aggregation diagnostics such as aggregation delta and update statistics. |
-| `posterior_summary.csv` | Posterior statistics by round and possibly by layer. |
-| `snr_histograms.csv` | Posterior SNR histograms used by SNR density/CDF plots. |
-| `calibration_bins.csv` | Calibration bin statistics used to draw reliability diagrams. |
-| `pruning_eval.csv` | Post-hoc pruning evaluation results, when generated. |
-
-Usage guideline:
-
-- Use `metrics.csv` for round curves.
-- Use `run_summary.csv` for final/best summary tables.
-- Use `client_data_summary.csv` and `device_summary.csv` to verify identical experimental settings across methods.
-- Use `selected_clients.csv` to verify fair client selection across methods.
-- Use `posterior_summary.csv` and `snr_histograms.csv` for Bayesian posterior analysis.
-- Use `sparse_comm_metrics.csv` for sparse communication analysis.
-
----
-
-## 8. Plots: generated analysis artifacts
-
-```text
-plots/
-├── final_compare_mnist_noniid_unbalanced/
-├── sparse_comm_mnist_noniid_unbalanced/
-├── research_diagnostics_mnist_noniid_unbalanced/
-├── tune_ola_mnist_noniid_unbalanced/
-└── tune_vi_mnist_noniid_unbalanced/
-```
-
-The `plots/` folder is generated by `utils.py` and scripts in `scripts/plot/`.
-
-### Major plot groups
-
-| Folder | Meaning |
-|---|---|
-| `plots/final_compare_mnist_noniid_unbalanced/` | Dense method comparison plots: FedAvg vs OLA, FedAvg vs VI, pruning plots. |
-| `plots/sparse_comm_mnist_noniid_unbalanced/` | Sparse ratio-sweep plots for VI and OLA. |
-| `plots/research_diagnostics_mnist_noniid_unbalanced/` | Research diagnostics: best-vs-final, SNR evolution, heterogeneity, stability, sparse-decay comparisons. |
-| `plots/tune_ola_mnist_noniid_unbalanced/` | OLA tuning summary plots. |
-| `plots/tune_vi_mnist_noniid_unbalanced/` | VI tuning summary plots. |
-
-### Common plot subfolders
-
-| Subfolder | Purpose |
-|---|---|
-| `performance/` | Accuracy, loss, ECE, NLL, Brier, confidence, entropy, local/global curves. |
-| `fl_dynamics/` | Selected count/examples, label entropy, KL to global label distribution, update norm, aggregation diagnostics. |
-| `runtime/` | Round time, fit time, aggregation time, evaluation time. |
-| `bayesian_posterior/` | Posterior sigma, precision, SNR, VI losses, OLA Fisher/precision/sigma. |
-| `communication/` | Dense/sparse parameter counts, bytes, compression, saving ratio. |
-| `summary/` | Ratio-sweep summary plots and CSV files. |
-| `calibration_*` or `calibration_final/` | Reliability diagrams. |
-| `snr_*` or `snr_final/` | SNR density and CDF plots. |
-| `heterogeneity/` | Client label distribution vs update/sparse behavior plots. |
-| `diagnostics/` | Best-vs-final, accuracy vs wall-time, uncertainty/SNR overlay, local-global gap. |
-| `*_characteristics/` | Method-specific diagnostics for VI or OLA. |
-
-Usage guideline:
-
-- Use `plots/.../summary/*.csv` for final tables.
-- Use `plots/.../performance/mix_global_accuracy_round.png` for accuracy-over-round comparison.
-- Use `plots/.../summary/accuracy_vs_communication_saving.png` for sparse communication tradeoff.
-- Use `plots/.../diagnostics/accuracy_uncertainty_snr_overlay.png` to interpret posterior instability.
-
----
-
-## 9. Common `utils.py` commands
-
-### Mixed metric curves
+3. Train stabilized VI variants:
 
 ```bash
-python utils.py mix \
-  --runs fedavg=outputs/final_compare_mnist_noniid_unbalanced/fedavg_seed42 \
-         vi=outputs/final_compare_mnist_noniid_unbalanced/vi_seed42 \
-  --metrics global_accuracy global_loss global_ece \
-  --output_dir plots/manual_compare
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_decay_seed42.sh > logs/train_vi_decay_seed42.log 2>&1 &
+nohup bash scripts/train/train_vi_mnist_noniid_unbalanced_sparse_update_snr_keep010_decay_seed42.sh > logs/train_vi_sparse_keep010_decay_seed42.log 2>&1 &
 ```
 
-### Calibration plot
+4. Generate plots:
 
 ```bash
-python utils.py calibration \
-  --calibration outputs/final_compare_mnist_noniid_unbalanced/vi_seed42/calibration_bins.csv \
-  --round 200 \
-  --eval_scope global_test \
-  --output_dir plots/manual_calibration_vi
-```
-
-### SNR density/CDF plot
-
-```bash
-python utils.py snr \
-  --snr outputs/final_compare_mnist_noniid_unbalanced/vi_seed42/snr_histograms.csv \
-  --round 200 \
-  --layer all \
-  --value_space db \
-  --output_dir plots/manual_snr_vi
-```
-
-### SNR evolution plot
-
-```bash
-python utils.py snr-evolution \
-  --snr outputs/vi_sparse_keep010_decay_seed42/snr_histograms.csv \
-  --rounds 0 50 100 150 200 \
-  --output_dir plots/manual_snr_evolution_vi_sparse_decay
-```
-
-### One-run diagnostics
-
-```bash
-python utils.py diagnostics \
-  --run outputs/vi_sparse_keep010_decay_seed42 \
-  --output_dir plots/manual_diagnostics_vi_sparse_decay
-```
-
-### Best-vs-final comparison
-
-```bash
-python utils.py compare-diagnostics \
-  --runs fedavg=outputs/final_compare_mnist_noniid_unbalanced/fedavg_seed42 \
-         ola=outputs/final_compare_mnist_noniid_unbalanced/ola_seed42 \
-         vi_sparse_decay=outputs/vi_sparse_keep010_decay_seed42 \
-  --output_dir plots/manual_best_final_compare
-```
-
----
-
-## 10. Reproducibility and extension checklist
-
-Before starting a new research extension:
-
-```text
-1. Confirm the current code compiles:
-   python -m py_compile *.py
-
-2. Confirm scripts are executable:
-   bash -n scripts/train/*.sh scripts/tune/*.sh scripts/plot/*.sh
-
-3. Confirm baseline outputs exist:
-   outputs/final_compare_mnist_noniid_unbalanced/
-   outputs/sparse_comm_mnist_noniid_unbalanced/
-   outputs/vi_sparse_keep010_decay_seed42/
-
-4. Confirm diagnostic plots exist:
-   plots/research_diagnostics_mnist_noniid_unbalanced/
-
-5. Use config.csv and run_summary.csv to verify the exact run setting.
-```
-
-Extension points:
-
-| Goal | File(s) to modify |
-|---|---|
-| Add a new dataset | `dataset.py`, possibly `config.py` |
-| Add a new model | `model.py`, possibly `config.py` |
-| Add a new Bayesian VI prior/posterior | `bayes_vi.py`, `config.py`, `observability.py` |
-| Add a new sparse score | `compression.py`, `config.py`, `client.py`, `strategy.py`, `observability.py`, `utils.py` |
-| Add a new aggregation rule | `strategy.py`, possibly `client.py` and `observability.py` |
-| Add wireless-aware client selection | `selector.py`, `config.py`, `strategy.py`, `observability.py` |
-| Add new plots | `utils.py`, optionally `scripts/plot/` |
-| Add new metrics | Producer file plus `observability.py` and possibly `utils.py` |
-
-Recommended rule:
-
-```text
-Training code writes CSV/PT artifacts to outputs/.
-Plotting code reads outputs/ and writes PNG/CSV artifacts to plots/.
-Shell scripts in scripts/ reproduce official experiments.
-```
-
----
-
-## 11. Generated artifacts and Git practice
-
-The following folders can become large:
-
-```text
-outputs/
-plots/
-logs/
-```
-
-Recommended practice:
-
-- Keep source code, scripts, and documentation under version control.
-- Keep only important result artifacts if the repository size is acceptable.
-- Archive large `.pt` checkpoints externally if needed.
-- Do not manually edit generated CSV files; regenerate them from code or scripts.
-
----
-
-## 12. Quick orientation for new readers
-
-Read in this order:
-
-```text
-1. README.md              # this file: structure and usage
-2. design/README.md       # architecture/design explanation
-3. config.py              # all runtime options
-4. main.py                # training entry point
-5. client.py              # client-side behavior
-6. strategy.py            # server-side aggregation/evaluation
-7. bayes_vi.py            # VI method details
-8. compression.py         # sparse Bayesian communication
-9. observability.py       # output files and metrics
-10. utils.py              # plotting and offline analysis
-11. scripts/              # reproducible execution commands
+nohup bash scripts/plot/plot_compare_fedavg_ola_mnist_noniid_unbalanced_seed42.sh > logs/plot_compare_fedavg_ola_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_compare_fedavg_vi_mnist_noniid_unbalanced_seed42.sh > logs/plot_compare_fedavg_vi_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_sweep_seed42.sh > logs/plot_sparse_vi_ratio_sweep_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_sparse_ola_mnist_noniid_unbalanced_precision_update_ratio_sweep_seed42.sh > logs/plot_sparse_ola_ratio_sweep_seed42.log 2>&1 &
+nohup bash scripts/plot/plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh > logs/plot_diagnostics_mnist_research_v1.log 2>&1 &
 ```
