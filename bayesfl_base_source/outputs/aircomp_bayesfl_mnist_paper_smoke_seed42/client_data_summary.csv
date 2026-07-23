@@ -1,0 +1,9 @@
+scenario,condition_name,realization,physical_client_id,num_examples,local_classes,assigned_labels,label_entropy,label_0_count,label_1_count,label_2_count,label_3_count,label_4_count,label_5_count,label_6_count,label_7_count,label_8_count,label_9_count
+default,default,0,0,9,1,2,-0.0,0,0,9,0,0,0,0,0,0,0
+default,default,0,1,15,1,6,-0.0,0,0,0,0,0,0,15,0,0,0
+default,default,0,2,10,1,4,-0.0,0,0,0,0,10,0,0,0,0,0
+default,default,0,3,16,1,8,-0.0,0,0,0,0,0,0,0,0,16,0
+default,default,0,4,7,1,5,-0.0,0,0,0,0,0,7,0,0,0,0
+default,default,0,5,12,1,7,-0.0,0,0,0,0,0,0,0,12,0,0
+default,default,0,6,13,1,6,-0.0,0,0,0,0,0,0,13,0,0,0
+default,default,0,7,7,1,1,-0.0,0,7,0,0,0,0,0,0,0,0

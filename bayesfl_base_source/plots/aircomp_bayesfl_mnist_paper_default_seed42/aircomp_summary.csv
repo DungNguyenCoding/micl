@@ -1,0 +1,5 @@
+scenario,condition_name,method,final_accuracy,best_accuracy,final_ece
+default,default,fedavg,0.10434000000000002,0.10755999999999999,0.02946157529950138
+default,default,fedprox,0.10436000000000001,0.10755999999999999,0.02941776663064951
+default,default,proposed,0.10377,0.1061,0.030036266148090317
+default,default,scaffold,0.09238,0.1157,0.01097909510135649
