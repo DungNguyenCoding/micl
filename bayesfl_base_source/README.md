@@ -953,3 +953,25 @@ nohup bash scripts/plot/plot_sparse_vi_mnist_noniid_unbalanced_update_snr_ratio_
 nohup bash scripts/plot/plot_sparse_ola_mnist_noniid_unbalanced_precision_update_ratio_sweep_seed42.sh > logs/plot_sparse_ola_ratio_sweep_seed42.log 2>&1 &
 nohup bash scripts/plot/plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh > logs/plot_diagnostics_mnist_research_v1.log 2>&1 &
 ```
+
+
+## Sparse communication ablation: Bayesian vs Random selection
+
+The sparse communication module supports an additional ablation mode:
+
+```bash
+--sparse_selection bayesian
+```
+
+uses posterior-aware importance scores:
+
+- VI: update-SNR
+- OLA: precision-update
+
+```bash
+--sparse_selection random
+```
+
+uses random scores but keeps the same top-k keep ratio and aggregation pipeline.
+
+This allows a fair comparison between Bayesian importance selection and random sparsification under identical communication budgets.

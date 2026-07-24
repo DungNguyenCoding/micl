@@ -86,6 +86,17 @@ def diag_gaussian_kl_score(
     return 0.5 * ((ls**2 + (lm - gm) ** 2) / (gs**2) - 1.0 + 2.0 * (np.log(gs) - np.log(ls)))
 
 
+
+
+def random_sparse_score(num_params: int, seed: int | None = None) -> np.ndarray:
+    """Generate random scores for random top-k sparse communication ablation.
+
+    The existing top-k packing code is reused; only the ranking score changes.
+    This keeps communication budget identical to Bayesian sparse selection.
+    """
+    rng = np.random.default_rng(seed)
+    return rng.random(int(num_params)).astype(np.float64)
+
 def score_for_sparse_metric(
     metric: str,
     local_mu: np.ndarray,

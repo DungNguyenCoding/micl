@@ -278,14 +278,17 @@ class GroupedBayesClient(fl.client.NumPyClient):
             sparse_pack = None
             if use_sparse:
                 global_sigma = np.sqrt(1.0 / np.maximum(global_precision, float(self.cfg.precision_floor)))
-                score = compression.score_for_sparse_metric(
-                    metric=str(self.cfg.sparse_metric),
-                    local_mu=local_mu,
-                    global_mu=global_mu,
-                    local_sigma=local_sigma,
-                    local_precision=local_precision,
-                    global_sigma=global_sigma,
-                )
+                if str(getattr(self.cfg, "sparse_selection", "bayesian")).lower() == "random":
+                    score = compression.random_sparse_score(local_mu.size, seed=int(self.cfg.seed) + int(server_round) + int(did))
+                else:
+                    score = compression.score_for_sparse_metric(
+                        metric=str(self.cfg.sparse_metric),
+                        local_mu=local_mu,
+                        global_mu=global_mu,
+                        local_sigma=local_sigma,
+                        local_precision=local_precision,
+                        global_sigma=global_sigma,
+                    )
                 sparse_pack = compression.pack_sparse_contribution(
                     first_dense=first_dense,
                     second_dense=second_dense,
