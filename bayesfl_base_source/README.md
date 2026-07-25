@@ -954,24 +954,30 @@ nohup bash scripts/plot/plot_sparse_ola_mnist_noniid_unbalanced_precision_update
 nohup bash scripts/plot/plot_diagnostics_mnist_noniid_unbalanced_research_v1.sh > logs/plot_diagnostics_mnist_research_v1.log 2>&1 &
 ```
 
+## Sparse-selection ablation: Bayesian vs random top-k
 
-## Sparse communication ablation: Bayesian vs Random selection
-
-The sparse communication module supports an additional ablation mode:
-
-```bash
---sparse_selection bayesian
-```
-
-uses posterior-aware importance scores:
-
-- VI: update-SNR
-- OLA: precision-update
+This version supports an ablation for sparse Bayesian communication:
 
 ```bash
---sparse_selection random
+--sparse_selection bayesian   # default: current Bayesian score-based top-k
+--sparse_selection random     # random top-k baseline with the same keep ratio
 ```
 
-uses random scores but keeps the same top-k keep ratio and aggregation pipeline.
+The ablation is designed to test whether Bayesian uncertainty-aware coordinate selection is better than random sparsification under the same communication budget. The sparse ratio still means the kept/sent fraction:
 
-This allows a fair comparison between Bayesian importance selection and random sparsification under identical communication budgets.
+```bash
+--sparse_ratio 0.10   # send/keep 10% of parameter coordinates
+```
+
+The new client-level sparse metrics include selected-vs-dropped Bayesian score statistics, retained update energy, and estimated dense/sparse communication bytes. The recommended scripts are:
+
+```bash
+nohup bash scripts/train/train_vi_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/train_vi_sparse_selection_ablation.log 2>&1 &
+
+nohup bash scripts/train/train_ola_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/train_ola_sparse_selection_ablation.log 2>&1 &
+
+nohup bash scripts/plot/plot_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/plot_sparse_selection_ablation.log 2>&1 &
+```

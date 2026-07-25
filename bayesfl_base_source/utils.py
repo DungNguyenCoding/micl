@@ -1262,6 +1262,267 @@ def plot_snr_evolution(snr_csv: str | Path, output_dir: str | Path, rounds: Sequ
     return outputs
 
 
+
+# ---------------------------------------------------------------------------
+# Sparse-selection ablation plots
+# ---------------------------------------------------------------------------
+def _read_run_config(run_dir: Path) -> dict[str, str]:
+    cfg_path = run_dir / "config.csv"
+    if not cfg_path.exists():
+        return {}
+    rows = _read_csv_rows(cfg_path)
+    out: dict[str, str] = {}
+    for r in rows:
+        if "key" in r and "value" in r:
+            out[str(r.get("key", ""))] = str(r.get("value", ""))
+        else:
+            vals = list(r.values())
+            if len(vals) >= 2:
+                out[str(vals[0])] = str(vals[1])
+    return out
+
+
+def _float_from_row(row: Mapping[str, str] | None, key: str, default: float = float("nan")) -> float:
+    if row is None:
+        return default
+    try:
+        v = row.get(key, "")
+        if v == "" or v is None:
+            return default
+        return float(v)
+    except Exception:
+        return default
+
+
+def _infer_keep_from_label(label: str) -> float | None:
+    import re
+    m = re.search(r"keep(\d+)", label.lower())
+    if not m:
+        return None
+    val = int(m.group(1))
+    if val > 100:
+        return val / 1000.0
+    return val / 100.0
+
+
+def _infer_label_and_run(spec: str) -> tuple[str, Path]:
+    if "=" in spec:
+        label, path = spec.split("=", 1)
+        return label.strip(), Path(path.strip())
+    path = Path(spec)
+    return path.name, path
+
+
+def _mean_from_rows(rows: Rows, key: str) -> float:
+    vals = []
+    for r in rows:
+        try:
+            v = r.get(key, "")
+            if v != "":
+                vals.append(float(v))
+        except Exception:
+            continue
+    vals = [v for v in vals if np.isfinite(v)]
+    return float(np.mean(vals)) if vals else float("nan")
+
+
+def _sum_from_rows(rows: Rows, key: str) -> float:
+    vals = []
+    for r in rows:
+        try:
+            v = r.get(key, "")
+            if v != "":
+                vals.append(float(v))
+        except Exception:
+            continue
+    vals = [v for v in vals if np.isfinite(v)]
+    return float(np.sum(vals)) if vals else float("nan")
+
+
+def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> list[Path]:
+    """Create Bayesian-vs-random sparse selection ablation summary plots.
+
+    Each run spec can be ``label=run_dir`` or just ``run_dir``.  The function
+    reads ``metrics.csv``, ``config.csv``, and optionally
+    ``sparse_comm_metrics.csv`` from every run.
+    """
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    summary: list[dict[str, object]] = []
+
+    for spec in run_specs:
+        label, run_dir = _infer_label_and_run(spec)
+        metrics_path = run_dir / "metrics.csv"
+        if not metrics_path.exists():
+            print(f"[skip] missing metrics.csv for {label}: {metrics_path}")
+            continue
+        rows = _read_csv_rows(metrics_path)
+        if not rows:
+            print(f"[skip] empty metrics.csv for {label}")
+            continue
+        cfg = _read_run_config(run_dir)
+        last, best_acc = _last_and_best(rows, "global_accuracy")
+        _last_ece, best_ece = _last_and_best(rows, "global_ece")
+        method = cfg.get("method") or (last or {}).get("method", "") or label.split("_")[0]
+        selection = cfg.get("sparse_selection") or cfg.get("sparse_selection_method") or (last or {}).get("sparse_selection_method", "")
+        if not selection:
+            selection = "random" if "random" in label.lower() else "bayesian"
+        try:
+            keep_ratio = float(cfg.get("sparse_ratio", ""))
+        except Exception:
+            inferred = _infer_keep_from_label(label)
+            keep_ratio = inferred if inferred is not None else float("nan")
+        if not np.isfinite(keep_ratio):
+            inferred = _infer_keep_from_label(label)
+            keep_ratio = inferred if inferred is not None else float("nan")
+
+        sparse_rows: Rows = []
+        sparse_path = run_dir / "sparse_comm_metrics.csv"
+        if sparse_path.exists():
+            try:
+                sparse_rows = _read_csv_rows(sparse_path)
+            except Exception:
+                sparse_rows = []
+
+        cumulative_sparse = _float_from_row(last, "communication_cumulative_sparse_bytes")
+        cumulative_dense = _float_from_row(last, "communication_cumulative_dense_bytes")
+        if not np.isfinite(cumulative_sparse):
+            cumulative_sparse = _sum_from_rows(sparse_rows, "sparse_sent_bytes")
+        if not np.isfinite(cumulative_dense):
+            cumulative_dense = _sum_from_rows(sparse_rows, "sparse_dense_bytes")
+        if np.isfinite(cumulative_sparse) and np.isfinite(cumulative_dense) and cumulative_dense > 0:
+            cumulative_saving = 1.0 - cumulative_sparse / cumulative_dense
+        else:
+            cumulative_saving = _float_from_row(last, "communication_cumulative_saving_ratio")
+
+        retention = _float_from_row(last, "sparse_update_energy_retention_mean")
+        if not np.isfinite(retention):
+            retention = _float_from_row(last, "sparse_sent_update_fraction_l2_mean")
+        if not np.isfinite(retention):
+            retention = _mean_from_rows(sparse_rows, "sparse_update_energy_retention")
+        if not np.isfinite(retention):
+            retention = _mean_from_rows(sparse_rows, "sparse_sent_update_fraction_l2")
+
+        selected_score = _float_from_row(last, "sparse_selected_score_mean_mean")
+        dropped_score = _float_from_row(last, "sparse_dropped_score_mean_mean")
+        if not np.isfinite(selected_score):
+            selected_score = _mean_from_rows(sparse_rows, "sparse_selected_score_mean")
+        if not np.isfinite(dropped_score):
+            dropped_score = _mean_from_rows(sparse_rows, "sparse_dropped_score_mean")
+        score_gap = selected_score - dropped_score if np.isfinite(selected_score) and np.isfinite(dropped_score) else float("nan")
+
+        summary.append({
+            "label": label,
+            "run_dir": str(run_dir),
+            "method": method,
+            "sparse_selection": selection,
+            "keep_ratio": keep_ratio,
+            "keep_percent": keep_ratio * 100.0 if np.isfinite(keep_ratio) else float("nan"),
+            "final_round": _float_from_row(last, "round"),
+            "final_global_accuracy": _float_from_row(last, "global_accuracy"),
+            "final_global_loss": _float_from_row(last, "global_loss"),
+            "final_global_ece": _float_from_row(last, "global_ece"),
+            "best_global_accuracy": _float_from_row(best_acc, "global_accuracy"),
+            "best_global_accuracy_round": _float_from_row(best_acc, "round"),
+            "best_global_ece": _float_from_row(best_ece, "global_ece"),
+            "best_global_ece_round": _float_from_row(best_ece, "round"),
+            "cumulative_dense_bytes": cumulative_dense,
+            "cumulative_sparse_bytes": cumulative_sparse,
+            "cumulative_sparse_MB": cumulative_sparse / (1024.0 * 1024.0) if np.isfinite(cumulative_sparse) else float("nan"),
+            "cumulative_saving_ratio": cumulative_saving,
+            "mean_update_energy_retention": retention,
+            "selected_score_mean": selected_score,
+            "dropped_score_mean": dropped_score,
+            "selected_minus_dropped_score_mean": score_gap,
+        })
+
+    if not summary:
+        print("[skip] no valid runs for sparse ablation")
+        return []
+
+    fields = list(summary[0].keys())
+    summary_path = out_dir / "sparse_ablation_summary.csv"
+    with summary_path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore", restval="")
+        writer.writeheader()
+        for row in summary:
+            writer.writerow(row)
+    outputs: list[Path] = [summary_path]
+
+    def _plot_vs_keep(metric: str, ylabel: str, filename: str, title: str) -> None:
+        methods = sorted({str(r["method"]) for r in summary})
+        for method in methods:
+            sub = [r for r in summary if str(r["method"]) == method]
+            if not sub:
+                continue
+            fig, ax = plt.subplots(figsize=(7.5, 4.5))
+            plotted = False
+            for selection in sorted({str(r["sparse_selection"]) for r in sub}):
+                rows_s = [r for r in sub if str(r["sparse_selection"]) == selection]
+                xs, ys = [], []
+                for r in sorted(rows_s, key=lambda x: float(x.get("keep_percent", float("nan"))), reverse=True):
+                    try:
+                        x = float(r.get("keep_percent", float("nan")))
+                        y = float(r.get(metric, float("nan")))
+                    except Exception:
+                        continue
+                    if np.isfinite(x) and np.isfinite(y):
+                        xs.append(x); ys.append(y)
+                if xs:
+                    ax.plot(xs, ys, marker="o", label=selection)
+                    plotted = True
+            if plotted:
+                ax.set_xlabel("Keep ratio (%)")
+                ax.set_ylabel(ylabel)
+                ax.set_title(f"{method.upper()}: {title}")
+                ax.grid(True, alpha=0.3)
+                ax.legend()
+                outputs.append(_save_figure(fig, out_dir / f"{method}_{filename}"))
+            else:
+                plt.close(fig)
+
+    _plot_vs_keep("final_global_accuracy", "Final global accuracy", "accuracy_vs_keep_ratio.png", "accuracy vs keep ratio")
+    _plot_vs_keep("best_global_accuracy", "Best global accuracy", "best_accuracy_vs_keep_ratio.png", "best accuracy vs keep ratio")
+    _plot_vs_keep("final_global_ece", "Final ECE", "ece_vs_keep_ratio.png", "calibration vs keep ratio")
+    _plot_vs_keep("cumulative_saving_ratio", "Cumulative communication saving ratio", "communication_saving_vs_keep_ratio.png", "communication saving vs keep ratio")
+    _plot_vs_keep("mean_update_energy_retention", "Mean retained update L2 fraction", "update_energy_retention_vs_keep_ratio.png", "information retention vs keep ratio")
+    _plot_vs_keep("selected_minus_dropped_score_mean", "Selected - dropped Bayesian score", "selected_dropped_score_gap_vs_keep_ratio.png", "selection-quality gap")
+
+    # Accuracy vs communication cost Pareto-style plot.
+    methods = sorted({str(r["method"]) for r in summary})
+    for method in methods:
+        sub = [r for r in summary if str(r["method"]) == method]
+        fig, ax = plt.subplots(figsize=(7.5, 4.5))
+        plotted = False
+        for selection in sorted({str(r["sparse_selection"]) for r in sub}):
+            rows_s = [r for r in sub if str(r["sparse_selection"]) == selection]
+            xs, ys = [], []
+            for r in rows_s:
+                try:
+                    x = float(r.get("cumulative_sparse_MB", float("nan")))
+                    y = float(r.get("final_global_accuracy", float("nan")))
+                except Exception:
+                    continue
+                if np.isfinite(x) and np.isfinite(y):
+                    xs.append(x); ys.append(y)
+            if xs:
+                order = np.argsort(xs)
+                xs = [xs[i] for i in order]
+                ys = [ys[i] for i in order]
+                ax.plot(xs, ys, marker="o", label=selection)
+                plotted = True
+        if plotted:
+            ax.set_xlabel("Cumulative communication (MB)")
+            ax.set_ylabel("Final global accuracy")
+            ax.set_title(f"{method.upper()}: accuracy vs communication cost")
+            ax.grid(True, alpha=0.3)
+            ax.legend()
+            outputs.append(_save_figure(fig, out_dir / f"{method}_accuracy_vs_communication_cost.png"))
+        else:
+            plt.close(fig)
+
+    return outputs
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline PNG plotting for Bayesian FL runs")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -1362,6 +1623,10 @@ def main() -> None:
     prune_plot_parser.add_argument("--pruning", required=True, help="Path to pruning_eval.csv")
     prune_plot_parser.add_argument("--output_dir", default="plots/pruning")
 
+    sparse_ablation_parser = sub.add_parser("sparse-ablation", help="Compare Bayesian vs random sparse selection runs")
+    sparse_ablation_parser.add_argument("--runs", nargs="+", required=True, help="label=run_dir entries")
+    sparse_ablation_parser.add_argument("--output_dir", required=True)
+
     args = parser.parse_args()
     if args.command == "metric":
         print(plot_metric(args.history, args.metric, args.output_dir))
@@ -1403,6 +1668,9 @@ def main() -> None:
         print(run_posthoc_pruning(args.run, args.output_dir, args.fractions, args.round, args.device))
     elif args.command == "prune-plot":
         for path in plot_pruning_eval(args.pruning, args.output_dir):
+            print(path)
+    elif args.command == "sparse-ablation":
+        for path in plot_sparse_ablation(args.runs, args.output_dir):
             print(path)
 
 

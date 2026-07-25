@@ -87,6 +87,8 @@ class GroupedBayesStrategy(FedAvg):
         self.round_start_time: dict[int, float] = {}
         self.fit_start_time: dict[int, float] = {}
         self.aggregate_time_sec: float = 0.0
+        self.cumulative_dense_bytes: int = 0
+        self.cumulative_sparse_bytes: int = 0
         self.start_time = time.perf_counter()
 
         super().__init__(
@@ -332,6 +334,7 @@ class GroupedBayesStrategy(FedAvg):
         sparse_metrics: dict[str, Any] = {
             "sparse_comm_enabled": bool(len(sparse_rows) > 0),
             "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_selection_method": str(getattr(self.cfg, "sparse_selection", "bayesian")),
             "sparse_ratio": float(self.cfg.sparse_ratio),
             "sparse_warmup_rounds": int(self.cfg.sparse_warmup_rounds),
         }
@@ -342,12 +345,31 @@ class GroupedBayesStrategy(FedAvg):
             totalp = totalp[np.isfinite(totalp)]
             dense_params = int(totalp.sum()) if totalp.size else 0
             sent_params = int(sent.sum()) if sent.size else 0
-            # Dense product posterior communication uses two float32 arrays per physical client.
-            # Sparse mode sends one int64 index and three float32 values per selected coordinate.
-            dense_bytes = int(dense_params * 2 * 4)
-            index_bytes = int(sent_params * 8)
-            value_bytes = int(sent_params * 3 * 4)
-            sparse_bytes = int(index_bytes + value_bytes)
+
+            # Prefer client-estimated byte counts when present because they
+            # handle keep100 controls as optimized dense communication. Fall
+            # back to the original formula for backward compatibility.
+            dense_bytes_arr = np.asarray([obs.float_or_nan(r.get("sparse_dense_bytes", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            sent_bytes_arr = np.asarray([obs.float_or_nan(r.get("sparse_sent_bytes", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            index_bytes_arr = np.asarray([obs.float_or_nan(r.get("sparse_index_bytes", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            value_bytes_arr = np.asarray([obs.float_or_nan(r.get("sparse_value_bytes", obs.nan())) for r in sparse_rows], dtype=np.float64)
+            dense_bytes_arr = dense_bytes_arr[np.isfinite(dense_bytes_arr)]
+            sent_bytes_arr = sent_bytes_arr[np.isfinite(sent_bytes_arr)]
+            index_bytes_arr = index_bytes_arr[np.isfinite(index_bytes_arr)]
+            value_bytes_arr = value_bytes_arr[np.isfinite(value_bytes_arr)]
+            if dense_bytes_arr.size and sent_bytes_arr.size:
+                dense_bytes = int(dense_bytes_arr.sum())
+                sparse_bytes = int(sent_bytes_arr.sum())
+                index_bytes = int(index_bytes_arr.sum()) if index_bytes_arr.size else obs.nan()
+                value_bytes = int(value_bytes_arr.sum()) if value_bytes_arr.size else obs.nan()
+            else:
+                dense_bytes = int(dense_params * 2 * 4)
+                index_bytes = int(sent_params * 8)
+                value_bytes = int(sent_params * 3 * 4)
+                sparse_bytes = int(index_bytes + value_bytes)
+
+            self.cumulative_dense_bytes += int(dense_bytes)
+            self.cumulative_sparse_bytes += int(sparse_bytes)
             sparse_metrics.update({
                 "communication_dense_params": dense_params,
                 "communication_sent_params_total": sent_params,
@@ -358,6 +380,9 @@ class GroupedBayesStrategy(FedAvg):
                 "communication_index_bytes": index_bytes,
                 "communication_value_bytes": value_bytes,
                 "communication_saving_ratio": float(1.0 - sparse_bytes / max(dense_bytes, 1)),
+                "communication_cumulative_dense_bytes": int(self.cumulative_dense_bytes),
+                "communication_cumulative_sparse_bytes": int(self.cumulative_sparse_bytes),
+                "communication_cumulative_saving_ratio": float(1.0 - self.cumulative_sparse_bytes / max(self.cumulative_dense_bytes, 1)),
             })
 
         self.last_fit_metrics = {

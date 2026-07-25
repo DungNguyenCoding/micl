@@ -112,6 +112,8 @@ class RunConfig:
     # Sparse Bayesian communication / BBB-style pruning experiments
     sparse_comm: bool = False
     sparse_metric: str = "update_snr"  # snr | update_snr | precision_update | kl
+    # How sparse coordinates are selected. bayesian uses sparse_metric scores;
+    # random uses a deterministic random mask under the same keep ratio.
     sparse_selection: str = "bayesian"  # bayesian | random
     sparse_ratio: float = 1.0
     sparse_warmup_rounds: int = 0
@@ -214,7 +216,7 @@ def parse_args() -> RunConfig:
 
     parser.add_argument("--sparse_comm", type=str2bool, default=RunConfig.sparse_comm)
     parser.add_argument("--sparse_metric", choices=["snr", "update_snr", "precision_update", "kl"], default=RunConfig.sparse_metric)
-    parser.add_argument("--sparse_selection", choices=["bayesian", "random"], default=RunConfig.sparse_selection)
+    parser.add_argument("--sparse_selection", choices=["bayesian", "random"], default=RunConfig.sparse_selection, help="Coordinate selection rule for sparse communication. bayesian uses --sparse_metric; random is the ablation baseline.")
     parser.add_argument("--sparse_ratio", type=float, default=RunConfig.sparse_ratio)
     parser.add_argument("--sparse_warmup_rounds", type=int, default=RunConfig.sparse_warmup_rounds)
     parser.add_argument("--sparse_min_keep", type=int, default=RunConfig.sparse_min_keep)

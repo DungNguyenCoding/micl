@@ -69,3 +69,36 @@ Check running jobs:
 ```bash
 pgrep -af "main.py|scripts/"
 ```
+
+## Sparse-selection ablation scripts
+
+These scripts compare the current Bayesian sparse-selection rule against a random top-k sparse baseline under the same keep ratio and training settings.
+
+Train VI ablation:
+
+```bash
+nohup bash scripts/train/train_vi_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/train_vi_sparse_selection_ablation.log 2>&1 &
+```
+
+Train OLA ablation:
+
+```bash
+nohup bash scripts/train/train_ola_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/train_ola_sparse_selection_ablation.log 2>&1 &
+```
+
+Plot ablation results:
+
+```bash
+nohup bash scripts/plot/plot_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh \
+  > logs/plot_sparse_selection_ablation.log 2>&1 &
+```
+
+Default keep ratios are `100, 50, 10, 5, 2` percent. Override them with:
+
+```bash
+KEEP_RATIOS="1.0 0.5 0.1" bash scripts/train/train_vi_sparse_selection_ablation_mnist_noniid_unbalanced_seed42.sh
+```
+
+`bayesian` mode uses the configured sparse metric (`update_snr` for VI and `precision_update` for OLA). `random` mode uses a deterministic random mask with the same keep ratio.

@@ -156,6 +156,19 @@ class GroupedBayesClient(fl.client.NumPyClient):
             return False
         return int(server_round) > int(self.cfg.sparse_warmup_rounds)
 
+    def _sparse_selection_scores(self, bayesian_scores: np.ndarray, server_round: int, did: int) -> np.ndarray:
+        """Return the actual scores used for sparse top-k selection.
+
+        Bayesian mode returns the scientific importance scores. Random mode
+        returns deterministic random scores under the same keep ratio.  The
+        random seed depends on the global seed, method, round, virtual client,
+        and physical client so random masks are reproducible but distinct.
+        """
+        selection = str(getattr(self.cfg, "sparse_selection", "bayesian"))
+        salt = 11_000_003 if self.cfg.method == "vi" else 13_000_007
+        seed = int(self.cfg.seed + salt * int(server_round) + 10_007 * int(self.group_id) + int(did))
+        return compression.score_for_sparse_selection(selection, bayesian_scores, seed=seed)
+
     def _effective_vi_lr(self, server_round: int) -> float:
         """Return VI learning rate after optional round-based decay."""
         lr = float(self.cfg.vi_lr)
@@ -278,22 +291,22 @@ class GroupedBayesClient(fl.client.NumPyClient):
             sparse_pack = None
             if use_sparse:
                 global_sigma = np.sqrt(1.0 / np.maximum(global_precision, float(self.cfg.precision_floor)))
-                if str(getattr(self.cfg, "sparse_selection", "bayesian")).lower() == "random":
-                    score = compression.random_sparse_score(local_mu.size, seed=int(self.cfg.seed) + int(server_round) + int(did))
-                else:
-                    score = compression.score_for_sparse_metric(
-                        metric=str(self.cfg.sparse_metric),
-                        local_mu=local_mu,
-                        global_mu=global_mu,
-                        local_sigma=local_sigma,
-                        local_precision=local_precision,
-                        global_sigma=global_sigma,
-                    )
+                bayesian_score = compression.score_for_sparse_metric(
+                    metric=str(self.cfg.sparse_metric),
+                    local_mu=local_mu,
+                    global_mu=global_mu,
+                    local_sigma=local_sigma,
+                    local_precision=local_precision,
+                    global_sigma=global_sigma,
+                )
+                selection_score = self._sparse_selection_scores(bayesian_score, server_round, did)
                 sparse_pack = compression.pack_sparse_contribution(
                     first_dense=first_dense,
                     second_dense=second_dense,
                     count_dense=count_dense,
-                    scores=score,
+                    scores=selection_score,
+                    importance_scores=bayesian_score,
+                    selection_method=str(getattr(self.cfg, "sparse_selection", "bayesian")),
                     ratio=float(self.cfg.sparse_ratio),
                     min_keep=int(self.cfg.sparse_min_keep),
                 )
@@ -338,6 +351,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
                     pack=sparse_pack,
                     update=update,
                     mask_indices=None if sparse_pack is None else sparse_pack.indices,
+                    selection=str(getattr(self.cfg, "sparse_selection", "bayesian")),
                 )
             )
             train_rows.append(row)
@@ -358,6 +372,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
         group_metrics = {
             "sparse_comm_enabled": bool(use_sparse),
             "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_selection_method": str(getattr(self.cfg, "sparse_selection", "bayesian")),
             "sparse_ratio": float(self.cfg.sparse_ratio),
             "sparse_group_sent_params": int(sparse_sent_total),
             "sparse_group_total_params": int(sparse_total_params),
@@ -419,7 +434,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
 
             sparse_pack = None
             if use_sparse:
-                score = compression.score_for_sparse_metric(
+                bayesian_score = compression.score_for_sparse_metric(
                     metric=str(self.cfg.sparse_metric),
                     local_mu=loc,
                     global_mu=global_loc,
@@ -427,11 +442,14 @@ class GroupedBayesClient(fl.client.NumPyClient):
                     local_precision=precision,
                     global_sigma=global_scale,
                 )
+                selection_score = self._sparse_selection_scores(bayesian_score, server_round, did)
                 sparse_pack = compression.pack_sparse_contribution(
                     first_dense=first_dense,
                     second_dense=second_dense,
                     count_dense=count_dense,
-                    scores=score,
+                    scores=selection_score,
+                    importance_scores=bayesian_score,
+                    selection_method=str(getattr(self.cfg, "sparse_selection", "bayesian")),
                     ratio=float(self.cfg.sparse_ratio),
                     min_keep=int(self.cfg.sparse_min_keep),
                 )
@@ -474,6 +492,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
                     pack=sparse_pack,
                     update=update,
                     mask_indices=None if sparse_pack is None else sparse_pack.indices,
+                    selection=str(getattr(self.cfg, "sparse_selection", "bayesian")),
                 )
             )
             train_rows.append(row)
@@ -514,6 +533,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
         group_metrics = {
             "sparse_comm_enabled": bool(use_sparse),
             "sparse_metric": str(self.cfg.sparse_metric),
+            "sparse_selection_method": str(getattr(self.cfg, "sparse_selection", "bayesian")),
             "sparse_ratio": float(self.cfg.sparse_ratio),
             "sparse_group_sent_params": int(sparse_sent_total),
             "sparse_group_total_params": int(sparse_total_params),
