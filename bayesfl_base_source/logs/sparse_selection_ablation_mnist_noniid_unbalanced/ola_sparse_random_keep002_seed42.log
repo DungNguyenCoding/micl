@@ -1,0 +1,150 @@
+2026-07-26 14:48:57,206 | INFO | Starting Bayesian FL source run
+2026-07-26 14:48:57,206 | INFO | Flower version: 1.29.0
+2026-07-26 14:48:57,206 | INFO | Method=ola dataset=mnist model=mlp
+2026-07-26 14:48:57,206 | INFO | Physical devices=300 Flower virtual clients=24 client_fraction=0.0500
+2026-07-26 14:48:57,206 | INFO | Output directory: /home/micl/DungNDH/micl/bayesfl_base_source/outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep002_seed42
+/home/micl/DungNDH/micl/bayesfl_base_source/dataset.py:75: UserWarning: Length of split at index 1 is 0. This might result in an empty dataset.
+  train_subset, val_subset = random_split(subset, [train_len, val_len], generator=split_gen)
+2026-07-26 14:48:58,506 | INFO | Loaded dataset with input_shape=(1, 28, 28) num_classes=10
+2026-07-26 14:48:58,506 | INFO | Saved device/data summary to outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep002_seed42/device_summary.csv
+2026-07-26 14:48:58,507 | INFO | Initial payload arrays: [(101770,), (101770,)]
+2026-07-26 14:48:58,512 | INFO | Flower client_resources={'num_cpus': 1.0, 'num_gpus': 0.25}
+[93mWARNING [0m:   DEPRECATED FEATURE: flwr.simulation.start_simulation() is deprecated.
+	Instead, use the `flwr run` CLI command to start a local simulation in your Flower app, as shown for example below:
+
+		$ flwr new  # Create a new Flower app from a template
+
+		$ flwr run  # Run the Flower app in Simulation Mode
+
+	Using `start_simulation()` is deprecated.
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+2026-07-26 14:48:58,611 | WARNING | DEPRECATED FEATURE: flwr.simulation.start_simulation() is deprecated.
+	Instead, use the `flwr run` CLI command to start a local simulation in your Flower app, as shown for example below:
+
+		$ flwr new  # Create a new Flower app from a template
+
+		$ flwr run  # Run the Flower app in Simulation Mode
+
+	Using `start_simulation()` is deprecated.
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+[92mINFO [0m:      Starting Flower simulation, config: num_rounds=200, no round_timeout
+2026-07-26 14:48:58,611 | INFO | Starting Flower simulation, config: num_rounds=200, no round_timeout
+2026-07-26 14:49:00,293	INFO worker.py:2012 -- Started a local Ray instance.
+/home/micl/anaconda3/envs/dungndh/lib/python3.10/site-packages/ray/_private/worker.py:2051: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+[92mINFO [0m:      Flower VCE: Ray initialized with resources: {'GPU': 2.0, 'node:__internal_head__': 1.0, 'object_store_memory': 75942732595.0, 'memory': 177199709389.0, 'node:203.249.64.186': 1.0, 'accelerator_type:G': 1.0, 'CPU': 48.0}
+2026-07-26 14:49:01,179 | INFO | Flower VCE: Ray initialized with resources: {'GPU': 2.0, 'node:__internal_head__': 1.0, 'object_store_memory': 75942732595.0, 'memory': 177199709389.0, 'node:203.249.64.186': 1.0, 'accelerator_type:G': 1.0, 'CPU': 48.0}
+[92mINFO [0m:      Optimize your simulation with Flower VCE: https://flower.ai/docs/framework/how-to-run-simulations.html
+2026-07-26 14:49:01,179 | INFO | Optimize your simulation with Flower VCE: https://flower.ai/docs/framework/how-to-run-simulations.html
+[92mINFO [0m:      Flower VCE: Resources for each Virtual Client: {'num_cpus': 1.0, 'num_gpus': 0.25}
+2026-07-26 14:49:01,179 | INFO | Flower VCE: Resources for each Virtual Client: {'num_cpus': 1.0, 'num_gpus': 0.25}
+[92mINFO [0m:      Flower VCE: Creating VirtualClientEngineActorPool with 8 actors
+2026-07-26 14:49:01,242 | INFO | Flower VCE: Creating VirtualClientEngineActorPool with 8 actors
+[92mINFO [0m:      [INIT]
+2026-07-26 14:49:01,242 | INFO | [INIT]
+[92mINFO [0m:      Using initial global parameters provided by strategy
+2026-07-26 14:49:01,242 | INFO | Using initial global parameters provided by strategy
+[92mINFO [0m:      Starting evaluation of initial global parameters
+2026-07-26 14:49:01,242 | INFO | Starting evaluation of initial global parameters
+[92mINFO [0m:      initial parameters (loss, other metrics): 2.2839737342834474, {'accuracy': 0.1078, 'global_ece': 0.03257808776050807, 'selected_count': 0, 'active_physical_devices': 0}
+2026-07-26 14:49:11,454 | INFO | initial parameters (loss, other metrics): 2.2839737342834474, {'accuracy': 0.1078, 'global_ece': 0.03257808776050807, 'selected_count': 0, 'active_physical_devices': 0}
+[92mINFO [0m:      
+2026-07-26 14:49:11,454 | INFO | 
+[92mINFO [0m:      [ROUND 1]
+2026-07-26 14:49:11,454 | INFO | [ROUND 1]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:49:11,455 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:49:16,092 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (1, 2.302878458404541, {'accuracy': 0.1521, 'global_ece': 0.11426782073676586, 'selected_count': 15, 'active_physical_devices': 15}, 13.415605762973428)
+2026-07-26 14:49:24,870 | INFO | fit progress: (1, 2.302878458404541, {'accuracy': 0.1521, 'global_ece': 0.11426782073676586, 'selected_count': 15, 'active_physical_devices': 15}, 13.415605762973428)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:49:24,870 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:49:24,870 | INFO | 
+[92mINFO [0m:      [ROUND 2]
+2026-07-26 14:49:24,870 | INFO | [ROUND 2]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:49:24,871 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:49:27,210 | INFO | aggregate_fit: received 24 results and 0 failures
+[36m(pid=gcs_server)[0m [2026-07-26 14:49:29,211 E 820694 820694] (gcs_server) gcs_server.cc:302: Failed to establish connection to the event+metrics exporter agent. Events and metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[33m(raylet)[0m [2026-07-26 14:49:30,237 E 820886 820886] (raylet) main.cc:975: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[36m(ClientAppActor pid=820987)[0m [2026-07-26 14:49:30,749 E 820987 821131] core_worker_process.cc:825: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[2026-07-26 14:49:31,183 E 820649 820985] core_worker_process.cc:825: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[92mINFO [0m:      fit progress: (2, 2.0902324981689455, {'accuracy': 0.2429, 'global_ece': 0.18877201757133003, 'selected_count': 15, 'active_physical_devices': 15}, 25.340254563023336)
+2026-07-26 14:49:36,794 | INFO | fit progress: (2, 2.0902324981689455, {'accuracy': 0.2429, 'global_ece': 0.18877201757133003, 'selected_count': 15, 'active_physical_devices': 15}, 25.340254563023336)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:49:36,795 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:49:36,795 | INFO | 
+[92mINFO [0m:      [ROUND 3]
+2026-07-26 14:49:36,795 | INFO | [ROUND 3]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:49:36,796 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:49:39,467 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (3, 2.0395173721313475, {'accuracy': 0.3131, 'global_ece': 0.11514952111542223, 'selected_count': 15, 'active_physical_devices': 15}, 37.08616849395912)
+2026-07-26 14:49:48,540 | INFO | fit progress: (3, 2.0395173721313475, {'accuracy': 0.3131, 'global_ece': 0.11514952111542223, 'selected_count': 15, 'active_physical_devices': 15}, 37.08616849395912)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:49:48,541 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:49:48,541 | INFO | 
+[92mINFO [0m:      [ROUND 4]
+2026-07-26 14:49:48,541 | INFO | [ROUND 4]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:49:48,542 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:49:51,746 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (4, 2.3621295101165773, {'accuracy': 0.3858, 'global_ece': 0.17607345579713585, 'selected_count': 15, 'active_physical_devices': 15}, 49.095108006033115)
+2026-07-26 14:50:00,549 | INFO | fit progress: (4, 2.3621295101165773, {'accuracy': 0.3858, 'global_ece': 0.17607345579713585, 'selected_count': 15, 'active_physical_devices': 15}, 49.095108006033115)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:50:00,550 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:50:00,550 | INFO | 
+[92mINFO [0m:      [ROUND 5]
+2026-07-26 14:50:00,550 | INFO | [ROUND 5]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:50:00,551 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:50:02,696 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (5, 2.1400221252441405, {'accuracy': 0.4461, 'global_ece': 0.12259854133725166, 'selected_count': 15, 'active_physical_devices': 15}, 60.622186717926525)
+2026-07-26 14:50:12,076 | INFO | fit progress: (5, 2.1400221252441405, {'accuracy': 0.4461, 'global_ece': 0.12259854133725166, 'selected_count': 15, 'active_physical_devices': 15}, 60.622186717926525)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:50:12,077 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:50:12,077 | INFO | 
+[92mINFO [0m:      [ROUND 6]
+2026-07-26 14:50:12,077 | INFO | [ROUND 6]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:50:12,077 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:50:14,976 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (6, 2.7926652114868165, {'accuracy': 0.2786, 'global_ece': 0.40502402575612073, 'selected_count': 15, 'active_physical_devices': 15}, 71.54713325493503)
+2026-07-26 14:50:23,001 | INFO | fit progress: (6, 2.7926652114868165, {'accuracy': 0.2786, 'global_ece': 0.40502402575612073, 'selected_count': 15, 'active_physical_devices': 15}, 71.54713325493503)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:50:23,001 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:50:23,002 | INFO | 
+[92mINFO [0m:      [ROUND 7]
+2026-07-26 14:50:23,002 | INFO | [ROUND 7]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:50:23,002 | INFO | configure_fit: strategy sampled 24 clients (out of 24)
+[92mINFO [0m:      aggregate_fit: received 24 results and 0 failures
+2026-07-26 14:50:25,421 | INFO | aggregate_fit: received 24 results and 0 failures
+[92mINFO [0m:      fit progress: (7, 2.469718569564819, {'accuracy': 0.3524, 'global_ece': 0.26653250962644814, 'selected_count': 15, 'active_physical_devices': 15}, 82.09425523993559)
+2026-07-26 14:50:33,548 | INFO | fit progress: (7, 2.469718569564819, {'accuracy': 0.3524, 'global_ece': 0.26653250962644814, 'selected_count': 15, 'active_physical_devices': 15}, 82.09425523993559)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+2026-07-26 14:50:33,549 | INFO | configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+2026-07-26 14:50:33,549 | INFO | 
+[92mINFO [0m:      [ROUND 8]
+2026-07-26 14:50:33,549 | INFO | [ROUND 8]
+[92mINFO [0m:      configure_fit: strategy sampled 24 clients (out of 24)
+2026-07-26 14:50:33,550 | INFO | configure_fit: strategy sampled 24 clients (out of 24)

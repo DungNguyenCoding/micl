@@ -112,8 +112,8 @@ for SELECTION in "${SELECTIONS[@]}"; do
       --model mlp \
       --iid false \
       --balanced false \
-      --noniid_alpha 0.1 \
-      --unbalanced_alpha 0.5 \
+      --noniid_alpha 0.01 \
+      --unbalanced_alpha 0.1 \
       --num_devices 300 \
       --num_virtual_clients 24 \
       --client_fraction 0.05 \

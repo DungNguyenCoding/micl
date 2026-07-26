@@ -1,0 +1,18 @@
+nohup: ignoring input
+===== OLA sparse-selection ablation =====
+OUTPUT_ROOT=outputs/sparse_selection_ablation_mnist_noniid_unbalanced
+LOG_DIR=logs/sparse_selection_ablation_mnist_noniid_unbalanced
+KEEP_RATIOS=0.1
+SELECTIONS=bayesian random
+SPARSE_METRIC=precision_update
+DEVICE=cuda CLIENT_GPUS=0.25
+===== Running OLA bayesian keep=0.1 =====
+Output: outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_bayesian_keep010_seed42
+Log:    logs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_bayesian_keep010_seed42.log
+[done] ola_sparse_bayesian_keep010_seed42
+===== Running OLA random keep=0.1 =====
+Output: outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep010_seed42
+Log:    logs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep010_seed42.log
+[done] ola_sparse_random_keep010_seed42
+===== OLA sparse-selection ablation finished =====
+Manifest: outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_selection_ablation_manifest_seed42.csv
