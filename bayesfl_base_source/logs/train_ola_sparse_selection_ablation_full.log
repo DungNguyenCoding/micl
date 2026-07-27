@@ -45,3 +45,6 @@ Log:    logs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random
 ===== Running OLA random keep=0.02 =====
 Output: outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep002_seed42
 Log:    logs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_random_keep002_seed42.log
+[done] ola_sparse_random_keep002_seed42
+===== OLA sparse-selection ablation finished =====
+Manifest: outputs/sparse_selection_ablation_mnist_noniid_unbalanced/ola_sparse_selection_ablation_manifest_seed42.csv
