@@ -1367,6 +1367,8 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
         selection = cfg.get("sparse_selection") or cfg.get("sparse_selection_method") or (last or {}).get("sparse_selection_method", "")
         if not selection:
             selection = "random" if "random" in label.lower() else "bayesian"
+        sparse_metric = str(cfg.get("sparse_metric", "") or (last or {}).get("sparse_metric", "") or "")
+
         try:
             keep_ratio = float(cfg.get("sparse_ratio", ""))
         except Exception:
@@ -1416,6 +1418,8 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
             "run_dir": str(run_dir),
             "method": method,
             "sparse_selection": selection,
+            "sparse_metric": sparse_metric,
+            "curve_label": (f"{selection}:{sparse_metric}" if selection == "bayesian" and sparse_metric else selection),
             "keep_ratio": keep_ratio,
             "keep_percent": keep_ratio * 100.0 if np.isfinite(keep_ratio) else float("nan"),
             "final_round": _float_from_row(last, "round"),
@@ -1440,7 +1444,11 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
         print("[skip] no valid runs for sparse ablation")
         return []
 
-    fields = list(summary[0].keys())
+    fields = []
+    for row in summary:
+        for key in row.keys():
+            if key not in fields:
+                fields.append(key)
     summary_path = out_dir / "sparse_ablation_summary.csv"
     with summary_path.open("w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore", restval="")
@@ -1457,8 +1465,8 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
                 continue
             fig, ax = plt.subplots(figsize=(7.5, 4.5))
             plotted = False
-            for selection in sorted({str(r["sparse_selection"]) for r in sub}):
-                rows_s = [r for r in sub if str(r["sparse_selection"]) == selection]
+            for selection in sorted({str(r.get("curve_label", r.get("sparse_selection", ""))) for r in sub}):
+                rows_s = [r for r in sub if str(r.get("curve_label", r.get("sparse_selection", ""))) == selection]
                 xs, ys = [], []
                 for r in sorted(rows_s, key=lambda x: float(x.get("keep_percent", float("nan"))), reverse=True):
                     try:
@@ -1494,8 +1502,8 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
         sub = [r for r in summary if str(r["method"]) == method]
         fig, ax = plt.subplots(figsize=(7.5, 4.5))
         plotted = False
-        for selection in sorted({str(r["sparse_selection"]) for r in sub}):
-            rows_s = [r for r in sub if str(r["sparse_selection"]) == selection]
+        for selection in sorted({str(r.get("curve_label", r.get("sparse_selection", ""))) for r in sub}):
+            rows_s = [r for r in sub if str(r.get("curve_label", r.get("sparse_selection", ""))) == selection]
             xs, ys = [], []
             for r in rows_s:
                 try:

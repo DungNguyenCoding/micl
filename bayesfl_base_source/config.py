@@ -111,7 +111,7 @@ class RunConfig:
 
     # Sparse Bayesian communication / BBB-style pruning experiments
     sparse_comm: bool = False
-    sparse_metric: str = "update_snr"  # snr | update_snr | precision_update | kl
+    sparse_metric: str = "update_snr"  # snr | update_snr | precision_update | fisher_update | kl
     # How sparse coordinates are selected. bayesian uses sparse_metric scores;
     # random uses a deterministic random mask under the same keep ratio.
     sparse_selection: str = "bayesian"  # bayesian | random
@@ -215,7 +215,7 @@ def parse_args() -> RunConfig:
     parser.add_argument("--best_checkpoint_metric", choices=["global_accuracy", "global_ece", "global_loss"], default=RunConfig.best_checkpoint_metric)
 
     parser.add_argument("--sparse_comm", type=str2bool, default=RunConfig.sparse_comm)
-    parser.add_argument("--sparse_metric", choices=["snr", "update_snr", "precision_update", "kl"], default=RunConfig.sparse_metric)
+    parser.add_argument("--sparse_metric", choices=["snr", "update_snr", "precision_update", "fisher_update", "kl"], default=RunConfig.sparse_metric)
     parser.add_argument("--sparse_selection", choices=["bayesian", "random"], default=RunConfig.sparse_selection, help="Coordinate selection rule for sparse communication. bayesian uses --sparse_metric; random is the ablation baseline.")
     parser.add_argument("--sparse_ratio", type=float, default=RunConfig.sparse_ratio)
     parser.add_argument("--sparse_warmup_rounds", type=int, default=RunConfig.sparse_warmup_rounds)
@@ -250,7 +250,7 @@ def parse_args() -> RunConfig:
         raise ValueError("sparse_min_keep must be >= 1")
     if cfg.sparse_comm and cfg.method not in {x.strip() for x in str(cfg.sparse_apply_to).split(",") if x.strip()}:
         raise ValueError("sparse_comm=True but cfg.method is not listed in --sparse_apply_to")
-    if cfg.sparse_comm and cfg.method == "ola" and cfg.sparse_metric not in {"precision_update", "update_snr", "snr", "kl"}:
+    if cfg.sparse_comm and cfg.method == "ola" and cfg.sparse_metric not in {"precision_update", "fisher_update", "update_snr", "snr", "kl"}:
         raise ValueError("Unsupported OLA sparse_metric")
     if cfg.sparse_comm and cfg.method == "vi" and cfg.sparse_metric not in {"update_snr", "snr", "kl"}:
         raise ValueError("Recommended VI sparse_metric values: update_snr, snr, kl")

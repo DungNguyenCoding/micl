@@ -19,7 +19,7 @@ SELECTIONS=(${SELECTIONS:-bayesian random})
 NUM_ROUNDS="${NUM_ROUNDS:-200}"
 SKIP_EXISTING="${SKIP_EXISTING:-true}"
 STOP_RAY_BETWEEN_RUNS="${STOP_RAY_BETWEEN_RUNS:-true}"
-SPARSE_WARMUP_ROUNDS="${SPARSE_WARMUP_ROUNDS:-20}"
+SPARSE_WARMUP_ROUNDS="${SPARSE_WARMUP_ROUNDS:-0}"
 SPARSE_MIN_KEEP="${SPARSE_MIN_KEEP:-100}"
 SPARSE_METRIC="${SPARSE_METRIC:-update_snr}"
 VI_USE_DECAY="${VI_USE_DECAY:-true}"
@@ -112,11 +112,12 @@ for SELECTION in "${SELECTIONS[@]}"; do
       --model mlp \
       --iid false \
       --balanced false \
-      --noniid_alpha 0.01 \
-      --unbalanced_alpha 0.1 \
-      --num_devices 300 \
-      --num_virtual_clients 24 \
-      --client_fraction 0.05 \
+      --noniid_alpha "${NONIID_ALPHA:-0.1}" \
+      --unbalanced_alpha "${UNBALANCED_ALPHA:-0.5}" \
+      --min_client_examples "${MIN_CLIENT_EXAMPLES:-1}" \
+      --num_devices "${NUM_DEVICES:-300}" \
+      --num_virtual_clients "${NUM_VIRTUAL_CLIENTS:-24}" \
+      --client_fraction "${CLIENT_FRACTION:-0.05}" \
       --num_rounds "${NUM_ROUNDS}" \
       --mlp_hidden 128 \
       --val_ratio 0.1 \

@@ -297,6 +297,7 @@ class GroupedBayesClient(fl.client.NumPyClient):
                     global_mu=global_mu,
                     local_sigma=local_sigma,
                     local_precision=local_precision,
+                    local_fisher=fisher,
                     global_sigma=global_sigma,
                 )
                 selection_score = self._sparse_selection_scores(bayesian_score, server_round, did)

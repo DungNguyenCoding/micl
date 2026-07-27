@@ -22,7 +22,7 @@ from typing import Literal
 import numpy as np
 
 EPS = 1.0e-12
-SparseMetric = Literal["snr", "update_snr", "precision_update", "kl"]
+SparseMetric = Literal["snr", "update_snr", "precision_update", "fisher_update", "kl"]
 SparseSelection = Literal["bayesian", "random"]
 
 
@@ -98,6 +98,20 @@ def precision_update_score(local_mu: np.ndarray, global_mu: np.ndarray, local_pr
     )
 
 
+def fisher_update_score(local_mu: np.ndarray, global_mu: np.ndarray, local_fisher: np.ndarray) -> np.ndarray:
+    """OLA ablation score: |delta_mu| * local Fisher diagonal.
+
+    This is similar in spirit to ``precision_update``, but it uses the fresh
+    Fisher information collected in the current local training round rather
+    than the accumulated online precision. It is useful for diagnosing whether
+    OLA sparse communication should prioritize new local curvature evidence
+    instead of historically accumulated precision.
+    """
+    return np.abs(np.asarray(local_mu, dtype=np.float64) - np.asarray(global_mu, dtype=np.float64)) * np.asarray(
+        local_fisher, dtype=np.float64
+    )
+
+
 def diag_gaussian_kl_score(
     local_mu: np.ndarray,
     local_sigma: np.ndarray,
@@ -119,6 +133,7 @@ def score_for_sparse_metric(
     global_mu: np.ndarray,
     local_sigma: np.ndarray | None = None,
     local_precision: np.ndarray | None = None,
+    local_fisher: np.ndarray | None = None,
     global_sigma: np.ndarray | None = None,
 ) -> np.ndarray:
     """Compute Bayesian importance scores for sparse communication."""
@@ -135,6 +150,10 @@ def score_for_sparse_metric(
         if local_precision is None:
             raise ValueError("metric='precision_update' requires local_precision")
         return precision_update_score(local_mu, global_mu, local_precision)
+    if metric == "fisher_update":
+        if local_fisher is None:
+            raise ValueError("metric='fisher_update' requires local_fisher")
+        return fisher_update_score(local_mu, global_mu, local_fisher)
     if metric == "kl":
         if local_sigma is None or global_sigma is None:
             raise ValueError("metric='kl' requires local_sigma and global_sigma")
