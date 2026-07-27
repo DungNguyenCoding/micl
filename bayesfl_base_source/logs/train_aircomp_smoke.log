@@ -1,9 +1,0 @@
-nohup: ignoring input
-[aircomp] scenario=default condition=default realization=0 method=fedavg
-[aircomp] scenario=default condition=default realization=0 method=fedprox
-[aircomp] scenario=default condition=default realization=0 method=proposed
-[aircomp] wrote:
-  metrics: outputs/aircomp_bayesfl_mnist_paper_smoke_seed42/metrics.csv
-  calibration: outputs/aircomp_bayesfl_mnist_paper_smoke_seed42/calibration_bins.csv
-  client_data: outputs/aircomp_bayesfl_mnist_paper_smoke_seed42/client_data_summary.csv
-  summary: outputs/aircomp_bayesfl_mnist_paper_smoke_seed42/run_summary.csv
