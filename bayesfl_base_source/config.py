@@ -35,7 +35,7 @@ class RunConfig:
     # Core experiment
     method: str = "fedavg"  # fedavg | vi | ola
     dataset: str = "mnist"  # mnist | cifar10
-    model: str = "mlp"  # mlp | cnn ; VI currently uses mlp
+    model: str = "mlp"  # mlp | cnn | resnet
     output_dir: str = "outputs/debug_run"
     data_dir: str = "./data"
     num_rounds: int = 5
@@ -83,6 +83,9 @@ class RunConfig:
 
     # Model dimensions
     mlp_hidden: List[int] | str = "200"
+    # Lightweight ResNet-style model dimensions. Keep small for mean-field VI.
+    resnet_width: int = 16
+    resnet_blocks: List[int] | str = "1,1,1"
 
     # Online Laplace Approximation / FOLA
     ola_prior_lambda: float = 1.0
@@ -156,7 +159,7 @@ def parse_args() -> RunConfig:
 
     parser.add_argument("--method", choices=["fedavg", "vi", "ola"], default=RunConfig.method)
     parser.add_argument("--dataset", choices=["mnist", "cifar10"], default=RunConfig.dataset)
-    parser.add_argument("--model", choices=["mlp", "cnn"], default=RunConfig.model)
+    parser.add_argument("--model", choices=["mlp", "cnn", "resnet"], default=RunConfig.model)
     parser.add_argument("--output_dir", default=RunConfig.output_dir)
     parser.add_argument("--data_dir", default=RunConfig.data_dir)
     parser.add_argument("--num_rounds", type=int, default=RunConfig.num_rounds)
@@ -195,6 +198,8 @@ def parse_args() -> RunConfig:
     parser.add_argument("--weight_decay", type=float, default=RunConfig.weight_decay)
     parser.add_argument("--optimizer", choices=["sgd", "adam"], default=RunConfig.optimizer)
     parser.add_argument("--mlp_hidden", type=str, default=RunConfig.mlp_hidden)
+    parser.add_argument("--resnet_width", type=int, default=RunConfig.resnet_width)
+    parser.add_argument("--resnet_blocks", type=str, default=RunConfig.resnet_blocks, help="Comma-separated residual block counts, e.g. 1,1,1")
 
     parser.add_argument("--ola_prior_lambda", type=float, default=RunConfig.ola_prior_lambda)
     parser.add_argument("--precision_init", type=float, default=RunConfig.precision_init)
@@ -240,8 +245,8 @@ def parse_args() -> RunConfig:
         raise ValueError("num_devices and num_virtual_clients must be positive")
     if cfg.num_virtual_clients > cfg.num_devices:
         raise ValueError("num_virtual_clients cannot exceed num_devices")
-    if cfg.method == "vi" and cfg.model != "mlp":
-        raise ValueError("The Pyro VI scaffold currently supports --model mlp. Use --model mlp for --method vi.")
+    if cfg.method == "vi" and cfg.model not in {"mlp", "cnn", "resnet"}:
+        raise ValueError("Unsupported VI model. Use --model mlp, cnn, or resnet.")
     if not 0 < cfg.sparse_ratio <= 1:
         raise ValueError("sparse_ratio must be in (0, 1]")
     if cfg.sparse_warmup_rounds < 0:
@@ -281,4 +286,5 @@ def parse_args() -> RunConfig:
     cfg.output_dir = str(Path(cfg.output_dir))
     cfg.data_dir = str(Path(cfg.data_dir))
     cfg.mlp_hidden = cfg.normalized_hidden()
+    cfg.resnet_blocks = int_list(cfg.resnet_blocks)
     return cfg

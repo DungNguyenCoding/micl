@@ -102,3 +102,40 @@ KEEP_RATIOS="1.0 0.5 0.1" bash scripts/train/train_vi_sparse_selection_ablation_
 ```
 
 `bayesian` mode uses the configured sparse metric (`update_snr` for VI and `precision_update` for OLA). `random` mode uses a deterministic random mask with the same keep ratio.
+
+## VI sparse-selection focused experiments
+
+The current recommended sparse-selection experiment focuses on VI.  It compares
+Bayesian update-SNR top-k selection against random top-k selection under the
+same keep ratio and communication budget.
+
+Main script:
+
+```bash
+bash scripts/train/train_vi_sparse_selection_multikeep_multiseed.sh
+```
+
+Default settings:
+
+```text
+DATASET=mnist
+MODEL=resnet
+RESNET_WIDTH=16
+RESNET_BLOCKS=1,1,1
+SEEDS=42 43 44
+KEEP_RATIOS=1.0 0.75 0.5 0.25 0.1 0.05 0.02
+SELECTIONS=bayesian random
+NONIID_ALPHA=0.01
+UNBALANCED_ALPHA=0.1
+CLIENT_FRACTION=0.0333333333333
+SPARSE_WARMUP_ROUNDS=0
+```
+
+Plot script:
+
+```bash
+bash scripts/plot/plot_vi_sparse_selection_multikeep_multiseed.sh
+```
+
+The plot command generates summary plots and all round-by-round curves for
+accuracy, loss, and ECE.

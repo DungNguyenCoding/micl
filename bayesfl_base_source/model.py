@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from config import RunConfig
+from config import RunConfig, int_list
 
 
 class MLP(nn.Module):
@@ -54,6 +54,83 @@ class SmallCNN(nn.Module):
         return self.fc2(x)
 
 
+class ResidualBlock(nn.Module):
+    """Small residual block without BatchNorm, suitable for FL/VI functional calls.
+
+    GroupNorm is used instead of BatchNorm to avoid client-specific running
+    statistics and to keep Bayesian functional evaluation simple.
+    """
+
+    def __init__(self, in_channels: int, out_channels: int, stride: int = 1) -> None:
+        super().__init__()
+        groups = 4 if out_channels % 4 == 0 else 1
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.gn1 = nn.GroupNorm(groups, out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.gn2 = nn.GroupNorm(groups, out_channels)
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=stride, bias=False),
+                nn.GroupNorm(groups, out_channels),
+            )
+        else:
+            self.shortcut = nn.Identity()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = F.relu(self.gn1(self.conv1(x)))
+        out = self.gn2(self.conv2(out))
+        out = out + self.shortcut(x)
+        return F.relu(out)
+
+
+class TinyResNet(nn.Module):
+    """Lightweight ResNet-style classifier for MNIST/CIFAR-10 FL experiments.
+
+    This is intentionally smaller than standard ResNet-18 so that mean-field VI
+    over all trainable parameters remains feasible in the Flower simulation.
+    The default architecture is:
+
+        stem -> stage1 -> stage2(stride=2) -> stage3(stride=2) -> avgpool -> fc
+
+    For MNIST with width=16 and blocks=1,1,1 it has a similar order of
+    parameters to the MLP baseline, but it has convolutional inductive bias.
+    """
+
+    def __init__(self, input_shape: Sequence[int], num_classes: int, width: int = 16, blocks: Sequence[int] = (1, 1, 1)) -> None:
+        super().__init__()
+        channels = int(input_shape[0])
+        width = int(width)
+        block_counts = [int(x) for x in blocks]
+        if len(block_counts) != 3:
+            raise ValueError(f"TinyResNet expects exactly three block counts, got {block_counts}")
+        groups = 4 if width % 4 == 0 else 1
+        self.stem = nn.Sequential(
+            nn.Conv2d(channels, width, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.GroupNorm(groups, width),
+            nn.ReLU(inplace=False),
+        )
+        self.layer1 = self._make_stage(width, width, block_counts[0], stride=1)
+        self.layer2 = self._make_stage(width, width * 2, block_counts[1], stride=2)
+        self.layer3 = self._make_stage(width * 2, width * 4, block_counts[2], stride=2)
+        self.pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(width * 4, int(num_classes))
+
+    def _make_stage(self, in_channels: int, out_channels: int, blocks: int, stride: int) -> nn.Sequential:
+        layers: list[nn.Module] = [ResidualBlock(in_channels, out_channels, stride=stride)]
+        for _ in range(max(0, int(blocks) - 1)):
+            layers.append(ResidualBlock(out_channels, out_channels, stride=1))
+        return nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.stem(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.pool(x)
+        x = torch.flatten(x, start_dim=1)
+        return self.fc(x)
+
+
 def set_seed(seed: int) -> None:
     """Set Python, NumPy, and Torch RNG seeds."""
     random.seed(seed)
@@ -86,9 +163,14 @@ def build_model(cfg: RunConfig, input_shape: Sequence[int], num_classes: int) ->
     if cfg.model == "mlp":
         return MLP(input_shape=input_shape, num_classes=num_classes, hidden_dims=cfg.normalized_hidden())
     if cfg.model == "cnn":
-        if cfg.method == "vi":
-            raise ValueError("VI scaffold currently supports --model mlp only")
         return SmallCNN(input_shape=input_shape, num_classes=num_classes)
+    if cfg.model == "resnet":
+        return TinyResNet(
+            input_shape=input_shape,
+            num_classes=num_classes,
+            width=int(getattr(cfg, "resnet_width", 16)),
+            blocks=int_list(getattr(cfg, "resnet_blocks", "1,1,1")),
+        )
     raise ValueError(f"Unsupported model type {cfg.model!r}")
 
 

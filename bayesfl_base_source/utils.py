@@ -1368,6 +1368,11 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
         if not selection:
             selection = "random" if "random" in label.lower() else "bayesian"
         sparse_metric = str(cfg.get("sparse_metric", "") or (last or {}).get("sparse_metric", "") or "")
+        seed_value = cfg.get("seed", "") or (last or {}).get("seed", "")
+        try:
+            seed_numeric = int(float(seed_value)) if str(seed_value) != "" else None
+        except Exception:
+            seed_numeric = None
 
         try:
             keep_ratio = float(cfg.get("sparse_ratio", ""))
@@ -1419,6 +1424,7 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
             "method": method,
             "sparse_selection": selection,
             "sparse_metric": sparse_metric,
+            "seed": seed_numeric if seed_numeric is not None else "",
             "curve_label": (f"{selection}:{sparse_metric}" if selection == "bayesian" and sparse_metric else selection),
             "keep_ratio": keep_ratio,
             "keep_percent": keep_ratio * 100.0 if np.isfinite(keep_ratio) else float("nan"),
@@ -1458,6 +1464,7 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
     outputs: list[Path] = [summary_path]
 
     def _plot_vs_keep(metric: str, ylabel: str, filename: str, title: str) -> None:
+        """Plot mean ± std over seeds for every selection/metric curve."""
         methods = sorted({str(r["method"]) for r in summary})
         for method in methods:
             sub = [r for r in summary if str(r["method"]) == method]
@@ -1467,17 +1474,20 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
             plotted = False
             for selection in sorted({str(r.get("curve_label", r.get("sparse_selection", ""))) for r in sub}):
                 rows_s = [r for r in sub if str(r.get("curve_label", r.get("sparse_selection", ""))) == selection]
-                xs, ys = [], []
-                for r in sorted(rows_s, key=lambda x: float(x.get("keep_percent", float("nan"))), reverse=True):
+                grouped: dict[float, list[float]] = {}
+                for r in rows_s:
                     try:
                         x = float(r.get("keep_percent", float("nan")))
                         y = float(r.get(metric, float("nan")))
                     except Exception:
                         continue
                     if np.isfinite(x) and np.isfinite(y):
-                        xs.append(x); ys.append(y)
-                if xs:
-                    ax.plot(xs, ys, marker="o", label=selection)
+                        grouped.setdefault(x, []).append(y)
+                if grouped:
+                    xs = sorted(grouped.keys(), reverse=True)
+                    ys = [float(np.mean(grouped[x])) for x in xs]
+                    yerr = [float(np.std(grouped[x])) if len(grouped[x]) > 1 else 0.0 for x in xs]
+                    ax.errorbar(xs, ys, yerr=yerr, marker="o", capsize=3, label=selection)
                     plotted = True
             if plotted:
                 ax.set_xlabel("Keep ratio (%)")
@@ -1528,6 +1538,47 @@ def plot_sparse_ablation(run_specs: Sequence[str], output_dir: str | Path) -> li
             outputs.append(_save_figure(fig, out_dir / f"{method}_accuracy_vs_communication_cost.png"))
         else:
             plt.close(fig)
+
+
+    # Round-by-round overlays. These show every run directly, which is useful
+    # for checking whether Bayesian top-k consistently trains better than the
+    # random top-k baseline under the same keep ratio.
+    round_metrics = [
+        ("global_accuracy", "Global accuracy"),
+        ("global_loss", "Global loss"),
+        ("global_ece", "Global ECE"),
+    ]
+    for method in sorted({str(r["method"]) for r in summary}):
+        method_rows = [r for r in summary if str(r["method"]) == method]
+        for metric_name, ylabel in round_metrics:
+            fig, ax = plt.subplots(figsize=(10, 5.5))
+            plotted = False
+            for r in sorted(method_rows, key=lambda x: (str(x.get("curve_label", "")), float(x.get("keep_ratio", 0.0)), str(x.get("seed", "")))):
+                run_dir = Path(str(r["run_dir"]))
+                rows = _read_csv_rows(run_dir / "metrics.csv")
+                xs, ys = [], []
+                for row in rows:
+                    try:
+                        x = float(row.get("round", ""))
+                        y = float(row.get(metric_name, ""))
+                    except Exception:
+                        continue
+                    if np.isfinite(x) and np.isfinite(y):
+                        xs.append(x); ys.append(y)
+                if xs:
+                    seed_suffix = f",s{r.get('seed')}" if r.get("seed", "") != "" else ""
+                    label = f"{r.get('curve_label')} keep{float(r.get('keep_percent', 0.0)):.0f}%{seed_suffix}"
+                    ax.plot(xs, ys, linewidth=1.2, alpha=0.75, label=label)
+                    plotted = True
+            if plotted:
+                ax.set_xlabel("Round")
+                ax.set_ylabel(ylabel)
+                ax.set_title(f"{method.upper()}: {ylabel} vs round, all sparse settings")
+                ax.grid(True, alpha=0.3)
+                ax.legend(fontsize=7, ncol=2)
+                outputs.append(_save_figure(fig, out_dir / f"{method}_{metric_name}_round_all_settings.png"))
+            else:
+                plt.close(fig)
 
     return outputs
 
