@@ -1,4 +1,0 @@
-scenario,condition_name,realization,method,final_round,final_channel_uses,final_accuracy,best_accuracy,best_accuracy_round,final_loss,final_ece,best_ece,best_ece_round
-default,default,0,fedavg,5,312320,0.0942,0.0942,3,2.3037890197753907,0.020169347524642944,0.020169347524642944,5
-default,default,0,fedprox,5,312320,0.0941,0.0941,1,2.303789093017578,0.020269349217414856,0.020269252359867096,1
-default,default,0,proposed,3,374784,0.0941,0.0941,1,2.3037889892578125,0.020268812775611877,0.020268812775611877,3

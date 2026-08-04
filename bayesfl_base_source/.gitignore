@@ -2,4 +2,13 @@ __pycache__/
 *.pyc
 .venv/
 data/
-logs/
+logs/*test*
+outputs/*test*
+plots/*test*
+logs/*medium*
+outputs/*medium*
+plots/*medium*
+logs/*debug*
+outputs/*debug*
+plots/*debug*
+logs/*plot*
