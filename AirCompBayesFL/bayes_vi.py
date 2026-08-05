@@ -1,25 +1,30 @@
 """Pyro variational inference for the paper's separated rho/nu phases.
 
-This module follows Algorithm 1 instead of optimizing mean and variance inside
-one client call.  The server first collects local precision coordinates
-``rho_{t,k}``, aggregates and broadcasts ``rho_{t+1}``, and only then starts a
-second client call in which each client optimizes ``nu_{t,k}`` using the newly
-broadcast covariance.
+Version 1.3.1 keeps the two server-controlled phases introduced in v1.3.0,
+but corrects two mathematical details:
+
+1. ``rho`` is optimized directly, as written in Eq. (25), instead of updating
+   an unconstrained ``log(rho)`` coordinate.
+2. In phase 2, the variational covariance is the newly aggregated
+   ``Sigma_{t+1}``, while the KL prior remains the round-start global posterior
+   ``q_{theta_t}``, as required by Eqs. (13), (15), and (35).
+
+Pyro still supplies the probabilistic model, guide, Monte-Carlo ELBO, and
+reparameterized Gaussian samples. PyTorch SGD is used on the explicit ``rho``
+and ``nu`` tensors so the optimized coordinates match Algorithm 1.
 """
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
-from typing import Dict, Mapping, Tuple
+from typing import Dict, Iterable, Sequence, Tuple
 
 import numpy as np
 import pyro
 import pyro.distributions as dist
 import torch
 from pyro import poutine
-from pyro.infer import SVI, TraceMeanField_ELBO
-from pyro.optim import SGD
+from pyro.infer import TraceMeanField_ELBO
 from torch.func import functional_call
 from torch.utils.data import DataLoader
 
@@ -42,33 +47,16 @@ class NaturalMeanPhaseResult:
     local_steps: int
 
 
-def _safe_precision(
-    value: torch.Tensor,
-    model_cfg: ModelConfig,
-) -> torch.Tensor:
+def _safe_precision(value: torch.Tensor, model_cfg: ModelConfig) -> torch.Tensor:
+    """Return a finite positive precision in the configured interval."""
     return value.clamp(
         min=float(model_cfg.min_precision),
         max=float(model_cfg.max_precision),
     )
 
 
-def _precision_from_log_parameter(
-    log_precision: torch.Tensor,
-    model_cfg: ModelConfig,
-) -> torch.Tensor:
-    """Positive precision parameterization used by Pyro's optimizer.
-
-    Algorithm 1 writes SGD directly in rho.  In software, an unconstrained
-    log-rho parameter is used so every SVI iterate remains a valid Gaussian.
-    The returned quantity and all transmitted/aggregated values are rho.
-    """
-    lower = math.log(float(model_cfg.min_precision))
-    upper = math.log(float(model_cfg.max_precision))
-    return torch.exp(torch.clamp(log_precision, min=lower, max=upper))
-
-
 class BayesianVITrainer:
-    """Execute one local phase of Algorithm 1 with Pyro SVI."""
+    """Execute one local phase of Algorithm 1 with Pyro's differentiable ELBO."""
 
     def __init__(
         self,
@@ -80,6 +68,10 @@ class BayesianVITrainer:
     ) -> None:
         self.model = model.to(device)
         self.model.eval()
+        # ``functional_call`` supplies sampled weights. The module's own stored
+        # parameters are not optimization variables in Bayesian local training.
+        for parameter in self.model.parameters():
+            parameter.requires_grad_(False)
         self.layout = layout
         self.model_cfg = model_cfg
         self.train_cfg = train_cfg
@@ -93,10 +85,12 @@ class BayesianVITrainer:
         loader: DataLoader,
         seed: int,
     ) -> PrecisionPhaseResult:
-        """Optimize rho_{t,k} while keeping the mean fixed at mu_t.
+        """Optimize ``rho_{t,k}`` with ``mu_t`` fixed; Eqs. (23)-(25).
 
-        The guide is ``N(mu_t, diag(rho_{t,k})^{-1})`` and the model prior is
-        ``N(mu_t, diag(rho_t)^{-1})``.  This implements Eqs. (23)-(25).
+        The prior is ``N(mu_t, diag(rho_t)^-1)`` and the guide is
+        ``N(mu_t, diag(rho_{t,k})^-1)``. The trainable tensor is ``rho`` itself,
+        not ``log(rho)``, so one optimizer step is the software equivalent of
+        ``rho <- rho - eta * grad_rho L_k`` followed by a positivity projection.
         """
         mean = torch.as_tensor(
             global_mean, dtype=torch.float32, device=self.device
@@ -110,60 +104,70 @@ class BayesianVITrainer:
         self._validate_vector(mean, "global_mean")
         self._validate_vector(prior_precision, "global_precision")
 
-        pyro.clear_param_store()
-        pyro.set_rng_seed(int(seed))
-        torch.manual_seed(int(seed))
-
+        self._seed(seed)
         mean_named = self.layout.vector_to_named(mean)
         prior_precision_named = self.layout.vector_to_named(prior_precision)
 
-        def model_fn(x: torch.Tensor, y: torch.Tensor | None = None) -> None:
+        rho = torch.nn.Parameter(prior_precision.detach().clone())
+
+        def model_fn(
+            x: torch.Tensor,
+            y: torch.Tensor | None = None,
+            likelihood_scale: float = 1.0,
+        ) -> None:
             sampled: Dict[str, torch.Tensor] = {}
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    prior_std = torch.rsqrt(prior_precision_named[spec.name])
                     sampled[spec.name] = pyro.sample(
                         site,
                         dist.Normal(
                             mean_named[spec.name],
-                            prior_std,
+                            torch.rsqrt(prior_precision_named[spec.name]),
                         ).to_event(len(spec.shape)),
                     )
             logits = functional_call(self.model, sampled, (x,))
-            with pyro.plate("data", x.shape[0]):
-                pyro.sample("obs", dist.Categorical(logits=logits), obs=y)
+            with poutine.scale(scale=float(likelihood_scale)):
+                with pyro.plate("data", x.shape[0]):
+                    pyro.sample("obs", dist.Categorical(logits=logits), obs=y)
 
-        def guide_fn(x: torch.Tensor, y: torch.Tensor | None = None) -> None:
-            del x, y
+        def guide_fn(
+            x: torch.Tensor,
+            y: torch.Tensor | None = None,
+            likelihood_scale: float = 1.0,
+        ) -> None:
+            del x, y, likelihood_scale
+            rho_named = self.layout.vector_to_named(
+                _safe_precision(rho, self.model_cfg)
+            )
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    initial_log_rho = torch.log(prior_precision_named[spec.name])
-                    log_rho = pyro.param(
-                        f"{site}__log_precision",
-                        initial_log_rho.clone(),
-                    )
-                    rho = _precision_from_log_parameter(log_rho, self.model_cfg)
                     pyro.sample(
                         site,
                         dist.Normal(
                             mean_named[spec.name],
-                            torch.rsqrt(rho),
+                            torch.rsqrt(rho_named[spec.name]),
                         ).to_event(len(spec.shape)),
                     )
 
-        average_loss, local_steps = self._run_svi(model_fn, guide_fn, loader)
+        def project_precision() -> None:
+            with torch.no_grad():
+                rho.clamp_(
+                    min=float(self.model_cfg.min_precision),
+                    max=float(self.model_cfg.max_precision),
+                )
 
-        posterior_precision: Dict[str, torch.Tensor] = {}
-        for spec in self.layout.specs:
-            site = self.layout.site_name(spec.name)
-            posterior_precision[spec.name] = _precision_from_log_parameter(
-                pyro.param(f"{site}__log_precision"), self.model_cfg
-            ).detach()
-        precision_vector = self.layout.named_to_vector(posterior_precision)
+        average_loss, local_steps = self._run_coordinate_sgd(
+            model_fn=model_fn,
+            guide_fn=guide_fn,
+            loader=loader,
+            parameters=[rho],
+            after_step=project_precision,
+        )
+        precision = _safe_precision(rho.detach(), self.model_cfg)
         result = PrecisionPhaseResult(
-            precision=precision_vector.cpu().numpy().astype(np.float32),
+            precision=precision.cpu().numpy().astype(np.float32),
             average_loss=float(average_loss),
             local_steps=int(local_steps),
         )
@@ -174,25 +178,34 @@ class BayesianVITrainer:
         self,
         *,
         global_mean: np.ndarray,
+        prior_global_precision: np.ndarray,
         next_global_precision: np.ndarray,
         local_precision: np.ndarray,
         loader: DataLoader,
         seed: int,
     ) -> NaturalMeanPhaseResult:
-        """Optimize nu_{t,k} after the server broadcasts rho_{t+1}.
+        """Optimize ``nu_{t,k}`` after the server broadcasts ``rho_{t+1}``.
 
-        Eqs. (33)-(35) are implemented element-wise for diagonal covariance:
+        Coordinate transforms for diagonal covariance are:
 
-        ``nu_init = (rho_local / rho_global_next) * mu_t``
+        ``nu_init = (rho_local / rho_next) * mu_t``
 
-        ``mu_local(nu) = (rho_global_next / rho_local) * nu``
+        ``mu_local(nu) = (rho_next / rho_local) * nu``
 
-        The phase-2 variational covariance is the newly aggregated global
-        covariance ``diag(rho_{t+1})^{-1}``, exactly as stated around Eq. (34).
+        The guide covariance is ``diag(rho_next)^-1``. The KL prior is the
+        round-start global posterior ``N(mu_t, diag(rho_t)^-1)``; therefore the
+        function receives both ``prior_global_precision`` and
+        ``next_global_precision``.
         """
         mean = torch.as_tensor(
             global_mean, dtype=torch.float32, device=self.device
         ).reshape(-1)
+        prior_rho = _safe_precision(
+            torch.as_tensor(
+                prior_global_precision, dtype=torch.float32, device=self.device
+            ).reshape(-1),
+            self.model_cfg,
+        )
         next_rho = _safe_precision(
             torch.as_tensor(
                 next_global_precision, dtype=torch.float32, device=self.device
@@ -206,116 +219,150 @@ class BayesianVITrainer:
             self.model_cfg,
         )
         self._validate_vector(mean, "global_mean")
+        self._validate_vector(prior_rho, "prior_global_precision")
         self._validate_vector(next_rho, "next_global_precision")
         self._validate_vector(local_rho, "local_precision")
 
-        pyro.clear_param_store()
-        pyro.set_rng_seed(int(seed))
-        torch.manual_seed(int(seed))
-
+        self._seed(seed)
         mean_named = self.layout.vector_to_named(mean)
+        prior_rho_named = self.layout.vector_to_named(prior_rho)
         next_rho_named = self.layout.vector_to_named(next_rho)
         local_rho_named = self.layout.vector_to_named(local_rho)
 
-        def model_fn(x: torch.Tensor, y: torch.Tensor | None = None) -> None:
+        nu_init = local_rho / next_rho * mean
+        nu = torch.nn.Parameter(nu_init.detach().clone())
+
+        def model_fn(
+            x: torch.Tensor,
+            y: torch.Tensor | None = None,
+            likelihood_scale: float = 1.0,
+        ) -> None:
             sampled: Dict[str, torch.Tensor] = {}
+            # Eq. (15) continues to regularize against q_{theta_t}, whose
+            # covariance is the round-start global covariance.
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    global_std = torch.rsqrt(next_rho_named[spec.name])
                     sampled[spec.name] = pyro.sample(
                         site,
                         dist.Normal(
                             mean_named[spec.name],
-                            global_std,
+                            torch.rsqrt(prior_rho_named[spec.name]),
                         ).to_event(len(spec.shape)),
                     )
             logits = functional_call(self.model, sampled, (x,))
-            with pyro.plate("data", x.shape[0]):
-                pyro.sample("obs", dist.Categorical(logits=logits), obs=y)
+            with poutine.scale(scale=float(likelihood_scale)):
+                with pyro.plate("data", x.shape[0]):
+                    pyro.sample("obs", dist.Categorical(logits=logits), obs=y)
 
-        def guide_fn(x: torch.Tensor, y: torch.Tensor | None = None) -> None:
-            del x, y
+        def guide_fn(
+            x: torch.Tensor,
+            y: torch.Tensor | None = None,
+            likelihood_scale: float = 1.0,
+        ) -> None:
+            del x, y, likelihood_scale
+            nu_named = self.layout.vector_to_named(nu)
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    init_nu = (
-                        local_rho_named[spec.name]
-                        / next_rho_named[spec.name]
-                        * mean_named[spec.name]
-                    )
-                    nu = pyro.param(f"{site}__nu", init_nu.clone())
                     implied_mean = (
                         next_rho_named[spec.name]
                         / local_rho_named[spec.name]
-                        * nu
+                        * nu_named[spec.name]
                     )
-                    global_std = torch.rsqrt(next_rho_named[spec.name])
                     pyro.sample(
                         site,
-                        dist.Normal(implied_mean, global_std).to_event(
-                            len(spec.shape)
-                        ),
+                        dist.Normal(
+                            implied_mean,
+                            torch.rsqrt(next_rho_named[spec.name]),
+                        ).to_event(len(spec.shape)),
                     )
 
-        average_loss, local_steps = self._run_svi(model_fn, guide_fn, loader)
+        average_loss, local_steps = self._run_coordinate_sgd(
+            model_fn=model_fn,
+            guide_fn=guide_fn,
+            loader=loader,
+            parameters=[nu],
+            after_step=None,
+        )
 
-        posterior_nu: Dict[str, torch.Tensor] = {}
-        implied_mean_named: Dict[str, torch.Tensor] = {}
-        for spec in self.layout.specs:
-            site = self.layout.site_name(spec.name)
-            nu = pyro.param(f"{site}__nu").detach()
-            posterior_nu[spec.name] = nu
-            implied_mean_named[spec.name] = (
-                next_rho_named[spec.name]
-                / local_rho_named[spec.name]
-                * nu
-            ).detach()
-
-        nu_vector = self.layout.named_to_vector(posterior_nu)
-        implied_mean_vector = self.layout.named_to_vector(implied_mean_named)
+        with torch.no_grad():
+            implied_mean = next_rho / local_rho * nu
         result = NaturalMeanPhaseResult(
-            nu=nu_vector.cpu().numpy().astype(np.float32),
-            implied_mean=implied_mean_vector.cpu().numpy().astype(np.float32),
+            nu=nu.detach().cpu().numpy().astype(np.float32),
+            implied_mean=implied_mean.detach().cpu().numpy().astype(np.float32),
             average_loss=float(average_loss),
             local_steps=int(local_steps),
         )
         pyro.clear_param_store()
         return result
 
-    def _run_svi(
+    def _run_coordinate_sgd(
         self,
+        *,
         model_fn,
         guide_fn,
         loader: DataLoader,
+        parameters: Sequence[torch.nn.Parameter],
+        after_step,
     ) -> Tuple[float, int]:
-        optimizer = SGD(
-            {"lr": float(self.train_cfg.learning_rate)},
-            clip_args={"clip_norm": float(self.train_cfg.gradient_clip_norm)},
+        """Minimize Pyro's differentiable negative ELBO in paper coordinates."""
+        optimizer = torch.optim.SGD(
+            parameters,
+            lr=float(self.train_cfg.learning_rate),
         )
-        svi = SVI(
-            model_fn,
-            guide_fn,
-            optimizer,
-            loss=TraceMeanField_ELBO(
-                num_particles=int(self.train_cfg.mc_train_samples),
-                vectorize_particles=False,
-            ),
+        elbo = TraceMeanField_ELBO(
+            num_particles=int(self.train_cfg.mc_train_samples),
+            vectorize_particles=False,
         )
 
-        total_loss = 0.0
-        total_examples = 0
+        dataset_size = max(1, int(len(loader.dataset)))
+        total_normalized_loss = 0.0
         local_steps = 0
         non_blocking = bool(self.device.type == "cuda" and loader.pin_memory)
+
         for _ in range(int(self.train_cfg.local_epochs)):
             for features, targets in loader:
                 features = features.to(self.device, non_blocking=non_blocking)
                 targets = targets.to(self.device, non_blocking=non_blocking)
-                batch_loss = float(svi.step(features, targets))
-                total_loss += batch_loss
-                total_examples += int(targets.numel())
+                batch_size = max(1, int(targets.numel()))
+                # Eq. (14) uses the likelihood of the complete local dataset.
+                # This turns a mini-batch likelihood into an unbiased full-data
+                # estimator while leaving the KL term applied once.
+                likelihood_scale = float(dataset_size) / float(batch_size)
+
+                optimizer.zero_grad(set_to_none=True)
+                loss = elbo.differentiable_loss(
+                    model_fn,
+                    guide_fn,
+                    features,
+                    targets,
+                    likelihood_scale,
+                )
+                if not torch.isfinite(loss):
+                    raise FloatingPointError(
+                        f"Non-finite variational loss encountered: {loss.detach().item()}"
+                    )
+                loss.backward()
+
+                clip_norm = float(self.train_cfg.gradient_clip_norm)
+                if clip_norm > 0.0:
+                    torch.nn.utils.clip_grad_norm_(parameters, max_norm=clip_norm)
+                optimizer.step()
+                if after_step is not None:
+                    after_step()
+
+                total_normalized_loss += float(loss.detach().cpu()) / dataset_size
                 local_steps += 1
-        return total_loss / max(1, total_examples), local_steps
+
+        return total_normalized_loss / max(1, local_steps), local_steps
+
+    def _seed(self, seed: int) -> None:
+        pyro.clear_param_store()
+        pyro.set_rng_seed(int(seed))
+        torch.manual_seed(int(seed))
+        if self.device.type == "cuda":
+            torch.cuda.manual_seed_all(int(seed))
 
     def _validate_vector(self, value: torch.Tensor, name: str) -> None:
         if value.numel() != self.layout.total_numel:

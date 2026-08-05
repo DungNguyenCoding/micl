@@ -1,6 +1,6 @@
 # Validation status
 
-Validation performed for version 1.3.0 in the packaging environment:
+Validation performed for version 1.3.1 in the packaging environment:
 
 ```text
 python -m compileall -q .
@@ -11,7 +11,7 @@ passed for all Python files.
 The dependency-light test set passed:
 
 ```text
-12 passed
+14 passed
 ```
 
 It covers:
@@ -23,7 +23,8 @@ It covers:
 - physical precision/natural-mean phase scheduling;
 - Eq. (33)/(34) coordinate initialization and round trip;
 - exact ideal two-phase Gaussian conflation;
-- phase-aware CSV schemas.
+- phase-aware CSV schemas;
+- direct-rho source contract and phase-2 round-start-prior contract.
 
 The packaging environment does not contain Pyro, Flower, or Ray and has no
 NVIDIA GPU, so a full end-to-end Pyro/Flower/CUDA run was not executed there.

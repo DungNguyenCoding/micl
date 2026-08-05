@@ -1,4 +1,4 @@
-# AirCompBayesFL 1.3.0
+# AirCompBayesFL 1.3.1
 
 A modular Pyro + Flower/Ray simulator for the paper:
 
@@ -10,7 +10,15 @@ used Blitz; this project intentionally uses Pyro. Undisclosed implementation
 details, including numerical path-loss normalization, are explicit configurable
 assumptions.
 
-## What changed in 1.3.0
+## What changed in 1.3.1
+
+Version 1.3.1 corrects the local optimization coordinates and the phase-2 KL prior:
+
+- precision is optimized directly in `rho`, not in `log(rho)`;
+- the phase-2 guide uses `rho_{t+1}`, while its KL prior remains the
+  round-start posterior with `rho_t`;
+- mini-batch likelihoods are scaled to estimate the full local-data objective.
+
 
 The proposed method now follows Algorithm 1 with a real server boundary between
 its two phases:

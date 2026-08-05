@@ -306,10 +306,17 @@ class AirCompStrategy(FedAvg):
                 rng=phase_rng,
             )
             # Critical Algorithm-1 boundary: keep mu_t unchanged and broadcast
-            # the newly aggregated rho_{t+1} before phase 2 starts.
+            # the newly aggregated rho_{t+1} before phase 2 starts.  Phase 2
+            # also needs rho_t because Eq. (15) regularizes against the
+            # round-start global posterior q_{theta_t}.  The temporary third
+            # array is removed after the natural-mean aggregation.
+            round_start_precision = self.current_arrays[1].astype(
+                np.float32, copy=True
+            )
             self.current_arrays = [
                 self.current_arrays[0].astype(np.float32, copy=True),
                 aggregation.parameters[0].astype(np.float32),
+                round_start_precision,
             ]
             self.last_phase1_train_loss = weighted_loss
             self.last_phase2_train_loss = 0.0
@@ -336,6 +343,12 @@ class AirCompStrategy(FedAvg):
                 wireless_cfg=self.config_obj.wireless,
                 rng=phase_rng,
             )
+            if len(self.current_arrays) != 3:
+                raise RuntimeError(
+                    "Natural-mean phase requires [mu_t, rho_{t+1}, rho_t] "
+                    f"from the preceding precision phase; got "
+                    f"{len(self.current_arrays)} arrays"
+                )
             self.current_arrays = [
                 aggregation.parameters[0].astype(np.float32),
                 self.current_arrays[1].astype(np.float32, copy=True),

@@ -1,3 +1,14 @@
+## 1.3.1
+
+- Optimizes the Bayesian precision coordinate `rho` directly with Pyro's
+  differentiable ELBO and PyTorch SGD, matching Eq. (25).
+- Keeps the phase-2 guide covariance at `Sigma_{t+1}` while regularizing
+  against the round-start global prior `q_{theta_t}` from Eqs. (13) and (15).
+- Scales mini-batch likelihoods to unbiased full-local-dataset estimates.
+- Temporarily broadcasts `[mu_t, rho_{t+1}, rho_t]` during the natural-mean
+  phase, then returns to the normal `[mu_{t+1}, rho_{t+1}]` server state.
+- Adds source-contract tests for the corrected coordinates and phase-2 prior.
+
 # Changelog
 
 ## 1.3.0

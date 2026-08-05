@@ -196,9 +196,18 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         num_examples: int,
         phase_seed: int,
     ) -> Tuple[List[np.ndarray], int, Dict[str, fl.common.Scalar]]:
-        if len(parameters) != 2:
+        expected_count = 2 if phase == PRECISION_PHASE else 3
+        if len(parameters) != expected_count:
+            if phase == PRECISION_PHASE:
+                expected = "[global_mean, round_start_global_precision]"
+            else:
+                expected = (
+                    "[global_mean, next_global_precision, "
+                    "round_start_global_precision]"
+                )
             raise ValueError(
-                "Proposed method expects [global_mean, global_precision] in both phases"
+                f"Proposed phase {phase!r} expects {expected}; "
+                f"received {len(parameters)} array(s)"
             )
         global_mean = np.asarray(parameters[0], dtype=np.float32)
         global_precision = np.asarray(parameters[1], dtype=np.float32)
@@ -242,8 +251,10 @@ class AirCompNumPyClient(fl.client.NumPyClient):
 
         if phase == NATURAL_MEAN_PHASE:
             local_precision = self._load_proposed_precision(logical_round)
+            prior_global_precision = np.asarray(parameters[2], dtype=np.float32)
             result = trainer.train_natural_mean_phase(
                 global_mean=global_mean,
+                prior_global_precision=prior_global_precision,
                 next_global_precision=global_precision,
                 local_precision=local_precision,
                 loader=loader,
