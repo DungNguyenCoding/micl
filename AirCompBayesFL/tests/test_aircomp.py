@@ -25,3 +25,5 @@ def test_aircomp_matches_weighted_sum_when_unconstrained_and_noiseless():
     expected = weights[0] * updates[0] + weights[1] * updates[1]
     np.testing.assert_allclose(actual, expected, rtol=1e-5, atol=1e-6)
     assert stats.clipped_fraction == 0.0
+    assert stats.retained_magnitude_ratio == 1.0
+    assert abs(stats.distorted_to_ideal_norm_ratio - 1.0) < 1.0e-6

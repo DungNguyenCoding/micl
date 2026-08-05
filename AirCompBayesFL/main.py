@@ -40,6 +40,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", default=None)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--no-wireless", action="store_true")
+    parser.add_argument(
+        "--path-loss-reference-m",
+        type=float,
+        default=None,
+        help=(
+            "Override wireless.path_loss_reference_m. The default configs use "
+            "1000 m, equivalent to expressing distance in km."
+        ),
+    )
     parser.add_argument("--force-partitions", action="store_true")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
@@ -79,6 +88,8 @@ def main() -> None:
         config.output.directory = args.output
     if args.no_wireless:
         config.wireless.enabled = False
+    if args.path_loss_reference_m is not None:
+        config.wireless.path_loss_reference_m = args.path_loss_reference_m
 
     # Apply CLI overrides before validating runtime/GPU consistency.
     config.validate()

@@ -1,12 +1,13 @@
 # Validation
 
-Version: 1.1.0
+Version 1.2.0 validation performed in the packaging environment:
 
-Completed in the packaging environment:
+- All Python modules compile successfully.
+- Eight unit tests pass, including AirComp, aggregation, model size, runtime
+  backend selection, and wireless distance normalization tests.
+- A numerical AirComp check confirms that normalized-distance channels avoid
+  the near-total update suppression produced by the legacy raw-metre channel.
 
-- `python -m compileall -q .`
-- `PYTHONPATH=. pytest -q`
-- Result: 7 tests passed.
-- YAML parsing and backend resolution checks completed.
-
-The packaging environment has CPU-only PyTorch and does not expose Flower, Ray, Pyro, or an NVIDIA GPU, so an end-to-end CUDA run could not be performed there. The native-Windows fix avoids the failing Ray CUDA worker path and runs local clients sequentially in the launcher process, where the user's independent CUDA check already succeeds.
+An end-to-end RTX 3060 run cannot be executed in this packaging environment.
+The user's prior v1.1 run established that CUDA 12.1, local client training,
+and ideal/no-wireless aggregation execute successfully on their machine.

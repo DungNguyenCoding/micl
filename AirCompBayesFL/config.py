@@ -55,6 +55,12 @@ class WirelessConfig:
     noise_dbm: float = -74.0
     num_subchannels: int = 1024
     path_loss_exponent: float = 4.0
+    # The power-law r^{-alpha} is dimensionless. Distances stored by the data
+    # module are in metres, so divide them by this reference before applying
+    # the exponent. Set this to 1.0 to reproduce the legacy raw-metre model.
+    # The paper does not disclose the numerical distance normalization used by
+    # the authors; 1000 m (distances expressed in km) is the documented default.
+    path_loss_reference_m: float = 1000.0
     gamma_db: float = 10.0
     min_channel_power: float = 1.0e-14
     bisection_steps: int = 60
@@ -136,6 +142,8 @@ class SimulationConfig:
             raise ValueError("training.bayesian_local_mode must be 'joint' or 'two_phase'")
         if self.wireless.num_subchannels <= 0:
             raise ValueError("wireless.num_subchannels must be positive")
+        if self.wireless.path_loss_reference_m <= 0:
+            raise ValueError("wireless.path_loss_reference_m must be positive")
         if self.runtime.replications <= 0:
             raise ValueError("runtime.replications must be positive")
         if self.runtime.client_num_cpus <= 0:

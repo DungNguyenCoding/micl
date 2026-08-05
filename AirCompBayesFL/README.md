@@ -200,3 +200,16 @@ $env:PYTHONPATH = "."
 ## Important performance note
 
 The paper CNN and the very small per-client datasets can make GPU execution slower than expected because each client performs little work and CUDA setup/transfer overhead is significant. The native-Windows local backend is intended for correctness and stability. Use WSL2/Linux Ray mode for actual parallel virtual-client experiments.
+
+
+## Wireless distance normalization
+
+The channel law uses `(distance_m / path_loss_reference_m)^(-alpha)`. The
+configs default to `path_loss_reference_m: 1000.0` because the paper does not
+publish the numerical distance reference. See `WIRELESS_NORMALIZATION.md`.
+
+Run a channel-normalization sensitivity test without editing YAML:
+
+```powershell
+python main.py --config configs/smoke_gpu.yaml --experiment fig2 --methods fedavg --rounds 10 --path-loss-reference-m 1500 --output results/ref1500
+```

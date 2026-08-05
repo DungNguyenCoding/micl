@@ -18,13 +18,32 @@ def sample_rayleigh_channels(
     num_subchannels: int,
     path_loss_exponent: float,
     rng: np.random.Generator,
+    path_loss_reference_m: float = 1000.0,
 ) -> np.ndarray:
-    """Sample h_k ~ CN(0, r_k^{-alpha} I_F)."""
-    distances = np.maximum(np.asarray(distances_m, dtype=np.float64), 1.0)
-    variances = distances ** (-float(path_loss_exponent))
+    """Sample block-Rayleigh channels with an explicit distance reference.
+
+    The paper writes ``h_k ~ CN(0, r_k^{-alpha} I)``.  A power law requires a
+    dimensionless distance ratio, while the dataset module stores distances in
+    metres.  We therefore use
+
+        variance_k = (distance_m / path_loss_reference_m) ** (-alpha).
+
+    ``path_loss_reference_m=1000`` is equivalent to expressing distance in km.
+    Set it to ``1`` to recover the legacy raw-metre implementation.
+
+    The accessible paper does not state the numerical reference used in the
+    authors' private simulator, so this parameter is exposed in YAML rather
+    than silently hard-coded.
+    """
+    distances = np.maximum(np.asarray(distances_m, dtype=np.float64), 1.0e-12)
+    reference = float(path_loss_reference_m)
+    if reference <= 0.0:
+        raise ValueError("path_loss_reference_m must be positive")
+    normalized_distances = np.maximum(distances / reference, 1.0e-12)
+    variances = normalized_distances ** (-float(path_loss_exponent))
     scale = np.sqrt(variances[:, None] / 2.0)
-    real = rng.standard_normal((len(distances), num_subchannels))
-    imag = rng.standard_normal((len(distances), num_subchannels))
+    real = rng.standard_normal((len(distances), int(num_subchannels)))
+    imag = rng.standard_normal((len(distances), int(num_subchannels)))
     return (real + 1j * imag) * scale
 
 

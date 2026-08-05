@@ -199,6 +199,7 @@ class AirCompStrategy(FedAvg):
             self.config_obj.wireless.num_subchannels,
             self.config_obj.wireless.path_loss_exponent,
             rng,
+            self.config_obj.wireless.path_loss_reference_m,
         )
 
         if self.method in {"fedavg", "fedprox"}:
@@ -327,6 +328,8 @@ class AirCompStrategy(FedAvg):
                 "aircomp_average_symbol_power_watts": self.last_aircomp_stats.average_symbol_power_watts,
                 "aircomp_maximum_symbol_power_watts": self.last_aircomp_stats.maximum_symbol_power_watts,
                 "aircomp_noise_l2": self.last_aircomp_stats.noise_l2,
+                "aircomp_retained_magnitude_ratio": self.last_aircomp_stats.retained_magnitude_ratio,
+                "aircomp_distorted_to_ideal_norm_ratio": self.last_aircomp_stats.distorted_to_ideal_norm_ratio,
                 "wall_time_sec": time.perf_counter() - self.started_at,
             }
         )

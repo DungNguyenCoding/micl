@@ -22,10 +22,15 @@ class AirCompStats:
     ideal_l2: float
     received_l2: float
     delta_bar: float
+    retained_magnitude_ratio: float
+    distorted_to_ideal_norm_ratio: float
 
     @classmethod
     def zero(cls) -> "AirCompStats":
-        return cls(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        return cls(
+            0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 1.0, 1.0,
+        )
 
 
 def _optimal_magnitude(
@@ -131,6 +136,8 @@ def aggregate_updates(
     clipped_values = 0
     total_values = 0
     symbol_powers: List[float] = []
+    original_magnitude_sum = 0.0
+    retained_magnitude_sum = 0.0
 
     for start in range(0, dimension, num_subchannels):
         stop = min(start + num_subchannels, dimension)
@@ -155,9 +162,17 @@ def aggregate_updates(
             )
             aggregate_chunk += weight * np.sign(chunk) * magnitude
             symbol_powers.append(used_power)
+            original_active = absolute[:active]
+            retained_active = magnitude[:active]
+            original_magnitude_sum += float(np.sum(original_active))
+            retained_magnitude_sum += float(np.sum(retained_active))
             if clipped:
-                clipped_values += int(np.count_nonzero(magnitude[:active] < absolute[:active]))
-            total_values += active
+                materially_reduced = (
+                    (original_active > 1.0e-12)
+                    & (retained_active < original_active * (1.0 - 1.0e-6))
+                )
+                clipped_values += int(np.count_nonzero(materially_reduced))
+            total_values += int(np.count_nonzero(original_active > 1.0e-12))
 
         noise = sample_complex_noise(
             (num_subchannels,), noise_power, rng
@@ -180,6 +195,13 @@ def aggregate_updates(
         ideal_l2=float(np.sqrt(ideal_energy)),
         received_l2=float(np.linalg.norm(received)),
         delta_bar=delta_bar,
+        retained_magnitude_ratio=float(
+            retained_magnitude_sum / max(original_magnitude_sum, 1.0e-30)
+        ),
+        distorted_to_ideal_norm_ratio=float(
+            np.linalg.norm(distorted_without_noise)
+            / max(np.linalg.norm(ideal), 1.0e-30)
+        ),
     )
     return received.astype(np.float32), stats
 
@@ -202,4 +224,10 @@ def combine_stats(*stats_items: AirCompStats) -> AirCompStats:
         ideal_l2=float(np.sqrt(sum(item.ideal_l2**2 for item in items))),
         received_l2=float(np.sqrt(sum(item.received_l2**2 for item in items))),
         delta_bar=float(np.mean([item.delta_bar for item in items])),
+        retained_magnitude_ratio=float(
+            np.mean([item.retained_magnitude_ratio for item in items])
+        ),
+        distorted_to_ideal_norm_ratio=float(
+            np.mean([item.distorted_to_ideal_norm_ratio for item in items])
+        ),
     )
