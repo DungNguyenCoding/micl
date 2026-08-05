@@ -309,6 +309,10 @@ class AirCompStrategy(FedAvg):
             "mean_samples_per_client": self.config_obj.data.mean_samples_per_client,
             "power_dbm": self.config_obj.wireless.power_dbm,
             "noise_dbm": self.config_obj.wireless.noise_dbm,
+            "num_subchannels": self.config_obj.wireless.num_subchannels,
+            "path_loss_exponent": self.config_obj.wireless.path_loss_exponent,
+            "path_loss_reference_m": self.config_obj.wireless.path_loss_reference_m,
+            "gamma_db": self.config_obj.wireless.gamma_db,
         }
         self.logger.metrics.append(
             {
@@ -328,6 +332,9 @@ class AirCompStrategy(FedAvg):
                 "aircomp_average_symbol_power_watts": self.last_aircomp_stats.average_symbol_power_watts,
                 "aircomp_maximum_symbol_power_watts": self.last_aircomp_stats.maximum_symbol_power_watts,
                 "aircomp_noise_l2": self.last_aircomp_stats.noise_l2,
+                "aircomp_ideal_l2": self.last_aircomp_stats.ideal_l2,
+                "aircomp_received_l2": self.last_aircomp_stats.received_l2,
+                "aircomp_delta_bar": self.last_aircomp_stats.delta_bar,
                 "aircomp_retained_magnitude_ratio": self.last_aircomp_stats.retained_magnitude_ratio,
                 "aircomp_distorted_to_ideal_norm_ratio": self.last_aircomp_stats.distorted_to_ideal_norm_ratio,
                 "wall_time_sec": time.perf_counter() - self.started_at,

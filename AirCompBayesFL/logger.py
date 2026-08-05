@@ -23,6 +23,10 @@ METRIC_FIELDS = [
     "mean_samples_per_client",
     "power_dbm",
     "noise_dbm",
+    "num_subchannels",
+    "path_loss_exponent",
+    "path_loss_reference_m",
+    "gamma_db",
     "accuracy",
     "nll",
     "ece",
@@ -38,6 +42,11 @@ METRIC_FIELDS = [
     "aircomp_average_symbol_power_watts",
     "aircomp_maximum_symbol_power_watts",
     "aircomp_noise_l2",
+    "aircomp_ideal_l2",
+    "aircomp_received_l2",
+    "aircomp_delta_bar",
+    "aircomp_retained_magnitude_ratio",
+    "aircomp_distorted_to_ideal_norm_ratio",
     "wall_time_sec",
 ]
 

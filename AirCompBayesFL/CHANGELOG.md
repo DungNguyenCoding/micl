@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.1
+
+- Fixed `metrics.csv` schema so the AirComp retained-magnitude and distorted/ideal norm diagnostics are actually written.
+- Added path-loss reference, exponent, subchannel count, and gamma to every metrics row.
+- Added ideal/received update norms and `delta_bar` to the metrics output.
+
+
 ## 1.2.0
 
 - Corrected the wireless path-loss unit mismatch by making the distance
