@@ -64,14 +64,25 @@ class WirelessConfig:
 class RuntimeConfig:
     seed: int = 2025
     replications: int = 1
+
+    # auto: native Windows + CUDA -> local sequential GPU backend;
+    #       otherwise -> Flower/Ray backend.
+    # ray:  force Flower/Ray (recommended on Linux/WSL2).
+    # local: run virtual clients sequentially in the launcher process.
+    backend: str = "auto"  # auto | ray | local
+
     client_num_cpus: float = 1.0
     client_num_gpus: float = 0.0
     ray_include_dashboard: bool = False
     torch_num_threads: int = 1
-    client_device: str = "cpu"  # cpu | cuda | auto
+    client_device: str = "cpu"  # cpu | cuda | cuda:N | auto
     server_device: str = "cpu"
     verbose_flower: bool = False
     cleanup_cuda_after_fit: bool = True
+
+    # Do not silently continue when all or some client jobs fail. This prevents
+    # random/untrained models from being written to metrics.csv as valid runs.
+    fail_on_client_failure: bool = True
 
 
 @dataclass
@@ -131,6 +142,9 @@ class SimulationConfig:
             raise ValueError("runtime.client_num_cpus must be positive")
         if self.runtime.client_num_gpus < 0:
             raise ValueError("runtime.client_num_gpus cannot be negative")
+        if str(self.runtime.backend).strip().lower() not in {"auto", "ray", "local"}:
+            raise ValueError("runtime.backend must be auto, ray, or local")
+
         valid_devices = {"cpu", "cuda", "auto"}
         for field_name, value in {
             "runtime.client_device": self.runtime.client_device,
@@ -138,9 +152,7 @@ class SimulationConfig:
         }.items():
             normalized = str(value).strip().lower()
             if normalized not in valid_devices and not normalized.startswith("cuda:"):
-                raise ValueError(
-                    f"{field_name} must be cpu, cuda, cuda:N, or auto"
-                )
+                raise ValueError(f"{field_name} must be cpu, cuda, cuda:N, or auto")
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

@@ -12,8 +12,12 @@ from config import SimulationConfig
 from dataset import ensure_mnist, prepare_partitions
 from experiments import RunSpec, derive_rounds, experiment_conditions
 from models import build_model, count_parameters
-from runtime_utils import configure_runtime_environment, validate_runtime
-from server import run_flower_simulation
+from runtime_utils import (
+    configure_runtime_environment,
+    resolve_backend,
+    validate_runtime,
+)
+from server import run_configured_simulation
 
 
 def parse_args() -> argparse.Namespace:
@@ -147,13 +151,21 @@ def main() -> None:
                     planned.append((condition_cfg.copy(), run_spec, str(partition_path.resolve())))
 
     print(f"Model dimension: {model_dimension:,}")
+    backend = resolve_backend(config)
     print(
         "Runtime: "
+        f"backend={backend}, "
         f"client_device={config.runtime.client_device}, "
         f"client_num_gpus={config.runtime.client_num_gpus}, "
         f"server_device={config.runtime.server_device}, "
         f"pin_memory={config.data.pin_memory}"
     )
+    if backend == "local" and config.runtime.client_device.lower().startswith("cuda"):
+        print(
+            "Native-Windows safe mode: CUDA clients run sequentially in the "
+            "launcher process. Use WSL2/Linux with runtime.backend: ray for "
+            "parallel Ray GPU clients."
+        )
     if config.runtime.client_device.lower().startswith("cuda"):
         print(
             "CUDA: "
@@ -161,7 +173,7 @@ def main() -> None:
             f"available={gpu_status.available}, devices={gpu_status.device_count}, "
             f"GPU={gpu_status.device_name}"
         )
-    print(f"Planned Flower/Ray simulations: {len(planned)}")
+    print(f"Planned simulations: {len(planned)}")
     for index, (_, run_spec, partition_path) in enumerate(planned, start=1):
         status = "SKIP" if finished.get(run_spec.run_id, -1) >= run_spec.rounds else "RUN"
         print(
@@ -177,7 +189,7 @@ def main() -> None:
             continue
         print("=" * 88)
         print(f"Starting {index}/{len(planned)}: {run_spec.run_id}")
-        run_flower_simulation(run_cfg, run_spec, partition_path)
+        run_configured_simulation(run_cfg, run_spec, partition_path)
         print(f"Finished: {run_spec.run_id}")
 
     print("All requested simulations finished.")

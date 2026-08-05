@@ -1,248 +1,202 @@
 # AirCompBayesFL
 
-A modular Flower/Ray + Pyro implementation of the simulation system described in:
+An independent, modular implementation of the simulation system described in:
 
 > **Distribution-Level AirComp for Wireless Federated Learning under Data Scarcity and Heterogeneity**  
 > Jun-Pyo Hong, Hyowoon Seo, and Kisong Lee, arXiv:2506.06090 (2025)
 
-The package implements the disclosed MNIST/CNN environment, scarce non-IID partitions, Pyro mean-field variational inference, Gaussian posterior conflation through sufficient statistics, Rayleigh fading, additive noise, symbol-power constraints, KKT-based AirComp power control, FedAvg, FedProx, SCAFFOLD, CSV logging, and separate plotting.
+The project includes MNIST scarce/non-IID partitions, the 62,346-parameter CNN, Pyro mean-field variational inference, posterior sufficient-statistic aggregation, Rayleigh fading, additive noise, symbol-power constraints, KKT-based AirComp power control, FedAvg, FedProx, SCAFFOLD, CSV logging, and separate plotting.
 
-## Important reproducibility note
+## Reproducibility scope
 
-This is an independent implementation, not the authors' original code. The paper states that its experiments used Blitz, while this package intentionally uses Pyro. The paper also does not disclose every implementation choice needed for bit-for-bit reproduction, including all random seeds, the FedProx coefficient, exact initialization, and the exact stopping-round schedule. Therefore this package is designed to reproduce the **method, environment, ablations, metrics, and plot structure**, but it cannot guarantee numerically identical curves.
+This is not the authors' original source code. The paper reports Blitz, while this project intentionally uses Pyro. Some implementation details needed for bit-identical curves are not disclosed. The goal is therefore to reproduce the method, simulation environment, ablations, metrics, and plot structure rather than guarantee identical random curves.
 
-The proposed method uses Pyro SVI with a diagonal Gaussian guide and optimizes:
+## Execution backends
 
-`task loss + lambda * KL(q_local || q_global)`
+The same client, server, AirComp, aggregation, and metrics code can run through two execution backends:
 
-The server transmits/aggregates two Gaussian sufficient statistics—precision and precision-weighted mean—corresponding to Eqs. (18)-(19). `two_phase` mode first optimizes local uncertainty with the mean fixed and then optimizes the mean with uncertainty fixed. This is the documented interpretation used to translate the paper's two-phase algorithm into Pyro.
+- `ray`: Flower Simulation Runtime with Ray virtual clients. Use this on Linux or WSL2 for parallel client execution.
+- `local`: virtual clients execute sequentially in the launcher process. This is the stable CUDA path for native Windows 11.
+- `auto`: selects `local` for native Windows + CUDA and selects `ray` elsewhere.
+
+Native Windows Ray support is experimental. Version 1.1.0 no longer sends CUDA work into Ray workers by default on native Windows because that combination can pass the launcher CUDA check but fail during a worker's first `model.to("cuda")` call. The local backend still performs all local training on the GPU; only client concurrency changes.
 
 ## Project layout
 
 ```text
 AirCompBayesFL/
-├── main.py              Experiment runner
+├── main.py              Experiment runner and backend dispatch
 ├── config.py            Dataclass/YAML configuration
 ├── dataset.py           MNIST download and scarce non-IID partitions
-├── models.py            62,346-parameter paper CNN
+├── models.py            Paper CNN
 ├── serialization.py     Flat-vector parameter layout
 ├── bayes_vi.py          Pyro SVI local Bayesian training
 ├── deterministic.py     FedAvg/FedProx/SCAFFOLD local training
-├── client.py            Flower NumPyClient and CUDA cleanup
-├── server.py            Flower ServerApp and AirComp strategy
-├── runtime_utils.py     CUDA/Ray preflight and safe device handling
-├── gpu_check.py         Standalone GPU configuration checker
-├── wireless.py          Rayleigh fading, path loss, and noise
+├── client.py            Backend-neutral virtual client
+├── server.py            Flower/Ray backend + local CUDA backend
+├── runtime_utils.py     CUDA/backend preflight and device handling
+├── gpu_check.py         Standalone preflight checker
+├── wireless.py          Rayleigh fading and path loss
 ├── aircomp.py           AirComp and KKT power control
-├── aggregation.py       Model/posterior aggregation
+├── aggregation.py       Deterministic/posterior aggregation
 ├── metrics.py           Accuracy, NLL, ECE, reliability bins
-├── logger.py            metrics.csv and reliability.csv
-├── experiments.py       Figure 2-6 experiment matrices
+├── logger.py            CSV and checkpoint output
+├── experiments.py       Figure 2–6 experiment matrices
 ├── utils.py             Standalone plotting
 ├── configs/
-│   ├── smoke.yaml       Small CPU functional test
-│   ├── paper.yaml       Tables I-II and 10 realizations on CPU
-│   ├── smoke_gpu.yaml   RTX 3060/Windows GPU smoke test
-│   └── paper_gpu.yaml   RTX 3060/Windows paper-scale starting point
+│   ├── smoke.yaml
+│   ├── paper.yaml
+│   ├── smoke_gpu.yaml
+│   └── paper_gpu.yaml
 └── tests/
 ```
 
-## Supported platforms
-
-- Linux x86-64
-- Windows 11 x86-64
-- Python 3.11 or Python 3.12 recommended
-
-Ray's local Windows support is usable but may be slower and more memory intensive than Linux. Run commands from a normal terminal rather than from inside an interactive notebook on Windows.
-
 ## Installation
 
-### Linux
-
-```bash
-cd AirCompBayesFL
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
+Python 3.11 or 3.12 is recommended.
 
 ### Windows 11 PowerShell
 
 ```powershell
-cd AirCompBayesFL
+cd C:\Users\Admin\Desktop\micl\AirCompBayesFL
 py -3.12 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-For NVIDIA GPU clients, install the matching CUDA build of PyTorch first, then install the remaining requirements. Set `runtime.client_num_gpus` and `runtime.client_device` in YAML.
+Install a CUDA-enabled PyTorch build before the remaining requirements when GPU support is needed. Verify it with:
 
-## RTX 3060 Laptop GPU on Windows 11
+```powershell
+.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+```
 
-The native-Windows profiles deliberately use one GPU client at a time and keep the Flower ServerApp on CPU:
+### Linux/WSL2
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+```
+
+## RTX 3060 Laptop GPU on native Windows
+
+`configs/smoke_gpu.yaml` contains:
 
 ```yaml
 runtime:
+  backend: auto
+  client_num_cpus: 1
   client_num_gpus: 1.0
   client_device: cuda
   server_device: cpu
   cleanup_cuda_after_fit: true
-
-data:
-  num_workers: 0
-  pin_memory: false
+  fail_on_client_failure: true
 ```
 
-Run the preflight check:
+On native Windows, `auto` resolves to `local`; on WSL2/Linux it resolves to `ray`.
+
+Run the preflight:
 
 ```powershell
 .\.venv\Scripts\python.exe gpu_check.py --config configs/smoke_gpu.yaml
 ```
 
-Stop stale Ray workers after any previous crash, then run the GPU smoke test:
+Expected native-Windows output includes:
+
+```text
+Resolved backend: local
+CUDA available: True
+GPU: NVIDIA GeForce RTX 3060 Laptop GPU
+Client concurrency: sequential (stable native-Windows CUDA mode)
+```
+
+Remove results produced by the previous failed Ray/CUDA attempt because those rounds had zero successful client updates:
 
 ```powershell
-.\.venv\Scripts\ray.exe stop --force
+Remove-Item -Recurse -Force .\results\gpu_smoke_windows -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force .\results\gpu_smoke_windows_v110 -ErrorAction SilentlyContinue
+```
+
+Run the corrected GPU smoke test:
+
+```powershell
 .\.venv\Scripts\python.exe main.py `
   --config configs/smoke_gpu.yaml `
   --experiment fig2 `
   --methods fedavg,proposed
 ```
 
-The code now enforces device-aware DataLoader behavior: the CPU server never requests CUDA-pinned memory, while a CUDA client only uses pinned memory when explicitly enabled. Ray shutdown runs from a `finally` block, so failed simulations do not normally leave GPU-owning worker processes alive.
+The output should say `backend=local` and `Local backend: clients execute sequentially`. It should not start a Flower RayBackend for this native-Windows CUDA run.
 
-## Quick functional test
+## Parallel GPU clients
 
-The smoke profile uses 4 clients, 2 rounds, one local epoch, and fewer Monte Carlo samples:
-
-```bash
-python main.py --config configs/smoke.yaml --experiment fig2 --methods fedavg,proposed
-```
-
-Check syntax and unit tests:
-
-```bash
-python -m compileall .
-pytest -q
-```
-
-## Paper-scale experiments
-
-`configs/paper.yaml` contains the disclosed values from Tables I-II:
-
-- 40 clients in a 200 m cell
-- Poisson local size with mean 10
-- single-label local data by default
-- `P = 23 dBm`
-- noise `-74 dBm`
-- 1,024 subchannels
-- path-loss exponent 4
-- local learning rate 0.1
-- batch size 10
-- 3 local epochs
-- `gamma = 10 dB`
-- `lambda = 1/50,000`
-- 5 Monte Carlo samples
-- 10 independent realizations
-
-The paper-scale matrix is computationally expensive. Start with one replication and a limited number of rounds:
-
-```bash
-python main.py --config configs/paper.yaml --experiment fig2 --replications 1 --rounds 10
-```
-
-Then launch the complete disclosed experiment matrix:
-
-```bash
-python main.py --config configs/paper.yaml --experiment all
-```
-
-When `training.num_rounds` is `null`, the runner derives rounds from a 30-million channel-use budget. FedAvg/FedProx transmit `d` values per round; SCAFFOLD/Proposed transmit `2d`, where `d=62,346`.
-
-### Individual figures
-
-```bash
-python main.py --config configs/paper.yaml --experiment fig2
-python main.py --config configs/paper.yaml --experiment fig3
-python main.py --config configs/paper.yaml --experiment fig4
-python main.py --config configs/paper.yaml --experiment fig5
-python main.py --config configs/paper.yaml --experiment fig6
-```
-
-Figure mapping:
-
-- `fig2`: FedAvg, FedProx, SCAFFOLD, Proposed
-- `fig3`: 1-, 2-, and 10-class local label support
-- `fig4`: Poisson means 10, 20, and 50
-- `fig5`: power budgets 3, 23, and 33 dBm
-- `fig6`: reliability diagrams and ECE
-
-Useful options:
-
-```bash
-python main.py --help
-python main.py --config configs/paper.yaml --experiment fig2 --dry-run
-python main.py --config configs/paper.yaml --experiment fig2 --resume
-python main.py --config configs/paper.yaml --experiment fig2 --no-wireless
-```
-
-## Output files
-
-The server appends all runs to:
-
-```text
-results/metrics.csv
-results/reliability.csv
-results/client_metrics.csv
-results/checkpoints/*.npz
-results/partitions/*.json
-```
-
-`metrics.csv` includes global accuracy, NLL, ECE, posterior variance, channel uses, OFDM-vector counts, AirComp NMSE, clipping fraction, power use, noise norm, and wall-clock time.
-
-## Generate plots separately
-
-```bash
-python utils.py --input results --figure all
-```
-
-Or one figure:
-
-```bash
-python utils.py --input results --figure fig2
-python utils.py --input results --figure fig6
-```
-
-Plots are written to `results/plots/`.
-
-## Parallelism
-
-Flower's Simulation Runtime uses Ray virtual clients. The degree of parallelism is controlled by:
+For parallel virtual-client GPU training, run the project in WSL2 or Linux and either keep `backend: auto` or set:
 
 ```yaml
 runtime:
-  client_num_cpus: 1
-  client_num_gpus: 0
+  backend: ray
+  client_num_gpus: 1.0
+  client_device: cuda
+  server_device: cpu
 ```
 
-For a machine with 16 CPU cores, assigning one CPU per client normally allows multiple clients to train concurrently. PyTorch threads are limited per actor to reduce CPU oversubscription.
+With one RTX 3060 Laptop GPU, start with `client_num_gpus: 1.0`. Fractional GPU scheduling can be tested later, but Ray fractions are scheduling resources and do not enforce a VRAM partition.
 
-## Wireless implementation
+## CPU smoke test
 
-For each round, the server samples a block-fading channel:
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/smoke.yaml `
+  --experiment fig2 `
+  --methods fedavg,proposed
+```
 
-`h_k ~ CN(0, r_k^(-alpha) I)`
+## Paper-scale starting point
 
-For each transmitted chunk, the code computes the weighted average update power, channel-inversion coefficient, and the KKT power-control vector. If the unconstrained vector violates the symbol-power limit, the scalar multiplier in Eq. (43) is found by bisection. The receiver adds complex Gaussian noise and applies the paper's de-biasing scale.
+The disclosed values from Tables I–II are represented in `configs/paper.yaml` and `configs/paper_gpu.yaml`, including 40 clients, Poisson mean 10, one label per client, 23 dBm, −74 dBm, 1,024 subchannels, path-loss exponent 4, learning rate 0.1, batch size 10, three local epochs, `lambda=1/50,000`, five MC samples, and ten realizations.
 
-The physical layer is simulated centrally in the Flower strategy after clients train in parallel. This is intentional: virtual clients perform local computation independently, while the strategy emulates their synchronized analog superposition over one shared channel.
+Start with one realization and ten rounds:
 
-## Known practical considerations
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/paper_gpu.yaml `
+  --experiment fig2 `
+  --methods proposed `
+  --replications 1 `
+  --rounds 10
+```
 
-1. The full paper configuration can take many hours or days on CPU.
-2. Pyro SVI is more expensive than deterministic local SGD.
-3. Windows Ray processes use more memory than Linux processes.
-4. Exact curves vary strongly with scarce-data partitions and assigned labels; use all 10 realizations before comparing averaged curves.
-5. SCAFFOLD is included, but—as discussed in the paper—its control variate can become unstable under analog aggregation noise.
+## Output
+
+Each configured output directory contains:
+
+```text
+metrics.csv
+reliability.csv
+client_metrics.csv
+checkpoints/*.npz
+partitions/*.json
+```
+
+Version 1.1.0 fails immediately when a client job fails. It no longer treats a round with zero client results as a completed training round.
+
+## Plot generation
+
+```powershell
+.\.venv\Scripts\python.exe utils.py `
+  --input results\gpu_smoke_windows_v110 `
+  --figure fig2
+```
+
+## Validation
+
+```powershell
+.\.venv\Scripts\python.exe -m compileall .
+$env:PYTHONPATH = "."
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+## Important performance note
+
+The paper CNN and the very small per-client datasets can make GPU execution slower than expected because each client performs little work and CUDA setup/transfer overhead is significant. The native-Windows local backend is intended for correctness and stability. Use WSL2/Linux Ray mode for actual parallel virtual-client experiments.

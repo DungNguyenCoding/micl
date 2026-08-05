@@ -1,13 +1,14 @@
-"""Flower ServerApp, custom AirComp strategy, evaluation, and simulation runner."""
+"""Flower/Ray and local execution backends for AirCompBayesFL."""
 
 from __future__ import annotations
 
+import gc
 import math
-import os
 import shutil
 import time
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Sequence
 
 import flwr as fl
 import numpy as np
@@ -32,13 +33,28 @@ from experiments import RunSpec, payload_multiplier
 from logger import RunLogger
 from metrics import evaluate_bayesian, evaluate_deterministic
 from models import build_model
-from runtime_utils import configure_runtime_environment, resolve_device, should_pin_memory
+from runtime_utils import (
+    configure_runtime_environment,
+    release_cuda_memory,
+    resolve_backend,
+    resolve_device,
+    should_pin_memory,
+)
 from serialization import ParameterLayout, initial_model_vector
 from wireless import sample_rayleigh_channels
 
 
+@dataclass
+class ClientFitPayload:
+    """Backend-neutral representation of one successful client fit result."""
+
+    arrays: List[np.ndarray]
+    num_examples: int
+    metrics: Mapping[str, object]
+
+
 class AirCompStrategy(FedAvg):
-    """Full-participation Flower strategy with wireless analog aggregation."""
+    """Full-participation strategy with wireless analog aggregation."""
 
     def __init__(
         self,
@@ -55,14 +71,9 @@ class AirCompStrategy(FedAvg):
         self.layout = ParameterLayout(self.model)
         self.dimension = self.layout.total_numel
         self.server_device = resolve_device(config.runtime.server_device)
-        # Ray can hide CUDA devices from the ServerApp because GPU resources are
-        # assigned only to ClientApps.  Never request CUDA-pinned batches when
-        # the central evaluator itself runs on CPU.
         self.test_loader = load_test_loader(
             config.data,
-            pin_memory=should_pin_memory(
-                config.data.pin_memory, self.server_device
-            ),
+            pin_memory=should_pin_memory(config.data.pin_memory, self.server_device),
         )
 
         initial_model = initial_model_vector(self.model, run_spec.seed)
@@ -102,29 +113,62 @@ class AirCompStrategy(FedAvg):
             min_available_clients=config.data.num_clients,
             evaluate_fn=None,
             on_fit_config_fn=lambda server_round: {"server_round": server_round},
-            accept_failures=False,
+            accept_failures=not config.runtime.fail_on_client_failure,
             initial_parameters=ndarrays_to_parameters(initial_arrays),
         )
 
     def aggregate_fit(self, server_round, results, failures):  # type: ignore[override]
+        """Flower callback; convert results then use the backend-neutral path."""
+        if failures and self.config_obj.runtime.fail_on_client_failure:
+            raise RuntimeError(
+                f"Round {server_round}: {len(failures)} client job(s) failed. "
+                "The run was aborted so invalid random-model metrics are not recorded. "
+                f"First failure: {failures[0]!r}"
+            )
         if not results:
-            return None, {}
-        if failures and not self.accept_failures:
-            return None, {}
+            raise RuntimeError(
+                f"Round {server_round}: Flower returned zero successful client results."
+            )
+
+        payloads: List[ClientFitPayload] = []
+        for _client_proxy, fit_res in results:
+            payloads.append(
+                ClientFitPayload(
+                    arrays=[
+                        np.asarray(value, dtype=np.float32)
+                        for value in parameters_to_ndarrays(fit_res.parameters)
+                    ],
+                    num_examples=int(fit_res.num_examples),
+                    metrics=dict(fit_res.metrics or {}),
+                )
+            )
+        return self.aggregate_payloads(server_round, payloads)
+
+    def aggregate_payloads(
+        self,
+        server_round: int,
+        payloads: Sequence[ClientFitPayload],
+    ) -> tuple[Parameters, Dict[str, float]]:
+        """Aggregate successful client updates from any execution backend."""
+        if not payloads:
+            raise RuntimeError(f"Round {server_round}: no client payloads to aggregate")
+        expected = int(self.config_obj.data.num_clients)
+        if len(payloads) != expected and self.config_obj.runtime.fail_on_client_failure:
+            raise RuntimeError(
+                f"Round {server_round}: expected {expected} client payloads, "
+                f"received {len(payloads)}."
+            )
 
         local_arrays: List[List[np.ndarray]] = []
         examples: List[int] = []
         distances: List[float] = []
         losses: List[float] = []
 
-        for client_proxy, fit_res in results:
-            arrays = [
-                np.asarray(value, dtype=np.float32)
-                for value in parameters_to_ndarrays(fit_res.parameters)
-            ]
+        for payload in payloads:
+            arrays = [np.asarray(value, dtype=np.float32) for value in payload.arrays]
             local_arrays.append(arrays)
-            examples.append(int(fit_res.num_examples))
-            metrics = fit_res.metrics or {}
+            examples.append(int(payload.num_examples))
+            metrics = payload.metrics
             distances.append(float(metrics.get("distance_m", 1.0)))
             losses.append(float(metrics.get("train_loss", float("nan"))))
             self.logger.clients.append(
@@ -132,7 +176,7 @@ class AirCompStrategy(FedAvg):
                     "run_id": self.run_spec.run_id,
                     "round": server_round,
                     "client_id": int(metrics.get("client_id", -1)),
-                    "num_examples": int(fit_res.num_examples),
+                    "num_examples": int(payload.num_examples),
                     "distance_m": float(metrics.get("distance_m", float("nan"))),
                     "train_loss": float(metrics.get("train_loss", float("nan"))),
                     "phase1_loss": float(metrics.get("phase1_loss", 0.0)),
@@ -192,7 +236,9 @@ class AirCompStrategy(FedAvg):
         else:
             raise ValueError(f"Unknown method: {self.method}")
 
-        self.current_arrays = [array.astype(np.float32) for array in aggregation.parameters]
+        self.current_arrays = [
+            array.astype(np.float32) for array in aggregation.parameters
+        ]
         self.last_aircomp_stats = aggregation.aircomp_stats
         multiplier = payload_multiplier(self.method)
         self.channel_uses_cumulative += multiplier * self.dimension
@@ -303,16 +349,116 @@ class AirCompStrategy(FedAvg):
         }
 
 
+def _prepare_state_dir(config: SimulationConfig, run_spec: RunSpec) -> Path:
+    state_dir = Path(config.output.directory) / "client_state" / run_spec.run_id
+    if state_dir.exists():
+        shutil.rmtree(state_dir)
+    state_dir.mkdir(parents=True, exist_ok=True)
+    return state_dir
+
+
+def run_local_simulation(
+    config: SimulationConfig,
+    run_spec: RunSpec,
+    partition_path: str,
+) -> None:
+    """Run virtual clients sequentially in the launcher process.
+
+    This is the stable native-Windows GPU path. It uses the same client code,
+    server aggregation, AirComp channel model, metrics, and checkpoints as the
+    Flower/Ray path, but avoids Ray's experimental CUDA worker handling on
+    native Windows. Linux/WSL2 users can keep using the Ray backend.
+    """
+    state_dir = _prepare_state_dir(config, run_spec)
+    strategy = AirCompStrategy(
+        config=config,
+        run_spec=run_spec,
+        partition_path=partition_path,
+    )
+
+    local_client_device = resolve_device(config.runtime.client_device)
+    print(
+        "Local backend: clients execute sequentially; "
+        f"client_device={local_client_device}, "
+        f"server_device={config.runtime.server_device}."
+    )
+    initial = strategy.evaluate(0, ndarrays_to_parameters(strategy.current_arrays))
+    if initial is not None:
+        initial_loss, initial_metrics = initial
+        print(
+            f"Round 0: loss={initial_loss:.6f}, "
+            f"accuracy={initial_metrics['accuracy']:.4f}, "
+            f"ece={initial_metrics['ece']:.4f}"
+        )
+
+    for server_round in range(1, int(run_spec.rounds) + 1):
+        round_started = time.perf_counter()
+        global_arrays = [value.copy() for value in strategy.current_arrays]
+        payloads: List[ClientFitPayload] = []
+
+        for client_id in range(int(config.data.num_clients)):
+            client: AirCompNumPyClient | None = None
+            try:
+                client = AirCompNumPyClient(
+                    client_id=client_id,
+                    method=run_spec.method,
+                    config=config,
+                    partition_path=partition_path,
+                    run_seed=run_spec.seed,
+                    state_dir=str(state_dir),
+                )
+                arrays, num_examples, metrics = client.fit(
+                    [value.copy() for value in global_arrays],
+                    {"server_round": server_round},
+                )
+                payloads.append(
+                    ClientFitPayload(
+                        arrays=[np.asarray(value, dtype=np.float32) for value in arrays],
+                        num_examples=int(num_examples),
+                        metrics=dict(metrics),
+                    )
+                )
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Local backend client {client_id} failed in round "
+                    f"{server_round}: {exc}"
+                ) from exc
+            finally:
+                if client is not None:
+                    del client
+                gc.collect()
+                if local_client_device.type == "cuda":
+                    release_cuda_memory(local_client_device)
+
+        parameters, aggregate_metrics = strategy.aggregate_payloads(
+            server_round, payloads
+        )
+        evaluation = strategy.evaluate(server_round, parameters)
+        elapsed = time.perf_counter() - round_started
+        if evaluation is None:
+            print(
+                f"Round {server_round}/{run_spec.rounds}: "
+                f"train_loss={aggregate_metrics['train_loss']:.6f}, "
+                f"elapsed={elapsed:.2f}s"
+            )
+        else:
+            loss, metrics = evaluation
+            print(
+                f"Round {server_round}/{run_spec.rounds}: "
+                f"loss={loss:.6f}, accuracy={metrics['accuracy']:.4f}, "
+                f"ece={metrics['ece']:.4f}, "
+                f"train_loss={aggregate_metrics['train_loss']:.6f}, "
+                f"elapsed={elapsed:.2f}s"
+            )
+
+
 def run_flower_simulation(
     config: SimulationConfig,
     run_spec: RunSpec,
     partition_path: str,
 ) -> None:
     """Execute one method/condition/realization with Flower's Ray backend."""
-    state_dir = Path(config.output.directory) / "client_state" / run_spec.run_id
-    if state_dir.exists():
-        shutil.rmtree(state_dir)
-    state_dir.mkdir(parents=True, exist_ok=True)
+    state_dir = _prepare_state_dir(config, run_spec)
 
     def client_fn(context: Context):
         client_id = int(context.node_config["partition-id"])
@@ -360,9 +506,6 @@ def run_flower_simulation(
             verbose_logging=config.runtime.verbose_flower,
         )
     finally:
-        # Flower normally manages Ray lifecycle, but a failed native-Windows
-        # simulation can leave worker processes and GPU allocations alive.  A
-        # finally block makes sequential runs and retries deterministic.
         try:
             import ray
 
@@ -370,3 +513,18 @@ def run_flower_simulation(
                 ray.shutdown()
         except Exception:
             pass
+
+
+def run_configured_simulation(
+    config: SimulationConfig,
+    run_spec: RunSpec,
+    partition_path: str,
+) -> None:
+    """Dispatch to the resolved backend."""
+    backend = resolve_backend(config)
+    if backend == "local":
+        run_local_simulation(config, run_spec, partition_path)
+    elif backend == "ray":
+        run_flower_simulation(config, run_spec, partition_path)
+    else:  # defensive; resolve_backend validates values
+        raise ValueError(f"Unsupported runtime backend: {backend}")

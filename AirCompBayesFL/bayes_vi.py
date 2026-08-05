@@ -125,13 +125,18 @@ class BayesianVITrainer:
             min=self.model_cfg.min_precision,
             max=self.model_cfg.max_precision,
         )
-        return PosteriorResult(
+        result = PosteriorResult(
             mean=local_mean.detach().cpu().numpy().astype(np.float32),
             precision=local_precision.detach().cpu().numpy().astype(np.float32),
             average_loss=float(loss),
             phase1_loss=float(phase1_loss),
             phase2_loss=float(phase2_loss),
         )
+        # Pyro's global parameter store otherwise keeps references to CUDA
+        # tensors after a virtual client returns. This matters when many
+        # clients are executed sequentially on one laptop GPU.
+        pyro.clear_param_store()
+        return result
 
     def _run_phase(
         self,

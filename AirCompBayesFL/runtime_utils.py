@@ -1,10 +1,4 @@
-"""Runtime, CUDA, and Ray helpers shared by clients and the server.
-
-The helpers in this module deliberately avoid initializing CUDA unless the
-configuration explicitly requests a CUDA device.  This matters for native
-Windows Flower/Ray simulations because Ray controls ``CUDA_VISIBLE_DEVICES``
-per worker process.
-"""
+"""Runtime, CUDA, and backend helpers shared by clients and the server."""
 
 from __future__ import annotations
 
@@ -26,6 +20,30 @@ class GPUStatus:
     cuda_build: str | None
     device_name: str | None
     device_count: int
+
+
+def is_native_windows() -> bool:
+    """Return True for Windows Python, but not for WSL2/Linux Python."""
+    return platform.system() == "Windows"
+
+
+def resolve_backend(config: SimulationConfig) -> str:
+    """Resolve the configured execution backend.
+
+    Native Windows Flower/Ray GPU workers are experimental and can expose a
+    CUDA device that fails during lazy CUDA initialization.  For this exact
+    platform combination, ``auto`` selects the in-process local backend.  The
+    same source still uses Flower/Ray on Linux, WSL2, and macOS/CPU.
+    """
+    requested = str(config.runtime.backend).strip().lower()
+    if requested in {"ray", "local"}:
+        return requested
+
+    client_request = str(config.runtime.client_device).strip().lower()
+    wants_cuda = client_request == "cuda" or client_request.startswith("cuda:")
+    if is_native_windows() and wants_cuda:
+        return "local"
+    return "ray"
 
 
 def resolve_device(requested: str) -> torch.device:
@@ -52,12 +70,7 @@ def resolve_device(requested: str) -> torch.device:
 
 
 def should_pin_memory(configured: bool, device: torch.device) -> bool:
-    """Return whether a DataLoader should pin host memory.
-
-    Pinned memory is useful only for CPU-to-CUDA copies.  Never pin memory for
-    a CPU evaluator.  This avoids ``cudaErrorDevicesUnavailable`` in a Ray
-    ServerApp that has no GPU resource assigned.
-    """
+    """Return whether a DataLoader should pin host memory."""
     return bool(configured and device.type == "cuda" and torch.cuda.is_available())
 
 
@@ -69,7 +82,6 @@ def release_cuda_memory(device: torch.device) -> None:
     try:
         torch.cuda.synchronize(device)
     except Exception:
-        # Do not mask the original training result/error during cleanup.
         pass
     try:
         torch.cuda.empty_cache()
@@ -95,27 +107,31 @@ def inspect_gpu(requested: bool = True) -> GPUStatus:
 def configure_runtime_environment(config: SimulationConfig) -> None:
     """Set process environment knobs before Flower starts Ray workers."""
     os.environ.setdefault("RAY_DEDUP_LOGS", "1")
-    # Ray 2.55 emits a warning when a zero-GPU process hides accelerators.  The
-    # server stays on CPU by configuration, so keeping the user's accelerator
-    # visibility unchanged is safe and prevents pin-memory probing failures.
-    if platform.system() == "Windows":
+    os.environ.setdefault("PYTHONUNBUFFERED", "1")
+
+    # This only affects zero-GPU Ray processes such as the ServerApp.  It does
+    # not attempt to repair native-Windows CUDA workers; auto mode avoids that
+    # unsupported path by selecting the local backend instead.
+    if is_native_windows():
         os.environ.setdefault("RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO", "0")
 
 
 def validate_runtime(config: SimulationConfig) -> GPUStatus:
     """Fail early for contradictory GPU settings and return GPU information."""
+    backend = resolve_backend(config)
     client_request = config.runtime.client_device.strip().lower()
     gpu_requested = client_request == "cuda" or client_request.startswith("cuda:")
 
-    if gpu_requested and config.runtime.client_num_gpus <= 0:
-        raise ValueError(
-            "runtime.client_device requests CUDA, but runtime.client_num_gpus is 0. "
-            "Use client_num_gpus: 1.0 for one client at a time."
-        )
-    if config.runtime.client_num_gpus > 0 and client_request == "cpu":
-        raise ValueError(
-            "runtime.client_num_gpus is positive, but runtime.client_device is cpu."
-        )
+    if backend == "ray":
+        if gpu_requested and config.runtime.client_num_gpus <= 0:
+            raise ValueError(
+                "The Ray backend requests CUDA clients, but "
+                "runtime.client_num_gpus is 0. Use 1.0 for one GPU client at a time."
+            )
+        if config.runtime.client_num_gpus > 0 and client_request == "cpu":
+            raise ValueError(
+                "runtime.client_num_gpus is positive, but runtime.client_device is cpu."
+            )
 
     status = inspect_gpu(requested=gpu_requested)
     if gpu_requested and not status.available:
@@ -125,9 +141,21 @@ def validate_runtime(config: SimulationConfig) -> GPUStatus:
         )
 
     server_request = config.runtime.server_device.strip().lower()
-    if platform.system() == "Windows" and server_request.startswith("cuda"):
+    if is_native_windows() and backend == "ray" and server_request.startswith("cuda"):
         raise ValueError(
-            "Native-Windows Ray mode should keep runtime.server_device: cpu. "
-            "GPU resources are assigned to ClientApps, not the ServerApp."
+            "Native-Windows Ray mode should keep runtime.server_device: cpu."
         )
+
+    if (
+        is_native_windows()
+        and backend == "ray"
+        and gpu_requested
+        and str(config.runtime.backend).strip().lower() == "ray"
+    ):
+        print(
+            "WARNING: native Windows + Ray + CUDA was explicitly forced. "
+            "Flower documents native Windows Ray support as experimental. "
+            "Use runtime.backend: auto/local or run the Ray backend in WSL2/Linux."
+        )
+
     return status

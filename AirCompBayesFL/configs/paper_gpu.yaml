@@ -46,6 +46,9 @@ wireless:
   bisection_steps: 60
 
 runtime:
+  # auto selects the stable local CUDA backend on native Windows and
+  # Flower/Ray on Linux or WSL2.
+  backend: auto
   seed: 2025
   replications: 10
   client_num_cpus: 1
@@ -56,9 +59,10 @@ runtime:
   server_device: cpu
   verbose_flower: false
   cleanup_cuda_after_fit: true
+  fail_on_client_failure: true
 
 output:
-  directory: results/gpu_paper_windows
+  directory: results/gpu_paper_windows_v110
   metrics_filename: metrics.csv
   reliability_filename: reliability.csv
   clients_filename: client_metrics.csv

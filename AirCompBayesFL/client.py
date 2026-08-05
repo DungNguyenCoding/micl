@@ -80,6 +80,14 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         try:
             return self._fit_impl(parameters, config)
         finally:
+            if self.device.type == "cuda":
+                # Release model parameter storage before emptying the CUDA
+                # allocator cache. The client object may be reused by Ray or
+                # destroyed by the local sequential backend.
+                try:
+                    self.model.to("cpu")
+                except Exception:
+                    pass
             if self.config.runtime.cleanup_cuda_after_fit:
                 release_cuda_memory(self.device)
 

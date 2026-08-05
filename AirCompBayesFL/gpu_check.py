@@ -1,4 +1,4 @@
-"""Standalone CUDA and configuration preflight check."""
+"""Standalone CUDA and execution-backend preflight check."""
 
 from __future__ import annotations
 
@@ -6,7 +6,11 @@ import argparse
 from pathlib import Path
 
 from config import SimulationConfig
-from runtime_utils import configure_runtime_environment, validate_runtime
+from runtime_utils import (
+    configure_runtime_environment,
+    resolve_backend,
+    validate_runtime,
+)
 
 
 def main() -> None:
@@ -22,8 +26,10 @@ def main() -> None:
     config = SimulationConfig.from_yaml(path)
     configure_runtime_environment(config)
     status = validate_runtime(config)
+    backend = resolve_backend(config)
 
     print(f"Configuration: {path}")
+    print(f"Resolved backend: {backend}")
     print(f"Torch: {status.torch_version}")
     print(f"CUDA build: {status.cuda_build}")
     print(f"CUDA available: {status.available}")
@@ -33,6 +39,10 @@ def main() -> None:
     print(f"Ray GPUs per client: {config.runtime.client_num_gpus}")
     print(f"Server device: {config.runtime.server_device}")
     print(f"Configured pin memory: {config.data.pin_memory}")
+    if backend == "local":
+        print("Client concurrency: sequential (stable native-Windows CUDA mode)")
+    else:
+        print("Client concurrency: Flower/Ray resource scheduling")
     print("Preflight passed.")
 
 
