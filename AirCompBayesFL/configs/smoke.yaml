@@ -1,0 +1,60 @@
+data:
+  root: data
+  num_clients: 4
+  labels_per_client: 1
+  mean_samples_per_client: 20
+  min_samples_per_client: 2
+  bs_radius_m: 200
+  num_workers: 0
+  pin_memory: false
+
+model:
+  name: paper_cnn
+  num_classes: 10
+  initial_prior_std: 0.05
+  min_posterior_std: 0.0001
+  max_posterior_std: 10.0
+  min_precision: 0.000001
+  max_precision: 100000000.0
+
+training:
+  local_epochs: 1
+  batch_size: 10
+  learning_rate: 0.02
+  kl_weight: 0.00002
+  mc_train_samples: 1
+  mc_eval_samples: 2
+  bayesian_local_mode: joint
+  fedprox_mu: 0.01
+  gradient_clip_norm: 10.0
+  num_rounds: 2
+  max_channel_uses: 30000000
+  evaluate_every: 1
+
+wireless:
+  enabled: true
+  power_dbm: 23
+  noise_dbm: -74
+  num_subchannels: 1024
+  path_loss_exponent: 4
+  gamma_db: 10
+  min_channel_power: 1.0e-14
+  bisection_steps: 40
+
+runtime:
+  seed: 2025
+  replications: 1
+  client_num_cpus: 1
+  client_num_gpus: 0
+  ray_include_dashboard: false
+  torch_num_threads: 1
+  client_device: cpu
+  server_device: cpu
+  verbose_flower: false
+
+output:
+  directory: results
+  metrics_filename: metrics.csv
+  reliability_filename: reliability.csv
+  clients_filename: client_metrics.csv
+  save_checkpoints: true

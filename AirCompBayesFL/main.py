@@ -1,0 +1,188 @@
+"""Command-line entry point for AirCompBayesFL simulations."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import os
+from pathlib import Path
+from typing import Dict, Iterable, List, Optional, Sequence, Set
+
+from config import SimulationConfig
+from dataset import ensure_mnist, prepare_partitions
+from experiments import RunSpec, derive_rounds, experiment_conditions
+from models import build_model, count_parameters
+from runtime_utils import configure_runtime_environment, validate_runtime
+from server import run_flower_simulation
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Reproduce the simulation section of Distribution-Level AirComp for Wireless FL"
+    )
+    parser.add_argument("--config", default="configs/smoke.yaml")
+    parser.add_argument(
+        "--experiment",
+        default="fig2",
+        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "all"],
+    )
+    parser.add_argument(
+        "--methods",
+        default=None,
+        help="Comma-separated subset: fedavg,fedprox,scaffold,proposed",
+    )
+    parser.add_argument("--replications", type=int, default=None)
+    parser.add_argument("--rounds", type=int, default=None)
+    parser.add_argument("--output", default=None)
+    parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--no-wireless", action="store_true")
+    parser.add_argument("--force-partitions", action="store_true")
+    parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    return parser.parse_args()
+
+
+def completed_runs(metrics_path: Path) -> Dict[str, int]:
+    if not metrics_path.exists():
+        return {}
+    maximum_round: dict[str, int] = {}
+    with metrics_path.open("r", encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            run_id = row.get("run_id", "")
+            try:
+                server_round = int(row.get("round", "0"))
+            except ValueError:
+                continue
+            maximum_round[run_id] = max(maximum_round.get(run_id, -1), server_round)
+    return maximum_round
+
+
+def main() -> None:
+    args = parse_args()
+    project_root = Path(__file__).resolve().parent
+    config_path = Path(args.config)
+    if not config_path.is_absolute():
+        config_path = project_root / config_path
+    config = SimulationConfig.from_yaml(config_path)
+
+    if args.replications is not None:
+        config.runtime.replications = args.replications
+    if args.rounds is not None:
+        config.training.num_rounds = args.rounds
+    if args.seed is not None:
+        config.runtime.seed = args.seed
+    if args.output is not None:
+        config.output.directory = args.output
+    if args.no_wireless:
+        config.wireless.enabled = False
+
+    # Apply CLI overrides before validating runtime/GPU consistency.
+    config.validate()
+    configure_runtime_environment(config)
+    gpu_status = validate_runtime(config)
+
+    data_root = Path(config.data.root)
+    if not data_root.is_absolute():
+        config.data.root = str((project_root / data_root).resolve())
+    output_root = Path(config.output.directory)
+    if not output_root.is_absolute():
+        config.output.directory = str((project_root / output_root).resolve())
+    Path(config.output.directory).mkdir(parents=True, exist_ok=True)
+
+    methods_override: Optional[List[str]] = None
+    if args.methods:
+        methods_override = [part.strip().lower() for part in args.methods.split(",") if part.strip()]
+
+    experiments = (
+        ["fig2", "fig3", "fig4", "fig5", "fig6"]
+        if args.experiment == "all"
+        else [args.experiment]
+    )
+    model_dimension = count_parameters(
+        build_model(config.model.name, config.model.num_classes)
+    )
+
+    ensure_mnist(config.data.root)
+    partition_dir = Path(config.output.directory) / "partitions"
+    metrics_path = Path(config.output.directory) / config.output.metrics_filename
+    finished = completed_runs(metrics_path) if args.resume else {}
+
+    planned: List[tuple[SimulationConfig, RunSpec, str]] = []
+    condition_counter = 0
+    for experiment in experiments:
+        for condition in experiment_conditions(experiment, config, methods_override):
+            condition_counter += 1
+            condition_cfg = config.copy()
+            condition_cfg.data.labels_per_client = condition.labels_per_client
+            condition_cfg.data.mean_samples_per_client = condition.mean_samples_per_client
+            condition_cfg.wireless.power_dbm = condition.power_dbm
+
+            for realization in range(condition_cfg.runtime.replications):
+                partition_seed = (
+                    condition_cfg.runtime.seed
+                    + 10_000 * condition_counter
+                    + realization
+                )
+                partition_path = prepare_partitions(
+                    condition_cfg.data,
+                    partition_seed,
+                    partition_dir,
+                    force=args.force_partitions,
+                )
+                for method in condition.methods:
+                    rounds = derive_rounds(condition_cfg, method, model_dimension)
+                    run_id = (
+                        f"{condition.experiment}_{condition.name}_{method}_"
+                        f"rep{realization:02d}_seed{partition_seed}"
+                    )
+                    run_spec = RunSpec(
+                        run_id=run_id,
+                        experiment=condition.experiment,
+                        condition=condition.name,
+                        method=method,
+                        realization=realization,
+                        seed=partition_seed,
+                        rounds=rounds,
+                    )
+                    planned.append((condition_cfg.copy(), run_spec, str(partition_path.resolve())))
+
+    print(f"Model dimension: {model_dimension:,}")
+    print(
+        "Runtime: "
+        f"client_device={config.runtime.client_device}, "
+        f"client_num_gpus={config.runtime.client_num_gpus}, "
+        f"server_device={config.runtime.server_device}, "
+        f"pin_memory={config.data.pin_memory}"
+    )
+    if config.runtime.client_device.lower().startswith("cuda"):
+        print(
+            "CUDA: "
+            f"torch={gpu_status.torch_version}, build={gpu_status.cuda_build}, "
+            f"available={gpu_status.available}, devices={gpu_status.device_count}, "
+            f"GPU={gpu_status.device_name}"
+        )
+    print(f"Planned Flower/Ray simulations: {len(planned)}")
+    for index, (_, run_spec, partition_path) in enumerate(planned, start=1):
+        status = "SKIP" if finished.get(run_spec.run_id, -1) >= run_spec.rounds else "RUN"
+        print(
+            f"[{index:03d}/{len(planned):03d}] {status} {run_spec.run_id} "
+            f"rounds={run_spec.rounds} partition={Path(partition_path).name}"
+        )
+
+    if args.dry_run:
+        return
+
+    for index, (run_cfg, run_spec, partition_path) in enumerate(planned, start=1):
+        if finished.get(run_spec.run_id, -1) >= run_spec.rounds:
+            continue
+        print("=" * 88)
+        print(f"Starting {index}/{len(planned)}: {run_spec.run_id}")
+        run_flower_simulation(run_cfg, run_spec, partition_path)
+        print(f"Finished: {run_spec.run_id}")
+
+    print("All requested simulations finished.")
+    print(f"Metrics: {metrics_path}")
+
+
+if __name__ == "__main__":
+    main()
