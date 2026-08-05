@@ -1,13 +1,31 @@
-# Validation
+# Validation status
 
-Version 1.2.0 validation performed in the packaging environment:
+Validation performed for version 1.3.0 in the packaging environment:
 
-- All Python modules compile successfully.
-- Eight unit tests pass, including AirComp, aggregation, model size, runtime
-  backend selection, and wireless distance normalization tests.
-- A numerical AirComp check confirms that normalized-distance channels avoid
-  the near-total update suppression produced by the legacy raw-metre channel.
+```text
+python -m compileall -q .
+```
 
-An end-to-end RTX 3060 run cannot be executed in this packaging environment.
-The user's prior v1.1 run established that CUDA 12.1, local client training,
-and ideal/no-wireless aggregation execute successfully on their machine.
+passed for all Python files.
+
+The dependency-light test set passed:
+
+```text
+12 passed
+```
+
+It covers:
+
+- the disclosed 62,346-parameter CNN size;
+- ideal AirComp weighted summation;
+- reference-distance channel scaling;
+- backend/device helpers;
+- physical precision/natural-mean phase scheduling;
+- Eq. (33)/(34) coordinate initialization and round trip;
+- exact ideal two-phase Gaussian conflation;
+- phase-aware CSV schemas.
+
+The packaging environment does not contain Pyro, Flower, or Ray and has no
+NVIDIA GPU, so a full end-to-end Pyro/Flower/CUDA run was not executed there.
+The user's previously validated Windows environment uses PyTorch 2.5.1+cu121,
+Pyro 1.9.1, Flower 1.32.1, Ray 2.55.1, and an RTX 3060 Laptop GPU.

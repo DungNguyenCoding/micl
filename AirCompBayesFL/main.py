@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Set
 
+from bayesian_protocol import physical_round_count
 from config import SimulationConfig
 from dataset import ensure_mnist, prepare_partitions
 from experiments import RunSpec, derive_rounds, experiment_conditions
@@ -187,9 +188,11 @@ def main() -> None:
     print(f"Planned simulations: {len(planned)}")
     for index, (_, run_spec, partition_path) in enumerate(planned, start=1):
         status = "SKIP" if finished.get(run_spec.run_id, -1) >= run_spec.rounds else "RUN"
+        physical_rounds = physical_round_count(run_spec.method, run_spec.rounds)
         print(
             f"[{index:03d}/{len(planned):03d}] {status} {run_spec.run_id} "
-            f"rounds={run_spec.rounds} partition={Path(partition_path).name}"
+            f"logical_rounds={run_spec.rounds} physical_fit_rounds={physical_rounds} "
+            f"partition={Path(partition_path).name}"
         )
 
     if args.dry_run:

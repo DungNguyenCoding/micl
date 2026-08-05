@@ -1,191 +1,174 @@
-# AirCompBayesFL
+# AirCompBayesFL 1.3.0
 
-An independent, modular implementation of the simulation system described in:
+A modular Pyro + Flower/Ray simulator for the paper:
 
-> **Distribution-Level AirComp for Wireless Federated Learning under Data Scarcity and Heterogeneity**  
-> Jun-Pyo Hong, Hyowoon Seo, and Kisong Lee, arXiv:2506.06090 (2025)
+> **Distribution-Level AirComp for Wireless Federated Learning under Data
+> Scarcity and Heterogeneity** — Jun-Pyo Hong, Hyowoon Seo, and Kisong Lee.
 
-The project includes MNIST scarce/non-IID partitions, the 62,346-parameter CNN, Pyro mean-field variational inference, posterior sufficient-statistic aggregation, Rayleigh fading, additive noise, symbol-power constraints, KKT-based AirComp power control, FedAvg, FedProx, SCAFFOLD, CSV logging, and separate plotting.
+This is an independent reproduction, not the authors' original code. The paper
+used Blitz; this project intentionally uses Pyro. Undisclosed implementation
+details, including numerical path-loss normalization, are explicit configurable
+assumptions.
 
-## Reproducibility scope
+## What changed in 1.3.0
 
-This is not the authors' original source code. The paper reports Blitz, while this project intentionally uses Pyro. Some implementation details needed for bit-identical curves are not disclosed. The goal is therefore to reproduce the method, simulation environment, ablations, metrics, and plot structure rather than guarantee identical random curves.
+The proposed method now follows Algorithm 1 with a real server boundary between
+its two phases:
 
-## Execution backends
+```text
+logical round t
+  precision clients: optimize rho_{t,k}
+  server: AirComp aggregate Delta-rho -> rho_{t+1}
+  server: broadcast rho_{t+1}
+  mean clients: optimize nu_{t,k} using rho_{t+1}
+  server: AirComp aggregate Delta-nu -> mu_{t+1}
+  evaluate q(mu_{t+1}, rho_{t+1})
+```
 
-The same client, server, AirComp, aggregation, and metrics code can run through two execution backends:
-
-- `ray`: Flower Simulation Runtime with Ray virtual clients. Use this on Linux or WSL2 for parallel client execution.
-- `local`: virtual clients execute sequentially in the launcher process. This is the stable CUDA path for native Windows 11.
-- `auto`: selects `local` for native Windows + CUDA and selects `ray` elsewhere.
-
-Native Windows Ray support is experimental. Version 1.1.0 no longer sends CUDA work into Ray workers by default on native Windows because that combination can pass the launcher CUDA check but fail during a worker's first `model.to("cuda")` call. The local backend still performs all local training on the GPU; only client concurrency changes.
+See `ALGORITHM1_TWO_PHASE.md` for the equations and Flower round mapping.
 
 ## Project layout
 
 ```text
 AirCompBayesFL/
-├── main.py              Experiment runner and backend dispatch
-├── config.py            Dataclass/YAML configuration
-├── dataset.py           MNIST download and scarce non-IID partitions
-├── models.py            Paper CNN
-├── serialization.py     Flat-vector parameter layout
-├── bayes_vi.py          Pyro SVI local Bayesian training
-├── deterministic.py     FedAvg/FedProx/SCAFFOLD local training
-├── client.py            Backend-neutral virtual client
-├── server.py            Flower/Ray backend + local CUDA backend
-├── runtime_utils.py     CUDA/backend preflight and device handling
-├── gpu_check.py         Standalone preflight checker
-├── wireless.py          Rayleigh fading and path loss
-├── aircomp.py           AirComp and KKT power control
-├── aggregation.py       Deterministic/posterior aggregation
-├── metrics.py           Accuracy, NLL, ECE, reliability bins
-├── logger.py            CSV and checkpoint output
-├── experiments.py       Figure 2–6 experiment matrices
-├── utils.py             Standalone plotting
+├── main.py                  experiment CLI
+├── config.py                dataclass/YAML configuration
+├── experiments.py           Figure 2–6 condition matrix
+├── dataset.py               MNIST scarce/non-IID partitions
+├── models.py                62,346-parameter paper CNN
+├── serialization.py         stable flat parameter vectors
+├── bayesian_protocol.py     rho/nu transforms and phase schedule
+├── bayes_vi.py              Pyro precision and natural-mean SVI phases
+├── deterministic.py         FedAvg/FedProx/SCAFFOLD local training
+├── client.py                phase-aware virtual client
+├── server.py                Flower/Ray + native-Windows local backends
+├── aggregation.py           model, rho, and nu aggregation
+├── wireless.py              Rayleigh fading and path loss
+├── aircomp.py               AirComp/KKT power control
+├── metrics.py               accuracy, NLL, ECE, reliability bins
+├── logger.py                metrics/client/reliability CSVs
+├── utils.py                 standalone paper-style plotting
 ├── configs/
-│   ├── smoke.yaml
-│   ├── paper.yaml
-│   ├── smoke_gpu.yaml
-│   └── paper_gpu.yaml
 └── tests/
 ```
 
-## Installation
+## Recommended Windows environment
 
-Python 3.11 or 3.12 is recommended.
+The tested working combination for the RTX 3060 Laptop GPU is:
 
-### Windows 11 PowerShell
+```text
+Python       3.12
+PyTorch      2.5.1+cu121
+Torchvision  0.20.1+cu121
+Pyro         1.9.1
+Flower       1.32.1
+Ray          2.55.1
+```
+
+Keep the existing virtual environment when replacing an older package. For a
+fresh environment, install CUDA PyTorch first:
 
 ```powershell
-cd C:\Users\Admin\Desktop\micl\AirCompBayesFL
 py -3.12 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+.\.venv\Scripts\python.exe -m pip install `
+  torch==2.5.1 torchvision==0.20.1 `
+  --index-url https://download.pytorch.org/whl/cu121
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-Install a CUDA-enabled PyTorch build before the remaining requirements when GPU support is needed. Verify it with:
+Verify a real CUDA allocation:
 
 ```powershell
-.\.venv\Scripts\python.exe -c "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None')"
+.\.venv\Scripts\python.exe -c "import torch; torch.cuda.init(); x=torch.ones((64,64),device='cuda'); y=x@x; torch.cuda.synchronize(); print(torch.__version__, torch.version.cuda, float(y[0,0]))"
 ```
 
-### Linux/WSL2
+## Backends
 
-```bash
-python3.12 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip setuptools wheel
-python -m pip install -r requirements.txt
-```
+- `runtime.backend: local`: clients execute sequentially in the launcher. This
+  is the stable native-Windows CUDA path.
+- `runtime.backend: ray`: Flower/Ray parallel virtual clients, recommended on
+  Linux or WSL2.
+- `runtime.backend: auto`: native Windows + CUDA selects `local`; otherwise
+  selects `ray`.
 
-## RTX 3060 Laptop GPU on native Windows
+For the proposed method, Ray executes two physical fit rounds per logical FL
+round. Phase-1 client state is persisted locally between actor calls.
 
-`configs/smoke_gpu.yaml` contains:
-
-```yaml
-runtime:
-  backend: auto
-  client_num_cpus: 1
-  client_num_gpus: 1.0
-  client_device: cuda
-  server_device: cpu
-  cleanup_cuda_after_fit: true
-  fail_on_client_failure: true
-```
-
-On native Windows, `auto` resolves to `local`; on WSL2/Linux it resolves to `ray`.
-
-Run the preflight:
-
-```powershell
-.\.venv\Scripts\python.exe gpu_check.py --config configs/smoke_gpu.yaml
-```
-
-Expected native-Windows output includes:
-
-```text
-Resolved backend: local
-CUDA available: True
-GPU: NVIDIA GeForce RTX 3060 Laptop GPU
-Client concurrency: sequential (stable native-Windows CUDA mode)
-```
-
-Remove results produced by the previous failed Ray/CUDA attempt because those rounds had zero successful client updates:
-
-```powershell
-Remove-Item -Recurse -Force .\results\gpu_smoke_windows -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force .\results\gpu_smoke_windows_v110 -ErrorAction SilentlyContinue
-```
-
-Run the corrected GPU smoke test:
+## Smoke test
 
 ```powershell
 .\.venv\Scripts\python.exe main.py `
   --config configs/smoke_gpu.yaml `
   --experiment fig2 `
-  --methods fedavg,proposed
+  --methods fedavg,proposed `
+  --rounds 2 `
+  --output results\v130_smoke
 ```
 
-The output should say `backend=local` and `Local backend: clients execute sequentially`. It should not start a Flower RayBackend for this native-Windows CUDA run.
+Expected proposed output includes a precision phase before every evaluated
+round:
 
-## Parallel GPU clients
-
-For parallel virtual-client GPU training, run the project in WSL2 or Linux and either keep `backend: auto` or set:
-
-```yaml
-runtime:
-  backend: ray
-  client_num_gpus: 1.0
-  client_device: cuda
-  server_device: cpu
+```text
+Logical round 1/2, phase=precision: ...
+Round 1/2: ...
 ```
 
-With one RTX 3060 Laptop GPU, start with `client_num_gpus: 1.0`. Fractional GPU scheduling can be tested later, but Ray fractions are scheduling resources and do not enforce a VRAM partition.
-
-## CPU smoke test
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/smoke.yaml `
-  --experiment fig2 `
-  --methods fedavg,proposed
-```
-
-## Paper-scale starting point
-
-The disclosed values from Tables I–II are represented in `configs/paper.yaml` and `configs/paper_gpu.yaml`, including 40 clients, Poisson mean 10, one label per client, 23 dBm, −74 dBm, 1,024 subchannels, path-loss exponent 4, learning rate 0.1, batch size 10, three local epochs, `lambda=1/50,000`, five MC samples, and ten realizations.
-
-Start with one realization and ten rounds:
+## 40-client pilot
 
 ```powershell
 .\.venv\Scripts\python.exe main.py `
   --config configs/paper_gpu.yaml `
   --experiment fig2 `
-  --methods proposed `
+  --methods fedavg,proposed `
+  --rounds 5 `
   --replications 1 `
-  --rounds 10
+  --path-loss-reference-m 1000 `
+  --output results\paper40_v130_pilot
 ```
 
-## Output
+The `--rounds` value is a **logical** round count. Proposed internally executes
+`2 * rounds` physical fit phases but still transmits `2d` values and records one
+metrics row per logical round.
 
-Each configured output directory contains:
+## Full Figure 2 starting command
+
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/paper_gpu.yaml `
+  --experiment fig2 `
+  --methods fedavg,fedprox,scaffold,proposed
+```
+
+With `num_rounds: null`, the logical round count is derived from 30 million
+channel uses: `d` per FedAvg/FedProx round and `2d` per Proposed/SCAFFOLD round.
+
+## Outputs
 
 ```text
 metrics.csv
-reliability.csv
 client_metrics.csv
+reliability.csv
 checkpoints/*.npz
 partitions/*.json
+client_state/*        temporary phase state; normally removed after phase 2
 ```
 
-Version 1.1.0 fails immediately when a client job fails. It no longer treats a round with zero client results as a completed training round.
+Important new fields include:
 
-## Plot generation
+```text
+logical_round, physical_round, phase
+phase1_train_loss, phase2_train_loss
+precision_aircomp_*, mean_aircomp_*
+posterior_precision_mean/min/max
+local_precision_mean/min/max, local_nu_l2, local_implied_mean_l2
+```
+
+## Plotting
 
 ```powershell
 .\.venv\Scripts\python.exe utils.py `
-  --input results\gpu_smoke_windows_v110 `
+  --input results\paper40_v130_pilot `
   --figure fig2
 ```
 
@@ -197,19 +180,11 @@ $env:PYTHONPATH = "."
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-## Important performance note
+## Reproduction assumptions
 
-The paper CNN and the very small per-client datasets can make GPU execution slower than expected because each client performs little work and CUDA setup/transfer overhead is significant. The native-Windows local backend is intended for correctness and stability. Use WSL2/Linux Ray mode for actual parallel virtual-client experiments.
-
-
-## Wireless distance normalization
-
-The channel law uses `(distance_m / path_loss_reference_m)^(-alpha)`. The
-configs default to `path_loss_reference_m: 1000.0` because the paper does not
-publish the numerical distance reference. See `WIRELESS_NORMALIZATION.md`.
-
-Run a channel-normalization sensitivity test without editing YAML:
-
-```powershell
-python main.py --config configs/smoke_gpu.yaml --experiment fig2 --methods fedavg --rounds 10 --path-loss-reference-m 1500 --output results/ref1500
-```
+- The channel uses `(distance_m/path_loss_reference_m)^(-alpha)`; the default
+  reference is 1000 m because the paper does not publish its numerical distance
+  normalization.
+- Precision positivity is enforced by optimizing log-precision inside Pyro.
+- Native Windows CUDA uses sequential clients. Parallel GPU clients should use
+  WSL2/Linux Ray mode.

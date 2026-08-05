@@ -1,4 +1,9 @@
-"""Flower/Ray and local execution backends for AirCompBayesFL."""
+"""Flower/Ray and native-Windows local backends for AirCompBayesFL.
+
+Version 1.3 maps every logical proposed-method round to two physical fit
+rounds.  Precision is aggregated and broadcast before any client starts the
+natural-mean phase, matching Algorithm 1 of the paper.
+"""
 
 from __future__ import annotations
 
@@ -21,11 +26,20 @@ from flwr.simulation import run_simulation
 
 from aggregation import (
     aggregate_deterministic,
-    aggregate_gaussian_natural_parameters,
+    aggregate_gaussian_natural_mean_phase,
+    aggregate_gaussian_precision_phase,
     aggregate_scaffold,
     normalized_weights,
 )
-from aircomp import AirCompStats
+from aircomp import AirCompStats, combine_stats
+from bayesian_protocol import (
+    MODEL_PHASE,
+    NATURAL_MEAN_PHASE,
+    PRECISION_PHASE,
+    PhaseContext,
+    phase_context,
+    physical_round_count,
+)
 from client import AirCompNumPyClient
 from config import SimulationConfig
 from dataset import load_test_loader
@@ -54,7 +68,7 @@ class ClientFitPayload:
 
 
 class AirCompStrategy(FedAvg):
-    """Full-participation strategy with wireless analog aggregation."""
+    """Full-participation strategy with phase-aware wireless aggregation."""
 
     def __init__(
         self,
@@ -66,7 +80,7 @@ class AirCompStrategy(FedAvg):
         self.config_obj = config
         self.run_spec = run_spec
         self.partition_path = partition_path
-        self.method = run_spec.method
+        self.method = run_spec.method.lower()
         self.model = build_model(config.model.name, config.model.num_classes)
         self.layout = ParameterLayout(self.model)
         self.dimension = self.layout.total_numel
@@ -94,7 +108,12 @@ class AirCompStrategy(FedAvg):
 
         self.current_arrays = [array.copy() for array in initial_arrays]
         self.last_train_loss = float("nan")
+        self.last_phase1_train_loss = 0.0
+        self.last_phase2_train_loss = 0.0
         self.last_aircomp_stats = AirCompStats.zero()
+        self.last_precision_aircomp_stats = AirCompStats.zero()
+        self.last_mean_aircomp_stats = AirCompStats.zero()
+        self.pending_precision_logical_round: int | None = None
         self.channel_uses_cumulative = 0
         self.ofdm_symbols_cumulative = 0
         self.started_at = time.perf_counter()
@@ -112,22 +131,39 @@ class AirCompStrategy(FedAvg):
             min_evaluate_clients=0,
             min_available_clients=config.data.num_clients,
             evaluate_fn=None,
-            on_fit_config_fn=lambda server_round: {"server_round": server_round},
+            on_fit_config_fn=self.fit_config_for_round,
             accept_failures=not config.runtime.fail_on_client_failure,
             initial_parameters=ndarrays_to_parameters(initial_arrays),
         )
+
+    @property
+    def physical_rounds(self) -> int:
+        return physical_round_count(self.method, self.run_spec.rounds)
+
+    def context_for_round(self, physical_round: int) -> PhaseContext:
+        return phase_context(self.method, int(physical_round))
+
+    def fit_config_for_round(self, physical_round: int) -> Dict[str, fl.common.Scalar]:
+        context = self.context_for_round(physical_round)
+        return {
+            "server_round": int(context.logical_round),
+            "logical_round": int(context.logical_round),
+            "physical_round": int(context.physical_round),
+            "phase": str(context.phase),
+        }
 
     def aggregate_fit(self, server_round, results, failures):  # type: ignore[override]
         """Flower callback; convert results then use the backend-neutral path."""
         if failures and self.config_obj.runtime.fail_on_client_failure:
             raise RuntimeError(
-                f"Round {server_round}: {len(failures)} client job(s) failed. "
-                "The run was aborted so invalid random-model metrics are not recorded. "
+                f"Physical round {server_round}: {len(failures)} client job(s) "
+                "failed. The run is aborted so invalid metrics are not recorded. "
                 f"First failure: {failures[0]!r}"
             )
         if not results:
             raise RuntimeError(
-                f"Round {server_round}: Flower returned zero successful client results."
+                f"Physical round {server_round}: Flower returned zero successful "
+                "client results."
             )
 
         payloads: List[ClientFitPayload] = []
@@ -142,29 +178,39 @@ class AirCompStrategy(FedAvg):
                     metrics=dict(fit_res.metrics or {}),
                 )
             )
-        return self.aggregate_payloads(server_round, payloads)
+        return self.aggregate_payloads(int(server_round), payloads)
 
     def aggregate_payloads(
         self,
-        server_round: int,
+        physical_round: int,
         payloads: Sequence[ClientFitPayload],
     ) -> tuple[Parameters, Dict[str, float]]:
-        """Aggregate successful client updates from any execution backend."""
+        """Aggregate one physical phase from either execution backend."""
+        context = self.context_for_round(physical_round)
         if not payloads:
-            raise RuntimeError(f"Round {server_round}: no client payloads to aggregate")
+            raise RuntimeError(
+                f"Physical round {physical_round}: no client payloads to aggregate"
+            )
         expected = int(self.config_obj.data.num_clients)
         if len(payloads) != expected and self.config_obj.runtime.fail_on_client_failure:
             raise RuntimeError(
-                f"Round {server_round}: expected {expected} client payloads, "
-                f"received {len(payloads)}."
+                f"Physical round {physical_round}: expected {expected} client "
+                f"payloads, received {len(payloads)}."
             )
 
+        # Flower/Ray result arrival order is not guaranteed. Stable client order
+        # is required so one channel row always belongs to the same client in
+        # both phases of a logical Bayesian round.
+        ordered = sorted(
+            payloads,
+            key=lambda payload: int(payload.metrics.get("client_id", -1)),
+        )
         local_arrays: List[List[np.ndarray]] = []
         examples: List[int] = []
         distances: List[float] = []
         losses: List[float] = []
 
-        for payload in payloads:
+        for payload in ordered:
             arrays = [np.asarray(value, dtype=np.float32) for value in payload.arrays]
             local_arrays.append(arrays)
             examples.append(int(payload.num_examples))
@@ -174,7 +220,10 @@ class AirCompStrategy(FedAvg):
             self.logger.clients.append(
                 {
                     "run_id": self.run_spec.run_id,
-                    "round": server_round,
+                    "round": int(context.logical_round),
+                    "logical_round": int(context.logical_round),
+                    "physical_round": int(context.physical_round),
+                    "phase": str(context.phase),
                     "client_id": int(metrics.get("client_id", -1)),
                     "num_examples": int(payload.num_examples),
                     "distance_m": float(metrics.get("distance_m", float("nan"))),
@@ -182,36 +231,48 @@ class AirCompStrategy(FedAvg):
                     "phase1_loss": float(metrics.get("phase1_loss", 0.0)),
                     "phase2_loss": float(metrics.get("phase2_loss", 0.0)),
                     "local_steps": int(metrics.get("local_steps", 0)),
+                    "local_precision_mean": float(
+                        metrics.get("local_precision_mean", float("nan"))
+                    ),
+                    "local_precision_min": float(
+                        metrics.get("local_precision_min", float("nan"))
+                    ),
+                    "local_precision_max": float(
+                        metrics.get("local_precision_max", float("nan"))
+                    ),
+                    "local_nu_l2": float(metrics.get("local_nu_l2", 0.0)),
+                    "local_implied_mean_l2": float(
+                        metrics.get("local_implied_mean_l2", 0.0)
+                    ),
                 }
             )
 
         weights = normalized_weights(examples)
-        valid_losses = np.asarray(losses, dtype=np.float64)
-        valid_mask = np.isfinite(valid_losses)
-        if np.any(valid_mask):
-            renormalized = weights[valid_mask]
-            renormalized = renormalized / renormalized.sum()
-            self.last_train_loss = float(np.dot(renormalized, valid_losses[valid_mask]))
-
-        rng = np.random.default_rng(self.run_spec.seed + 1_000_033 * int(server_round))
-        channels = sample_rayleigh_channels(
-            np.asarray(distances, dtype=np.float64),
-            self.config_obj.wireless.num_subchannels,
-            self.config_obj.wireless.path_loss_exponent,
-            rng,
-            self.config_obj.wireless.path_loss_reference_m,
-        )
+        weighted_loss = self._weighted_finite_mean(losses, weights)
+        channels = self._sample_channels(context.logical_round, distances)
+        phase_rng = self._phase_rng(context)
 
         if self.method in {"fedavg", "fedprox"}:
+            self._expect_array_count(local_arrays, 1, context)
             aggregation = aggregate_deterministic(
                 self.current_arrays[0],
                 [arrays[0] for arrays in local_arrays],
                 weights,
                 channels,
                 self.config_obj.wireless,
-                rng,
+                phase_rng,
             )
+            self.current_arrays = [aggregation.parameters[0].astype(np.float32)]
+            self.last_train_loss = weighted_loss
+            self.last_phase1_train_loss = 0.0
+            self.last_phase2_train_loss = weighted_loss
+            self.last_aircomp_stats = aggregation.aircomp_stats
+            self.last_precision_aircomp_stats = AirCompStats.zero()
+            self.last_mean_aircomp_stats = aggregation.aircomp_stats
+            phase_multiplier = 1
+
         elif self.method == "scaffold":
+            self._expect_array_count(local_arrays, 2, context)
             aggregation = aggregate_scaffold(
                 self.current_arrays[0],
                 self.current_arrays[1],
@@ -220,43 +281,106 @@ class AirCompStrategy(FedAvg):
                 weights,
                 channels,
                 self.config_obj.wireless,
-                rng,
+                phase_rng,
             )
-        elif self.method == "proposed":
-            aggregation = aggregate_gaussian_natural_parameters(
-                self.current_arrays[0],
-                self.current_arrays[1],
-                [arrays[0] for arrays in local_arrays],
-                [arrays[1] for arrays in local_arrays],
-                weights,
-                channels,
-                self.config_obj.wireless,
-                self.config_obj.model,
-                rng,
-            )
-        else:
-            raise ValueError(f"Unknown method: {self.method}")
+            self.current_arrays = [
+                array.astype(np.float32) for array in aggregation.parameters
+            ]
+            self.last_train_loss = weighted_loss
+            self.last_phase1_train_loss = 0.0
+            self.last_phase2_train_loss = weighted_loss
+            self.last_aircomp_stats = aggregation.aircomp_stats
+            self.last_precision_aircomp_stats = AirCompStats.zero()
+            self.last_mean_aircomp_stats = aggregation.aircomp_stats
+            phase_multiplier = 2
 
-        self.current_arrays = [
-            array.astype(np.float32) for array in aggregation.parameters
-        ]
-        self.last_aircomp_stats = aggregation.aircomp_stats
-        multiplier = payload_multiplier(self.method)
-        self.channel_uses_cumulative += multiplier * self.dimension
-        self.ofdm_symbols_cumulative += multiplier * math.ceil(
+        elif self.method == "proposed" and context.phase == PRECISION_PHASE:
+            self._expect_array_count(local_arrays, 1, context)
+            aggregation = aggregate_gaussian_precision_phase(
+                current_precision=self.current_arrays[1],
+                local_precisions=[arrays[0] for arrays in local_arrays],
+                weights=weights,
+                channels=channels,
+                wireless_cfg=self.config_obj.wireless,
+                model_cfg=self.config_obj.model,
+                rng=phase_rng,
+            )
+            # Critical Algorithm-1 boundary: keep mu_t unchanged and broadcast
+            # the newly aggregated rho_{t+1} before phase 2 starts.
+            self.current_arrays = [
+                self.current_arrays[0].astype(np.float32, copy=True),
+                aggregation.parameters[0].astype(np.float32),
+            ]
+            self.last_phase1_train_loss = weighted_loss
+            self.last_phase2_train_loss = 0.0
+            self.last_train_loss = weighted_loss
+            self.last_precision_aircomp_stats = aggregation.aircomp_stats
+            self.last_mean_aircomp_stats = AirCompStats.zero()
+            self.last_aircomp_stats = aggregation.aircomp_stats
+            self.pending_precision_logical_round = context.logical_round
+            phase_multiplier = 1
+
+        elif self.method == "proposed" and context.phase == NATURAL_MEAN_PHASE:
+            if self.pending_precision_logical_round != context.logical_round:
+                raise RuntimeError(
+                    "Natural-mean phase started without the matching server-side "
+                    f"precision aggregation. pending={self.pending_precision_logical_round}, "
+                    f"requested={context.logical_round}."
+                )
+            self._expect_array_count(local_arrays, 1, context)
+            aggregation = aggregate_gaussian_natural_mean_phase(
+                current_mean=self.current_arrays[0],
+                local_nus=[arrays[0] for arrays in local_arrays],
+                weights=weights,
+                channels=channels,
+                wireless_cfg=self.config_obj.wireless,
+                rng=phase_rng,
+            )
+            self.current_arrays = [
+                aggregation.parameters[0].astype(np.float32),
+                self.current_arrays[1].astype(np.float32, copy=True),
+            ]
+            self.last_phase2_train_loss = weighted_loss
+            self.last_train_loss = (
+                self.last_phase1_train_loss + self.last_phase2_train_loss
+            )
+            self.last_mean_aircomp_stats = aggregation.aircomp_stats
+            self.last_aircomp_stats = combine_stats(
+                self.last_precision_aircomp_stats,
+                self.last_mean_aircomp_stats,
+            )
+            self.pending_precision_logical_round = None
+            phase_multiplier = 1
+
+        else:
+            raise ValueError(
+                f"Unknown method/phase combination: {self.method}/{context.phase}"
+            )
+
+        self.channel_uses_cumulative += phase_multiplier * self.dimension
+        self.ofdm_symbols_cumulative += phase_multiplier * math.ceil(
             self.dimension / self.config_obj.wireless.num_subchannels
         )
         parameters = ndarrays_to_parameters(self.current_arrays)
         return parameters, {
-            "train_loss": self.last_train_loss,
-            "aircomp_nmse": self.last_aircomp_stats.nmse,
+            "train_loss": float(self.last_train_loss),
+            "phase_train_loss": float(weighted_loss),
+            "aircomp_nmse": float(aggregation.aircomp_stats.nmse),
+            "logical_round": float(context.logical_round),
+            "physical_round": float(context.physical_round),
         }
 
     def evaluate(self, server_round: int, parameters: Parameters):  # type: ignore[override]
+        """Evaluate at round zero and after complete logical rounds only."""
+        context = self.context_for_round(int(server_round))
+        if self.method == "proposed" and context.phase == PRECISION_PHASE:
+            return None
+
+        logical_round = int(context.logical_round)
         if (
-            server_round != 0
-            and server_round != self.run_spec.rounds
-            and server_round % self.config_obj.training.evaluate_every != 0
+            logical_round != 0
+            and logical_round != self.run_spec.rounds
+            and logical_round % self.config_obj.training.evaluate_every != 0
         ):
             return None
 
@@ -267,6 +391,8 @@ class AirCompStrategy(FedAvg):
         self.current_arrays = arrays
 
         if self.method == "proposed":
+            if len(arrays) != 2:
+                raise ValueError("Proposed evaluation expects [global_mean, precision]")
             evaluation = evaluate_bayesian(
                 self.model,
                 self.layout,
@@ -275,9 +401,11 @@ class AirCompStrategy(FedAvg):
                 self.test_loader,
                 self.server_device,
                 mc_samples=self.config_obj.training.mc_eval_samples,
-                seed=self.run_spec.seed + server_round,
+                seed=self.run_spec.seed + logical_round,
             )
-            posterior_variance = float(np.mean(1.0 / np.maximum(arrays[1], 1.0e-12)))
+            posterior_variance = float(
+                np.mean(1.0 / np.maximum(arrays[1], 1.0e-12))
+            )
         else:
             evaluation = evaluate_deterministic(
                 self.model,
@@ -289,10 +417,10 @@ class AirCompStrategy(FedAvg):
             posterior_variance = 0.0
 
         multiplier = payload_multiplier(self.method)
-        channel_uses_round = 0 if server_round == 0 else multiplier * self.dimension
+        channel_uses_round = 0 if logical_round == 0 else multiplier * self.dimension
         ofdm_symbols_round = (
             0
-            if server_round == 0
+            if logical_round == 0
             else multiplier
             * math.ceil(self.dimension / self.config_obj.wireless.num_subchannels)
         )
@@ -303,7 +431,10 @@ class AirCompStrategy(FedAvg):
             "method": self.method,
             "realization": self.run_spec.realization,
             "seed": self.run_spec.seed,
-            "round": server_round,
+            "round": logical_round,
+            "logical_round": logical_round,
+            "physical_round": int(context.physical_round),
+            "phase": MODEL_PHASE if logical_round == 0 else context.phase,
             "num_clients": self.config_obj.data.num_clients,
             "labels_per_client": self.config_obj.data.labels_per_client,
             "mean_samples_per_client": self.config_obj.data.mean_samples_per_client,
@@ -321,28 +452,33 @@ class AirCompStrategy(FedAvg):
                 "nll": evaluation.nll,
                 "ece": evaluation.ece,
                 "train_loss": self.last_train_loss,
+                "phase1_train_loss": self.last_phase1_train_loss,
+                "phase2_train_loss": self.last_phase2_train_loss,
                 "posterior_variance": posterior_variance,
+                "posterior_precision_mean": (
+                    float(np.mean(arrays[1])) if self.method == "proposed" else 0.0
+                ),
+                "posterior_precision_min": (
+                    float(np.min(arrays[1])) if self.method == "proposed" else 0.0
+                ),
+                "posterior_precision_max": (
+                    float(np.max(arrays[1])) if self.method == "proposed" else 0.0
+                ),
                 "channel_uses_round": channel_uses_round,
                 "channel_uses_cumulative": self.channel_uses_cumulative,
                 "ofdm_symbols_round": ofdm_symbols_round,
                 "ofdm_symbols_cumulative": self.ofdm_symbols_cumulative,
-                "aircomp_nmse": self.last_aircomp_stats.nmse,
-                "aircomp_distortion_nmse": self.last_aircomp_stats.distortion_nmse,
-                "aircomp_clipped_fraction": self.last_aircomp_stats.clipped_fraction,
-                "aircomp_average_symbol_power_watts": self.last_aircomp_stats.average_symbol_power_watts,
-                "aircomp_maximum_symbol_power_watts": self.last_aircomp_stats.maximum_symbol_power_watts,
-                "aircomp_noise_l2": self.last_aircomp_stats.noise_l2,
-                "aircomp_ideal_l2": self.last_aircomp_stats.ideal_l2,
-                "aircomp_received_l2": self.last_aircomp_stats.received_l2,
-                "aircomp_delta_bar": self.last_aircomp_stats.delta_bar,
-                "aircomp_retained_magnitude_ratio": self.last_aircomp_stats.retained_magnitude_ratio,
-                "aircomp_distorted_to_ideal_norm_ratio": self.last_aircomp_stats.distorted_to_ideal_norm_ratio,
+                **self._stats_row("aircomp", self.last_aircomp_stats),
+                **self._stats_row(
+                    "precision_aircomp", self.last_precision_aircomp_stats
+                ),
+                **self._stats_row("mean_aircomp", self.last_mean_aircomp_stats),
                 "wall_time_sec": time.perf_counter() - self.started_at,
             }
         )
         self.logger.log_reliability(base, evaluation)
 
-        if server_round == self.run_spec.rounds and self.config_obj.output.save_checkpoints:
+        if logical_round == self.run_spec.rounds and self.config_obj.output.save_checkpoints:
             self.logger.save_checkpoint(
                 self.run_spec.run_id,
                 arrays,
@@ -351,11 +487,81 @@ class AirCompStrategy(FedAvg):
                     "accuracy": evaluation.accuracy,
                     "ece": evaluation.ece,
                     "nll": evaluation.nll,
+                    "protocol": "server_separated_rho_nu",
                 },
             )
         return float(evaluation.nll), {
             "accuracy": float(evaluation.accuracy),
             "ece": float(evaluation.ece),
+        }
+
+    def _sample_channels(
+        self,
+        logical_round: int,
+        distances: Sequence[float],
+    ) -> np.ndarray:
+        # Both proposed phases reuse the same block-fading realization. Noise
+        # remains independent because phase-specific RNGs are used below.
+        channel_rng = np.random.default_rng(
+            self.run_spec.seed + 1_000_033 * int(logical_round)
+        )
+        return sample_rayleigh_channels(
+            np.asarray(distances, dtype=np.float64),
+            self.config_obj.wireless.num_subchannels,
+            self.config_obj.wireless.path_loss_exponent,
+            channel_rng,
+            self.config_obj.wireless.path_loss_reference_m,
+        )
+
+    def _phase_rng(self, context: PhaseContext) -> np.random.Generator:
+        phase_offset = {
+            MODEL_PHASE: 11,
+            PRECISION_PHASE: 101,
+            NATURAL_MEAN_PHASE: 211,
+        }[context.phase]
+        return np.random.default_rng(
+            self.run_spec.seed
+            + 9_000_091 * int(context.logical_round)
+            + phase_offset
+        )
+
+    @staticmethod
+    def _weighted_finite_mean(losses: Sequence[float], weights: np.ndarray) -> float:
+        values = np.asarray(losses, dtype=np.float64)
+        mask = np.isfinite(values)
+        if not np.any(mask):
+            return float("nan")
+        selected = np.asarray(weights, dtype=np.float64)[mask]
+        selected = selected / max(float(selected.sum()), 1.0e-30)
+        return float(np.dot(selected, values[mask]))
+
+    @staticmethod
+    def _expect_array_count(
+        local_arrays: Sequence[Sequence[np.ndarray]],
+        count: int,
+        context: PhaseContext,
+    ) -> None:
+        invalid = [index for index, arrays in enumerate(local_arrays) if len(arrays) != count]
+        if invalid:
+            raise ValueError(
+                f"Phase {context.phase} expected {count} returned array(s) per "
+                f"client; invalid payload indices: {invalid[:5]}"
+            )
+
+    @staticmethod
+    def _stats_row(prefix: str, stats: AirCompStats) -> Dict[str, float]:
+        return {
+            f"{prefix}_nmse": stats.nmse,
+            f"{prefix}_distortion_nmse": stats.distortion_nmse,
+            f"{prefix}_clipped_fraction": stats.clipped_fraction,
+            f"{prefix}_average_symbol_power_watts": stats.average_symbol_power_watts,
+            f"{prefix}_maximum_symbol_power_watts": stats.maximum_symbol_power_watts,
+            f"{prefix}_noise_l2": stats.noise_l2,
+            f"{prefix}_ideal_l2": stats.ideal_l2,
+            f"{prefix}_received_l2": stats.received_l2,
+            f"{prefix}_delta_bar": stats.delta_bar,
+            f"{prefix}_retained_magnitude_ratio": stats.retained_magnitude_ratio,
+            f"{prefix}_distorted_to_ideal_norm_ratio": stats.distorted_to_ideal_norm_ratio,
         }
 
 
@@ -372,13 +578,7 @@ def run_local_simulation(
     run_spec: RunSpec,
     partition_path: str,
 ) -> None:
-    """Run virtual clients sequentially in the launcher process.
-
-    This is the stable native-Windows GPU path. It uses the same client code,
-    server aggregation, AirComp channel model, metrics, and checkpoints as the
-    Flower/Ray path, but avoids Ray's experimental CUDA worker handling on
-    native Windows. Linux/WSL2 users can keep using the Ray backend.
-    """
+    """Run physical client phases sequentially in the launcher process."""
     state_dir = _prepare_state_dir(config, run_spec)
     strategy = AirCompStrategy(
         config=config,
@@ -392,6 +592,12 @@ def run_local_simulation(
         f"client_device={local_client_device}, "
         f"server_device={config.runtime.server_device}."
     )
+    if run_spec.method == "proposed":
+        print(
+            "Proposed protocol: each logical round executes precision -> "
+            "server aggregation/broadcast -> natural_mean."
+        )
+
     initial = strategy.evaluate(0, ndarrays_to_parameters(strategy.current_arrays))
     if initial is not None:
         initial_loss, initial_metrics = initial
@@ -401,10 +607,12 @@ def run_local_simulation(
             f"ece={initial_metrics['ece']:.4f}"
         )
 
-    for server_round in range(1, int(run_spec.rounds) + 1):
-        round_started = time.perf_counter()
+    for physical_round in range(1, strategy.physical_rounds + 1):
+        phase_started = time.perf_counter()
+        context = strategy.context_for_round(physical_round)
         global_arrays = [value.copy() for value in strategy.current_arrays]
         payloads: List[ClientFitPayload] = []
+        fit_config = strategy.fit_config_for_round(physical_round)
 
         for client_id in range(int(config.data.num_clients)):
             client: AirCompNumPyClient | None = None
@@ -419,7 +627,7 @@ def run_local_simulation(
                 )
                 arrays, num_examples, metrics = client.fit(
                     [value.copy() for value in global_arrays],
-                    {"server_round": server_round},
+                    fit_config,
                 )
                 payloads.append(
                     ClientFitPayload(
@@ -430,8 +638,8 @@ def run_local_simulation(
                 )
             except Exception as exc:
                 raise RuntimeError(
-                    f"Local backend client {client_id} failed in round "
-                    f"{server_round}: {exc}"
+                    f"Local backend client {client_id} failed in logical round "
+                    f"{context.logical_round}, phase {context.phase}: {exc}"
                 ) from exc
             finally:
                 if client is not None:
@@ -441,20 +649,23 @@ def run_local_simulation(
                     release_cuda_memory(local_client_device)
 
         parameters, aggregate_metrics = strategy.aggregate_payloads(
-            server_round, payloads
+            physical_round, payloads
         )
-        evaluation = strategy.evaluate(server_round, parameters)
-        elapsed = time.perf_counter() - round_started
+        evaluation = strategy.evaluate(physical_round, parameters)
+        elapsed = time.perf_counter() - phase_started
+
         if evaluation is None:
             print(
-                f"Round {server_round}/{run_spec.rounds}: "
-                f"train_loss={aggregate_metrics['train_loss']:.6f}, "
+                f"Logical round {context.logical_round}/{run_spec.rounds}, "
+                f"phase={context.phase}: "
+                f"phase_loss={aggregate_metrics['phase_train_loss']:.6f}, "
+                f"aircomp_nmse={aggregate_metrics['aircomp_nmse']:.6f}, "
                 f"elapsed={elapsed:.2f}s"
             )
         else:
             loss, metrics = evaluation
             print(
-                f"Round {server_round}/{run_spec.rounds}: "
+                f"Round {context.logical_round}/{run_spec.rounds}: "
                 f"loss={loss:.6f}, accuracy={metrics['accuracy']:.4f}, "
                 f"ece={metrics['ece']:.4f}, "
                 f"train_loss={aggregate_metrics['train_loss']:.6f}, "
@@ -467,7 +678,7 @@ def run_flower_simulation(
     run_spec: RunSpec,
     partition_path: str,
 ) -> None:
-    """Execute one method/condition/realization with Flower's Ray backend."""
+    """Execute one simulation with Flower's Ray backend."""
     state_dir = _prepare_state_dir(config, run_spec)
 
     def client_fn(context: Context):
@@ -490,7 +701,7 @@ def run_flower_simulation(
         )
         return ServerAppComponents(
             strategy=strategy,
-            config=ServerConfig(num_rounds=run_spec.rounds),
+            config=ServerConfig(num_rounds=strategy.physical_rounds),
         )
 
     client_app = ClientApp(client_fn=client_fn)
@@ -536,5 +747,5 @@ def run_configured_simulation(
         run_local_simulation(config, run_spec, partition_path)
     elif backend == "ray":
         run_flower_simulation(config, run_spec, partition_path)
-    else:  # defensive; resolve_backend validates values
+    else:
         raise ValueError(f"Unsupported runtime backend: {backend}")

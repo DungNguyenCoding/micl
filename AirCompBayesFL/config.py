@@ -40,7 +40,9 @@ class TrainingConfig:
     kl_weight: float = 1.0 / 50_000.0
     mc_train_samples: int = 5
     mc_eval_samples: int = 5
-    bayesian_local_mode: str = "two_phase"  # joint | two_phase
+    # v1.3 implements Algorithm 1 exactly as two server-controlled phases.
+    # "two_phase" and "paper_two_phase" are accepted aliases.
+    bayesian_local_mode: str = "paper_two_phase"
     fedprox_mu: float = 0.01
     gradient_clip_norm: float = 10.0
     num_rounds: Optional[int] = 3
@@ -85,6 +87,8 @@ class RuntimeConfig:
     server_device: str = "cpu"
     verbose_flower: bool = False
     cleanup_cuda_after_fit: bool = True
+    # Delete client-specific rho state after the corresponding nu phase.
+    cleanup_phase_state: bool = True
 
     # Do not silently continue when all or some client jobs fail. This prevents
     # random/untrained models from being written to metrics.csv as valid runs.
@@ -138,8 +142,12 @@ class SimulationConfig:
             raise ValueError("training.learning_rate must be positive")
         if self.training.mc_train_samples <= 0 or self.training.mc_eval_samples <= 0:
             raise ValueError("Monte Carlo sample counts must be positive")
-        if self.training.bayesian_local_mode not in {"joint", "two_phase"}:
-            raise ValueError("training.bayesian_local_mode must be 'joint' or 'two_phase'")
+        if self.training.bayesian_local_mode not in {"two_phase", "paper_two_phase"}:
+            raise ValueError(
+                "training.bayesian_local_mode must be 'two_phase' or "
+                "'paper_two_phase'; joint client-side optimization was removed "
+                "because it does not implement Algorithm 1"
+            )
         if self.wireless.num_subchannels <= 0:
             raise ValueError("wireless.num_subchannels must be positive")
         if self.wireless.path_loss_reference_m <= 0:

@@ -10,6 +10,25 @@ from typing import Dict, Iterable, Mapping
 import numpy as np
 
 
+_BASE_AIRCOMP_FIELDS = [
+    "nmse",
+    "distortion_nmse",
+    "clipped_fraction",
+    "average_symbol_power_watts",
+    "maximum_symbol_power_watts",
+    "noise_l2",
+    "ideal_l2",
+    "received_l2",
+    "delta_bar",
+    "retained_magnitude_ratio",
+    "distorted_to_ideal_norm_ratio",
+]
+
+
+def _prefixed(prefix: str) -> list[str]:
+    return [f"{prefix}_{name}" for name in _BASE_AIRCOMP_FIELDS]
+
+
 METRIC_FIELDS = [
     "run_id",
     "experiment",
@@ -18,6 +37,9 @@ METRIC_FIELDS = [
     "realization",
     "seed",
     "round",
+    "logical_round",
+    "physical_round",
+    "phase",
     "num_clients",
     "labels_per_client",
     "mean_samples_per_client",
@@ -31,22 +53,19 @@ METRIC_FIELDS = [
     "nll",
     "ece",
     "train_loss",
+    "phase1_train_loss",
+    "phase2_train_loss",
     "posterior_variance",
+    "posterior_precision_mean",
+    "posterior_precision_min",
+    "posterior_precision_max",
     "channel_uses_round",
     "channel_uses_cumulative",
     "ofdm_symbols_round",
     "ofdm_symbols_cumulative",
-    "aircomp_nmse",
-    "aircomp_distortion_nmse",
-    "aircomp_clipped_fraction",
-    "aircomp_average_symbol_power_watts",
-    "aircomp_maximum_symbol_power_watts",
-    "aircomp_noise_l2",
-    "aircomp_ideal_l2",
-    "aircomp_received_l2",
-    "aircomp_delta_bar",
-    "aircomp_retained_magnitude_ratio",
-    "aircomp_distorted_to_ideal_norm_ratio",
+    *_prefixed("aircomp"),
+    *_prefixed("precision_aircomp"),
+    *_prefixed("mean_aircomp"),
     "wall_time_sec",
 ]
 
@@ -57,6 +76,9 @@ RELIABILITY_FIELDS = [
     "method",
     "realization",
     "round",
+    "logical_round",
+    "physical_round",
+    "phase",
     "bin",
     "lower",
     "upper",
@@ -68,6 +90,9 @@ RELIABILITY_FIELDS = [
 CLIENT_FIELDS = [
     "run_id",
     "round",
+    "logical_round",
+    "physical_round",
+    "phase",
     "client_id",
     "num_examples",
     "distance_m",
@@ -75,6 +100,11 @@ CLIENT_FIELDS = [
     "phase1_loss",
     "phase2_loss",
     "local_steps",
+    "local_precision_mean",
+    "local_precision_min",
+    "local_precision_max",
+    "local_nu_l2",
+    "local_implied_mean_l2",
 ]
 
 

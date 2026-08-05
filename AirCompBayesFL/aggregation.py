@@ -1,9 +1,9 @@
-"""Server-side deterministic and Gaussian posterior aggregation."""
+"""Server-side deterministic and two-phase Bayesian aggregation."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Sequence, Tuple
+from typing import Sequence
 
 import numpy as np
 
@@ -38,7 +38,10 @@ def aggregate_deterministic(
     rng: np.random.Generator,
 ) -> AggregationResult:
     current = np.asarray(current_model, dtype=np.float32).reshape(-1)
-    updates = [np.asarray(local, dtype=np.float32).reshape(-1) - current for local in local_models]
+    updates = [
+        np.asarray(local, dtype=np.float32).reshape(-1) - current
+        for local in local_models
+    ]
     aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
     return AggregationResult([current + aggregate], stats)
 
@@ -75,10 +78,8 @@ def aggregate_scaffold(
     )
 
 
-def aggregate_gaussian_natural_parameters(
-    current_mean: np.ndarray,
+def aggregate_gaussian_precision_phase(
     current_precision: np.ndarray,
-    local_means: Sequence[np.ndarray],
     local_precisions: Sequence[np.ndarray],
     weights: np.ndarray,
     channels: np.ndarray,
@@ -86,41 +87,54 @@ def aggregate_gaussian_natural_parameters(
     model_cfg: ModelConfig,
     rng: np.random.Generator,
 ) -> AggregationResult:
-    """AirComp aggregation of Gaussian precision and precision-weighted mean.
-
-    This implements the two sufficient statistics in Eqs. (18)-(19):
-    precision and precision*mean. Updates relative to the previous global
-    natural parameters are transmitted to match the iterative FL formulation.
-    """
-    current_mean = np.asarray(current_mean, dtype=np.float32).reshape(-1)
-    current_precision = np.asarray(current_precision, dtype=np.float32).reshape(-1)
-
-    precision_updates = [
-        np.asarray(local_precision, dtype=np.float32).reshape(-1) - current_precision
-        for local_precision in local_precisions
+    """Aggregate Delta-rho and update rho_{t+1}; Eqs. (26)-(32)."""
+    current = np.asarray(current_precision, dtype=np.float32).reshape(-1)
+    updates = [
+        np.asarray(local, dtype=np.float32).reshape(-1) - current
+        for local in local_precisions
     ]
-    aggregate_precision_update, precision_stats = aggregate_updates(
-        precision_updates, weights, channels, wireless_cfg, rng
-    )
+    aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
     next_precision = np.clip(
-        current_precision + aggregate_precision_update,
-        model_cfg.min_precision,
-        model_cfg.max_precision,
+        current + aggregate,
+        float(model_cfg.min_precision),
+        float(model_cfg.max_precision),
     ).astype(np.float32)
+    if not np.all(np.isfinite(next_precision)):
+        raise FloatingPointError("Aggregated global precision contains non-finite values")
+    return AggregationResult([next_precision], stats)
 
-    current_natural_mean = current_precision * current_mean
-    natural_mean_updates = [
-        np.asarray(local_precision, dtype=np.float32).reshape(-1)
-        * np.asarray(local_mean, dtype=np.float32).reshape(-1)
-        - current_natural_mean
-        for local_mean, local_precision in zip(local_means, local_precisions)
+
+def aggregate_gaussian_natural_mean_phase(
+    current_mean: np.ndarray,
+    local_nus: Sequence[np.ndarray],
+    weights: np.ndarray,
+    channels: np.ndarray,
+    wireless_cfg: WirelessConfig,
+    rng: np.random.Generator,
+) -> AggregationResult:
+    """Aggregate Delta-nu and update mu_{t+1}; Eqs. (36)-(37).
+
+    The global phase-2 coordinate at the beginning of a logical round is
+    ``nu_t = mu_t``. Therefore every client transmits ``nu_{t,k} - mu_t`` and
+    the ideal update produces ``mu_{t+1} = sum_k pi_k nu_{t,k}``.
+    """
+    current = np.asarray(current_mean, dtype=np.float32).reshape(-1)
+    updates = [
+        np.asarray(local_nu, dtype=np.float32).reshape(-1) - current
+        for local_nu in local_nus
     ]
-    aggregate_natural_mean_update, mean_stats = aggregate_updates(
-        natural_mean_updates, weights, channels, wireless_cfg, rng
-    )
-    next_natural_mean = current_natural_mean + aggregate_natural_mean_update
-    next_mean = (next_natural_mean / next_precision).astype(np.float32)
-    return AggregationResult(
-        [next_mean, next_precision],
-        combine_stats(precision_stats, mean_stats),
+    aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
+    next_mean = (current + aggregate).astype(np.float32)
+    if not np.all(np.isfinite(next_mean)):
+        raise FloatingPointError("Aggregated global mean contains non-finite values")
+    return AggregationResult([next_mean], stats)
+
+
+def aggregate_gaussian_natural_parameters(*args, **kwargs):
+    """Removed v1.2 API retained only to produce a clear migration error."""
+    del args, kwargs
+    raise RuntimeError(
+        "aggregate_gaussian_natural_parameters was removed in v1.3.0. "
+        "Use aggregate_gaussian_precision_phase, broadcast rho_{t+1}, then "
+        "aggregate_gaussian_natural_mean_phase."
     )

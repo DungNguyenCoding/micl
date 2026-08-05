@@ -26,7 +26,7 @@ training:
   kl_weight: 0.00002
   mc_train_samples: 5
   mc_eval_samples: 5
-  bayesian_local_mode: two_phase
+  bayesian_local_mode: paper_two_phase
   fedprox_mu: 0.01
   gradient_clip_norm: 10.0
   num_rounds: null

@@ -28,7 +28,7 @@ training:
   kl_weight: 0.00002
   mc_train_samples: 5
   mc_eval_samples: 5
-  bayesian_local_mode: two_phase
+  bayesian_local_mode: paper_two_phase
   fedprox_mu: 0.01
   gradient_clip_norm: 10.0
   num_rounds: null
@@ -63,10 +63,11 @@ runtime:
   server_device: cpu
   verbose_flower: false
   cleanup_cuda_after_fit: true
+  cleanup_phase_state: true
   fail_on_client_failure: true
 
 output:
-  directory: results/gpu_paper_windows_v110
+  directory: results/gpu_paper_windows_v130
   metrics_filename: metrics.csv
   reliability_filename: reliability.csv
   clients_filename: client_metrics.csv
