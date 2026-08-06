@@ -22,6 +22,8 @@ def test_phase_and_aircomp_diagnostics_are_logged():
         "physical_round",
         "phase",
         "local_precision_mean",
+        "local_precision_delta_l2",
+        "local_precision_gradient_l2_mean",
         "local_nu_l2",
         "local_implied_mean_l2",
     }

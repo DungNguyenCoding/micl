@@ -95,7 +95,7 @@ class AirCompStrategy(FedAvg):
             initial_precision = np.full(
                 self.dimension,
                 1.0 / (config.model.initial_prior_std**2),
-                dtype=np.float32,
+                dtype=np.float64,
             )
             initial_arrays = [initial_model, initial_precision]
         elif self.method == "scaffold":
@@ -170,10 +170,9 @@ class AirCompStrategy(FedAvg):
         for _client_proxy, fit_res in results:
             payloads.append(
                 ClientFitPayload(
-                    arrays=[
-                        np.asarray(value, dtype=np.float32)
-                        for value in parameters_to_ndarrays(fit_res.parameters)
-                    ],
+                    arrays=[np.asarray(value) for value in parameters_to_ndarrays(
+                        fit_res.parameters
+                    )],
                     num_examples=int(fit_res.num_examples),
                     metrics=dict(fit_res.metrics or {}),
                 )
@@ -211,7 +210,12 @@ class AirCompStrategy(FedAvg):
         losses: List[float] = []
 
         for payload in ordered:
-            arrays = [np.asarray(value, dtype=np.float32) for value in payload.arrays]
+            payload_dtype = (
+                np.float64
+                if self.method == "proposed" and context.phase == PRECISION_PHASE
+                else np.float32
+            )
+            arrays = [np.asarray(value, dtype=payload_dtype) for value in payload.arrays]
             local_arrays.append(arrays)
             examples.append(int(payload.num_examples))
             metrics = payload.metrics
@@ -239,6 +243,29 @@ class AirCompStrategy(FedAvg):
                     ),
                     "local_precision_max": float(
                         metrics.get("local_precision_max", float("nan"))
+                    ),
+                    "local_precision_delta_l2": float(
+                        metrics.get("local_precision_delta_l2", float("nan"))
+                    ),
+                    "local_precision_delta_max_abs": float(
+                        metrics.get(
+                            "local_precision_delta_max_abs", float("nan")
+                        )
+                    ),
+                    "local_precision_changed_fraction": float(
+                        metrics.get(
+                            "local_precision_changed_fraction", float("nan")
+                        )
+                    ),
+                    "local_precision_gradient_l2_mean": float(
+                        metrics.get(
+                            "local_precision_gradient_l2_mean", float("nan")
+                        )
+                    ),
+                    "local_precision_gradient_max_abs": float(
+                        metrics.get(
+                            "local_precision_gradient_max_abs", float("nan")
+                        )
                     ),
                     "local_nu_l2": float(metrics.get("local_nu_l2", 0.0)),
                     "local_implied_mean_l2": float(
@@ -311,11 +338,11 @@ class AirCompStrategy(FedAvg):
             # round-start global posterior q_{theta_t}.  The temporary third
             # array is removed after the natural-mean aggregation.
             round_start_precision = self.current_arrays[1].astype(
-                np.float32, copy=True
+                np.float64, copy=True
             )
             self.current_arrays = [
                 self.current_arrays[0].astype(np.float32, copy=True),
-                aggregation.parameters[0].astype(np.float32),
+                aggregation.parameters[0].astype(np.float64),
                 round_start_precision,
             ]
             self.last_phase1_train_loss = weighted_loss
@@ -351,7 +378,7 @@ class AirCompStrategy(FedAvg):
                 )
             self.current_arrays = [
                 aggregation.parameters[0].astype(np.float32),
-                self.current_arrays[1].astype(np.float32, copy=True),
+                self.current_arrays[1].astype(np.float64, copy=True),
             ]
             self.last_phase2_train_loss = weighted_loss
             self.last_train_loss = (
@@ -644,7 +671,7 @@ def run_local_simulation(
                 )
                 payloads.append(
                     ClientFitPayload(
-                        arrays=[np.asarray(value, dtype=np.float32) for value in arrays],
+                        arrays=[np.asarray(value) for value in arrays],
                         num_examples=int(num_examples),
                         metrics=dict(metrics),
                     )

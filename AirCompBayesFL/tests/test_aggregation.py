@@ -74,3 +74,25 @@ def test_phase2_initial_nus_average_back_to_old_global_mean():
     ]
     weighted = sum(weight * nu for weight, nu in zip(weights, initialized))
     np.testing.assert_allclose(weighted, mean, rtol=1e-6, atol=1e-6)
+
+
+def test_precision_phase_preserves_updates_below_float32_ulp():
+    current = np.full(8, 400.0, dtype=np.float64)
+    # 1e-6 is far below one float32 ULP at 400 (~3.05e-5).
+    local = [current + 1.0e-6, current - 2.0e-6]
+    weights = np.asarray([0.25, 0.75], dtype=np.float64)
+    channels = np.ones((2, 8), dtype=np.complex128)
+    wireless = WirelessConfig(enabled=False, num_subchannels=8)
+
+    result = aggregate_gaussian_precision_phase(
+        current_precision=current,
+        local_precisions=local,
+        weights=weights,
+        channels=channels,
+        wireless_cfg=wireless,
+        model_cfg=ModelConfig(),
+        rng=np.random.default_rng(9),
+    )
+    expected = current + weights[0] * 1.0e-6 - weights[1] * 2.0e-6
+    assert result.parameters[0].dtype == np.float64
+    np.testing.assert_allclose(result.parameters[0], expected, rtol=0.0, atol=1e-12)

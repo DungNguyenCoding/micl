@@ -88,17 +88,26 @@ def aggregate_gaussian_precision_phase(
     rng: np.random.Generator,
 ) -> AggregationResult:
     """Aggregate Delta-rho and update rho_{t+1}; Eqs. (26)-(32)."""
-    current = np.asarray(current_precision, dtype=np.float32).reshape(-1)
+    # Precision uses a float64 master representation.  The direct rho update in
+    # Eq. (25) can be smaller than one float32 ULP when rho is large.
+    current = np.asarray(current_precision, dtype=np.float64).reshape(-1)
     updates = [
-        np.asarray(local, dtype=np.float32).reshape(-1) - current
+        np.asarray(local, dtype=np.float64).reshape(-1) - current
         for local in local_precisions
     ]
-    aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
+    aggregate, stats = aggregate_updates(
+        updates,
+        weights,
+        channels,
+        wireless_cfg,
+        rng,
+        output_dtype=np.float64,
+    )
     next_precision = np.clip(
         current + aggregate,
         float(model_cfg.min_precision),
         float(model_cfg.max_precision),
-    ).astype(np.float32)
+    ).astype(np.float64)
     if not np.all(np.isfinite(next_precision)):
         raise FloatingPointError("Aggregated global precision contains non-finite values")
     return AggregationResult([next_precision], stats)

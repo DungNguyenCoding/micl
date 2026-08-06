@@ -1,4 +1,6 @@
-# AirCompBayesFL 1.3.1
+# AirCompBayesFL
+
+**Version 1.3.2:** float64 master precision for the paper's direct-rho update; CNN computation remains float32. 1.3.1
 
 A modular Pyro + Flower/Ray simulator for the paper:
 

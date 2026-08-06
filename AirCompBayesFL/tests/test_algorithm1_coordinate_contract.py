@@ -7,7 +7,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_precision_is_optimized_in_rho_coordinate():
     source = (ROOT / "bayes_vi.py").read_text(encoding="utf-8")
     assert "__log_precision" not in source
-    assert "rho = torch.nn.Parameter(prior_precision.detach().clone())" in source
+    assert "rho = torch.nn.Parameter(initial_rho.clone())" in source
+    assert "dtype=torch.float64" in source
     assert "elbo.differentiable_loss" in source
 
 

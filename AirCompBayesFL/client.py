@@ -63,7 +63,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
             precision = np.full(
                 self.dimension,
                 1.0 / (self.config.model.initial_prior_std**2),
-                dtype=np.float32,
+                dtype=np.float64,
             )
             return [model_vector, precision]
         if self.method == "scaffold":
@@ -210,7 +210,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 f"received {len(parameters)} array(s)"
             )
         global_mean = np.asarray(parameters[0], dtype=np.float32)
-        global_precision = np.asarray(parameters[1], dtype=np.float32)
+        global_precision = np.asarray(parameters[1], dtype=np.float64)
         trainer = BayesianVITrainer(
             self.model,
             self.layout,
@@ -242,6 +242,19 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                     "local_precision_mean": float(np.mean(result.precision)),
                     "local_precision_min": float(np.min(result.precision)),
                     "local_precision_max": float(np.max(result.precision)),
+                    "local_precision_delta_l2": float(result.precision_delta_l2),
+                    "local_precision_delta_max_abs": float(
+                        result.precision_delta_max_abs
+                    ),
+                    "local_precision_changed_fraction": float(
+                        result.precision_changed_fraction
+                    ),
+                    "local_precision_gradient_l2_mean": float(
+                        result.applied_gradient_l2_mean
+                    ),
+                    "local_precision_gradient_max_abs": float(
+                        result.applied_gradient_max_abs
+                    ),
                     "local_nu_l2": 0.0,
                     "local_implied_mean_l2": 0.0,
                 }
@@ -251,7 +264,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
 
         if phase == NATURAL_MEAN_PHASE:
             local_precision = self._load_proposed_precision(logical_round)
-            prior_global_precision = np.asarray(parameters[2], dtype=np.float32)
+            prior_global_precision = np.asarray(parameters[2], dtype=np.float64)
             result = trainer.train_natural_mean_phase(
                 global_mean=global_mean,
                 prior_global_precision=prior_global_precision,
@@ -338,13 +351,13 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         value = np.load(path)
         if value.shape != (self.dimension,):
             raise ValueError(f"Invalid SCAFFOLD state in {path}: {value.shape}")
-        return value.astype(np.float32)
+        return value.astype(np.float64)
 
     def _save_scaffold_control(self, value: np.ndarray) -> None:
         self._atomic_save(self.scaffold_state_path, value)
 
     def _save_proposed_precision(self, logical_round: int, value: np.ndarray) -> None:
-        value = np.asarray(value, dtype=np.float32).reshape(-1)
+        value = np.asarray(value, dtype=np.float64).reshape(-1)
         if value.shape != (self.dimension,):
             raise ValueError(
                 f"Local precision has shape {value.shape}; expected {(self.dimension,)}"
@@ -368,7 +381,9 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         self.proposed_precision_state_path(logical_round).unlink(missing_ok=True)
 
     def _atomic_save(self, path: Path, value: np.ndarray) -> None:
-        value = np.asarray(value, dtype=np.float32)
+        # Preserve the incoming dtype.  Proposed precision state is float64;
+        # SCAFFOLD control state remains float32.
+        value = np.asarray(value)
         fd, tmp_name = tempfile.mkstemp(
             prefix=path.name,
             suffix=".tmp.npy",

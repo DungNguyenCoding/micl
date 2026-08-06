@@ -1,3 +1,15 @@
+# Changelog
+
+## 1.3.2
+
+- Fixed the numerically frozen precision coordinate observed at rho=400.
+- Keeps rho as a float64 master variable during Pyro VI, client state, server
+  aggregation, and AirComp reconstruction.
+- Casts sampled Bayesian weights to float32 only for the CNN forward pass.
+- Preserves sub-float32-ULP precision updates in both ideal and wireless modes.
+- Adds per-client precision delta and applied-gradient diagnostics.
+- Adds a regression test for 1e-6 precision updates at rho=400.
+
 ## 1.3.1
 
 - Optimizes the Bayesian precision coordinate `rho` directly with Pyro's

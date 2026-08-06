@@ -103,6 +103,11 @@ CLIENT_FIELDS = [
     "local_precision_mean",
     "local_precision_min",
     "local_precision_max",
+    "local_precision_delta_l2",
+    "local_precision_delta_max_abs",
+    "local_precision_changed_fraction",
+    "local_precision_gradient_l2_mean",
+    "local_precision_gradient_max_abs",
     "local_nu_l2",
     "local_implied_mean_l2",
 ]

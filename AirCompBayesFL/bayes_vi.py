@@ -37,6 +37,11 @@ class PrecisionPhaseResult:
     precision: np.ndarray
     average_loss: float
     local_steps: int
+    precision_delta_l2: float
+    precision_delta_max_abs: float
+    precision_changed_fraction: float
+    applied_gradient_l2_mean: float
+    applied_gradient_max_abs: float
 
 
 @dataclass
@@ -92,12 +97,17 @@ class BayesianVITrainer:
         not ``log(rho)``, so one optimizer step is the software equivalent of
         ``rho <- rho - eta * grad_rho L_k`` followed by a positivity projection.
         """
+        # Keep the variational distribution and the rho master coordinate in
+        # float64.  At rho=400, one float32 ULP is about 3e-5, while the direct
+        # Eq. (25) update can be much smaller.  A float32 rho therefore appears
+        # exactly frozen even when the ELBO gradient is non-zero.  Samples are
+        # cast to the model dtype immediately before the CNN forward pass.
         mean = torch.as_tensor(
-            global_mean, dtype=torch.float32, device=self.device
+            global_mean, dtype=torch.float64, device=self.device
         ).reshape(-1)
         prior_precision = _safe_precision(
             torch.as_tensor(
-                global_precision, dtype=torch.float32, device=self.device
+                global_precision, dtype=torch.float64, device=self.device
             ).reshape(-1),
             self.model_cfg,
         )
@@ -108,7 +118,8 @@ class BayesianVITrainer:
         mean_named = self.layout.vector_to_named(mean)
         prior_precision_named = self.layout.vector_to_named(prior_precision)
 
-        rho = torch.nn.Parameter(prior_precision.detach().clone())
+        initial_rho = prior_precision.detach().clone()
+        rho = torch.nn.Parameter(initial_rho.clone())
 
         def model_fn(
             x: torch.Tensor,
@@ -119,13 +130,14 @@ class BayesianVITrainer:
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    sampled[spec.name] = pyro.sample(
+                    sampled_weight = pyro.sample(
                         site,
                         dist.Normal(
                             mean_named[spec.name],
                             torch.rsqrt(prior_precision_named[spec.name]),
                         ).to_event(len(spec.shape)),
                     )
+                    sampled[spec.name] = sampled_weight.to(dtype=torch.float32)
             logits = functional_call(self.model, sampled, (x,))
             with poutine.scale(scale=float(likelihood_scale)):
                 with pyro.plate("data", x.shape[0]):
@@ -158,7 +170,12 @@ class BayesianVITrainer:
                     max=float(self.model_cfg.max_precision),
                 )
 
-        average_loss, local_steps = self._run_coordinate_sgd(
+        (
+            average_loss,
+            local_steps,
+            applied_gradient_l2_mean,
+            applied_gradient_max_abs,
+        ) = self._run_coordinate_sgd(
             model_fn=model_fn,
             guide_fn=guide_fn,
             loader=loader,
@@ -166,10 +183,20 @@ class BayesianVITrainer:
             after_step=project_precision,
         )
         precision = _safe_precision(rho.detach(), self.model_cfg)
+        delta = precision - initial_rho
         result = PrecisionPhaseResult(
-            precision=precision.cpu().numpy().astype(np.float32),
+            # Keep rho in float64 across client state, server aggregation, and
+            # AirComp.  Casting here was the second source of the frozen-rho bug.
+            precision=precision.cpu().numpy().astype(np.float64),
             average_loss=float(average_loss),
             local_steps=int(local_steps),
+            precision_delta_l2=float(torch.linalg.vector_norm(delta).cpu()),
+            precision_delta_max_abs=float(torch.max(torch.abs(delta)).cpu()),
+            precision_changed_fraction=float(
+                torch.count_nonzero(delta).cpu() / max(1, delta.numel())
+            ),
+            applied_gradient_l2_mean=float(applied_gradient_l2_mean),
+            applied_gradient_max_abs=float(applied_gradient_max_abs),
         )
         pyro.clear_param_store()
         return result
@@ -197,24 +224,27 @@ class BayesianVITrainer:
         function receives both ``prior_global_precision`` and
         ``next_global_precision``.
         """
+        # Distribution parameters use float64 so the phase-1 precision update
+        # is not rounded away before phase 2.  The actual CNN forward still uses
+        # float32 sampled weights.
         mean = torch.as_tensor(
-            global_mean, dtype=torch.float32, device=self.device
+            global_mean, dtype=torch.float64, device=self.device
         ).reshape(-1)
         prior_rho = _safe_precision(
             torch.as_tensor(
-                prior_global_precision, dtype=torch.float32, device=self.device
+                prior_global_precision, dtype=torch.float64, device=self.device
             ).reshape(-1),
             self.model_cfg,
         )
         next_rho = _safe_precision(
             torch.as_tensor(
-                next_global_precision, dtype=torch.float32, device=self.device
+                next_global_precision, dtype=torch.float64, device=self.device
             ).reshape(-1),
             self.model_cfg,
         )
         local_rho = _safe_precision(
             torch.as_tensor(
-                local_precision, dtype=torch.float32, device=self.device
+                local_precision, dtype=torch.float64, device=self.device
             ).reshape(-1),
             self.model_cfg,
         )
@@ -229,7 +259,7 @@ class BayesianVITrainer:
         next_rho_named = self.layout.vector_to_named(next_rho)
         local_rho_named = self.layout.vector_to_named(local_rho)
 
-        nu_init = local_rho / next_rho * mean
+        nu_init = (local_rho / next_rho * mean).to(dtype=torch.float32)
         nu = torch.nn.Parameter(nu_init.detach().clone())
 
         def model_fn(
@@ -243,13 +273,14 @@ class BayesianVITrainer:
             with poutine.scale(scale=float(self.train_cfg.kl_weight)):
                 for spec in self.layout.specs:
                     site = self.layout.site_name(spec.name)
-                    sampled[spec.name] = pyro.sample(
+                    sampled_weight = pyro.sample(
                         site,
                         dist.Normal(
                             mean_named[spec.name],
                             torch.rsqrt(prior_rho_named[spec.name]),
                         ).to_event(len(spec.shape)),
                     )
+                    sampled[spec.name] = sampled_weight.to(dtype=torch.float32)
             logits = functional_call(self.model, sampled, (x,))
             with poutine.scale(scale=float(likelihood_scale)):
                 with pyro.plate("data", x.shape[0]):
@@ -278,7 +309,12 @@ class BayesianVITrainer:
                         ).to_event(len(spec.shape)),
                     )
 
-        average_loss, local_steps = self._run_coordinate_sgd(
+        (
+            average_loss,
+            local_steps,
+            _nu_gradient_l2_mean,
+            _nu_gradient_max_abs,
+        ) = self._run_coordinate_sgd(
             model_fn=model_fn,
             guide_fn=guide_fn,
             loader=loader,
@@ -305,8 +341,13 @@ class BayesianVITrainer:
         loader: DataLoader,
         parameters: Sequence[torch.nn.Parameter],
         after_step,
-    ) -> Tuple[float, int]:
-        """Minimize Pyro's differentiable negative ELBO in paper coordinates."""
+    ) -> Tuple[float, int, float, float]:
+        """Minimize Pyro's differentiable negative ELBO in paper coordinates.
+
+        The final two return values summarize the *applied* (post-clipping)
+        gradients.  They make a numerically frozen rho immediately visible in
+        client_metrics.csv instead of requiring inference from accuracy curves.
+        """
         optimizer = torch.optim.SGD(
             parameters,
             lr=float(self.train_cfg.learning_rate),
@@ -319,6 +360,8 @@ class BayesianVITrainer:
         dataset_size = max(1, int(len(loader.dataset)))
         total_normalized_loss = 0.0
         local_steps = 0
+        applied_gradient_l2_sum = 0.0
+        applied_gradient_max_abs = 0.0
         non_blocking = bool(self.device.type == "cuda" and loader.pin_memory)
 
         for _ in range(int(self.train_cfg.local_epochs)):
@@ -348,6 +391,23 @@ class BayesianVITrainer:
                 clip_norm = float(self.train_cfg.gradient_clip_norm)
                 if clip_norm > 0.0:
                     torch.nn.utils.clip_grad_norm_(parameters, max_norm=clip_norm)
+
+                gradient_sq = 0.0
+                gradient_max = 0.0
+                for parameter in parameters:
+                    if parameter.grad is None:
+                        continue
+                    grad = parameter.grad.detach()
+                    gradient_sq += float(torch.sum(grad.double() ** 2).cpu())
+                    gradient_max = max(
+                        gradient_max,
+                        float(torch.max(torch.abs(grad)).cpu()),
+                    )
+                applied_gradient_l2_sum += gradient_sq ** 0.5
+                applied_gradient_max_abs = max(
+                    applied_gradient_max_abs, gradient_max
+                )
+
                 optimizer.step()
                 if after_step is not None:
                     after_step()
@@ -355,7 +415,12 @@ class BayesianVITrainer:
                 total_normalized_loss += float(loss.detach().cpu()) / dataset_size
                 local_steps += 1
 
-        return total_normalized_loss / max(1, local_steps), local_steps
+        return (
+            total_normalized_loss / max(1, local_steps),
+            local_steps,
+            applied_gradient_l2_sum / max(1, local_steps),
+            applied_gradient_max_abs,
+        )
 
     def _seed(self, seed: int) -> None:
         pyro.clear_param_store()

@@ -73,6 +73,8 @@ def aggregate_updates(
     channels: np.ndarray,
     wireless_cfg: WirelessConfig,
     rng: np.random.Generator,
+    *,
+    output_dtype: np.dtype | type = np.float32,
 ) -> Tuple[np.ndarray, AirCompStats]:
     """Aggregate real update vectors using the paper's optimized AirComp rule.
 
@@ -103,8 +105,9 @@ def aggregate_updates(
         np.stack([weight * vector for weight, vector in zip(weights, vectors)]),
         axis=0,
     )
+    output_dtype = np.dtype(output_dtype)
     if not wireless_cfg.enabled:
-        return ideal.astype(np.float32), AirCompStats.zero()
+        return ideal.astype(output_dtype), AirCompStats.zero()
 
     num_subchannels = int(wireless_cfg.num_subchannels)
     if channels.shape != (len(vectors), num_subchannels):
@@ -120,7 +123,7 @@ def aggregate_updates(
         )
     )
     if delta_bar <= 1.0e-30:
-        return np.zeros(dimension, dtype=np.float32), AirCompStats.zero()
+        return np.zeros(dimension, dtype=output_dtype), AirCompStats.zero()
 
     gamma = db_to_linear(wireless_cfg.gamma_db)
     power_budget = dbm_to_watts(wireless_cfg.power_dbm)
@@ -203,7 +206,7 @@ def aggregate_updates(
             / max(np.linalg.norm(ideal), 1.0e-30)
         ),
     )
-    return received.astype(np.float32), stats
+    return received.astype(output_dtype), stats
 
 
 def combine_stats(*stats_items: AirCompStats) -> AirCompStats:
