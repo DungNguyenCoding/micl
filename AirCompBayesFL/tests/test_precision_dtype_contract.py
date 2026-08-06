@@ -13,3 +13,4 @@ def test_precision_path_uses_float64_master_and_transport():
     assert "output_dtype=np.float64" in aggregation
     assert "dtype=np.float64" in client
     assert "aggregation.parameters[0].astype(np.float64)" in server
+    assert "normalize_server_state_dtypes" in server

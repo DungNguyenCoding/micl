@@ -54,7 +54,11 @@ from runtime_utils import (
     resolve_device,
     should_pin_memory,
 )
-from serialization import ParameterLayout, initial_model_vector
+from serialization import (
+    ParameterLayout,
+    initial_model_vector,
+    normalize_server_state_dtypes,
+)
 from wireless import sample_rayleigh_channels
 
 
@@ -424,11 +428,13 @@ class AirCompStrategy(FedAvg):
         ):
             return None
 
-        arrays = [
-            np.asarray(value, dtype=np.float32)
-            for value in parameters_to_ndarrays(parameters)
-        ]
-        self.current_arrays = arrays
+        # Do not blanket-cast decoded Flower parameters to float32.  The
+        # proposed method keeps rho in float64; downcasting here used to erase
+        # the sub-float32-ULP precision update after every logical round.
+        arrays = normalize_server_state_dtypes(
+            self.method, parameters_to_ndarrays(parameters)
+        )
+        self.current_arrays = [value.copy() for value in arrays]
 
         if self.method == "proposed":
             if len(arrays) != 2:
@@ -485,6 +491,23 @@ class AirCompStrategy(FedAvg):
             "path_loss_reference_m": self.config_obj.wireless.path_loss_reference_m,
             "gamma_db": self.config_obj.wireless.gamma_db,
         }
+        if self.method == "proposed":
+            initial_precision_value = 1.0 / (
+                self.config_obj.model.initial_prior_std**2
+            )
+            precision_offset = arrays[1] - initial_precision_value
+            posterior_precision_std = float(np.std(arrays[1], dtype=np.float64))
+            posterior_precision_offset_l2 = float(
+                np.linalg.vector_norm(precision_offset.astype(np.float64))
+            )
+            posterior_precision_offset_max_abs = float(
+                np.max(np.abs(precision_offset))
+            )
+        else:
+            posterior_precision_std = 0.0
+            posterior_precision_offset_l2 = 0.0
+            posterior_precision_offset_max_abs = 0.0
+
         self.logger.metrics.append(
             {
                 **base,
@@ -503,6 +526,11 @@ class AirCompStrategy(FedAvg):
                 ),
                 "posterior_precision_max": (
                     float(np.max(arrays[1])) if self.method == "proposed" else 0.0
+                ),
+                "posterior_precision_std": posterior_precision_std,
+                "posterior_precision_offset_l2": posterior_precision_offset_l2,
+                "posterior_precision_offset_max_abs": (
+                    posterior_precision_offset_max_abs
                 ),
                 "channel_uses_round": channel_uses_round,
                 "channel_uses_cumulative": self.channel_uses_cumulative,

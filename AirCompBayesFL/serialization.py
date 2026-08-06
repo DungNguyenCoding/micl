@@ -86,6 +86,30 @@ class ParameterLayout:
         return result
 
 
+
+def normalize_server_state_dtypes(
+    method: str, arrays: Sequence[np.ndarray]
+) -> List[np.ndarray]:
+    """Normalize server state arrays without destroying Bayesian precision.
+
+    Flower preserves ndarray dtypes in ``Parameters``.  The server must also
+    preserve them when decoding parameters after evaluation.  In particular,
+    the proposed method stores ``mu`` in float32 and ``rho`` in float64 because
+    direct rho updates around rho=400 can be smaller than one float32 ULP.
+    """
+    method = str(method).lower()
+    values = [np.asarray(value) for value in arrays]
+    if method == "proposed":
+        if len(values) != 2:
+            raise ValueError(
+                "Proposed server state expects [global_mean, global_precision]"
+            )
+        return [
+            np.asarray(values[0], dtype=np.float32),
+            np.asarray(values[1], dtype=np.float64),
+        ]
+    return [np.asarray(value, dtype=np.float32) for value in values]
+
 def initial_model_vector(model: nn.Module, seed: int) -> np.ndarray:
     """Deterministically initialize and serialize a model."""
     with torch.random.fork_rng(devices=[]):

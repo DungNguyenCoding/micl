@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.3
+
+- Fixed the final float64 precision-state leak in server evaluation.
+- Flower-decoded proposed state now remains `[float32 mean, float64 precision]`.
+- Prevents evaluation from quantizing rho to float32 and feeding the rounded
+  value into the next logical round.
+- Adds posterior precision spread and offset diagnostics to `metrics.csv`.
+- Adds a regression test for server-state dtype normalization at rho=400.
+
 ## 1.3.2
 
 - Fixed the numerically frozen precision coordinate observed at rho=400.
