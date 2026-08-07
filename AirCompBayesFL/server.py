@@ -45,7 +45,7 @@ from config import SimulationConfig
 from dataset import load_test_loader
 from experiments import RunSpec, payload_multiplier
 from logger import RunLogger
-from metrics import evaluate_bayesian, evaluate_deterministic
+from metrics import evaluate_bayesian, evaluate_bayesian_mean, evaluate_deterministic
 from models import build_model
 from runtime_utils import (
     configure_runtime_environment,
@@ -117,6 +117,10 @@ class AirCompStrategy(FedAvg):
         self.last_aircomp_stats = AirCompStats.zero()
         self.last_precision_aircomp_stats = AirCompStats.zero()
         self.last_mean_aircomp_stats = AirCompStats.zero()
+        self.last_global_mean_update_l2 = 0.0
+        self.last_global_mean_update_max_abs = 0.0
+        self.last_global_precision_update_l2 = 0.0
+        self.last_global_precision_update_max_abs = 0.0
         self.pending_precision_logical_round: int | None = None
         self.channel_uses_cumulative = 0
         self.ofdm_symbols_cumulative = 0
@@ -285,6 +289,7 @@ class AirCompStrategy(FedAvg):
 
         if self.method in {"fedavg", "fedprox"}:
             self._expect_array_count(local_arrays, 1, context)
+            previous_model = self.current_arrays[0].astype(np.float64, copy=True)
             aggregation = aggregate_deterministic(
                 self.current_arrays[0],
                 [arrays[0] for arrays in local_arrays],
@@ -294,6 +299,11 @@ class AirCompStrategy(FedAvg):
                 phase_rng,
             )
             self.current_arrays = [aggregation.parameters[0].astype(np.float32)]
+            model_delta = self.current_arrays[0].astype(np.float64) - previous_model
+            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
+            self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
+            self.last_global_precision_update_l2 = 0.0
+            self.last_global_precision_update_max_abs = 0.0
             self.last_train_loss = weighted_loss
             self.last_phase1_train_loss = 0.0
             self.last_phase2_train_loss = weighted_loss
@@ -304,6 +314,7 @@ class AirCompStrategy(FedAvg):
 
         elif self.method == "scaffold":
             self._expect_array_count(local_arrays, 2, context)
+            previous_model = self.current_arrays[0].astype(np.float64, copy=True)
             aggregation = aggregate_scaffold(
                 self.current_arrays[0],
                 self.current_arrays[1],
@@ -317,6 +328,11 @@ class AirCompStrategy(FedAvg):
             self.current_arrays = [
                 array.astype(np.float32) for array in aggregation.parameters
             ]
+            model_delta = self.current_arrays[0].astype(np.float64) - previous_model
+            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
+            self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
+            self.last_global_precision_update_l2 = 0.0
+            self.last_global_precision_update_max_abs = 0.0
             self.last_train_loss = weighted_loss
             self.last_phase1_train_loss = 0.0
             self.last_phase2_train_loss = weighted_loss
@@ -327,6 +343,7 @@ class AirCompStrategy(FedAvg):
 
         elif self.method == "proposed" and context.phase == PRECISION_PHASE:
             self._expect_array_count(local_arrays, 1, context)
+            previous_precision = self.current_arrays[1].astype(np.float64, copy=True)
             aggregation = aggregate_gaussian_precision_phase(
                 current_precision=self.current_arrays[1],
                 local_precisions=[arrays[0] for arrays in local_arrays],
@@ -349,6 +366,15 @@ class AirCompStrategy(FedAvg):
                 aggregation.parameters[0].astype(np.float64),
                 round_start_precision,
             ]
+            precision_delta = self.current_arrays[1] - previous_precision
+            self.last_global_precision_update_l2 = float(
+                np.linalg.vector_norm(precision_delta)
+            )
+            self.last_global_precision_update_max_abs = float(
+                np.max(np.abs(precision_delta))
+            )
+            # Keep the previous logical round's mean-update diagnostic until
+            # phase 2 completes; it is overwritten below before evaluation.
             self.last_phase1_train_loss = weighted_loss
             self.last_phase2_train_loss = 0.0
             self.last_train_loss = weighted_loss
@@ -366,6 +392,7 @@ class AirCompStrategy(FedAvg):
                     f"requested={context.logical_round}."
                 )
             self._expect_array_count(local_arrays, 1, context)
+            previous_mean = self.current_arrays[0].astype(np.float64, copy=True)
             aggregation = aggregate_gaussian_natural_mean_phase(
                 current_mean=self.current_arrays[0],
                 local_nus=[arrays[0] for arrays in local_arrays],
@@ -384,6 +411,9 @@ class AirCompStrategy(FedAvg):
                 aggregation.parameters[0].astype(np.float32),
                 self.current_arrays[1].astype(np.float64, copy=True),
             ]
+            mean_delta = self.current_arrays[0].astype(np.float64) - previous_mean
+            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(mean_delta))
+            self.last_global_mean_update_max_abs = float(np.max(np.abs(mean_delta)))
             self.last_phase2_train_loss = weighted_loss
             self.last_train_loss = (
                 self.last_phase1_train_loss + self.last_phase2_train_loss
@@ -449,6 +479,13 @@ class AirCompStrategy(FedAvg):
                 mc_samples=self.config_obj.training.mc_eval_samples,
                 seed=self.run_spec.seed + logical_round,
             )
+            posterior_mean_evaluation = evaluate_bayesian_mean(
+                self.model,
+                self.layout,
+                arrays[0],
+                self.test_loader,
+                self.server_device,
+            )
             posterior_variance = float(
                 np.mean(1.0 / np.maximum(arrays[1], 1.0e-12))
             )
@@ -460,6 +497,7 @@ class AirCompStrategy(FedAvg):
                 self.test_loader,
                 self.server_device,
             )
+            posterior_mean_evaluation = evaluation
             posterior_variance = 0.0
 
         multiplier = payload_multiplier(self.method)
@@ -490,6 +528,7 @@ class AirCompStrategy(FedAvg):
             "path_loss_exponent": self.config_obj.wireless.path_loss_exponent,
             "path_loss_reference_m": self.config_obj.wireless.path_loss_reference_m,
             "gamma_db": self.config_obj.wireless.gamma_db,
+            "power_control_mode": self.config_obj.wireless.power_control_mode,
         }
         if self.method == "proposed":
             initial_precision_value = 1.0 / (
@@ -514,6 +553,27 @@ class AirCompStrategy(FedAvg):
                 "accuracy": evaluation.accuracy,
                 "nll": evaluation.nll,
                 "ece": evaluation.ece,
+                "posterior_predictive_accuracy": (
+                    evaluation.accuracy if self.method == "proposed" else 0.0
+                ),
+                "posterior_predictive_nll": (
+                    evaluation.nll if self.method == "proposed" else 0.0
+                ),
+                "posterior_predictive_ece": (
+                    evaluation.ece if self.method == "proposed" else 0.0
+                ),
+                "posterior_mean_accuracy": (
+                    posterior_mean_evaluation.accuracy
+                    if self.method == "proposed" else evaluation.accuracy
+                ),
+                "posterior_mean_nll": (
+                    posterior_mean_evaluation.nll
+                    if self.method == "proposed" else evaluation.nll
+                ),
+                "posterior_mean_ece": (
+                    posterior_mean_evaluation.ece
+                    if self.method == "proposed" else evaluation.ece
+                ),
                 "train_loss": self.last_train_loss,
                 "phase1_train_loss": self.last_phase1_train_loss,
                 "phase2_train_loss": self.last_phase2_train_loss,
@@ -531,6 +591,20 @@ class AirCompStrategy(FedAvg):
                 "posterior_precision_offset_l2": posterior_precision_offset_l2,
                 "posterior_precision_offset_max_abs": (
                     posterior_precision_offset_max_abs
+                ),
+                "global_mean_update_l2": (
+                    0.0 if logical_round == 0 else self.last_global_mean_update_l2
+                ),
+                "global_mean_update_max_abs": (
+                    0.0 if logical_round == 0 else self.last_global_mean_update_max_abs
+                ),
+                "global_precision_update_l2": (
+                    0.0 if logical_round == 0 else self.last_global_precision_update_l2
+                ),
+                "global_precision_update_max_abs": (
+                    0.0
+                    if logical_round == 0
+                    else self.last_global_precision_update_max_abs
                 ),
                 "channel_uses_round": channel_uses_round,
                 "channel_uses_cumulative": self.channel_uses_cumulative,

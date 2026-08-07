@@ -76,7 +76,7 @@ def aggregate_updates(
     *,
     output_dtype: np.dtype | type = np.float32,
 ) -> Tuple[np.ndarray, AirCompStats]:
-    """Aggregate real update vectors using the paper's optimized AirComp rule.
+    """Aggregate real update vectors using the shared optimized AirComp rule.
 
     Parameters
     ----------
@@ -88,6 +88,10 @@ def aggregate_updates(
         Complex channel matrix with shape [K, F]. The same block-fading
         realization is reused for every OFDM vector in this aggregation phase.
     """
+    if str(wireless_cfg.power_control_mode).strip().lower() != "unified_kkt":
+        raise ValueError(
+            "aggregate_updates requires wireless.power_control_mode=unified_kkt"
+        )
     if not updates:
         raise ValueError("At least one client update is required")
 

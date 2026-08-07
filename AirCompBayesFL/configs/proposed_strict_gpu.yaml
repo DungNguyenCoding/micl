@@ -1,3 +1,7 @@
+# Proposed-first strict-source diagnostic configuration for v1.4.0.
+# Gradient clipping is disabled because it is not listed in Table II.
+# Same wireless QCQP/KKT power-control solver is used for every method, but
+# priority stage 1 should be run with --methods proposed.
 # Paper-scale starting configuration for an RTX 3060 Laptop GPU on Windows 11.
 # First run with --replications 1 and only the proposed method. The full paper
 # matrix is expensive because it uses 40 clients, E=3, M=5, and 10 realizations.
@@ -30,7 +34,7 @@ training:
   mc_eval_samples: 5
   bayesian_local_mode: paper_two_phase
   fedprox_mu: 0.01
-  gradient_clip_norm: 10.0
+  gradient_clip_norm: 0.0
   num_rounds: null
   max_channel_uses: 30000000
   evaluate_every: 1
@@ -55,7 +59,9 @@ runtime:
   # Flower/Ray on Linux or WSL2.
   backend: auto
   seed: 2025
-  replications: 10
+  # Priority-stage default: one realization for iteration. Use --replications 10
+  # for the paper-style average after the curve is validated.
+  replications: 1
   client_num_cpus: 1
   client_num_gpus: 1.0
   ray_include_dashboard: false
@@ -68,7 +74,7 @@ runtime:
   fail_on_client_failure: true
 
 output:
-  directory: results/gpu_paper_windows_v130
+  directory: results/proposed_priority_strict_no_clip
   metrics_filename: metrics.csv
   reliability_filename: reliability.csv
   clients_filename: client_metrics.csv

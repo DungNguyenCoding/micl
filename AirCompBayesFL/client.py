@@ -375,7 +375,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         value = np.load(path)
         if value.shape != (self.dimension,):
             raise ValueError(f"Invalid proposed phase state in {path}: {value.shape}")
-        return value.astype(np.float32)
+        return value.astype(np.float64)
 
     def _remove_proposed_precision(self, logical_round: int) -> None:
         self.proposed_precision_state_path(logical_round).unlink(missing_ok=True)

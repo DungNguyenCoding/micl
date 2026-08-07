@@ -48,6 +48,7 @@ wireless:
   path_loss_reference_m: 1000.0
   gamma_db: 10
   min_channel_power: 1.0e-14
+  power_control_mode: unified_kkt
   bisection_steps: 40
 
 runtime:

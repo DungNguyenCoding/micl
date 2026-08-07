@@ -104,6 +104,27 @@ def evaluate_deterministic(
     return expected_calibration_error(probabilities, targets, n_bins=n_bins)
 
 
+
+def evaluate_bayesian_mean(
+    model: torch.nn.Module,
+    layout: ParameterLayout,
+    mean: np.ndarray,
+    loader: DataLoader,
+    device: torch.device,
+    n_bins: int = 10,
+) -> EvaluationResult:
+    """Evaluate the deterministic network at the Bayesian posterior mean.
+
+    The paper's reported Proposed accuracy uses probabilistic inference; this
+    diagnostic is intentionally additional. It separates slow/incorrect mean
+    learning from degradation caused by posterior sampling variance.
+    """
+    model = model.to(device)
+    mean_vector = np.asarray(mean, dtype=np.float32).reshape(-1)
+    layout.load_model_vector(model, mean_vector)
+    probabilities, targets = _predict_model(model, loader, device)
+    return expected_calibration_error(probabilities, targets, n_bins=n_bins)
+
 def evaluate_bayesian(
     model: torch.nn.Module,
     layout: ParameterLayout,

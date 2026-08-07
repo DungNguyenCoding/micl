@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.4.0
+
+- Made the shared AirComp power-control policy explicit with
+  `wireless.power_control_mode: unified_kkt`; every method routes through the
+  same QCQP/KKT solver.
+- Preserved phase-1 client precision as float64 when reloading it for phase 2.
+- Added posterior-mean accuracy/NLL/ECE next to paper-style posterior-predictive
+  metrics.
+- Added global mean/precision update norms.
+- Added `proposed_debug` plotting mode.
+- Added Proposed-first, strict no-clip, and FedAvg-comparison GPU configs.
+- Added regression tests for the unified power-control contract and posterior
+  mean diagnostic.
+
 ## 1.3.3
 
 - Fixed the final float64 precision-state leak in server evaluation.

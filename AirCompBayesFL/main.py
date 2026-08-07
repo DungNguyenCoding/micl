@@ -42,6 +42,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--no-wireless", action="store_true")
     parser.add_argument(
+        "--power-control-mode",
+        default=None,
+        choices=["unified_kkt"],
+        help=(
+            "Power-control solver used for every AirComp payload. v1.4.0 "
+            "supports unified_kkt only so Proposed and comparison methods use "
+            "the same QCQP/KKT magnitude-control implementation."
+        ),
+    )
+    parser.add_argument(
         "--path-loss-reference-m",
         type=float,
         default=None,
@@ -89,6 +99,8 @@ def main() -> None:
         config.output.directory = args.output
     if args.no_wireless:
         config.wireless.enabled = False
+    if args.power_control_mode is not None:
+        config.wireless.power_control_mode = args.power_control_mode
     if args.path_loss_reference_m is not None:
         config.wireless.path_loss_reference_m = args.path_loss_reference_m
 
@@ -170,7 +182,8 @@ def main() -> None:
         f"client_device={config.runtime.client_device}, "
         f"client_num_gpus={config.runtime.client_num_gpus}, "
         f"server_device={config.runtime.server_device}, "
-        f"pin_memory={config.data.pin_memory}"
+        f"pin_memory={config.data.pin_memory}, "
+        f"power_control={config.wireless.power_control_mode}"
     )
     if backend == "local" and config.runtime.client_device.lower().startswith("cuda"):
         print(

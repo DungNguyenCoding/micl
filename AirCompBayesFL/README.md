@@ -1,70 +1,106 @@
 # AirCompBayesFL
 
-**Version 1.3.2:** float64 master precision for the paper's direct-rho update; CNN computation remains float32. 1.3.1
+**Version 1.4.0 — Proposed-first / unified power-control release**
 
-A modular Pyro + Flower/Ray simulator for the paper:
+A modular Pyro + Flower/Ray reproduction framework for:
 
-> **Distribution-Level AirComp for Wireless Federated Learning under Data
-> Scarcity and Heterogeneity** — Jun-Pyo Hong, Hyowoon Seo, and Kisong Lee.
+> *Distribution-Level AirComp for Wireless Federated Learning under Data
+> Scarcity and Heterogeneity* — Jun-Pyo Hong, Hyowoon Seo, Kisong Lee.
 
-This is an independent reproduction, not the authors' original code. The paper
-used Blitz; this project intentionally uses Pyro. Undisclosed implementation
-details, including numerical path-loss normalization, are explicit configurable
-assumptions.
+This is an independent reproduction, not the authors' original source. The
+paper reports Blitz for Bayesian layers; this project intentionally uses Pyro.
+Undisclosed details are exposed as configuration values instead of being hidden.
 
-## What changed in 1.3.1
+## v1.4.0 priorities
 
-Version 1.3.1 corrects the local optimization coordinates and the phase-2 KL prior:
+Development and experiments are intentionally ordered as:
 
-- precision is optimized directly in `rho`, not in `log(rho)`;
-- the phase-2 guide uses `rho_{t+1}`, while its KL prior remains the
-  round-start posterior with `rho_t`;
-- mini-batch likelihoods are scaled to estimate the full local-data objective.
+1. make the **Proposed** method trustworthy and reproduce its learning curve;
+2. run **FedAvg** under the same wireless/power-control implementation;
+3. add FedProx and SCAFFOLD comparisons afterward.
 
+## Shared optimal power control
 
-The proposed method now follows Algorithm 1 with a real server boundary between
-its two phases:
+Every transmitted update is routed through the same `aggregate_updates()`
+QCQP/KKT magnitude-control solver in `aircomp.py`:
 
-```text
-logical round t
-  precision clients: optimize rho_{t,k}
-  server: AirComp aggregate Delta-rho -> rho_{t+1}
-  server: broadcast rho_{t+1}
-  mean clients: optimize nu_{t,k} using rho_{t+1}
-  server: AirComp aggregate Delta-nu -> mu_{t+1}
-  evaluate q(mu_{t+1}, rho_{t+1})
+- FedAvg model update;
+- FedProx model update;
+- SCAFFOLD model update;
+- SCAFFOLD control-variate update;
+- Proposed precision update `Delta rho`;
+- Proposed natural-mean update `Delta nu`.
+
+The configuration makes this explicit:
+
+```yaml
+wireless:
+  power_control_mode: unified_kkt
 ```
 
-See `ALGORITHM1_TWO_PHASE.md` for the equations and Flower round mapping.
+v1.4.0 accepts only `unified_kkt`, so a comparison run cannot silently use a
+different power-control implementation for one method.
 
-## Project layout
+The paper text explicitly says its conventional baselines use the optimized
+power-allocation method from reference [13], while Eq. (43) is derived in the
+Proposed section. This reproduction follows the requested controlled-comparison
+policy of one shared KKT/QCQP solver for all methods.
+
+## Proposed Algorithm 1 implementation
+
+Each Proposed logical round has a real server boundary between phases:
 
 ```text
-AirCompBayesFL/
-├── main.py                  experiment CLI
-├── config.py                dataclass/YAML configuration
-├── experiments.py           Figure 2–6 condition matrix
-├── dataset.py               MNIST scarce/non-IID partitions
-├── models.py                62,346-parameter paper CNN
-├── serialization.py         stable flat parameter vectors
-├── bayesian_protocol.py     rho/nu transforms and phase schedule
-├── bayes_vi.py              Pyro precision and natural-mean SVI phases
-├── deterministic.py         FedAvg/FedProx/SCAFFOLD local training
-├── client.py                phase-aware virtual client
-├── server.py                Flower/Ray + native-Windows local backends
-├── aggregation.py           model, rho, and nu aggregation
-├── wireless.py              Rayleigh fading and path loss
-├── aircomp.py               AirComp/KKT power control
-├── metrics.py               accuracy, NLL, ECE, reliability bins
-├── logger.py                metrics/client/reliability CSVs
-├── utils.py                 standalone paper-style plotting
-├── configs/
-└── tests/
+rho phase
+  client: rho_t,k <- rho_t and optimize rho_t,k
+  server: AirComp aggregate Delta-rho -> rho_t+1
+  server: broadcast rho_t+1
+
+nu phase
+  client: reload its own rho_t,k
+  client: initialize/optimize nu_t,k using rho_t+1
+  server: AirComp aggregate Delta-nu -> mu_t+1
+
+server evaluates q(mu_t+1, rho_t+1)
 ```
+
+Precision is preserved in float64 end-to-end because the direct Eq. (25) update
+can be below one float32 ULP near rho=400. CNN forward computation remains
+float32.
+
+## New Proposed diagnostics
+
+`metrics.csv` now records both forms of Bayesian evaluation:
+
+```text
+accuracy                         # paper-style posterior predictive accuracy
+posterior_predictive_accuracy
+posterior_predictive_nll
+posterior_predictive_ece
+posterior_mean_accuracy          # diagnostic at w = mu
+posterior_mean_nll
+posterior_mean_ece
+```
+
+It also records actual global coordinate movement:
+
+```text
+global_mean_update_l2
+global_mean_update_max_abs
+global_precision_update_l2
+global_precision_update_max_abs
+```
+
+These fields answer the key debugging question:
+
+- mean accuracy high, predictive accuracy low -> covariance/sampling issue;
+- both low -> the `nu`/mean-learning path is the main issue.
+
+The phase-1 precision state is also reloaded as float64 in phase 2 in v1.4.0.
 
 ## Recommended Windows environment
 
-The tested working combination for the RTX 3060 Laptop GPU is:
+The combination that worked on the RTX 3060 Laptop GPU during this project is:
 
 ```text
 Python       3.12
@@ -75,126 +111,122 @@ Flower       1.32.1
 Ray          2.55.1
 ```
 
-Keep the existing virtual environment when replacing an older package. For a
-fresh environment, install CUDA PyTorch first:
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
-.\.venv\Scripts\python.exe -m pip install `
-  torch==2.5.1 torchvision==0.20.1 `
-  --index-url https://download.pytorch.org/whl/cu121
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
-
-Verify a real CUDA allocation:
-
-```powershell
-.\.venv\Scripts\python.exe -c "import torch; torch.cuda.init(); x=torch.ones((64,64),device='cuda'); y=x@x; torch.cuda.synchronize(); print(torch.__version__, torch.version.cuda, float(y[0,0]))"
-```
-
-## Backends
-
-- `runtime.backend: local`: clients execute sequentially in the launcher. This
-  is the stable native-Windows CUDA path.
-- `runtime.backend: ray`: Flower/Ray parallel virtual clients, recommended on
-  Linux or WSL2.
-- `runtime.backend: auto`: native Windows + CUDA selects `local`; otherwise
-  selects `ray`.
-
-For the proposed method, Ray executes two physical fit rounds per logical FL
-round. Phase-1 client state is persisted locally between actor calls.
-
-## Smoke test
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/smoke_gpu.yaml `
-  --experiment fig2 `
-  --methods fedavg,proposed `
-  --rounds 2 `
-  --output results\v130_smoke
-```
-
-Expected proposed output includes a precision phase before every evaluated
-round:
-
-```text
-Logical round 1/2, phase=precision: ...
-Round 1/2: ...
-```
-
-## 40-client pilot
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/paper_gpu.yaml `
-  --experiment fig2 `
-  --methods fedavg,proposed `
-  --rounds 5 `
-  --replications 1 `
-  --path-loss-reference-m 1000 `
-  --output results\paper40_v130_pilot
-```
-
-The `--rounds` value is a **logical** round count. Proposed internally executes
-`2 * rounds` physical fit phases but still transmits `2d` values and records one
-metrics row per logical round.
-
-## Full Figure 2 starting command
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/paper_gpu.yaml `
-  --experiment fig2 `
-  --methods fedavg,fedprox,scaffold,proposed
-```
-
-With `num_rounds: null`, the logical round count is derived from 30 million
-channel uses: `d` per FedAvg/FedProx round and `2d` per Proposed/SCAFFOLD round.
-
-## Outputs
-
-```text
-metrics.csv
-client_metrics.csv
-reliability.csv
-checkpoints/*.npz
-partitions/*.json
-client_state/*        temporary phase state; normally removed after phase 2
-```
-
-Important new fields include:
-
-```text
-logical_round, physical_round, phase
-phase1_train_loss, phase2_train_loss
-precision_aircomp_*, mean_aircomp_*
-posterior_precision_mean/min/max
-local_precision_mean/min/max, local_nu_l2, local_implied_mean_l2
-```
-
-## Plotting
-
-```powershell
-.\.venv\Scripts\python.exe utils.py `
-  --input results\paper40_v130_pilot `
-  --figure fig2
-```
+Native Windows CUDA uses the sequential `local` backend. WSL2/Linux can use
+Flower/Ray virtual clients in parallel.
 
 ## Validation
 
 ```powershell
-.\.venv\Scripts\python.exe -m compileall .
 $env:PYTHONPATH = "."
+.\.venv\Scripts\python.exe -m compileall .
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-## Reproduction assumptions
+The package contains 22 tests in v1.4.0.
 
-- The channel uses `(distance_m/path_loss_reference_m)^(-alpha)`; the default
-  reference is 1000 m because the paper does not publish its numerical distance
-  normalization.
-- Precision positivity is enforced by optimizing log-precision inside Pyro.
-- Native Windows CUDA uses sequential clients. Parallel GPU clients should use
-  WSL2/Linux Ray mode.
+## Priority stage 1: Proposed only
+
+Start with the validated learning settings, one realization, 60 logical rounds:
+
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/proposed_gpu.yaml `
+  --experiment fig2 `
+  --methods proposed `
+  --rounds 60 `
+  --replications 1 `
+  --path-loss-reference-m 1000 `
+  --output results\proposed_v140_60
+```
+
+Inspect the important fields:
+
+```powershell
+Import-Csv .\results\proposed_v140_60\metrics.csv |
+  Select-Object `
+    round,channel_uses_cumulative,
+    accuracy,posterior_mean_accuracy,
+    nll,ece,
+    global_mean_update_l2,global_precision_update_l2,
+    posterior_precision_mean,posterior_variance,
+    precision_aircomp_nmse,mean_aircomp_nmse |
+  Format-Table -AutoSize
+```
+
+Plot posterior predictive vs posterior mean:
+
+```powershell
+.\.venv\Scripts\python.exe utils.py `
+  --input results\proposed_v140_60 `
+  --figure proposed_debug
+```
+
+The paper-style Figure 2 curve still uses `accuracy`, i.e. posterior predictive
+accuracy.
+
+### Full Proposed communication budget
+
+With `d = 62,346` and `2d` transmitted values per logical Proposed round,
+30,000,000 channel uses correspond to approximately 240 logical rounds. After
+the 60-round trajectory is validated:
+
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/proposed_gpu.yaml `
+  --experiment fig2 `
+  --methods proposed `
+  --replications 1 `
+  --output results\proposed_v140_full1
+```
+
+`num_rounds: null` derives the round count from the channel-use budget.
+The paper-style final result should later be averaged over 10 independent
+realizations.
+
+## Optional strict-source optimizer diagnostic
+
+The published training table does not list gradient clipping. The working
+configuration retains the previously validated clip value (`10.0`) so v1.4.0
+does not unexpectedly change the trajectory. To test a no-clipping interpretation:
+
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/proposed_strict_gpu.yaml `
+  --experiment fig2 `
+  --methods proposed `
+  --rounds 20 `
+  --replications 1 `
+  --no-wireless `
+  --output results\proposed_v140_strict20
+```
+
+Treat this as a sensitivity experiment, not as a silent replacement for the
+working configuration.
+
+## Priority stage 2: FedAvg
+
+Only after Proposed is validated, run FedAvg with exactly the same wireless
+settings and the same `unified_kkt` power-control solver:
+
+```powershell
+.\.venv\Scripts\python.exe main.py `
+  --config configs/fedavg_compare_gpu.yaml `
+  --experiment fig2 `
+  --methods fedavg `
+  --replications 1 `
+  --path-loss-reference-m 1000 `
+  --output results\fedavg_v140_compare
+```
+
+Then combine/plot matched communication budgets. FedProx and SCAFFOLD can be
+added after Proposed-vs-FedAvg is credible.
+
+## Reproduction assumptions that remain explicit
+
+- `initial_prior_std: 0.05` is an implementation assumption; the paper does not
+  publish its initial covariance value.
+- `path_loss_reference_m: 1000` is a numerical path-loss normalization
+  assumption; the paper states `r^-alpha` and a 200 m cell but does not publish
+  the reference-distance constant used in code.
+- `gradient_clip_norm: 10.0` is retained in the working configuration for
+  continuity; `proposed_strict_gpu.yaml` disables it for sensitivity testing.

@@ -222,6 +222,44 @@ def plot_ece(metrics: pd.DataFrame, output_dir: Path) -> Path:
     return path
 
 
+
+def plot_proposed_debug(metrics: pd.DataFrame, output_dir: Path) -> Path:
+    """Plot posterior-predictive vs posterior-mean accuracy for Proposed.
+
+    This diagnostic is not one of the paper figures. It helps determine whether
+    poor Bayesian accuracy comes from the learned mean or from posterior
+    sampling/variance.
+    """
+    frame = metrics[metrics["method"] == "proposed"].copy()
+    if frame.empty:
+        raise ValueError("No proposed-method rows found")
+    required = {"posterior_predictive_accuracy", "posterior_mean_accuracy"}
+    missing = required.difference(frame.columns)
+    if missing:
+        raise ValueError(f"Missing v1.4 diagnostic columns: {sorted(missing)}")
+
+    figure, axis = plt.subplots(figsize=(7.2, 4.8))
+    for column, label in (
+        ("posterior_predictive_accuracy", "Posterior predictive"),
+        ("posterior_mean_accuracy", "Posterior mean"),
+    ):
+        grouped = (
+            frame.groupby("channel_uses_cumulative", as_index=False)[column]
+            .mean()
+            .sort_values("channel_uses_cumulative")
+        )
+        axis.plot(grouped["channel_uses_cumulative"], grouped[column], label=label)
+    axis.set_xlabel("Number of channel uses")
+    axis.set_ylabel("Accuracy for test dataset")
+    axis.set_ylim(0.05, 1.0)
+    axis.grid(alpha=0.25)
+    axis.legend()
+    figure.tight_layout()
+    path = output_dir / "proposed_posterior_mean_vs_predictive.png"
+    figure.savefig(path, dpi=200)
+    plt.close(figure)
+    return path
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate paper-style plots from CSV logs")
     parser.add_argument("--input", default="results", help="Directory containing metrics.csv")
@@ -229,7 +267,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--figure",
         default="all",
-        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "all"],
+        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "proposed_debug", "all"],
     )
     return parser.parse_args()
 
@@ -242,7 +280,7 @@ def main() -> None:
     metrics, reliability = load_results(input_dir)
 
     requested = (
-        ["fig2", "fig3", "fig4", "fig5", "fig6", "ece"]
+        ["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "proposed_debug"]
         if args.figure == "all"
         else [args.figure]
     )
@@ -253,6 +291,7 @@ def main() -> None:
         "fig5": lambda: plot_fig5(metrics, output_dir),
         "fig6": lambda: plot_fig6(reliability, output_dir),
         "ece": lambda: plot_ece(metrics, output_dir),
+        "proposed_debug": lambda: plot_proposed_debug(metrics, output_dir),
     }
     for name in requested:
         try:
