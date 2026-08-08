@@ -1,3 +1,14 @@
+# Changelog
+
+## 1.4.2
+
+- Restored FedAvg/FedProx wireless aggregation to additive local model updates: `Delta-w = w_local - w_global`.
+- Kept the same `unified_kkt` QCQP/KKT AirComp solver for deterministic and Bayesian transmitted vectors.
+- Changed `wireless.deterministic_payload_mode` from `model` to `update` in all bundled configurations.
+- Added `global_model_update_l2`, `ideal_model_update_l2`, and `received_model_update_l2` to `metrics.csv`.
+- Added regression tests for ideal no-wireless equivalence and deterministic update diagnostics.
+- Proposed two-phase `Delta-rho` / `Delta-nu` training and aggregation are unchanged.
+
 ## 1.4.1
 
 - Corrected FedAvg/FedProx AirComp payload semantics to match the paper's

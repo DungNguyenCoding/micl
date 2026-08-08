@@ -1,4 +1,4 @@
-# Proposed-first strict-source diagnostic configuration for v1.4.0.
+# Proposed-first strict-source diagnostic configuration for v1.4.2.
 # Gradient clipping is disabled because it is not listed in Table II.
 # Same wireless QCQP/KKT power-control solver is used for every method, but
 # priority stage 1 should be run with --methods proposed.
@@ -52,7 +52,7 @@ wireless:
   gamma_db: 10
   min_channel_power: 1.0e-14
   power_control_mode: unified_kkt
-  deterministic_payload_mode: model
+  deterministic_payload_mode: update
   bisection_steps: 60
 
 runtime:

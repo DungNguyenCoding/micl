@@ -119,6 +119,9 @@ class AirCompStrategy(FedAvg):
         self.last_mean_aircomp_stats = AirCompStats.zero()
         self.last_global_mean_update_l2 = 0.0
         self.last_global_mean_update_max_abs = 0.0
+        self.last_global_model_update_l2 = 0.0
+        self.last_ideal_model_update_l2 = 0.0
+        self.last_received_model_update_l2 = 0.0
         self.last_global_precision_update_l2 = 0.0
         self.last_global_precision_update_max_abs = 0.0
         self.pending_precision_logical_round: int | None = None
@@ -302,6 +305,17 @@ class AirCompStrategy(FedAvg):
             model_delta = self.current_arrays[0].astype(np.float64) - previous_model
             self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
             self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
+            self.last_global_model_update_l2 = float(
+                aggregation.diagnostics.get(
+                    "global_model_update_l2", self.last_global_mean_update_l2
+                )
+            )
+            self.last_ideal_model_update_l2 = float(
+                aggregation.diagnostics.get("ideal_model_update_l2", 0.0)
+            )
+            self.last_received_model_update_l2 = float(
+                aggregation.diagnostics.get("received_model_update_l2", 0.0)
+            )
             self.last_global_precision_update_l2 = 0.0
             self.last_global_precision_update_max_abs = 0.0
             self.last_train_loss = weighted_loss
@@ -331,6 +345,12 @@ class AirCompStrategy(FedAvg):
             model_delta = self.current_arrays[0].astype(np.float64) - previous_model
             self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
             self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
+            self.last_global_model_update_l2 = self.last_global_mean_update_l2
+            # The SCAFFOLD AirCompStats object combines model and control-variate
+            # transmissions, so the FedAvg-specific ideal/received model-update
+            # diagnostics are intentionally left at zero here.
+            self.last_ideal_model_update_l2 = 0.0
+            self.last_received_model_update_l2 = 0.0
             self.last_global_precision_update_l2 = 0.0
             self.last_global_precision_update_max_abs = 0.0
             self.last_train_loss = weighted_loss
@@ -373,6 +393,9 @@ class AirCompStrategy(FedAvg):
             self.last_global_precision_update_max_abs = float(
                 np.max(np.abs(precision_delta))
             )
+            self.last_global_model_update_l2 = 0.0
+            self.last_ideal_model_update_l2 = 0.0
+            self.last_received_model_update_l2 = 0.0
             # Keep the previous logical round's mean-update diagnostic until
             # phase 2 completes; it is overwritten below before evaluation.
             self.last_phase1_train_loss = weighted_loss
@@ -600,6 +623,15 @@ class AirCompStrategy(FedAvg):
                 ),
                 "global_mean_update_max_abs": (
                     0.0 if logical_round == 0 else self.last_global_mean_update_max_abs
+                ),
+                "global_model_update_l2": (
+                    0.0 if logical_round == 0 else self.last_global_model_update_l2
+                ),
+                "ideal_model_update_l2": (
+                    0.0 if logical_round == 0 else self.last_ideal_model_update_l2
+                ),
+                "received_model_update_l2": (
+                    0.0 if logical_round == 0 else self.last_received_model_update_l2
                 ),
                 "global_precision_update_l2": (
                     0.0 if logical_round == 0 else self.last_global_precision_update_l2

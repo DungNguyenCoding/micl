@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Sequence
+from dataclasses import dataclass, field
+from typing import Mapping, Sequence
 
 import numpy as np
 
@@ -15,6 +15,7 @@ from config import ModelConfig, WirelessConfig
 class AggregationResult:
     parameters: list[np.ndarray]
     aircomp_stats: AirCompStats
+    diagnostics: Mapping[str, float] = field(default_factory=dict)
 
 
 def normalized_weights(num_examples: Sequence[int]) -> np.ndarray:
@@ -37,33 +38,66 @@ def aggregate_deterministic(
     wireless_cfg: WirelessConfig,
     rng: np.random.Generator,
 ) -> AggregationResult:
-    """Aggregate FedAvg/FedProx *local model weights* over AirComp.
+    """Aggregate FedAvg/FedProx local model *updates* over AirComp.
 
-    The paper's simulation section states that FedAvg and FedProx transmit
-    ``d`` real values corresponding to the model weights in every training
-    round.  Earlier versions of this reproduction instead applied AirComp to
-    ``local_model - global_model`` updates.  Those two choices are identical
-    under ideal averaging, but they are *not* equivalent under the nonlinear
-    power constraint/KKT magnitude control because the transmitted magnitude
-    and clipping behavior differ.
+    Each client first computes the d-dimensional local update
 
-    We therefore pass the local model vectors themselves through the same
-    shared ``aggregate_updates`` QCQP/KKT solver used elsewhere.  With
-    wireless disabled this reduces exactly to weighted FedAvg.
+        Delta-w_{t,k} = w_{t,k} - w_t.
+
+    The same shared ``aggregate_updates`` QCQP/KKT solver used by the Bayesian
+    Delta-rho/Delta-nu phases is applied to these Delta-w vectors. The server
+    then performs the additive update
+
+        w_{t+1} = w_t + AirComp({Delta-w_{t,k}}).
+
+    This avoids the systematic repeated shrinkage that occurs when an
+    attenuated absolute model is used as a replacement state every round.
+    Communication accounting is unchanged: FedAvg/FedProx still transmit d
+    real values per round.
     """
-    if str(wireless_cfg.deterministic_payload_mode).strip().lower() != "model":
+    if str(wireless_cfg.deterministic_payload_mode).strip().lower() != "update":
         raise ValueError(
-            "FedAvg/FedProx paper mode requires deterministic_payload_mode=model"
+            "FedAvg/FedProx require deterministic_payload_mode=update"
         )
-    del current_model  # kept in the signature for API compatibility/diagnostics
-    transmitted_models = [
-        np.asarray(local, dtype=np.float32).reshape(-1)
+
+    current = np.asarray(current_model, dtype=np.float32).reshape(-1)
+    updates = [
+        np.asarray(local, dtype=np.float32).reshape(-1) - current
         for local in local_models
     ]
-    aggregate, stats = aggregate_updates(
-        transmitted_models, weights, channels, wireless_cfg, rng
+    if not updates:
+        raise ValueError("At least one local model is required")
+
+    normalized = np.asarray(weights, dtype=np.float64).reshape(-1)
+    normalized = normalized / max(float(np.sum(normalized)), 1.0e-30)
+    ideal_update = np.sum(
+        np.stack([
+            weight * np.asarray(update, dtype=np.float64)
+            for weight, update in zip(normalized, updates)
+        ]),
+        axis=0,
     )
-    return AggregationResult([aggregate.astype(np.float32)], stats)
+
+    received_update, stats = aggregate_updates(
+        updates, normalized, channels, wireless_cfg, rng
+    )
+    received_update64 = np.asarray(received_update, dtype=np.float64)
+    next_model = (
+        current.astype(np.float64) + received_update64
+    ).astype(np.float32)
+
+    diagnostics = {
+        "ideal_model_update_l2": float(np.linalg.vector_norm(ideal_update)),
+        "received_model_update_l2": float(
+            np.linalg.vector_norm(received_update64)
+        ),
+        "global_model_update_l2": float(
+            np.linalg.vector_norm(
+                next_model.astype(np.float64) - current.astype(np.float64)
+            )
+        ),
+    }
+    return AggregationResult([next_model], stats, diagnostics)
 
 
 def aggregate_scaffold(

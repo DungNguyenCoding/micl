@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
         default=None,
         choices=["unified_kkt"],
         help=(
-            "Power-control solver used for every AirComp payload. v1.4.0 "
+            "Power-control solver used for every AirComp payload. v1.4.2 "
             "supports unified_kkt only so Proposed and comparison methods use "
             "the same QCQP/KKT magnitude-control implementation."
         ),

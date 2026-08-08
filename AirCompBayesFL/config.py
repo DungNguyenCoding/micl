@@ -67,11 +67,13 @@ class WirelessConfig:
     min_channel_power: float = 1.0e-14
     bisection_steps: int = 60
     # Use one shared QCQP/KKT magnitude-control solver for every transmitted
-    # vector.  For FedAvg/FedProx, paper-mode transmits the local model weights
-    # themselves (not local-minus-global deltas); Proposed transmits Delta-rho
-    # and Delta-nu.
+    # vector. FedAvg/FedProx transmit the d-dimensional local model update
+    # Delta-w = w_{t,k} - w_t and the server applies it additively. Proposed
+    # transmits Delta-rho and Delta-nu. All paths therefore use the same KKT
+    # magnitude-control implementation while preserving each algorithm's
+    # natural update statistic.
     power_control_mode: str = "unified_kkt"
-    deterministic_payload_mode: str = "model"
+    deterministic_payload_mode: str = "update"
 
 
 @dataclass
@@ -163,10 +165,11 @@ class SimulationConfig:
                 "wireless.power_control_mode must be unified_kkt; all methods "
                 "intentionally use the same QCQP/KKT solver"
             )
-        if str(self.wireless.deterministic_payload_mode).strip().lower() != "model":
+        if str(self.wireless.deterministic_payload_mode).strip().lower() != "update":
             raise ValueError(
-                "wireless.deterministic_payload_mode must be 'model' in paper mode; "
-                "FedAvg/FedProx transmit local model weights, not model deltas"
+                "wireless.deterministic_payload_mode must be 'update'; "
+                "FedAvg/FedProx transmit Delta-w = local_model - global_model "
+                "through the same unified KKT AirComp solver"
             )
         if self.runtime.replications <= 0:
             raise ValueError("runtime.replications must be positive")

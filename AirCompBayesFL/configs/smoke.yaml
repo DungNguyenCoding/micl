@@ -44,7 +44,7 @@ wireless:
   gamma_db: 10
   min_channel_power: 1.0e-14
   power_control_mode: unified_kkt
-  deterministic_payload_mode: model
+  deterministic_payload_mode: update
   bisection_steps: 40
 
 runtime:

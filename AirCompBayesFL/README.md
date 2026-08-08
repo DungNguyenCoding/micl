@@ -1,6 +1,6 @@
 # AirCompBayesFL
 
-**Version 1.4.0 — Proposed-first / unified power-control release**
+**Version 1.4.2 — Proposed-first / deterministic-update AirComp release**
 
 A modular Pyro + Flower/Ray reproduction framework for:
 
@@ -11,7 +11,7 @@ This is an independent reproduction, not the authors' original source. The
 paper reports Blitz for Bayesian layers; this project intentionally uses Pyro.
 Undisclosed details are exposed as configuration values instead of being hidden.
 
-## v1.4.0 priorities
+## v1.4.2 priorities
 
 Development and experiments are intentionally ordered as:
 
@@ -38,13 +38,21 @@ wireless:
   power_control_mode: unified_kkt
 ```
 
-v1.4.0 accepts only `unified_kkt`, so a comparison run cannot silently use a
+v1.4.2 accepts only `unified_kkt`, so a comparison run cannot silently use a
 different power-control implementation for one method.
 
 The paper text explicitly says its conventional baselines use the optimized
 power-allocation method from reference [13], while Eq. (43) is derived in the
 Proposed section. This reproduction follows the requested controlled-comparison
 policy of one shared KKT/QCQP solver for all methods.
+
+### Deterministic payload semantics in v1.4.2
+
+FedAvg and FedProx form the local model update
+`Delta-w = w_local - w_global`, send that d-dimensional vector through the same
+`unified_kkt` solver, and update the server model additively. This is the key
+v1.4.2 correction: a power-attenuated absolute model is never used as a
+replacement global state. Communication accounting remains d values per round.
 
 ## Proposed Algorithm 1 implementation
 
@@ -96,7 +104,7 @@ These fields answer the key debugging question:
 - mean accuracy high, predictive accuracy low -> covariance/sampling issue;
 - both low -> the `nu`/mean-learning path is the main issue.
 
-The phase-1 precision state is also reloaded as float64 in phase 2 in v1.4.0.
+The phase-1 precision state is reloaded as float64 in phase 2.
 
 ## Recommended Windows environment
 
@@ -122,7 +130,7 @@ $env:PYTHONPATH = "."
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-The package contains 22 tests in v1.4.0.
+The package contains 27 tests in v1.4.2.
 
 ## Priority stage 1: Proposed only
 
@@ -136,13 +144,13 @@ Start with the validated learning settings, one realization, 60 logical rounds:
   --rounds 60 `
   --replications 1 `
   --path-loss-reference-m 1000 `
-  --output results\proposed_v140_60
+  --output results\proposed_v142_60
 ```
 
 Inspect the important fields:
 
 ```powershell
-Import-Csv .\results\proposed_v140_60\metrics.csv |
+Import-Csv .\results\proposed_v142_60\metrics.csv |
   Select-Object `
     round,channel_uses_cumulative,
     accuracy,posterior_mean_accuracy,
@@ -157,7 +165,7 @@ Plot posterior predictive vs posterior mean:
 
 ```powershell
 .\.venv\Scripts\python.exe utils.py `
-  --input results\proposed_v140_60 `
+  --input results\proposed_v142_60 `
   --figure proposed_debug
 ```
 
@@ -176,7 +184,7 @@ the 60-round trajectory is validated:
   --experiment fig2 `
   --methods proposed `
   --replications 1 `
-  --output results\proposed_v140_full1
+  --output results\proposed_v142_full1
 ```
 
 `num_rounds: null` derives the round count from the channel-use budget.
@@ -186,7 +194,7 @@ realizations.
 ## Optional strict-source optimizer diagnostic
 
 The published training table does not list gradient clipping. The working
-configuration retains the previously validated clip value (`10.0`) so v1.4.0
+configuration retains the previously validated clip value (`10.0`) so v1.4.2
 does not unexpectedly change the trajectory. To test a no-clipping interpretation:
 
 ```powershell
@@ -197,7 +205,7 @@ does not unexpectedly change the trajectory. To test a no-clipping interpretatio
   --rounds 20 `
   --replications 1 `
   --no-wireless `
-  --output results\proposed_v140_strict20
+  --output results\proposed_v142_strict20
 ```
 
 Treat this as a sensitivity experiment, not as a silent replacement for the
@@ -215,7 +223,7 @@ settings and the same `unified_kkt` power-control solver:
   --methods fedavg `
   --replications 1 `
   --path-loss-reference-m 1000 `
-  --output results\fedavg_v140_compare
+  --output results\fedavg_v142_compare
 ```
 
 Then combine/plot matched communication budgets. FedProx and SCAFFOLD can be
@@ -230,3 +238,15 @@ added after Proposed-vs-FedAvg is credible.
   the reference-distance constant used in code.
 - `gradient_clip_norm: 10.0` is retained in the working configuration for
   continuity; `proposed_strict_gpu.yaml` disables it for sensitivity testing.
+
+
+## v1.4.2 deterministic AirComp contract
+
+FedAvg and FedProx form `Delta-w = w_local - w_global`, pass that d-dimensional
+vector through the same `unified_kkt` power-control/AirComp implementation as
+the Proposed method uses for `Delta-rho` and `Delta-nu`, and update the server
+model additively. See `V142_DETERMINISTIC_UPDATE_AIRCOMP.md`.
+
+The deterministic diagnostics `global_model_update_l2`,
+`ideal_model_update_l2`, and `received_model_update_l2` are written to
+`metrics.csv`.
