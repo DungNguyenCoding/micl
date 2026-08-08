@@ -67,10 +67,11 @@ class WirelessConfig:
     min_channel_power: float = 1.0e-14
     bisection_steps: int = 60
     # Use one shared QCQP/KKT magnitude-control solver for every transmitted
-    # update: FedAvg/FedProx model updates, both SCAFFOLD payloads, and the
-    # proposed rho/nu phases. This makes the comparison power-control rule
-    # explicit instead of relying on implicit reuse of aggregate_updates().
+    # vector.  For FedAvg/FedProx, paper-mode transmits the local model weights
+    # themselves (not local-minus-global deltas); Proposed transmits Delta-rho
+    # and Delta-nu.
     power_control_mode: str = "unified_kkt"
+    deterministic_payload_mode: str = "model"
 
 
 @dataclass
@@ -159,8 +160,13 @@ class SimulationConfig:
             raise ValueError("wireless.path_loss_reference_m must be positive")
         if str(self.wireless.power_control_mode).strip().lower() != "unified_kkt":
             raise ValueError(
-                "wireless.power_control_mode must be unified_kkt in v1.4.0; "
-                "all methods intentionally use the same QCQP/KKT solver"
+                "wireless.power_control_mode must be unified_kkt; all methods "
+                "intentionally use the same QCQP/KKT solver"
+            )
+        if str(self.wireless.deterministic_payload_mode).strip().lower() != "model":
+            raise ValueError(
+                "wireless.deterministic_payload_mode must be 'model' in paper mode; "
+                "FedAvg/FedProx transmit local model weights, not model deltas"
             )
         if self.runtime.replications <= 0:
             raise ValueError("runtime.replications must be positive")

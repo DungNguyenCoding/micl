@@ -37,13 +37,33 @@ def aggregate_deterministic(
     wireless_cfg: WirelessConfig,
     rng: np.random.Generator,
 ) -> AggregationResult:
-    current = np.asarray(current_model, dtype=np.float32).reshape(-1)
-    updates = [
-        np.asarray(local, dtype=np.float32).reshape(-1) - current
+    """Aggregate FedAvg/FedProx *local model weights* over AirComp.
+
+    The paper's simulation section states that FedAvg and FedProx transmit
+    ``d`` real values corresponding to the model weights in every training
+    round.  Earlier versions of this reproduction instead applied AirComp to
+    ``local_model - global_model`` updates.  Those two choices are identical
+    under ideal averaging, but they are *not* equivalent under the nonlinear
+    power constraint/KKT magnitude control because the transmitted magnitude
+    and clipping behavior differ.
+
+    We therefore pass the local model vectors themselves through the same
+    shared ``aggregate_updates`` QCQP/KKT solver used elsewhere.  With
+    wireless disabled this reduces exactly to weighted FedAvg.
+    """
+    if str(wireless_cfg.deterministic_payload_mode).strip().lower() != "model":
+        raise ValueError(
+            "FedAvg/FedProx paper mode requires deterministic_payload_mode=model"
+        )
+    del current_model  # kept in the signature for API compatibility/diagnostics
+    transmitted_models = [
+        np.asarray(local, dtype=np.float32).reshape(-1)
         for local in local_models
     ]
-    aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
-    return AggregationResult([current + aggregate], stats)
+    aggregate, stats = aggregate_updates(
+        transmitted_models, weights, channels, wireless_cfg, rng
+    )
+    return AggregationResult([aggregate.astype(np.float32)], stats)
 
 
 def aggregate_scaffold(

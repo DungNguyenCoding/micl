@@ -50,6 +50,7 @@ METRIC_FIELDS = [
     "path_loss_reference_m",
     "gamma_db",
     "power_control_mode",
+    "deterministic_payload_mode",
     "accuracy",
     "nll",
     "ece",

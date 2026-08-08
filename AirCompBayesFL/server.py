@@ -529,6 +529,9 @@ class AirCompStrategy(FedAvg):
             "path_loss_reference_m": self.config_obj.wireless.path_loss_reference_m,
             "gamma_db": self.config_obj.wireless.gamma_db,
             "power_control_mode": self.config_obj.wireless.power_control_mode,
+            "deterministic_payload_mode": (
+                self.config_obj.wireless.deterministic_payload_mode
+            ),
         }
         if self.method == "proposed":
             initial_precision_value = 1.0 / (

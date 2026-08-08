@@ -23,7 +23,7 @@ def test_unified_kkt_is_the_only_v140_power_control_mode():
 
 def test_all_server_aggregation_paths_share_aggregate_updates():
     source = (ROOT / "aggregation.py").read_text(encoding="utf-8")
-    # FedAvg/FedProx route through aggregate_deterministic, SCAFFOLD through
+    # FedAvg/FedProx model-weight payloads route through aggregate_deterministic, SCAFFOLD through
     # aggregate_scaffold, and both Bayesian phases through their own wrappers.
     assert source.count("aggregate_updates(") >= 5
 

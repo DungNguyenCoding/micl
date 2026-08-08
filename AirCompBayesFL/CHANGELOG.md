@@ -1,3 +1,12 @@
+## 1.4.1
+
+- Corrected FedAvg/FedProx AirComp payload semantics to match the paper's
+  simulation description: clients transmit local **model weights** (d real
+  values), not local-minus-global model deltas.
+- The same `unified_kkt` QCQP/KKT magnitude-control solver is still used.
+- Added `wireless.deterministic_payload_mode: model` and validation.
+- Added payload semantics to `metrics.csv` for auditability.
+
 # Changelog
 
 ## 1.4.0
