@@ -47,8 +47,9 @@ wireless:
   path_loss_reference_m: 1000.0
   gamma_db: 10
   min_channel_power: 1.0e-14
-  power_control_mode: unified_kkt
+  power_control_mode: paper_reference_kkt
   deterministic_payload_mode: update
+  deterministic_reference_power_mode: coordinated_aggregate
   bisection_steps: 60
 
 runtime:

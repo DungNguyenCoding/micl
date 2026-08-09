@@ -9,6 +9,7 @@ def test_phase_and_aircomp_diagnostics_are_logged():
         "phase1_train_loss",
         "phase2_train_loss",
         "path_loss_reference_m",
+        "deterministic_reference_power_mode",
         "aircomp_retained_magnitude_ratio",
         "aircomp_distorted_to_ideal_norm_ratio",
         "precision_aircomp_nmse",

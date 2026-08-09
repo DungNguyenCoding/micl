@@ -7,7 +7,12 @@ from typing import Mapping, Sequence
 
 import numpy as np
 
-from aircomp import AirCompStats, aggregate_updates, combine_stats
+from aircomp import (
+    AirCompStats,
+    aggregate_updates_hong2023,
+    aggregate_updates_proposed,
+    combine_stats,
+)
 from config import ModelConfig, WirelessConfig
 
 
@@ -44,16 +49,17 @@ def aggregate_deterministic(
 
         Delta-w_{t,k} = w_{t,k} - w_t.
 
-    The same shared ``aggregate_updates`` QCQP/KKT solver used by the Bayesian
-    Delta-rho/Delta-nu phases is applied to these Delta-w vectors. The server
-    then performs the additive update
+    The Hong-2023 reference-[13] amplitude-alignment scaling is applied to
+    these Delta-w vectors, while sharing the same KKT magnitude optimizer used
+    by the Bayesian Delta-rho/Delta-nu phases. The server then performs the
+    additive update
 
         w_{t+1} = w_t + AirComp({Delta-w_{t,k}}).
 
-    This avoids the systematic repeated shrinkage that occurs when an
-    attenuated absolute model is used as a replacement state every round.
-    Communication accounting is unchanged: FedAvg/FedProx still transmit d
-    real values per round.
+    This follows the reference paper's local-update transmission and avoids
+    the systematic repeated shrinkage that occurs when an attenuated absolute
+    model is used as a replacement state every round. Communication accounting
+    is unchanged: FedAvg/FedProx still transmit d real values per round.
     """
     if str(wireless_cfg.deterministic_payload_mode).strip().lower() != "update":
         raise ValueError(
@@ -78,7 +84,7 @@ def aggregate_deterministic(
         axis=0,
     )
 
-    received_update, stats = aggregate_updates(
+    received_update, stats = aggregate_updates_hong2023(
         updates, normalized, channels, wireless_cfg, rng
     )
     received_update64 = np.asarray(received_update, dtype=np.float64)
@@ -120,10 +126,10 @@ def aggregate_scaffold(
         np.asarray(delta, dtype=np.float32).reshape(-1)
         for delta in local_control_deltas
     ]
-    model_aggregate, model_stats = aggregate_updates(
+    model_aggregate, model_stats = aggregate_updates_hong2023(
         model_updates, weights, channels, wireless_cfg, rng
     )
-    control_aggregate, control_stats = aggregate_updates(
+    control_aggregate, control_stats = aggregate_updates_hong2023(
         control_updates, weights, channels, wireless_cfg, rng
     )
     return AggregationResult(
@@ -149,7 +155,7 @@ def aggregate_gaussian_precision_phase(
         np.asarray(local, dtype=np.float64).reshape(-1) - current
         for local in local_precisions
     ]
-    aggregate, stats = aggregate_updates(
+    aggregate, stats = aggregate_updates_proposed(
         updates,
         weights,
         channels,
@@ -186,7 +192,9 @@ def aggregate_gaussian_natural_mean_phase(
         np.asarray(local_nu, dtype=np.float32).reshape(-1) - current
         for local_nu in local_nus
     ]
-    aggregate, stats = aggregate_updates(updates, weights, channels, wireless_cfg, rng)
+    aggregate, stats = aggregate_updates_proposed(
+        updates, weights, channels, wireless_cfg, rng
+    )
     next_mean = (current + aggregate).astype(np.float32)
     if not np.all(np.isfinite(next_mean)):
         raise FloatingPointError("Aggregated global mean contains non-finite values")

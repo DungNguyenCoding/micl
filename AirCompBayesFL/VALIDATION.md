@@ -1,11 +1,11 @@
-# Validation status — v1.4.2
+# Validation status — v1.5.0
 
 Packaging-environment validation:
 
 ```text
 python -m compileall -q .
 PYTHONPATH=. pytest -q
-27 passed
+33 passed
 ```
 
 The tests cover:
@@ -17,9 +17,9 @@ The tests cover:
 - Algorithm-1 precision/natural-mean phase scheduling;
 - Eq. (33)/(34) coordinate transforms;
 - float64 precision-state preservation;
-- unified KKT power-control configuration;
+- paper-reference KKT configuration with target-2025 Proposed scaling and Hong-2023 deterministic scaling;
 - posterior-mean diagnostics;
-- v1.4.2 deterministic `Delta-w` payload semantics;
+- deterministic `Delta-w` payload semantics with Hong-2023 reference scaling;
 - additive server application of the received FedAvg/FedProx update;
 - deterministic ideal/received/global update-norm logging fields.
 

@@ -555,6 +555,9 @@ class AirCompStrategy(FedAvg):
             "deterministic_payload_mode": (
                 self.config_obj.wireless.deterministic_payload_mode
             ),
+            "deterministic_reference_power_mode": (
+                self.config_obj.wireless.deterministic_reference_power_mode
+            ),
         }
         if self.method == "proposed":
             initial_precision_value = 1.0 / (

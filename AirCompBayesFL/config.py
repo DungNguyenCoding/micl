@@ -66,14 +66,21 @@ class WirelessConfig:
     gamma_db: float = 10.0
     min_channel_power: float = 1.0e-14
     bisection_steps: int = 60
-    # Use one shared QCQP/KKT magnitude-control solver for every transmitted
-    # vector. FedAvg/FedProx transmit the d-dimensional local model update
-    # Delta-w = w_{t,k} - w_t and the server applies it additively. Proposed
-    # transmits Delta-rho and Delta-nu. All paths therefore use the same KKT
-    # magnitude-control implementation while preserving each algorithm's
-    # natural update statistic.
-    power_control_mode: str = "unified_kkt"
+    # v1.5.0 shares the KKT/QCQP magnitude optimizer across methods but uses
+    # the source-appropriate power-scale normalization for each algorithm:
+    # - Proposed: target-2025 Eqs. (27),(28),(31)
+    # - FedAvg/FedProx/SCAFFOLD: Hong-2023 ref. [13] Eqs. (8),(10),(20)
+    # This corrects v1.4.x, which applied the Proposed normalization to every
+    # method and therefore did not faithfully implement the cited benchmark.
+    power_control_mode: str = "paper_reference_kkt"
     deterministic_payload_mode: str = "update"
+    # Reference [13] obtains rho_ref from a BS-local update. The target paper
+    # borrows its power allocation for conventional FL but has no BS dataset.
+    # Its exact adaptation is not disclosed. The default below implements the
+    # conventional coordinated-aggregate interpretation described in Remark 6:
+    # rho_ref = ||sum_k pi_k Delta_k||^2 / d. ``weighted_local`` is available
+    # as a documented sensitivity alternative.
+    deterministic_reference_power_mode: str = "coordinated_aggregate"
 
 
 @dataclass
@@ -160,16 +167,27 @@ class SimulationConfig:
             raise ValueError("wireless.num_subchannels must be positive")
         if self.wireless.path_loss_reference_m <= 0:
             raise ValueError("wireless.path_loss_reference_m must be positive")
-        if str(self.wireless.power_control_mode).strip().lower() != "unified_kkt":
+        if (
+            str(self.wireless.power_control_mode).strip().lower()
+            != "paper_reference_kkt"
+        ):
             raise ValueError(
-                "wireless.power_control_mode must be unified_kkt; all methods "
-                "intentionally use the same QCQP/KKT solver"
+                "wireless.power_control_mode must be paper_reference_kkt; "
+                "v1.5.0 uses one shared KKT magnitude optimizer with "
+                "source-specific Proposed/Hong-2023 power scaling"
             )
         if str(self.wireless.deterministic_payload_mode).strip().lower() != "update":
             raise ValueError(
                 "wireless.deterministic_payload_mode must be 'update'; "
-                "FedAvg/FedProx transmit Delta-w = local_model - global_model "
-                "through the same unified KKT AirComp solver"
+                "reference [13] transmits local update vectors"
+            )
+        if (
+            str(self.wireless.deterministic_reference_power_mode).strip().lower()
+            not in {"coordinated_aggregate", "weighted_local"}
+        ):
+            raise ValueError(
+                "wireless.deterministic_reference_power_mode must be "
+                "coordinated_aggregate or weighted_local"
             )
         if self.runtime.replications <= 0:
             raise ValueError("runtime.replications must be positive")

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5.0 — Reference-[13] benchmark power-control correction
+
+- Inspected the actual Hong, Park, and Choi IEEE TWC 2023 reference [13].
+- Preserved one shared KKT/QCQP magnitude optimizer for all AirComp payloads.
+- Kept Proposed `Delta-rho`/`Delta-nu` power normalization unchanged.
+- Changed FedAvg/FedProx/SCAFFOLD to Hong-2023 Eq. (8)/(10)/(20) scaling, including the `sigma_z^2` transmit factor and receiver de-scaling.
+- Kept deterministic payloads as additive local updates `Delta-w`.
+- Added `deterministic_reference_power_mode`, defaulting to the source-motivated `coordinated_aggregate` adaptation because the target paper has no BS dataset.
+- Added exact Eq. (8), Eq. (10), reference-power, shared-KKT, and configuration tests.
+
 ## 1.4.2
 
 - Restored FedAvg/FedProx wireless aggregation to additive local model updates: `Delta-w = w_local - w_global`.

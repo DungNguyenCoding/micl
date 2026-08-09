@@ -1,6 +1,6 @@
 # AirCompBayesFL
 
-**Version 1.4.2 — Proposed-first / deterministic-update AirComp release**
+**Version 1.5.0 — Reference-[13] benchmark power-control release**
 
 A modular Pyro + Flower/Ray reproduction framework for:
 
@@ -11,7 +11,7 @@ This is an independent reproduction, not the authors' original source. The
 paper reports Blitz for Bayesian layers; this project intentionally uses Pyro.
 Undisclosed details are exposed as configuration values instead of being hidden.
 
-## v1.4.2 priorities
+## v1.5.0 priorities
 
 Development and experiments are intentionally ordered as:
 
@@ -19,40 +19,62 @@ Development and experiments are intentionally ordered as:
 2. run **FedAvg** under the same wireless/power-control implementation;
 3. add FedProx and SCAFFOLD comparisons afterward.
 
-## Shared optimal power control
+## Paper-reference optimal power control
 
-Every transmitted update is routed through the same `aggregate_updates()`
-QCQP/KKT magnitude-control solver in `aircomp.py`:
-
-- FedAvg model update;
-- FedProx model update;
-- SCAFFOLD model update;
-- SCAFFOLD control-variate update;
-- Proposed precision update `Delta rho`;
-- Proposed natural-mean update `Delta nu`.
-
-The configuration makes this explicit:
+v1.5.0 corrects the main benchmark mismatch found after inspecting the actual
+IEEE TWC 2023 reference [13]. The **KKT/QCQP magnitude optimizer is shared**,
+but the transmit-power scale is not identical between the Bayesian method and
+the conventional baselines.
 
 ```yaml
 wireless:
-  power_control_mode: unified_kkt
+  power_control_mode: paper_reference_kkt
+  deterministic_payload_mode: update
+  deterministic_reference_power_mode: coordinated_aggregate
 ```
 
-v1.4.2 accepts only `unified_kkt`, so a comparison run cannot silently use a
-different power-control implementation for one method.
+For the Proposed method, `Delta-rho` and `Delta-nu` retain the target 2025
+paper's Eqs. (27),(28),(31):
 
-The paper text explicitly says its conventional baselines use the optimized
-power-allocation method from reference [13], while Eq. (43) is derived in the
-Proposed section. This reproduction follows the requested controlled-comparison
-policy of one shared KKT/QCQP solver for all methods.
+```text
+delta_bar = sum_k pi_k ||Delta_k||^2 / d
+u_k = pi_k^2 * gamma / delta_bar * |h_k|^-2
+```
 
-### Deterministic payload semantics in v1.4.2
+For FedAvg/FedProx/SCAFFOLD, local update vectors use Hong et al. (2023)
+Eqs. (8),(10),(20):
 
-FedAvg and FedProx form the local model update
-`Delta-w = w_local - w_global`, send that d-dimensional vector through the same
-`unified_kkt` solver, and update the server model additively. This is the key
-v1.4.2 correction: a power-attenuated absolute model is never used as a
-replacement global state. Communication accounting remains d values per round.
+```text
+u_k = w_k^2 * gamma * sigma_z^2 / rho_ref * |h_k|^-2
+receiver_scale = sqrt(rho_ref / (gamma * sigma_z^2))
+```
+
+Both paths call the same `_optimal_magnitude()` implementation of
+`v = |Delta|` when feasible and `v = |Delta|/(1 + lambda*u)` otherwise.
+Therefore v1.5.0 is source-faithful without maintaining two unrelated power
+optimizers.
+
+Reference [13] obtains `rho_ref` from a BS-local update, but the target 2025
+paper has no BS dataset in the conventional benchmark setup and does not state
+how it adapts this scalar. The default `coordinated_aggregate` mode follows
+Remark 6 of [13], which describes conventional AirComp as coordinating power
+with statistics of the aggregated update:
+
+```text
+rho_ref = ||sum_k pi_k Delta_k||^2 / d
+```
+
+`weighted_local` remains available as a sensitivity mode. This adaptation is
+logged in every `metrics.csv` row and must be reported as a reproduction
+assumption.
+
+### Deterministic payload semantics
+
+FedAvg and FedProx transmit `Delta-w = w_local - w_global` and the server
+applies the recovered update additively. This matches the local-update
+transmission in reference [13] and avoids replacing the global state with an
+attenuated absolute model. Communication accounting remains `d` values per
+round.
 
 ## Proposed Algorithm 1 implementation
 
@@ -130,7 +152,7 @@ $env:PYTHONPATH = "."
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-The package contains 27 tests in v1.4.2.
+The package contains 33 tests in v1.5.0.
 
 ## Priority stage 1: Proposed only
 
@@ -144,13 +166,13 @@ Start with the validated learning settings, one realization, 60 logical rounds:
   --rounds 60 `
   --replications 1 `
   --path-loss-reference-m 1000 `
-  --output results\proposed_v142_60
+  --output results\proposed_v150_60
 ```
 
 Inspect the important fields:
 
 ```powershell
-Import-Csv .\results\proposed_v142_60\metrics.csv |
+Import-Csv .\results\proposed_v150_60\metrics.csv |
   Select-Object `
     round,channel_uses_cumulative,
     accuracy,posterior_mean_accuracy,
@@ -165,7 +187,7 @@ Plot posterior predictive vs posterior mean:
 
 ```powershell
 .\.venv\Scripts\python.exe utils.py `
-  --input results\proposed_v142_60 `
+  --input results\proposed_v150_60 `
   --figure proposed_debug
 ```
 
@@ -184,7 +206,7 @@ the 60-round trajectory is validated:
   --experiment fig2 `
   --methods proposed `
   --replications 1 `
-  --output results\proposed_v142_full1
+  --output results\proposed_v150_full1
 ```
 
 `num_rounds: null` derives the round count from the channel-use budget.
@@ -194,7 +216,7 @@ realizations.
 ## Optional strict-source optimizer diagnostic
 
 The published training table does not list gradient clipping. The working
-configuration retains the previously validated clip value (`10.0`) so v1.4.2
+configuration retains the previously validated clip value (`10.0`) so v1.5.0
 does not unexpectedly change the trajectory. To test a no-clipping interpretation:
 
 ```powershell
@@ -205,7 +227,7 @@ does not unexpectedly change the trajectory. To test a no-clipping interpretatio
   --rounds 20 `
   --replications 1 `
   --no-wireless `
-  --output results\proposed_v142_strict20
+  --output results\proposed_v150_strict20
 ```
 
 Treat this as a sensitivity experiment, not as a silent replacement for the
@@ -214,7 +236,7 @@ working configuration.
 ## Priority stage 2: FedAvg
 
 Only after Proposed is validated, run FedAvg with exactly the same wireless
-settings and the same `unified_kkt` power-control solver:
+wireless channel settings, while using the Hong-2023 reference-[13] scaling:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py `
@@ -223,7 +245,7 @@ settings and the same `unified_kkt` power-control solver:
   --methods fedavg `
   --replications 1 `
   --path-loss-reference-m 1000 `
-  --output results\fedavg_v142_compare
+  --output results\fedavg_v150_compare
 ```
 
 Then combine/plot matched communication budgets. FedProx and SCAFFOLD can be
@@ -240,13 +262,14 @@ added after Proposed-vs-FedAvg is credible.
   continuity; `proposed_strict_gpu.yaml` disables it for sensitivity testing.
 
 
-## v1.4.2 deterministic AirComp contract
+## v1.5.0 deterministic AirComp contract
 
-FedAvg and FedProx form `Delta-w = w_local - w_global`, pass that d-dimensional
-vector through the same `unified_kkt` power-control/AirComp implementation as
-the Proposed method uses for `Delta-rho` and `Delta-nu`, and update the server
-model additively. See `V142_DETERMINISTIC_UPDATE_AIRCOMP.md`.
+FedAvg/FedProx/SCAFFOLD use the Hong-2023 Eq. (8)/(10)/(20) power scale and
+receiver de-scaling on local update vectors. Proposed retains its target-2025
+normalization. The shared KKT magnitude core is tested directly. See
+`V150_REFERENCE13_POWER_CONTROL.md`.
 
 The deterministic diagnostics `global_model_update_l2`,
-`ideal_model_update_l2`, and `received_model_update_l2` are written to
-`metrics.csv`.
+`ideal_model_update_l2`, and `received_model_update_l2` remain in
+`metrics.csv`, and `deterministic_reference_power_mode` records the `rho_ref`
+adaptation used by each run.

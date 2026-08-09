@@ -1,4 +1,4 @@
-# Proposed-first configuration for v1.4.2.
+# Proposed-first configuration for v1.5.0.
 # Same wireless QCQP/KKT power-control solver is used for every method, but
 # priority stage 1 should be run with --methods proposed.
 # Paper-scale starting configuration for an RTX 3060 Laptop GPU on Windows 11.
@@ -50,8 +50,9 @@ wireless:
   path_loss_reference_m: 1000.0
   gamma_db: 10
   min_channel_power: 1.0e-14
-  power_control_mode: unified_kkt
+  power_control_mode: paper_reference_kkt
   deterministic_payload_mode: update
+  deterministic_reference_power_mode: coordinated_aggregate
   bisection_steps: 60
 
 runtime:

@@ -69,12 +69,16 @@ def test_deterministic_wireless_result_is_applied_additively(monkeypatch):
 
     captured = {}
 
-    def fake_aggregate_updates(updates, weights, channels, wireless_cfg, rng):
+    def fake_aggregate_updates_hong2023(updates, weights, channels, wireless_cfg, rng):
         del weights, channels, wireless_cfg, rng
         captured["payload"] = np.asarray(updates[0]).copy()
         return np.array([0.25, -0.5], dtype=np.float32), AirCompStats.zero()
 
-    monkeypatch.setattr(aggregation_module, "aggregate_updates", fake_aggregate_updates)
+    monkeypatch.setattr(
+        aggregation_module,
+        "aggregate_updates_hong2023",
+        fake_aggregate_updates_hong2023,
+    )
     result = aggregate_deterministic(
         current, local, np.ones(1), np.ones((1, 2), dtype=np.complex128), cfg,
         np.random.default_rng(0),

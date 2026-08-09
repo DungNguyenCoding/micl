@@ -51,6 +51,7 @@ METRIC_FIELDS = [
     "gamma_db",
     "power_control_mode",
     "deterministic_payload_mode",
+    "deterministic_reference_power_mode",
     "accuracy",
     "nll",
     "ece",

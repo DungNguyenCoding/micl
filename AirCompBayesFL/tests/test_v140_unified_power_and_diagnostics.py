@@ -12,20 +12,25 @@ from serialization import ParameterLayout
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_unified_kkt_is_the_only_v140_power_control_mode():
+def test_paper_reference_kkt_is_the_only_v150_power_control_mode():
     cfg = SimulationConfig()
-    cfg.wireless.power_control_mode = "unified_kkt"
+    cfg.wireless.power_control_mode = "paper_reference_kkt"
     cfg.validate()
-    cfg.wireless.power_control_mode = "other"
+    cfg.wireless.power_control_mode = "unified_kkt"
     with pytest.raises(ValueError):
         cfg.validate()
 
 
-def test_all_server_aggregation_paths_share_aggregate_updates():
+def test_server_paths_use_source_specific_power_scaling_with_shared_kkt_core():
     source = (ROOT / "aggregation.py").read_text(encoding="utf-8")
-    # FedAvg/FedProx update payloads route through aggregate_deterministic, SCAFFOLD through
-    # aggregate_scaffold, and both Bayesian phases through their own wrappers.
-    assert source.count("aggregate_updates(") >= 5
+    # FedAvg/FedProx + SCAFFOLD payloads use Hong-2023 reference scaling.
+    assert source.count("aggregate_updates_hong2023(") >= 3
+    # Both Bayesian phases retain target-2025 scaling.
+    assert source.count("aggregate_updates_proposed(") >= 2
+
+    aircomp_source = (ROOT / "aircomp.py").read_text(encoding="utf-8")
+    # Both aggregation implementations call one common KKT magnitude helper.
+    assert aircomp_source.count("_optimal_magnitude(") >= 3
 
 
 def test_phase2_precision_loader_preserves_float64():

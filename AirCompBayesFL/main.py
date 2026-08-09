@@ -44,11 +44,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--power-control-mode",
         default=None,
-        choices=["unified_kkt"],
+        choices=["paper_reference_kkt"],
         help=(
-            "Power-control solver used for every AirComp payload. v1.4.2 "
-            "supports unified_kkt only so Proposed and comparison methods use "
-            "the same QCQP/KKT magnitude-control implementation."
+            "v1.5.0 paper-reference mode: one shared KKT magnitude optimizer "
+            "with target-2025 scaling for Proposed and Hong-2023 reference-[13] "
+            "scaling for deterministic benchmarks."
+        ),
+    )
+    parser.add_argument(
+        "--deterministic-reference-power-mode",
+        default=None,
+        choices=["coordinated_aggregate", "weighted_local"],
+        help=(
+            "rho_ref adaptation for Hong-2023 deterministic benchmark power "
+            "control. Default: coordinated_aggregate."
         ),
     )
     parser.add_argument(
@@ -101,6 +110,10 @@ def main() -> None:
         config.wireless.enabled = False
     if args.power_control_mode is not None:
         config.wireless.power_control_mode = args.power_control_mode
+    if args.deterministic_reference_power_mode is not None:
+        config.wireless.deterministic_reference_power_mode = (
+            args.deterministic_reference_power_mode
+        )
     if args.path_loss_reference_m is not None:
         config.wireless.path_loss_reference_m = args.path_loss_reference_m
 
@@ -183,7 +196,11 @@ def main() -> None:
         f"client_num_gpus={config.runtime.client_num_gpus}, "
         f"server_device={config.runtime.server_device}, "
         f"pin_memory={config.data.pin_memory}, "
-        f"power_control={config.wireless.power_control_mode}"
+        f"power_control={config.wireless.power_control_mode}, "
+        "proposed_power=target2025_eq27_28_31, "
+        "deterministic_power=hong2023_eq8_10_20, "
+        f"deterministic_reference_power="
+        f"{config.wireless.deterministic_reference_power_mode}"
     )
     if backend == "local" and config.runtime.client_device.lower().startswith("cuda"):
         print(
