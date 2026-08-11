@@ -1,6 +1,6 @@
 # AirCompBayesFL
 
-**Version 1.5.0 — Reference-[13] benchmark power-control release**
+**Version 1.5.2 — Paired-condition seed + MNIST memory fixes**
 
 A modular Pyro + Flower/Ray reproduction framework for:
 
@@ -10,6 +10,13 @@ A modular Pyro + Flower/Ray reproduction framework for:
 This is an independent reproduction, not the authors' original source. The
 paper reports Blitz for Bayesian layers; this project intentionally uses Pyro.
 Undisclosed details are exposed as configuration values instead of being hidden.
+
+## v1.5.2 experiment-control fixes
+
+- Keeps the v1.5.1 process-local MNIST cache, preventing repeated full-dataset reloads during long native-Windows runs.
+- Uses `seed = base_seed + realization` for every condition in a figure sweep. Matching conditions therefore share the same realization seed instead of receiving the old condition-specific `+10,000` offset.
+- In Figure 5, `P=3/23/33 dBm` now use the exact same client partition, model initialization, channel RNG seed, and noise RNG seed within each replication; only transmit power changes.
+- No Bayesian VI, deterministic SGD, AirComp, KKT, wireless, or metric equation was changed from the v1.5.0 algorithmic implementation.
 
 ## v1.5.0 priorities
 

@@ -6,6 +6,7 @@ import json
 import math
 import os
 import tempfile
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
@@ -22,6 +23,37 @@ MNIST_TRANSFORM = transforms.Compose(
 )
 
 
+def _root_cache_key(root: str | Path) -> str:
+    """Return one stable cache key for a dataset root."""
+    return str(Path(root).resolve())
+
+
+@lru_cache(maxsize=4)
+def _cached_mnist(root_key: str, train: bool) -> datasets.MNIST:
+    """Load each MNIST split once per Python process.
+
+    The native-Windows local backend calls ``load_client_loader`` for every
+    client and every physical phase. Reconstructing ``datasets.MNIST`` on each
+    call repeatedly allocates the full ~47 MB training image tensor and can
+    eventually exhaust/fragment host RAM during long two-phase runs.
+
+    The dataset object is immutable for our usage; client-specific subsets and
+    shuffle order remain separate, so caching does not change the experiment.
+    Ray workers naturally get independent process-local caches.
+    """
+    return datasets.MNIST(
+        root=root_key,
+        train=bool(train),
+        download=False,
+        transform=MNIST_TRANSFORM,
+    )
+
+
+def clear_dataset_cache() -> None:
+    """Clear process-local dataset objects (mainly useful for tests)."""
+    _cached_mnist.cache_clear()
+
+
 def ensure_mnist(root: str | Path) -> None:
     """Download MNIST once before Ray workers start."""
     root = str(root)
@@ -30,7 +62,7 @@ def ensure_mnist(root: str | Path) -> None:
 
 
 def _training_targets(root: str | Path) -> np.ndarray:
-    dataset = datasets.MNIST(root=str(root), train=True, download=False)
+    dataset = _cached_mnist(_root_cache_key(root), True)
     targets = dataset.targets
     if isinstance(targets, torch.Tensor):
         return targets.cpu().numpy().astype(np.int64)
@@ -177,12 +209,7 @@ def load_client_loader(
     pin_memory: bool | None = None,
 ) -> Tuple[DataLoader, Dict[str, object]]:
     metadata = load_partition_metadata(partition_path, client_id)
-    dataset = datasets.MNIST(
-        root=data_cfg.root,
-        train=True,
-        download=False,
-        transform=MNIST_TRANSFORM,
-    )
+    dataset = _cached_mnist(_root_cache_key(data_cfg.root), True)
     subset = Subset(dataset, [int(v) for v in metadata["indices"]])
     generator = torch.Generator()
     generator.manual_seed(int(shuffle_seed))
@@ -206,12 +233,7 @@ def load_test_loader(
     batch_size: int = 512,
     pin_memory: bool | None = None,
 ) -> DataLoader:
-    dataset = datasets.MNIST(
-        root=data_cfg.root,
-        train=False,
-        download=False,
-        transform=MNIST_TRANSFORM,
-    )
+    dataset = _cached_mnist(_root_cache_key(data_cfg.root), False)
     effective_pin_memory = (
         data_cfg.pin_memory if pin_memory is None else bool(pin_memory)
     )

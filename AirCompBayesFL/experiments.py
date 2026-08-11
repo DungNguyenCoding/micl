@@ -36,6 +36,21 @@ def payload_multiplier(method: str) -> int:
     return 2 if method in {"proposed", "scaffold"} else 1
 
 
+def paired_realization_seed(base_seed: int, realization: int) -> int:
+    """Return the seed shared by matching conditions of one realization.
+
+    Figure sweeps should change the intended condition variable (labels, local
+    dataset size, or transmit power) without also introducing a condition-specific
+    +10,000 seed offset.  Reusing ``base_seed + realization`` pairs the stochastic
+    realization across conditions.  For Figure 5, where the data configuration is
+    otherwise identical, this also reuses the exact same client partition, model
+    initialization, channel RNG seed, and noise RNG seed for P=3/23/33 dBm.
+    """
+    if int(realization) < 0:
+        raise ValueError("realization must be non-negative")
+    return int(base_seed) + int(realization)
+
+
 def derive_rounds(
     config: SimulationConfig,
     method: str,

@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.5.2 — Paired condition seeds
+
+- Pair the stochastic realization seed across conditions within Figure 3, Figure 4, and Figure 5 sweeps.
+- Remove the old condition-specific `+ 10_000 * condition_counter` seed offset.
+- A given replication now uses `base_seed + realization` for every condition.
+- Figure 5 therefore compares `P = 3/23/33 dBm` using the same client partition, model initialization, channel RNG seed, and noise RNG seed; only the configured transmit power changes.
+- Keep the v1.5.1 process-local MNIST cache and all v1.5.0 Proposed/Hong-2023 learning and AirComp equations unchanged.
+- Add regression tests for paired-condition seed semantics.
+
+## v1.5.1 — MNIST host-memory cache
+
+- Cache the MNIST train/test dataset objects once per Python process.
+- Prevent native-Windows local runs from repeatedly loading the full MNIST tensor for every client and every Proposed physical phase.
+- Preserve client subsets, deterministic shuffle seeds, transforms, and all learning/AirComp equations unchanged.
+- Add a regression test for process-local MNIST caching.
+
+
 ## 1.5.0 — Reference-[13] benchmark power-control correction
 
 - Inspected the actual Hong, Park, and Choi IEEE TWC 2023 reference [13].

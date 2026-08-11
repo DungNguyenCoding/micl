@@ -11,7 +11,12 @@ from typing import Dict, Iterable, List, Optional, Sequence, Set
 from bayesian_protocol import physical_round_count
 from config import SimulationConfig
 from dataset import ensure_mnist, prepare_partitions
-from experiments import RunSpec, derive_rounds, experiment_conditions
+from experiments import (
+    RunSpec,
+    derive_rounds,
+    experiment_conditions,
+    paired_realization_seed,
+)
 from models import build_model, count_parameters
 from runtime_utils import (
     configure_runtime_environment,
@@ -149,20 +154,16 @@ def main() -> None:
     finished = completed_runs(metrics_path) if args.resume else {}
 
     planned: List[tuple[SimulationConfig, RunSpec, str]] = []
-    condition_counter = 0
     for experiment in experiments:
         for condition in experiment_conditions(experiment, config, methods_override):
-            condition_counter += 1
             condition_cfg = config.copy()
             condition_cfg.data.labels_per_client = condition.labels_per_client
             condition_cfg.data.mean_samples_per_client = condition.mean_samples_per_client
             condition_cfg.wireless.power_dbm = condition.power_dbm
 
             for realization in range(condition_cfg.runtime.replications):
-                partition_seed = (
-                    condition_cfg.runtime.seed
-                    + 10_000 * condition_counter
-                    + realization
+                partition_seed = paired_realization_seed(
+                    condition_cfg.runtime.seed, realization
                 )
                 partition_path = prepare_partitions(
                     condition_cfg.data,
