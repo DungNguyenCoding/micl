@@ -54,6 +54,7 @@ from runtime_utils import (
     resolve_device,
     should_pin_memory,
 )
+from sparse_posterior import kept_coordinate_count
 from serialization import (
     ParameterLayout,
     initial_model_vector,
@@ -190,6 +191,22 @@ class AirCompStrategy(FedAvg):
             )
         return self.aggregate_payloads(int(server_round), payloads)
 
+    def _sparse_proposed_active(self) -> bool:
+        return bool(
+            self.method == "proposed"
+            and self.config_obj.sparse.enabled
+            and float(self.config_obj.sparse.keep_ratio) < 1.0
+        )
+
+    def _phase_payload_dimension(self) -> int:
+        if self.method == "proposed" and self.config_obj.sparse.enabled:
+            return kept_coordinate_count(
+                self.dimension,
+                float(self.config_obj.sparse.keep_ratio),
+                int(self.config_obj.sparse.min_keep),
+            )
+        return int(self.dimension)
+
     def aggregate_payloads(
         self,
         physical_round: int,
@@ -282,6 +299,15 @@ class AirCompStrategy(FedAvg):
                     "local_implied_mean_l2": float(
                         metrics.get("local_implied_mean_l2", 0.0)
                     ),
+                    "sparse_enabled": bool(metrics.get("sparse_enabled", False)),
+                    "sparse_selection": str(metrics.get("sparse_selection", "")),
+                    "sparse_keep_ratio": float(metrics.get("sparse_keep_ratio", 1.0)),
+                    "sparse_kept_coordinates": int(metrics.get("sparse_kept_coordinates", 0)),
+                    "sparse_total_coordinates": int(metrics.get("sparse_total_coordinates", 0)),
+                    "sparse_score_threshold": float(metrics.get("sparse_score_threshold", float("nan"))),
+                    "sparse_score_mean": float(metrics.get("sparse_score_mean", float("nan"))),
+                    "sparse_selected_score_mean": float(metrics.get("sparse_selected_score_mean", float("nan"))),
+                    "sparse_dropped_score_mean": float(metrics.get("sparse_dropped_score_mean", float("nan"))),
                 }
             )
 
@@ -372,6 +398,7 @@ class AirCompStrategy(FedAvg):
                 wireless_cfg=self.config_obj.wireless,
                 model_cfg=self.config_obj.model,
                 rng=phase_rng,
+                sparse_missing_is_silent=self._sparse_proposed_active(),
             )
             # Critical Algorithm-1 boundary: keep mu_t unchanged and broadcast
             # the newly aggregated rho_{t+1} before phase 2 starts.  Phase 2
@@ -423,6 +450,7 @@ class AirCompStrategy(FedAvg):
                 channels=channels,
                 wireless_cfg=self.config_obj.wireless,
                 rng=phase_rng,
+                sparse_missing_is_silent=self._sparse_proposed_active(),
             )
             if len(self.current_arrays) != 3:
                 raise RuntimeError(
@@ -454,9 +482,10 @@ class AirCompStrategy(FedAvg):
                 f"Unknown method/phase combination: {self.method}/{context.phase}"
             )
 
-        self.channel_uses_cumulative += phase_multiplier * self.dimension
+        phase_payload_dimension = self._phase_payload_dimension()
+        self.channel_uses_cumulative += phase_multiplier * phase_payload_dimension
         self.ofdm_symbols_cumulative += phase_multiplier * math.ceil(
-            self.dimension / self.config_obj.wireless.num_subchannels
+            phase_payload_dimension / self.config_obj.wireless.num_subchannels
         )
         parameters = ndarrays_to_parameters(self.current_arrays)
         return parameters, {
@@ -524,12 +553,17 @@ class AirCompStrategy(FedAvg):
             posterior_variance = 0.0
 
         multiplier = payload_multiplier(self.method)
-        channel_uses_round = 0 if logical_round == 0 else multiplier * self.dimension
+        payload_dimension = self._phase_payload_dimension()
+        channel_uses_round = (
+            0 if logical_round == 0 else multiplier * payload_dimension
+        )
         ofdm_symbols_round = (
             0
             if logical_round == 0
             else multiplier
-            * math.ceil(self.dimension / self.config_obj.wireless.num_subchannels)
+            * math.ceil(
+                payload_dimension / self.config_obj.wireless.num_subchannels
+            )
         )
         base = {
             "run_id": self.run_spec.run_id,
@@ -557,6 +591,24 @@ class AirCompStrategy(FedAvg):
             ),
             "deterministic_reference_power_mode": (
                 self.config_obj.wireless.deterministic_reference_power_mode
+            ),
+            "sparse_enabled": bool(
+                self.method == "proposed" and self.config_obj.sparse.enabled
+            ),
+            "sparse_selection": (
+                str(self.config_obj.sparse.selection)
+                if self.method == "proposed" and self.config_obj.sparse.enabled
+                else ""
+            ),
+            "sparse_keep_ratio": (
+                float(self.config_obj.sparse.keep_ratio)
+                if self.method == "proposed" and self.config_obj.sparse.enabled
+                else 1.0
+            ),
+            "sparse_kept_coordinates": (
+                self._phase_payload_dimension()
+                if self.method == "proposed" and self.config_obj.sparse.enabled
+                else self.dimension
             ),
         }
         if self.method == "proposed":

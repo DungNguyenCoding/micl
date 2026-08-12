@@ -83,6 +83,24 @@ class WirelessConfig:
     deterministic_reference_power_mode: str = "coordinated_aggregate"
 
 
+
+
+@dataclass
+class SparsePosteriorConfig:
+    """Optional research extension for sparse posterior-evidence communication.
+
+    Disabled by default so the paper-reproduction path is unchanged.  When
+    enabled for Proposed with keep_ratio < 1, each client selects a fixed-size
+    coordinate mask once per logical round and applies that same mask to both
+    Delta-rho and Delta-nu transmissions.
+    """
+
+    enabled: bool = False
+    selection: str = "bayesian"  # bayesian | random
+    keep_ratio: float = 1.0
+    score_epsilon: float = 1.0e-12
+    min_keep: int = 1
+
 @dataclass
 class RuntimeConfig:
     seed: int = 2025
@@ -125,6 +143,7 @@ class SimulationConfig:
     model: ModelConfig = field(default_factory=ModelConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)
     wireless: WirelessConfig = field(default_factory=WirelessConfig)
+    sparse: SparsePosteriorConfig = field(default_factory=SparsePosteriorConfig)
     runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
 
@@ -138,6 +157,7 @@ class SimulationConfig:
             model=ModelConfig(**raw.get("model", {})),
             training=TrainingConfig(**raw.get("training", {})),
             wireless=WirelessConfig(**raw.get("wireless", {})),
+            sparse=SparsePosteriorConfig(**raw.get("sparse", {})),
             runtime=RuntimeConfig(**raw.get("runtime", {})),
             output=OutputConfig(**raw.get("output", {})),
         )
@@ -189,6 +209,17 @@ class SimulationConfig:
                 "wireless.deterministic_reference_power_mode must be "
                 "coordinated_aggregate or weighted_local"
             )
+        if str(self.sparse.selection).strip().lower() not in {"bayesian", "random"}:
+            raise ValueError("sparse.selection must be bayesian or random")
+        if not (0.0 < float(self.sparse.keep_ratio) <= 1.0):
+            raise ValueError("sparse.keep_ratio must be in (0, 1]")
+        if float(self.sparse.score_epsilon) <= 0.0:
+            raise ValueError("sparse.score_epsilon must be positive")
+        if int(self.sparse.min_keep) <= 0:
+            raise ValueError("sparse.min_keep must be positive")
+        if self.sparse.enabled and self.training.bayesian_local_mode not in {"two_phase", "paper_two_phase"}:
+            raise ValueError("Sparse posterior evidence requires the Proposed two-phase VI mode")
+
         if self.runtime.replications <= 0:
             raise ValueError("runtime.replications must be positive")
         if self.runtime.client_num_cpus <= 0:
@@ -217,6 +248,7 @@ class SimulationConfig:
             model=replace(self.model),
             training=replace(self.training),
             wireless=replace(self.wireless),
+            sparse=replace(self.sparse),
             runtime=replace(self.runtime),
             output=replace(self.output),
         )

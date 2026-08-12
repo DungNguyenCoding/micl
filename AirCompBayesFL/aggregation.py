@@ -146,6 +146,8 @@ def aggregate_gaussian_precision_phase(
     wireless_cfg: WirelessConfig,
     model_cfg: ModelConfig,
     rng: np.random.Generator,
+    *,
+    sparse_missing_is_silent: bool = False,
 ) -> AggregationResult:
     """Aggregate Delta-rho and update rho_{t+1}; Eqs. (26)-(32)."""
     # Precision uses a float64 master representation.  The direct rho update in
@@ -155,6 +157,12 @@ def aggregate_gaussian_precision_phase(
         np.asarray(local, dtype=np.float64).reshape(-1) - current
         for local in local_precisions
     ]
+    active_mask = None
+    if sparse_missing_is_silent:
+        active_mask = np.any(
+            np.stack([np.asarray(update) != 0.0 for update in updates]),
+            axis=0,
+        )
     aggregate, stats = aggregate_updates_proposed(
         updates,
         weights,
@@ -162,6 +170,7 @@ def aggregate_gaussian_precision_phase(
         wireless_cfg,
         rng,
         output_dtype=np.float64,
+        active_coordinate_mask=active_mask,
     )
     next_precision = np.clip(
         current + aggregate,
@@ -180,6 +189,8 @@ def aggregate_gaussian_natural_mean_phase(
     channels: np.ndarray,
     wireless_cfg: WirelessConfig,
     rng: np.random.Generator,
+    *,
+    sparse_missing_is_silent: bool = False,
 ) -> AggregationResult:
     """Aggregate Delta-nu and update mu_{t+1}; Eqs. (36)-(37).
 
@@ -192,8 +203,19 @@ def aggregate_gaussian_natural_mean_phase(
         np.asarray(local_nu, dtype=np.float32).reshape(-1) - current
         for local_nu in local_nus
     ]
+    active_mask = None
+    if sparse_missing_is_silent:
+        active_mask = np.any(
+            np.stack([np.asarray(update) != 0.0 for update in updates]),
+            axis=0,
+        )
     aggregate, stats = aggregate_updates_proposed(
-        updates, weights, channels, wireless_cfg, rng
+        updates,
+        weights,
+        channels,
+        wireless_cfg,
+        rng,
+        active_coordinate_mask=active_mask,
     )
     next_mean = (current + aggregate).astype(np.float32)
     if not np.all(np.isfinite(next_mean)):

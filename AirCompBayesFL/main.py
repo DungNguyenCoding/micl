@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--experiment",
         default="fig2",
-        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "all"],
+        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "sparse", "all"],
     )
     parser.add_argument(
         "--methods",
@@ -73,6 +73,18 @@ def parse_args() -> argparse.Namespace:
             "Override wireless.path_loss_reference_m. The default configs use "
             "1000 m, equivalent to expressing distance in km."
         ),
+    )
+    parser.add_argument(
+        "--sparse-selection",
+        default=None,
+        choices=["bayesian", "random"],
+        help="Manual sparse-posterior selector override for research runs.",
+    )
+    parser.add_argument(
+        "--sparse-keep-ratio",
+        type=float,
+        default=None,
+        help="Manual sparse-posterior keep ratio in (0,1].",
     )
     parser.add_argument("--force-partitions", action="store_true")
     parser.add_argument("--resume", action="store_true")
@@ -121,6 +133,12 @@ def main() -> None:
         )
     if args.path_loss_reference_m is not None:
         config.wireless.path_loss_reference_m = args.path_loss_reference_m
+    if args.sparse_selection is not None:
+        config.sparse.selection = args.sparse_selection
+        config.sparse.enabled = True
+    if args.sparse_keep_ratio is not None:
+        config.sparse.keep_ratio = args.sparse_keep_ratio
+        config.sparse.enabled = True
 
     # Apply CLI overrides before validating runtime/GPU consistency.
     config.validate()
@@ -160,6 +178,10 @@ def main() -> None:
             condition_cfg.data.labels_per_client = condition.labels_per_client
             condition_cfg.data.mean_samples_per_client = condition.mean_samples_per_client
             condition_cfg.wireless.power_dbm = condition.power_dbm
+            if condition.experiment == "sparse":
+                condition_cfg.sparse.enabled = True
+                condition_cfg.sparse.selection = condition.sparse_selection
+                condition_cfg.sparse.keep_ratio = condition.sparse_keep_ratio
 
             for realization in range(condition_cfg.runtime.replications):
                 partition_seed = paired_realization_seed(
@@ -202,6 +224,10 @@ def main() -> None:
         "deterministic_power=hong2023_eq8_10_20, "
         f"deterministic_reference_power="
         f"{config.wireless.deterministic_reference_power_mode}"
+        + (
+            f", sparse={config.sparse.selection}@{100.0 * config.sparse.keep_ratio:.0f}%"
+            if config.sparse.enabled else ""
+        )
     )
     if backend == "local" and config.runtime.client_device.lower().startswith("cuda"):
         print(

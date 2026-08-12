@@ -260,14 +260,446 @@ def plot_proposed_debug(metrics: pd.DataFrame, output_dir: Path) -> Path:
     plt.close(figure)
     return path
 
+
+def _sparse_final_metrics(metrics: pd.DataFrame) -> pd.DataFrame:
+    frame = metrics[metrics["experiment"] == "sparse"].copy()
+    if frame.empty:
+        raise ValueError("No sparse experiment rows found")
+    final_rounds = frame.groupby("run_id")["round"].transform("max")
+    final = frame[frame["round"] == final_rounds].copy()
+    if "sparse_selection" not in final.columns:
+        final["sparse_selection"] = final["condition"].str.split("_keep").str[0]
+    if "sparse_keep_ratio" not in final.columns:
+        final["sparse_keep_ratio"] = (
+            final["condition"].str.split("keep").str[-1].astype(float) / 100.0
+        )
+    final["keep_percent"] = 100.0 * final["sparse_keep_ratio"].astype(float)
+    return final
+
+
+def _sparse_target_round(metrics: pd.DataFrame) -> int:
+    """Return the sparse experiment round used for the shared dense baseline."""
+    frame = metrics[metrics["experiment"] == "sparse"].copy()
+    if frame.empty:
+        raise ValueError("No sparse experiment rows found")
+    rounds = pd.to_numeric(frame["round"], errors="coerce").dropna()
+    if rounds.empty:
+        raise ValueError("Sparse metrics do not contain a valid round column")
+    return int(rounds.max())
+
+
+def _seed_values(frame: pd.DataFrame) -> set[int]:
+    if "seed" not in frame.columns:
+        return set()
+    values = pd.to_numeric(frame["seed"], errors="coerce").dropna()
+    return {int(value) for value in values.tolist()}
+
+
+def _shared_dense_keep100_rows(
+    sparse_metrics: pd.DataFrame,
+    dense_metrics: pd.DataFrame,
+    *,
+    target_round: int,
+) -> pd.DataFrame:
+    """Create Bayesian/random keep100 rows from an existing dense Fig.2 run.
+
+    The dense Proposed trajectory is mathematically identical to both sparse
+    selectors at keep_ratio=1.0.  We therefore reuse the requested Figure-2
+    round rather than rerunning two redundant sparse conditions.
+    """
+    baseline = dense_metrics[
+        (dense_metrics["experiment"] == "fig2")
+        & (dense_metrics["method"] == "proposed")
+        & (pd.to_numeric(dense_metrics["round"], errors="coerce") <= int(target_round))
+    ].copy()
+    if baseline.empty:
+        raise ValueError(
+            "Dense baseline has no Proposed Fig.2 rows at or before "
+            f"round {target_round}"
+        )
+    if int(pd.to_numeric(baseline["round"], errors="coerce").max()) < int(target_round):
+        raise ValueError(
+            f"Dense baseline stops before sparse target round {target_round}"
+        )
+
+    sparse_seeds = _seed_values(sparse_metrics)
+    dense_seeds = _seed_values(baseline)
+    if sparse_seeds and dense_seeds:
+        missing = sparse_seeds.difference(dense_seeds)
+        if missing:
+            raise ValueError(
+                "Dense baseline is missing sparse realization seed(s): "
+                + ", ".join(str(value) for value in sorted(missing))
+            )
+        baseline = baseline[
+            pd.to_numeric(baseline["seed"], errors="coerce").isin(sparse_seeds)
+        ].copy()
+
+    copies = []
+    for selection in ("bayesian", "random"):
+        part = baseline.copy()
+        part["experiment"] = "sparse"
+        part["condition"] = f"{selection}_keep100"
+        part["sparse_selection"] = selection
+        part["sparse_keep_ratio"] = 1.0
+        part["run_id"] = part["run_id"].astype(str) + f"__{selection}_keep100_reuse"
+        copies.append(part)
+    return pd.concat(copies, ignore_index=True, sort=False)
+
+
+def _shared_dense_keep100_reliability(
+    sparse_metrics: pd.DataFrame,
+    dense_reliability: pd.DataFrame,
+    *,
+    target_round: int,
+) -> pd.DataFrame:
+    """Create keep100 reliability rows from Fig.2 at exactly target_round."""
+    if dense_reliability.empty:
+        return pd.DataFrame()
+    baseline = dense_reliability[
+        (dense_reliability["experiment"] == "fig2")
+        & (dense_reliability["method"] == "proposed")
+        & (pd.to_numeric(dense_reliability["round"], errors="coerce") == int(target_round))
+    ].copy()
+    if baseline.empty:
+        raise ValueError(
+            "Dense baseline reliability.csv has no Proposed Fig.2 rows at "
+            f"round {target_round}"
+        )
+
+    sparse_seeds = _seed_values(sparse_metrics)
+    dense_seeds = _seed_values(baseline)
+    if sparse_seeds and dense_seeds:
+        missing = sparse_seeds.difference(dense_seeds)
+        if missing:
+            raise ValueError(
+                "Dense baseline reliability data is missing sparse seed(s): "
+                + ", ".join(str(value) for value in sorted(missing))
+            )
+        baseline = baseline[
+            pd.to_numeric(baseline["seed"], errors="coerce").isin(sparse_seeds)
+        ].copy()
+
+    copies = []
+    for selection in ("bayesian", "random"):
+        part = baseline.copy()
+        part["experiment"] = "sparse"
+        part["condition"] = f"{selection}_keep100"
+        part["run_id"] = part["run_id"].astype(str) + f"__{selection}_keep100_reuse"
+        copies.append(part)
+    return pd.concat(copies, ignore_index=True, sort=False)
+
+
+def _aggregate_reliability_condition(group: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    for bin_index, bin_group in group.groupby("bin"):
+        counts = bin_group["count"].to_numpy(dtype=float)
+        total = max(float(counts.sum()), 1.0)
+        rows.append(
+            {
+                "bin": int(bin_index),
+                "lower": float(bin_group["lower"].iloc[0]),
+                "upper": float(bin_group["upper"].iloc[0]),
+                "count": float(counts.sum()),
+                "confidence": float(np.dot(bin_group["confidence"], counts) / total),
+                "accuracy": float(np.dot(bin_group["accuracy"], counts) / total),
+            }
+        )
+    return pd.DataFrame(rows).sort_values("bin")
+
+
+def _draw_reliability(axis: plt.Axes, grouped: pd.DataFrame, title: str) -> None:
+    centers = 0.5 * (grouped["lower"] + grouped["upper"])
+    widths = grouped["upper"] - grouped["lower"]
+    axis.bar(
+        centers,
+        grouped["accuracy"],
+        width=widths * 0.9,
+        alpha=0.75,
+        label="Outputs",
+    )
+    gap_bottom = np.minimum(grouped["accuracy"], grouped["confidence"])
+    gap_height = np.abs(grouped["accuracy"] - grouped["confidence"])
+    axis.bar(
+        centers,
+        gap_height,
+        bottom=gap_bottom,
+        width=widths * 0.9,
+        alpha=0.3,
+        label="Gap",
+    )
+    axis.plot([0, 1], [0, 1], linestyle="--", label="Ideal")
+    ece = (
+        np.sum(grouped["count"] * np.abs(grouped["accuracy"] - grouped["confidence"]))
+        / max(float(grouped["count"].sum()), 1.0)
+    )
+    axis.set_title(f"{title} — ECE={ece:.3f}")
+    axis.set_xlabel("Confidence")
+    axis.set_ylabel("Accuracy")
+    axis.set_xlim(0, 1)
+    axis.set_ylim(0, 1)
+    axis.grid(alpha=0.2)
+
+
+def plot_sparse_suite(
+    metrics: pd.DataFrame,
+    reliability: pd.DataFrame,
+    output_dir: Path,
+    dense_metrics: pd.DataFrame | None = None,
+    dense_reliability: pd.DataFrame | None = None,
+    dense_baseline_round: int | None = None,
+) -> Path:
+    """Create the Bayesian-vs-random posterior-sparsity experiment plots."""
+    sparse_only = metrics[metrics["experiment"] == "sparse"].copy()
+    if sparse_only.empty:
+        raise ValueError("No sparse experiment rows found")
+    target_round = (
+        int(dense_baseline_round)
+        if dense_baseline_round is not None
+        else _sparse_target_round(metrics)
+    )
+
+    plot_metrics = metrics.copy()
+    plot_reliability = reliability.copy()
+    if dense_metrics is not None:
+        dense_keep100 = _shared_dense_keep100_rows(
+            sparse_only,
+            dense_metrics,
+            target_round=target_round,
+        )
+        plot_metrics = pd.concat(
+            [plot_metrics, dense_keep100], ignore_index=True, sort=False
+        )
+        if dense_reliability is not None and not dense_reliability.empty:
+            dense_keep100_rel = _shared_dense_keep100_reliability(
+                sparse_only,
+                dense_reliability,
+                target_round=target_round,
+            )
+            if not dense_keep100_rel.empty:
+                plot_reliability = pd.concat(
+                    [plot_reliability, dense_keep100_rel],
+                    ignore_index=True,
+                    sort=False,
+                )
+        print(
+            "Sparse plotting: reusing dense Proposed Fig.2 as shared keep100 "
+            f"baseline at round {target_round}."
+        )
+    else:
+        print(
+            "Sparse plotting: no --dense-baseline supplied; keep100 will be "
+            "omitted from sparse plots."
+        )
+
+    final = _sparse_final_metrics(plot_metrics)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    created: list[Path] = []
+
+    # 1) Final accuracy vs keep ratio.
+    figure, axis = plt.subplots(figsize=(7.5, 4.8))
+    for selection in ("bayesian", "random"):
+        sub = final[final["sparse_selection"] == selection]
+        if sub.empty:
+            continue
+        grouped = (
+            sub.groupby("keep_percent", as_index=False)
+            .agg(value=("accuracy", "mean"), std=("accuracy", "std"))
+            .sort_values("keep_percent")
+        )
+        grouped["std"] = grouped["std"].fillna(0.0)
+        axis.errorbar(
+            grouped["keep_percent"],
+            grouped["value"],
+            yerr=grouped["std"],
+            marker="o",
+            capsize=3,
+            label="Bayesian update-SNR" if selection == "bayesian" else "Random",
+        )
+    axis.set_xlabel("Keep ratio (%)")
+    axis.set_ylabel("Final global accuracy")
+    axis.grid(alpha=0.25)
+    axis.legend()
+    figure.tight_layout()
+    path = output_dir / "sparse_accuracy_vs_keep_ratio.png"
+    figure.savefig(path, dpi=200)
+    plt.close(figure)
+    created.append(path)
+
+    # 2) Final ECE vs keep ratio.
+    figure, axis = plt.subplots(figsize=(7.5, 4.8))
+    for selection in ("bayesian", "random"):
+        sub = final[final["sparse_selection"] == selection]
+        if sub.empty:
+            continue
+        grouped = (
+            sub.groupby("keep_percent", as_index=False)["ece"]
+            .mean()
+            .sort_values("keep_percent")
+        )
+        axis.plot(
+            grouped["keep_percent"],
+            grouped["ece"],
+            marker="o",
+            label="Bayesian update-SNR" if selection == "bayesian" else "Random",
+        )
+    axis.set_xlabel("Keep ratio (%)")
+    axis.set_ylabel("Final expected calibration error")
+    axis.grid(alpha=0.25)
+    axis.legend()
+    figure.tight_layout()
+    path = output_dir / "sparse_ece_vs_keep_ratio.png"
+    figure.savefig(path, dpi=200)
+    plt.close(figure)
+    created.append(path)
+
+    # 3) Round-by-round accuracy vs sparse payload channel uses, all settings.
+    frame = plot_metrics[plot_metrics["experiment"] == "sparse"].copy()
+    figure, axis = plt.subplots(figsize=(9.0, 5.8))
+    for condition in sorted(frame["condition"].dropna().unique()):
+        # Bayesian/random keep100 are the exact same reused dense trajectory.
+        # Draw it only once in the round-by-round overlay to avoid duplicate
+        # indistinguishable legend entries.
+        if condition == "random_keep100":
+            continue
+        sub = frame[frame["condition"] == condition]
+        curve = _mean_curve(sub)
+        if condition == "bayesian_keep100":
+            label = "Dense 100% (shared)"
+        else:
+            label = str(condition).replace("bayesian_keep", "Bayes ").replace(
+                "random_keep", "Random "
+            ) + "%"
+        axis.plot(
+            curve["channel_uses_cumulative"],
+            curve["accuracy"],
+            label=label,
+        )
+    axis.set_xlabel("Sparse posterior values transmitted (cumulative)")
+    axis.set_ylabel("Accuracy for test dataset")
+    axis.set_ylim(0.05, 1.0)
+    axis.grid(alpha=0.25)
+    axis.legend(ncol=2, fontsize=8)
+    figure.tight_layout()
+    path = output_dir / "sparse_accuracy_vs_channel_uses_all.png"
+    figure.savefig(path, dpi=200)
+    plt.close(figure)
+    created.append(path)
+
+    # 4) Final accuracy vs total communication cost (Pareto-style).
+    figure, axis = plt.subplots(figsize=(7.5, 4.8))
+    for selection in ("bayesian", "random"):
+        sub = final[final["sparse_selection"] == selection]
+        if sub.empty:
+            continue
+        grouped = (
+            sub.groupby("keep_percent", as_index=False)
+            .agg(
+                accuracy=("accuracy", "mean"),
+                channel_uses=("channel_uses_cumulative", "mean"),
+            )
+            .sort_values("channel_uses")
+        )
+        axis.plot(
+            grouped["channel_uses"],
+            grouped["accuracy"],
+            marker="o",
+            label="Bayesian update-SNR" if selection == "bayesian" else "Random",
+        )
+        for _, row in grouped.iterrows():
+            axis.annotate(
+                f"{row['keep_percent']:.0f}%",
+                (row["channel_uses"], row["accuracy"]),
+                xytext=(4, 4),
+                textcoords="offset points",
+                fontsize=8,
+            )
+    axis.set_xlabel("Total sparse posterior values transmitted")
+    axis.set_ylabel("Final global accuracy")
+    axis.grid(alpha=0.25)
+    axis.legend()
+    figure.tight_layout()
+    path = output_dir / "sparse_final_accuracy_vs_total_channel_uses.png"
+    figure.savefig(path, dpi=200)
+    plt.close(figure)
+    created.append(path)
+
+    # 5) Figure-6-style reliability: one file per selection/keep ratio + grid.
+    rel = _final_reliability_rows(plot_reliability, "sparse")
+    if not rel.empty:
+        condition_order = [
+            f"{selection}_keep{keep}"
+            for selection in ("bayesian", "random")
+            for keep in (100, 75, 50, 25, 10, 5, 2)
+        ]
+        grid_fig, grid_axes = plt.subplots(
+            2, 7, figsize=(24.0, 7.0), squeeze=False, sharex=True, sharey=True
+        )
+        for index, condition in enumerate(condition_order):
+            sub = rel[rel["condition"] == condition]
+            if sub.empty:
+                continue
+            grouped = _aggregate_reliability_condition(sub)
+            selection, keep_text = condition.split("_keep", 1)
+            title = (
+                ("Bayes" if selection == "bayesian" else "Random")
+                + f" — keep {keep_text}%"
+            )
+            row = 0 if selection == "bayesian" else 1
+            col = (100, 75, 50, 25, 10, 5, 2).index(int(keep_text))
+            _draw_reliability(grid_axes[row][col], grouped, title)
+
+            single_fig, single_axis = plt.subplots(figsize=(5.2, 4.5))
+            _draw_reliability(single_axis, grouped, title)
+            single_axis.legend()
+            single_fig.tight_layout()
+            single_path = output_dir / f"sparse_reliability_{condition}.png"
+            single_fig.savefig(single_path, dpi=200)
+            plt.close(single_fig)
+            created.append(single_path)
+
+        handles, labels = grid_axes[0][0].get_legend_handles_labels()
+        if handles:
+            grid_fig.legend(handles, labels, loc="upper center", ncol=3)
+        grid_fig.tight_layout(rect=(0, 0, 1, 0.95))
+        grid_path = output_dir / "sparse_reliability_grid.png"
+        grid_fig.savefig(grid_path, dpi=180)
+        plt.close(grid_fig)
+        created.append(grid_path)
+
+    print("Sparse suite created:")
+    for item in created:
+        print(f"  {item}")
+    return created[0]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate paper-style plots from CSV logs")
     parser.add_argument("--input", default="results", help="Directory containing metrics.csv")
     parser.add_argument("--output", default=None, help="Plot output directory")
     parser.add_argument(
+        "--dense-baseline",
+        default=None,
+        help=(
+            "Optional Figure-2 result directory used as the shared 100%% keep "
+            "baseline for --figure sparse. The plotter reuses the Proposed row "
+            "at the sparse experiment's final round instead of requiring two "
+            "redundant keep100 sparse runs."
+        ),
+    )
+    parser.add_argument(
+        "--dense-baseline-round",
+        type=int,
+        default=None,
+        help=(
+            "Round to reuse from --dense-baseline. By default, use the highest "
+            "round present in the sparse experiment (normally 120)."
+        ),
+    )
+    parser.add_argument(
         "--figure",
         default="all",
-        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "proposed_debug", "all"],
+        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "proposed_debug", "sparse", "all"],
     )
     return parser.parse_args()
 
@@ -278,6 +710,10 @@ def main() -> None:
     output_dir = Path(args.output) if args.output else input_dir / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
     metrics, reliability = load_results(input_dir)
+    dense_metrics = None
+    dense_reliability = None
+    if args.dense_baseline is not None:
+        dense_metrics, dense_reliability = load_results(args.dense_baseline)
 
     requested = (
         ["fig2", "fig3", "fig4", "fig5", "fig6", "ece", "proposed_debug"]
@@ -292,6 +728,14 @@ def main() -> None:
         "fig6": lambda: plot_fig6(reliability, output_dir),
         "ece": lambda: plot_ece(metrics, output_dir),
         "proposed_debug": lambda: plot_proposed_debug(metrics, output_dir),
+        "sparse": lambda: plot_sparse_suite(
+            metrics,
+            reliability,
+            output_dir,
+            dense_metrics=dense_metrics,
+            dense_reliability=dense_reliability,
+            dense_baseline_round=args.dense_baseline_round,
+        ),
     }
     for name in requested:
         try:

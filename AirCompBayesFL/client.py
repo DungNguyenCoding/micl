@@ -19,6 +19,11 @@ from deterministic import train_deterministic
 from models import build_model
 from runtime_utils import release_cuda_memory, resolve_device, should_pin_memory
 from serialization import ParameterLayout, initial_model_vector
+from sparse_posterior import (
+    bayesian_update_snr_score,
+    full_mask_info,
+    select_sparse_mask,
+)
 
 
 class AirCompNumPyClient(fl.client.NumPyClient):
@@ -184,6 +189,68 @@ class AirCompNumPyClient(fl.client.NumPyClient):
 
         raise ValueError(f"Unknown method: {self.method}")
 
+    def _sparse_proposed_enabled(self) -> bool:
+        return bool(self.method == "proposed" and self.config.sparse.enabled)
+
+    def _sparse_mask_for_precision_phase(
+        self,
+        *,
+        trainer: BayesianVITrainer,
+        global_mean: np.ndarray,
+        global_precision: np.ndarray,
+        local_precision: np.ndarray,
+        loader,
+        logical_round: int,
+        phase_seed: int,
+    ):
+        """Return one coordinate mask shared by Delta-rho and Delta-nu.
+
+        keep=100% is a strict pass-through and skips the score probe so the
+        numerical path is identical to the dense Figure-2 Proposed method.
+
+        For keep<100%, a non-communicated local posterior-mean probe is trained
+        with the just-learned local precision held as its covariance.  This
+        provides q_k=N(mu_k, diag(rho_k)^-1) before communication, allowing the
+        requested score |mu_k-mu_G|/(sigma_k+eps) to choose a same-round mask.
+        The probe changes no transmitted model state; it is used only to rank
+        coordinates.
+        """
+        if float(self.config.sparse.keep_ratio) >= 1.0:
+            return full_mask_info(self.dimension), None
+
+        probe = trainer.train_natural_mean_phase(
+            global_mean=global_mean,
+            prior_global_precision=global_precision,
+            next_global_precision=local_precision,
+            local_precision=local_precision,
+            loader=loader,
+            seed=int(phase_seed) + 70_000_003,
+        )
+        safe_precision = np.maximum(
+            np.asarray(local_precision, dtype=np.float64),
+            float(self.config.model.min_precision),
+        )
+        local_sigma = np.sqrt(1.0 / safe_precision)
+        bayesian_scores = bayesian_update_snr_score(
+            probe.implied_mean,
+            global_mean,
+            local_sigma,
+            epsilon=float(self.config.sparse.score_epsilon),
+        )
+        random_seed = (
+            int(self.run_seed)
+            + 81_000_019 * int(logical_round)
+            + 10_007 * int(self.client_id)
+        )
+        info = select_sparse_mask(
+            selection=self.config.sparse.selection,
+            keep_ratio=float(self.config.sparse.keep_ratio),
+            min_keep=int(self.config.sparse.min_keep),
+            bayesian_scores=bayesian_scores,
+            random_seed=random_seed,
+        )
+        return info, probe
+
     def _fit_proposed_phase(
         self,
         *,
@@ -227,6 +294,25 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 seed=phase_seed,
             )
             self._save_proposed_precision(logical_round, result.precision)
+            sparse_info = None
+            sparse_probe = None
+            transmitted_precision = result.precision
+            if self._sparse_proposed_enabled():
+                sparse_info, sparse_probe = self._sparse_mask_for_precision_phase(
+                    trainer=trainer,
+                    global_mean=global_mean,
+                    global_precision=global_precision,
+                    local_precision=result.precision,
+                    loader=loader,
+                    logical_round=logical_round,
+                    phase_seed=phase_seed,
+                )
+                if float(self.config.sparse.keep_ratio) < 1.0:
+                    self._save_proposed_sparse_mask(logical_round, sparse_info.mask)
+                    transmitted_precision = global_precision.copy()
+                    transmitted_precision[sparse_info.mask] = result.precision[
+                        sparse_info.mask
+                    ]
             metrics = self._base_metrics(
                 metadata,
                 logical_round,
@@ -259,8 +345,32 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                     "local_implied_mean_l2": 0.0,
                 }
             )
-            # The server aggregates rho and retains the global mean.
-            return [result.precision], num_examples, metrics
+            if sparse_info is not None:
+                metrics.update(
+                    {
+                        "sparse_enabled": True,
+                        "sparse_selection": str(self.config.sparse.selection),
+                        "sparse_keep_ratio": float(self.config.sparse.keep_ratio),
+                        "sparse_kept_coordinates": int(sparse_info.kept),
+                        "sparse_total_coordinates": int(sparse_info.total),
+                        "sparse_score_threshold": float(sparse_info.threshold),
+                        "sparse_score_mean": float(sparse_info.score_mean),
+                        "sparse_selected_score_mean": float(
+                            sparse_info.selected_score_mean
+                        ),
+                        "sparse_dropped_score_mean": float(
+                            sparse_info.dropped_score_mean
+                        ),
+                        "sparse_probe_mean_l2": (
+                            float(np.linalg.norm(sparse_probe.implied_mean))
+                            if sparse_probe is not None
+                            else 0.0
+                        ),
+                    }
+                )
+            # The server aggregates rho and retains the global mean. Dropped
+            # coordinates equal rho_t, so their Delta-rho is exactly zero.
+            return [transmitted_precision], num_examples, metrics
 
         if phase == NATURAL_MEAN_PHASE:
             local_precision = self._load_proposed_precision(logical_round)
@@ -292,10 +402,29 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                     "local_implied_mean_l2": float(np.linalg.norm(result.implied_mean)),
                 }
             )
+            transmitted_nu = result.nu
+            if self._sparse_proposed_enabled():
+                if float(self.config.sparse.keep_ratio) >= 1.0:
+                    mask = np.ones(self.dimension, dtype=bool)
+                else:
+                    mask = self._load_proposed_sparse_mask(logical_round)
+                    transmitted_nu = global_mean.copy()
+                    transmitted_nu[mask] = result.nu[mask]
+                metrics.update(
+                    {
+                        "sparse_enabled": True,
+                        "sparse_selection": str(self.config.sparse.selection),
+                        "sparse_keep_ratio": float(self.config.sparse.keep_ratio),
+                        "sparse_kept_coordinates": int(np.count_nonzero(mask)),
+                        "sparse_total_coordinates": int(mask.size),
+                    }
+                )
             if self.config.runtime.cleanup_phase_state:
                 self._remove_proposed_precision(logical_round)
-            # The server aggregates nu; it does not aggregate implied local means.
-            return [result.nu], num_examples, metrics
+                self._remove_proposed_sparse_mask(logical_round)
+            # The server aggregates nu; dropped coordinates equal mu_t, so
+            # their Delta-nu is exactly zero.
+            return [transmitted_nu], num_examples, metrics
 
         raise ValueError(
             "Proposed method requires phase='precision' or phase='natural_mean'; "
@@ -325,6 +454,15 @@ class AirCompNumPyClient(fl.client.NumPyClient):
             "phase2_loss": float(phase2_loss),
             "local_steps": int(local_steps),
             "device": str(self.device),
+            "sparse_enabled": bool(self._sparse_proposed_enabled()),
+            "sparse_selection": (
+                str(self.config.sparse.selection)
+                if self._sparse_proposed_enabled() else ""
+            ),
+            "sparse_keep_ratio": (
+                float(self.config.sparse.keep_ratio)
+                if self._sparse_proposed_enabled() else 1.0
+            ),
         }
 
     def evaluate(
@@ -342,6 +480,11 @@ class AirCompNumPyClient(fl.client.NumPyClient):
     def proposed_precision_state_path(self, logical_round: int) -> Path:
         return self.state_dir / (
             f"client_{self.client_id:05d}_round_{int(logical_round):06d}_precision.npy"
+        )
+
+    def proposed_sparse_mask_state_path(self, logical_round: int) -> Path:
+        return self.state_dir / (
+            f"client_{self.client_id:05d}_round_{int(logical_round):06d}_sparse_mask.npy"
         )
 
     def _load_scaffold_control(self) -> np.ndarray:
@@ -376,6 +519,29 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         if value.shape != (self.dimension,):
             raise ValueError(f"Invalid proposed phase state in {path}: {value.shape}")
         return value.astype(np.float64)
+
+    def _save_proposed_sparse_mask(self, logical_round: int, mask: np.ndarray) -> None:
+        value = np.asarray(mask, dtype=np.uint8).reshape(-1)
+        if value.shape != (self.dimension,):
+            raise ValueError(
+                f"Sparse mask has shape {value.shape}; expected {(self.dimension,)}"
+            )
+        self._atomic_save(self.proposed_sparse_mask_state_path(logical_round), value)
+
+    def _load_proposed_sparse_mask(self, logical_round: int) -> np.ndarray:
+        path = self.proposed_sparse_mask_state_path(logical_round)
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Missing sparse mask for client {self.client_id}, logical round "
+                f"{logical_round}: {path}"
+            )
+        value = np.load(path).reshape(-1)
+        if value.shape != (self.dimension,):
+            raise ValueError(f"Invalid sparse mask state in {path}: {value.shape}")
+        return value.astype(bool)
+
+    def _remove_proposed_sparse_mask(self, logical_round: int) -> None:
+        self.proposed_sparse_mask_state_path(logical_round).unlink(missing_ok=True)
 
     def _remove_proposed_precision(self, logical_round: int) -> None:
         self.proposed_precision_state_path(logical_round).unlink(missing_ok=True)

@@ -280,3 +280,11 @@ The deterministic diagnostics `global_model_update_l2`,
 `ideal_model_update_l2`, and `received_model_update_l2` remain in
 `metrics.csv`, and `deterministic_reference_power_mode` records the `rho_ref`
 adaptation used by each run.
+
+## Optional sparse posterior-evidence experiment (v1.6.1)
+
+The paper reproduction remains unchanged. For the separate Bayesian-vs-random
+sparse coordinate experiment, use `--experiment sparse` with
+`configs/sparse_proposed_gpu.yaml`. v1.6.1 trains only the 75/50/25/10/5/2%
+Bayesian/random conditions and reuses an existing dense Figure-2 Proposed run as
+the shared 100% endpoint during plotting. See `SPARSE_POSTERIOR_EXPERIMENT.md`.

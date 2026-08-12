@@ -200,6 +200,7 @@ def aggregate_updates_proposed(
     rng: np.random.Generator,
     *,
     output_dtype: np.dtype | type = np.float32,
+    active_coordinate_mask: np.ndarray | None = None,
 ) -> Tuple[np.ndarray, AirCompStats]:
     """Aggregate Proposed Delta-rho/Delta-nu using the target-paper scaling.
 
@@ -217,6 +218,14 @@ def aggregate_updates_proposed(
     _require_paper_reference_mode(wireless_cfg)
     vectors, weights, dimension, ideal = _normalize_inputs(updates, weights)
     output_dtype = np.dtype(output_dtype)
+    coordinate_mask = None
+    if active_coordinate_mask is not None:
+        coordinate_mask = np.asarray(active_coordinate_mask, dtype=bool).reshape(-1)
+        if coordinate_mask.shape != (dimension,):
+            raise ValueError(
+                f"active_coordinate_mask has shape {coordinate_mask.shape}; "
+                f"expected {(dimension,)}"
+            )
     if not wireless_cfg.enabled:
         return ideal.astype(output_dtype), AirCompStats.zero()
 
@@ -289,6 +298,12 @@ def aggregate_updates_proposed(
         noise = sample_complex_noise(
             (num_subchannels,), noise_power, rng
         ).real * np.sqrt(delta_bar / gamma)
+        if coordinate_mask is not None:
+            # Missing sparse coordinates carry no posterior evidence and are
+            # not allocated a sparse payload slot.  Suppress receiver noise on
+            # coordinates selected by no client so the server truly leaves
+            # those global posterior coordinates unchanged.
+            noise[:active] *= coordinate_mask[start:stop].astype(np.float64)
         distorted_without_noise[start:stop] = aggregate_chunk[:active]
         noise_vector[start:stop] = noise[:active]
         received[start:stop] = aggregate_chunk[:active] + noise[:active]

@@ -125,3 +125,24 @@
 ## 1.1.0
 
 - Added stable native-Windows sequential CUDA backend.
+
+## v1.6.0
+
+- Added opt-in Proposed sparse posterior-evidence experiment (`--experiment sparse`).
+- Added Bayesian update-SNR and same-budget random top-k coordinate selection.
+- Added keep-ratio matrix 100/75/50/25/10/5/2% using paired-condition seeds.
+- Added sparse communication accounting and reliability/accuracy/ECE plot suite.
+- Dense paper `fig2`-`fig6` paths remain sparse-disabled by default.
+
+## v1.6.1
+
+- Removed redundant Bayesian/random 100% keep runs from `--experiment sparse`.
+- Sparse matrix is now 12 runs: 75/50/25/10/5/2% for Bayesian and random.
+- Added `utils.py --dense-baseline <fig2_result_dir>` to reuse an existing dense
+  Proposed Figure-2 result as the shared 100% endpoint.
+- Added `--dense-baseline-round`; when omitted, the sparse experiment's highest
+  completed round is used automatically (normally 120).
+- Dense reliability bins are reused at the exact target round; dense trajectory
+  rows are clipped to that round for accuracy-vs-communication plots.
+- Added seed-consistency validation between sparse runs and the reused baseline.
+- Paper Figure 2–6 paths are unchanged.
