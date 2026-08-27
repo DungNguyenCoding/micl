@@ -1,2 +1,17 @@
-\.venv
-\data
+.venv/
+data/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Runtime logs are reproducible and should not be committed.
+logs/
+
+# Temporary experiment outputs only. Final dense/sparse/plot results remain
+# eligible for Git by design.
+results/tune_*/
+results/debug_*/
+results/archive_*/
+
+# Temporary tuning configs; keep configs/cifar_final and cifar_priority.
+configs/cifar_tune/

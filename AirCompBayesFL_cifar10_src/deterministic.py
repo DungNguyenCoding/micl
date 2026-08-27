@@ -33,6 +33,7 @@ def train_deterministic(
     device: torch.device,
     method: str,
     seed: int,
+    learning_rate: Optional[float] = None,
     global_control: Optional[np.ndarray] = None,
     client_control: Optional[np.ndarray] = None,
 ) -> DeterministicResult:
@@ -61,7 +62,17 @@ def train_deterministic(
         global_control_parts = []
         client_control_parts = []
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=train_cfg.learning_rate)
+    effective_lr = (
+        float(train_cfg.learning_rate)
+        if learning_rate is None
+        else float(learning_rate)
+    )
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        lr=effective_lr,
+        momentum=float(train_cfg.momentum),
+        weight_decay=float(train_cfg.weight_decay),
+    )
     total_loss = 0.0
     total_examples = 0
     local_steps = 0
@@ -116,7 +127,7 @@ def train_deterministic(
         )
 
     assert global_control is not None and client_control is not None
-    denominator = max(1, local_steps) * float(train_cfg.learning_rate)
+    denominator = max(1, local_steps) * effective_lr
     new_client_control_t = (
         torch.as_tensor(client_control, dtype=torch.float32, device=device)
         - torch.as_tensor(global_control, dtype=torch.float32, device=device)

@@ -15,6 +15,13 @@ def test_phase_and_aircomp_diagnostics_are_logged():
         "precision_aircomp_nmse",
         "mean_aircomp_nmse",
         "posterior_precision_mean",
+        "local_epochs",
+        "batch_size",
+        "optimizer",
+        "momentum",
+        "lr_scheduler",
+        "min_learning_rate",
+        "learning_rate",
     }
     assert required_metrics.issubset(set(METRIC_FIELDS))
 
@@ -27,5 +34,6 @@ def test_phase_and_aircomp_diagnostics_are_logged():
         "local_precision_gradient_l2_mean",
         "local_nu_l2",
         "local_implied_mean_l2",
+        "learning_rate",
     }
     assert required_clients.issubset(set(CLIENT_FIELDS))

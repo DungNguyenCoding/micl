@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.7.0-priority-baseline
+
+- Added opt-in SGD momentum and weight decay fields while preserving legacy defaults.
+- Added logical-round cosine learning-rate scheduling with configurable minimum LR.
+- Applied the same logical-round LR to FedAvg and to both Proposed Pyro phases.
+- Logged optimizer/scheduler/effective-LR settings in server and client CSV metrics.
+- Added CIFAR priority config: E=10, batch=256, SGD momentum=0.9, LR 0.05 -> 1e-4 cosine.
+- Added schedule tests; full test suite passes.
+- Bayesian backend remains Pyro for this stage; bayesian-torch comparison is deferred.
+
 ## v1.5.2 — Paired condition seeds
 
 - Pair the stochastic realization seed across conditions within Figure 3, Figure 4, and Figure 5 sweeps.

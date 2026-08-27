@@ -60,6 +60,7 @@ from serialization import (
     initial_model_vector,
     normalize_server_state_dtypes,
 )
+from training_schedule import learning_rate_for_round
 from wireless import sample_rayleigh_channels
 
 
@@ -157,11 +158,18 @@ class AirCompStrategy(FedAvg):
 
     def fit_config_for_round(self, physical_round: int) -> Dict[str, fl.common.Scalar]:
         context = self.context_for_round(physical_round)
+        effective_lr = learning_rate_for_round(
+            self.config_obj.training,
+            context.logical_round,
+            self.run_spec.rounds,
+        )
         return {
             "server_round": int(context.logical_round),
             "logical_round": int(context.logical_round),
             "physical_round": int(context.physical_round),
             "phase": str(context.phase),
+            "learning_rate": float(effective_lr),
+            "total_logical_rounds": int(self.run_spec.rounds),
         }
 
     def aggregate_fit(self, server_round, results, failures):  # type: ignore[override]
@@ -579,6 +587,20 @@ class AirCompStrategy(FedAvg):
             "num_clients": self.config_obj.data.num_clients,
             "labels_per_client": self.config_obj.data.labels_per_client,
             "mean_samples_per_client": self.config_obj.data.mean_samples_per_client,
+            "local_epochs": self.config_obj.training.local_epochs,
+            "batch_size": self.config_obj.training.batch_size,
+            "optimizer": str(self.config_obj.training.optimizer),
+            "momentum": float(self.config_obj.training.momentum),
+            "weight_decay": float(self.config_obj.training.weight_decay),
+            "lr_scheduler": str(self.config_obj.training.lr_scheduler),
+            "min_learning_rate": float(self.config_obj.training.min_learning_rate),
+            "learning_rate": float(
+                learning_rate_for_round(
+                    self.config_obj.training,
+                    max(1, logical_round),
+                    self.run_spec.rounds,
+                )
+            ),
             "power_dbm": self.config_obj.wireless.power_dbm,
             "noise_dbm": self.config_obj.wireless.noise_dbm,
             "num_subchannels": self.config_obj.wireless.num_subchannels,

@@ -70,6 +70,7 @@ class BayesianVITrainer:
         model_cfg: ModelConfig,
         train_cfg: TrainingConfig,
         device: torch.device,
+        learning_rate: float | None = None,
     ) -> None:
         self.model = model.to(device)
         self.model.eval()
@@ -81,6 +82,11 @@ class BayesianVITrainer:
         self.model_cfg = model_cfg
         self.train_cfg = train_cfg
         self.device = device
+        self.learning_rate = (
+            float(train_cfg.learning_rate)
+            if learning_rate is None
+            else float(learning_rate)
+        )
 
     def train_precision_phase(
         self,
@@ -350,7 +356,9 @@ class BayesianVITrainer:
         """
         optimizer = torch.optim.SGD(
             parameters,
-            lr=float(self.train_cfg.learning_rate),
+            lr=float(self.learning_rate),
+            momentum=float(self.train_cfg.momentum),
+            weight_decay=float(self.train_cfg.weight_decay),
         )
         elbo = TraceMeanField_ELBO(
             num_particles=int(self.train_cfg.mc_train_samples),

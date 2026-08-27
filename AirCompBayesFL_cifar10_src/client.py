@@ -103,6 +103,9 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         logical_round = int(config.get("server_round", config.get("logical_round", 0)))
         physical_round = int(config.get("physical_round", logical_round))
         phase = str(config.get("phase", "model"))
+        effective_learning_rate = float(
+            config.get("learning_rate", self.config.training.learning_rate)
+        )
         base_seed = self.run_seed + 100_003 * logical_round + self.client_id
         phase_seed = base_seed + (50_000_021 if phase == NATURAL_MEAN_PHASE else 0)
 
@@ -126,6 +129,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 metadata=metadata,
                 num_examples=num_examples,
                 phase_seed=phase_seed,
+                learning_rate=effective_learning_rate,
             )
 
         if phase != "model":
@@ -143,6 +147,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 device=self.device,
                 method=self.method,
                 seed=phase_seed,
+                learning_rate=effective_learning_rate,
             )
             metrics = self._base_metrics(
                 metadata,
@@ -153,6 +158,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 phase1_loss=0.0,
                 phase2_loss=0.0,
                 local_steps=int(result.local_steps),
+                learning_rate=effective_learning_rate,
             )
             return [result.model_vector], num_examples, metrics
 
@@ -169,6 +175,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 device=self.device,
                 method="scaffold",
                 seed=phase_seed,
+                learning_rate=effective_learning_rate,
                 global_control=np.asarray(parameters[1], dtype=np.float32),
                 client_control=client_control,
             )
@@ -184,6 +191,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 phase1_loss=0.0,
                 phase2_loss=0.0,
                 local_steps=int(result.local_steps),
+                learning_rate=effective_learning_rate,
             )
             return [result.model_vector, result.control_delta], num_examples, metrics
 
@@ -262,6 +270,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         metadata: Dict[str, object],
         num_examples: int,
         phase_seed: int,
+        learning_rate: float,
     ) -> Tuple[List[np.ndarray], int, Dict[str, fl.common.Scalar]]:
         expected_count = 2 if phase == PRECISION_PHASE else 3
         if len(parameters) != expected_count:
@@ -284,6 +293,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
             self.config.model,
             self.config.training,
             self.device,
+            learning_rate=learning_rate,
         )
 
         if phase == PRECISION_PHASE:
@@ -322,6 +332,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 phase1_loss=float(result.average_loss),
                 phase2_loss=0.0,
                 local_steps=int(result.local_steps),
+                learning_rate=learning_rate,
             )
             metrics.update(
                 {
@@ -392,6 +403,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
                 phase1_loss=0.0,
                 phase2_loss=float(result.average_loss),
                 local_steps=int(result.local_steps),
+                learning_rate=learning_rate,
             )
             metrics.update(
                 {
@@ -442,6 +454,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
         phase1_loss: float,
         phase2_loss: float,
         local_steps: int,
+        learning_rate: float,
     ) -> Dict[str, fl.common.Scalar]:
         return {
             "client_id": self.client_id,
@@ -453,6 +466,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
             "phase1_loss": float(phase1_loss),
             "phase2_loss": float(phase2_loss),
             "local_steps": int(local_steps),
+            "learning_rate": float(learning_rate),
             "device": str(self.device),
             "sparse_enabled": bool(self._sparse_proposed_enabled()),
             "sparse_selection": (

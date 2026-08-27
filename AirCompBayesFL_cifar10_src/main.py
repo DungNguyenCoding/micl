@@ -266,6 +266,17 @@ def main() -> None:
                     planned.append((condition_cfg.copy(), run_spec, str(partition_path.resolve())))
 
     print(f"Model dimension: {model_dimension:,}")
+    print(
+        "Training: "
+        f"E={config.training.local_epochs}, "
+        f"batch={config.training.batch_size}, "
+        f"optimizer={config.training.optimizer}, "
+        f"momentum={config.training.momentum}, "
+        f"weight_decay={config.training.weight_decay}, "
+        f"lr={config.training.learning_rate}, "
+        f"lr_scheduler={config.training.lr_scheduler}, "
+        f"min_lr={config.training.min_learning_rate}"
+    )
     backend = resolve_backend(config)
     print(
         "Runtime: "

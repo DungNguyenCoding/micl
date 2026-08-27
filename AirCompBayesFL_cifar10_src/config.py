@@ -37,6 +37,14 @@ class TrainingConfig:
     local_epochs: int = 3
     batch_size: int = 10
     learning_rate: float = 0.1
+    # Legacy/paper configs keep constant LR, zero momentum, and zero weight
+    # decay. CIFAR baseline tuning can opt into cosine round-level decay and
+    # momentum without changing the MNIST reproduction path.
+    optimizer: str = "sgd"
+    momentum: float = 0.0
+    weight_decay: float = 0.0
+    lr_scheduler: str = "constant"  # constant | cosine
+    min_learning_rate: float = 0.0
     kl_weight: float = 1.0 / 50_000.0
     mc_train_samples: int = 5
     mc_eval_samples: int = 5
@@ -175,6 +183,20 @@ class SimulationConfig:
             raise ValueError("training.batch_size must be positive")
         if self.training.learning_rate <= 0:
             raise ValueError("training.learning_rate must be positive")
+        if str(self.training.optimizer).strip().lower() != "sgd":
+            raise ValueError("training.optimizer must be 'sgd'")
+        if not (0.0 <= float(self.training.momentum) < 1.0):
+            raise ValueError("training.momentum must be in [0, 1)")
+        if float(self.training.weight_decay) < 0.0:
+            raise ValueError("training.weight_decay cannot be negative")
+        if str(self.training.lr_scheduler).strip().lower() not in {"constant", "cosine"}:
+            raise ValueError("training.lr_scheduler must be constant or cosine")
+        if float(self.training.min_learning_rate) < 0.0:
+            raise ValueError("training.min_learning_rate cannot be negative")
+        if float(self.training.min_learning_rate) > float(self.training.learning_rate):
+            raise ValueError(
+                "training.min_learning_rate cannot exceed training.learning_rate"
+            )
         if self.training.mc_train_samples <= 0 or self.training.mc_eval_samples <= 0:
             raise ValueError("Monte Carlo sample counts must be positive")
         if self.training.bayesian_local_mode not in {"two_phase", "paper_two_phase"}:
