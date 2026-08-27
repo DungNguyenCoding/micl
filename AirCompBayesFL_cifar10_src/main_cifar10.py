@@ -6,6 +6,11 @@ Use this file instead of main.py for CIFAR-10 experiments.  main.py remains
 untouched and continues to reproduce the MNIST/paper experiments.
 """
 
+import os
+
+# Propagates CIFAR mode to Ray worker processes.
+os.environ["AIRCOMP_DATASET"] = "cifar10"
+
 from cifar10_support import (
     CIFAR10_PARAMETER_COUNT,
     cifar10_parameter_count,

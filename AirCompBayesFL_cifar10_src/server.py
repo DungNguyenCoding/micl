@@ -329,7 +329,7 @@ class AirCompStrategy(FedAvg):
             )
             self.current_arrays = [aggregation.parameters[0].astype(np.float32)]
             model_delta = self.current_arrays[0].astype(np.float64) - previous_model
-            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
+            self.last_global_mean_update_l2 = float(np.linalg.norm(model_delta))
             self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
             self.last_global_model_update_l2 = float(
                 aggregation.diagnostics.get(
@@ -369,7 +369,7 @@ class AirCompStrategy(FedAvg):
                 array.astype(np.float32) for array in aggregation.parameters
             ]
             model_delta = self.current_arrays[0].astype(np.float64) - previous_model
-            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(model_delta))
+            self.last_global_mean_update_l2 = float(np.linalg.norm(model_delta))
             self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
             self.last_global_model_update_l2 = self.last_global_mean_update_l2
             # The SCAFFOLD AirCompStats object combines model and control-variate
@@ -415,7 +415,7 @@ class AirCompStrategy(FedAvg):
             ]
             precision_delta = self.current_arrays[1] - previous_precision
             self.last_global_precision_update_l2 = float(
-                np.linalg.vector_norm(precision_delta)
+                np.linalg.norm(precision_delta)
             )
             self.last_global_precision_update_max_abs = float(
                 np.max(np.abs(precision_delta))
@@ -463,7 +463,7 @@ class AirCompStrategy(FedAvg):
                 self.current_arrays[1].astype(np.float64, copy=True),
             ]
             mean_delta = self.current_arrays[0].astype(np.float64) - previous_mean
-            self.last_global_mean_update_l2 = float(np.linalg.vector_norm(mean_delta))
+            self.last_global_mean_update_l2 = float(np.linalg.norm(mean_delta))
             self.last_global_mean_update_max_abs = float(np.max(np.abs(mean_delta)))
             self.last_phase2_train_loss = weighted_loss
             self.last_train_loss = (
@@ -618,7 +618,7 @@ class AirCompStrategy(FedAvg):
             precision_offset = arrays[1] - initial_precision_value
             posterior_precision_std = float(np.std(arrays[1], dtype=np.float64))
             posterior_precision_offset_l2 = float(
-                np.linalg.vector_norm(precision_offset.astype(np.float64))
+                np.linalg.norm(precision_offset.astype(np.float64))
             )
             posterior_precision_offset_max_abs = float(
                 np.max(np.abs(precision_offset))

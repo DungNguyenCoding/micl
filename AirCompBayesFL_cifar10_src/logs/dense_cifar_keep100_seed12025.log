@@ -1,0 +1,195 @@
+CIFAR-10 extension active: RGB 32x32, model dimension=78,042. Core MNIST source is unchanged.
+Model dimension: 78,042
+Runtime: backend=ray, client_device=cuda, client_num_gpus=0.125, server_device=cpu, pin_memory=False, power_control=paper_reference_kkt, proposed_power=target2025_eq27_28_31, deterministic_power=hong2023_eq8_10_20, deterministic_reference_power=coordinated_aggregate
+CUDA: torch=2.11.0+cu128, build=12.8, available=True, devices=1, GPU=NVIDIA GeForce RTX 5090
+Planned simulations: 1
+[001/001] RUN fig2_default_proposed_rep00_seed12025 logical_rounds=80 physical_fit_rounds=160 partition=mnist_seed12025_k40_l1_m50.json
+========================================================================================
+Starting 1/1: fig2_default_proposed_rep00_seed12025
+[93mWARNING [0m:   DEPRECATED FEATURE: The `run_simulation` function is deprecated and will be removed in a future version of Flower. Please use `flwr run` in the CLI instead to run your simulation. Refer to the Flower Tutorials for more details: https://flower.ai/docs/framework/tutorial-quickstart-pytorch.html
+
+            This is a deprecated feature. It will be removed
+            entirely in future versions of Flower.
+        
+[92mINFO [0m:      Starting Flower ServerApp, config: num_rounds=160, no round_timeout
+[92mINFO [0m:      
+[92mINFO [0m:      [INIT]
+[92mINFO [0m:      Using initial global parameters provided by strategy
+[92mINFO [0m:      Starting evaluation of initial global parameters
+/home/micl/anaconda3/envs/dungndh/lib/python3.10/site-packages/ray/_private/worker.py:2051: FutureWarning: Tip: In future versions of Ray, Ray will no longer override accelerator visible devices env var if num_gpus=0 or num_gpus=None (default). To enable this behavior and turn off this error message, set RAY_ACCEL_ENV_VAR_OVERRIDE_ON_ZERO=0
+  warnings.warn(
+[92mINFO [0m:      initial parameters (loss, other metrics): 2.3708087632663397, {'accuracy': 0.1, 'ece': 0.08703089010149241}
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 1]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[36m(pid=gcs_server)[0m [2026-08-27 16:26:02,976 E 3206624 3206624] (gcs_server) gcs_server.cc:302: Failed to establish connection to the event+metrics exporter agent. Events and metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 2]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[33m(raylet)[0m [2026-08-27 16:26:05,044 E 3207145 3207145] (raylet) main.cc:975: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[36m(pid=3210142)[0m [2026-08-27 16:26:05,621 E 3210142 3210572] core_worker_process.cc:825: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[2026-08-27 16:26:06,039 E 3206331 3210131] core_worker_process.cc:825: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (2, 2.3809167247756617, {'accuracy': 0.1, 'ece': 0.09979368075639009}, 32.26868954813108)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 3]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 4]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (4, 2.4026382261983024, {'accuracy': 0.1044, 'ece': 0.08129447997525338}, 60.78360816510394)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 5]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 6]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (6, 2.424441370807329, {'accuracy': 0.1036, 'ece': 0.09325770731449126}, 91.18361798813567)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 7]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 8]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (8, 2.4628659511802975, {'accuracy': 0.1, 'ece': 0.12735030697733163}, 117.6238055890426)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 9]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 10]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (10, 2.464850290455085, {'accuracy': 0.1001, 'ece': 0.1249942386645079}, 145.03248911397532)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 11]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 12]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (12, 2.451327545598369, {'accuracy': 0.1002, 'ece': 0.1170868753376603}, 170.96356458542868)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 13]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 14]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (14, 2.4705154147581325, {'accuracy': 0.1005, 'ece': 0.12554796318978073}, 197.7354340259917)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 15]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 16]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (16, 2.4557246061994116, {'accuracy': 0.1013, 'ece': 0.11694620501250032}, 224.03748438926414)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 17]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 18]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (18, 2.466371601467578, {'accuracy': 0.1055, 'ece': 0.1185620457214117}, 249.1541940192692)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 19]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 20]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (20, 2.44519723419046, {'accuracy': 0.1043, 'ece': 0.11748993704080583}, 275.20053081633523)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 21]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 22]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (22, 2.4410754319970147, {'accuracy': 0.1045, 'ece': 0.13113508369371296}, 302.39470493234694)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 23]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 24]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (24, 2.4468107403771, {'accuracy': 0.1296, 'ece': 0.10114119171500206}, 328.0555026633665)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 25]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 26]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (26, 2.4117412098325706, {'accuracy': 0.1591, 'ece': 0.05052813533931972}, 354.0370063362643)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 27]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 28]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      fit progress: (28, 2.3991875166352483, {'accuracy': 0.1723, 'ece': 0.037016668422520174}, 379.2195438342169)
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 29]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+[92mINFO [0m:      configure_evaluate: no clients selected, skipping evaluation
+[92mINFO [0m:      
+[92mINFO [0m:      [ROUND 30]
+[92mINFO [0m:      configure_fit: strategy sampled 40 clients (out of 40)
+[92mINFO [0m:      aggregate_fit: received 40 results and 0 failures
+*** SIGTERM received at time=1787815947 on cpu 7 ***
+PC: @     0x70d3eac91117  (unknown)  (unknown)
+    @     0x70d3eac42520  (unknown)  (unknown)
+[2026-08-27 16:32:27,179 E 3206331 3206331] logging.cc:474: *** SIGTERM received at time=1787815947 on cpu 7 ***
+[2026-08-27 16:32:27,179 E 3206331 3206331] logging.cc:474: PC: @     0x70d3eac91117  (unknown)  (unknown)
+[2026-08-27 16:32:27,179 E 3206331 3206331] logging.cc:474:     @     0x70d3eac42520  (unknown)  (unknown)
+[36m(ClientAppActor pid=3213697)[0m [2026-08-27 16:26:07,124 E 3213697 3214178] core_worker_process.cc:825: Failed to establish connection to the metrics exporter agent. Metrics will not be exported. Exporter agent status: RpcError: Running out of retries to initialize the metrics agent. rpc_code: 14[32m [repeated 47x across cluster] (Ray deduplicates logs by default. Set RAY_DEDUP_LOGS=0 to disable log deduplication, or see https://docs.ray.io/en/master/ray-observability/user-guides/configure-logging.html#log-deduplication for more options.)[0m

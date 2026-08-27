@@ -51,7 +51,7 @@ def test_deterministic_update_diagnostics_are_exact_without_wireless():
         np.random.default_rng(0),
     )
     ideal_update = 0.5 * (local[0] - current) + 0.5 * (local[1] - current)
-    expected_norm = float(np.linalg.vector_norm(ideal_update.astype(np.float64)))
+    expected_norm = float(np.linalg.norm(ideal_update.astype(np.float64)))
     assert result.diagnostics["ideal_model_update_l2"] == pytest.approx(expected_norm)
     assert result.diagnostics["received_model_update_l2"] == pytest.approx(expected_norm)
     assert result.diagnostics["global_model_update_l2"] == pytest.approx(expected_norm)

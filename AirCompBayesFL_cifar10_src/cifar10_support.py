@@ -30,7 +30,7 @@ from torchvision import transforms
 
 CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
 CIFAR10_STD = (0.2470, 0.2435, 0.2616)
-CIFAR10_PARAMETER_COUNT = 69_706
+CIFAR10_PARAMETER_COUNT = 78_042
 
 
 def cifar10_transform() -> transforms.Compose:
@@ -86,37 +86,249 @@ class CIFAR10AsMNIST(Dataset):
         return self._dataset[index]
 
 
-class CIFAR10PaperCNN(nn.Module):
-    """Native-RGB CIFAR-10 analogue of the paper's small CNN."""
+class CIFAR10ResidualBlock(nn.Module):
+    """Small residual block using GroupNorm.
 
-    def __init__(self) -> None:
+    GroupNorm is preferred over BatchNorm here because federated
+    clients use small batches and highly non-IID one-class data.
+    It also avoids client-specific BatchNorm running statistics.
+    """
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        stride: int = 1,
+    ) -> None:
         super().__init__()
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=5)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=5)
-        self.fc = nn.Linear(64 * 5 * 5, 10)
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = torch.flatten(x, 1)
+        if out_channels == 16:
+            groups = 4
+        else:
+            groups = 8
+
+        self.conv1 = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            bias=False,
+        )
+
+        self.gn1 = nn.GroupNorm(
+            groups,
+            out_channels,
+        )
+
+        self.conv2 = nn.Conv2d(
+            out_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+        )
+
+        self.gn2 = nn.GroupNorm(
+            groups,
+            out_channels,
+        )
+
+        if (
+            stride != 1
+            or in_channels != out_channels
+        ):
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(
+                    in_channels,
+                    out_channels,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.GroupNorm(
+                    groups,
+                    out_channels,
+                ),
+            )
+        else:
+            self.shortcut = nn.Identity()
+
+    def forward(
+        self,
+        x: torch.Tensor,
+    ) -> torch.Tensor:
+
+        identity = self.shortcut(x)
+
+        x = self.conv1(x)
+        x = self.gn1(x)
+        x = F.relu(x)
+
+        x = self.conv2(x)
+        x = self.gn2(x)
+
+        x = x + identity
+        x = F.relu(x)
+
+        return x
+
+
+class CIFAR10ResidualCNN(nn.Module):
+    """Compact residual CNN designed for CIFAR-10.
+
+    Architecture:
+
+        RGB 3x32x32
+          -> Conv(3,16,3x3) + GroupNorm
+          -> Residual 16->16
+          -> Residual 16->32, stride 2
+          -> Residual 32->64, stride 2
+          -> AdaptiveAvgPool(1x1)
+          -> Linear(64,10)
+
+    The model intentionally remains small enough for Bayesian
+    VI and AirComp while being substantially more appropriate
+    for CIFAR-10 than the original MNIST-style two-conv CNN.
+    """
+
+    def __init__(
+        self,
+        num_classes: int = 10,
+    ) -> None:
+        super().__init__()
+
+        # Keep the name "conv1" because existing diagnostics
+        # inspect model.conv1.in_channels.
+        self.conv1 = nn.Conv2d(
+            3,
+            16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+        )
+
+        self.gn1 = nn.GroupNorm(
+            4,
+            16,
+        )
+
+        self.block1 = CIFAR10ResidualBlock(
+            16,
+            16,
+            stride=1,
+        )
+
+        self.block2 = CIFAR10ResidualBlock(
+            16,
+            32,
+            stride=2,
+        )
+
+        self.block3 = CIFAR10ResidualBlock(
+            32,
+            64,
+            stride=2,
+        )
+
+        self.fc = nn.Linear(
+            64,
+            num_classes,
+        )
+
+    def forward(
+        self,
+        x: torch.Tensor,
+    ) -> torch.Tensor:
+
+        x = self.conv1(x)
+        x = self.gn1(x)
+        x = F.relu(x)
+
+        x = self.block1(x)
+        x = self.block2(x)
+        x = self.block3(x)
+
+        x = F.adaptive_avg_pool2d(
+            x,
+            output_size=1,
+        )
+
+        x = torch.flatten(
+            x,
+            1,
+        )
+
         return self.fc(x)
 
 
+# Compatibility alias.
+#
+# models.py and the Ray-safe override already import this name.
+# Keeping it means the MNIST core source does not need to change.
+CIFAR10PaperCNN = CIFAR10ResidualCNN
+
+
 def cifar10_parameter_count() -> int:
-    model = CIFAR10PaperCNN()
-    return int(sum(p.numel() for p in model.parameters() if p.requires_grad))
+    model = CIFAR10ResidualCNN()
+
+    return int(
+        sum(
+            p.numel()
+            for p in model.parameters()
+            if p.requires_grad
+        )
+    )
 
 
-def _cifar_build_model(*args: Any, **kwargs: Any) -> nn.Module:
-    del args, kwargs
-    model = CIFAR10PaperCNN()
-    count = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
+def _cifar_build_model(
+    *args: Any,
+    **kwargs: Any,
+) -> nn.Module:
+
+    # Core build_model() normally passes:
+    #   name
+    #   num_classes
+    #
+    # The CIFAR extension supports 10 classes only.
+    num_classes = 10
+
+    if "num_classes" in kwargs:
+        num_classes = int(
+            kwargs["num_classes"]
+        )
+    elif len(args) >= 2:
+        num_classes = int(args[1])
+
+    if num_classes != 10:
+        raise ValueError(
+            "CIFAR-10 extension requires "
+            "num_classes=10"
+        )
+
+    model = CIFAR10ResidualCNN(
+        num_classes=num_classes
+    )
+
+    count = int(
+        sum(
+            p.numel()
+            for p in model.parameters()
+            if p.requires_grad
+        )
+    )
+
     if count != CIFAR10_PARAMETER_COUNT:
         raise RuntimeError(
-            f"CIFAR-10 model parameter count changed: {count:,} != "
+            f"CIFAR-10 model parameter count "
+            f"changed: {count:,} != "
             f"{CIFAR10_PARAMETER_COUNT:,}"
         )
+
     return model
+
 
 
 def install_cifar10_overrides() -> None:

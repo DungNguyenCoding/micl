@@ -251,3 +251,29 @@ def client_sizes(partition_path: str | Path) -> List[int]:
     with Path(partition_path).open("r", encoding="utf-8") as handle:
         payload = json.load(handle)
     return [int(payload["clients"][str(i)]["num_examples"]) for i in range(payload["num_clients"])]
+
+
+# ============================================================
+# AIRCOMP_RAY_SAFE_CIFAR_DATASET
+#
+# main_cifar10.py sets AIRCOMP_DATASET=cifar10.
+# Local execution already receives the normal in-process
+# override. Ray actors are fresh Python processes, so they
+# need to install the same override when dataset.py imports.
+# ============================================================
+
+import os as _aircomp_os
+
+if (
+    _aircomp_os.environ
+    .get("AIRCOMP_DATASET", "mnist")
+    .strip()
+    .lower()
+    == "cifar10"
+):
+    from cifar10_support import (
+        CIFAR10AsMNIST as _AirCompCIFAR10AsMNIST,
+    )
+
+    datasets.MNIST = _AirCompCIFAR10AsMNIST
+

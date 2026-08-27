@@ -47,3 +47,72 @@ def build_model(name: str = "paper_cnn", num_classes: int = 10) -> nn.Module:
 
 def count_parameters(model: nn.Module) -> int:
     return sum(parameter.numel() for parameter in model.parameters())
+
+
+# ============================================================
+# AIRCOMP_RAY_SAFE_CIFAR_MODEL
+#
+# Ray actors import models.py independently from the driver.
+# Install the same CIFAR model override based on the
+# process-visible AIRCOMP_DATASET environment variable.
+# ============================================================
+
+import os as _aircomp_os
+
+if (
+    _aircomp_os.environ
+    .get("AIRCOMP_DATASET", "mnist")
+    .strip()
+    .lower()
+    == "cifar10"
+):
+    from cifar10_support import (
+        CIFAR10PaperCNN as _AirCompCIFAR10PaperCNN,
+        CIFAR10_PARAMETER_COUNT as _AIRCOMP_CIFAR_D,
+        _cifar_build_model as _aircomp_cifar_build_model,
+    )
+
+    # Replace model factory.
+    build_model = _aircomp_cifar_build_model
+
+    # Replace common model class symbol when present.
+    if "PaperCNN" in globals():
+        PaperCNN = _AirCompCIFAR10PaperCNN
+
+    # Replace known expected-dimension constants when present.
+    for _name in (
+        "EXPECTED_PARAMETER_COUNT",
+        "PAPER_PARAMETER_COUNT",
+        "EXPECTED_D",
+        "MODEL_DIMENSION",
+    ):
+        if _name in globals():
+            globals()[_name] = _AIRCOMP_CIFAR_D
+
+    def _aircomp_assert_cifar_parameter_count(model):
+        count = int(
+            sum(
+                p.numel()
+                for p in model.parameters()
+                if p.requires_grad
+            )
+        )
+
+        if count != _AIRCOMP_CIFAR_D:
+            raise AssertionError(
+                f"Expected CIFAR-10 model dimension "
+                f"{_AIRCOMP_CIFAR_D:,}, got {count:,}"
+            )
+
+        return count
+
+    for _name in (
+        "assert_expected_parameter_count",
+        "assert_paper_parameter_count",
+        "assert_parameter_count",
+    ):
+        if _name in globals():
+            globals()[_name] = (
+                _aircomp_assert_cifar_parameter_count
+            )
+

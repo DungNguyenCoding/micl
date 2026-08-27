@@ -93,12 +93,12 @@ def aggregate_deterministic(
     ).astype(np.float32)
 
     diagnostics = {
-        "ideal_model_update_l2": float(np.linalg.vector_norm(ideal_update)),
+        "ideal_model_update_l2": float(np.linalg.norm(ideal_update)),
         "received_model_update_l2": float(
-            np.linalg.vector_norm(received_update64)
+            np.linalg.norm(received_update64)
         ),
         "global_model_update_l2": float(
-            np.linalg.vector_norm(
+            np.linalg.norm(
                 next_model.astype(np.float64) - current.astype(np.float64)
             )
         ),

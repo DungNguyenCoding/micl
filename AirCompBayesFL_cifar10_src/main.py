@@ -172,12 +172,67 @@ def main() -> None:
     finished = completed_runs(metrics_path) if args.resume else {}
 
     planned: List[tuple[SimulationConfig, RunSpec, str]] = []
+
+    # Optional sparse selector filter for running Bayesian and Random
+    # sparse experiments independently. Unset = original behavior.
+    sparse_selection_only = (
+        os.environ.get("AIRCOMP_SPARSE_SELECTION_ONLY", "")
+        .strip()
+        .lower()
+    )
+    if sparse_selection_only not in {"", "bayesian", "random"}:
+        raise ValueError(
+            "AIRCOMP_SPARSE_SELECTION_ONLY must be "
+            "'bayesian', 'random', or unset"
+        )
+
     for experiment in experiments:
         for condition in experiment_conditions(experiment, config, methods_override):
+            if (
+                experiment == "sparse"
+                and sparse_selection_only
+                and condition.sparse_selection != sparse_selection_only
+            ):
+                continue
+
             condition_cfg = config.copy()
-            condition_cfg.data.labels_per_client = condition.labels_per_client
-            condition_cfg.data.mean_samples_per_client = condition.mean_samples_per_client
-            condition_cfg.wireless.power_dbm = condition.power_dbm
+
+            # CIFAR-10 research extension:
+            # fig2 is the dense baseline and sparse is its communication
+            # extension. For these two cases, preserve the data settings
+            # from the CIFAR YAML (e.g. mean_samples_per_client=50)
+            # instead of overwriting them with the MNIST paper defaults
+            # hard-coded in experiments.py.
+            cifar10_mode = (
+                os.environ.get("AIRCOMP_DATASET", "mnist")
+                .strip()
+                .lower()
+                == "cifar10"
+            )
+
+            if not (
+                cifar10_mode
+                and condition.experiment in {"fig2", "sparse"}
+            ):
+                condition_cfg.data.labels_per_client = (
+                    condition.labels_per_client
+                )
+                condition_cfg.data.mean_samples_per_client = (
+                    condition.mean_samples_per_client
+                )
+
+            # For the CIFAR-10 fig2/sparse research extension,
+            # preserve the wireless power from the YAML as well.
+            # This allows controlled diagnostics such as a high-power
+            # near-ideal AirComp run without affecting the MNIST paper path.
+            if not (
+                cifar10_mode
+                and condition.experiment in {"fig2", "sparse"}
+            ):
+                condition_cfg.wireless.power_dbm = (
+                    condition.power_dbm
+                )
+
             if condition.experiment == "sparse":
                 condition_cfg.sparse.enabled = True
                 condition_cfg.sparse.selection = condition.sparse_selection
