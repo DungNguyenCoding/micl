@@ -1,61 +1,158 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Safe cleanup for the current Linux CIFAR priority workspace.
-# Preserves completed results/dense_*, results/sparse_*, results/plot_*,
-# configs/cifar_final/, configs/cifar_priority/, source files, docs, and tests.
+# Source-oriented cleanup for AirCompBayesFL_cifar10_src.
+#
+# Default: DRY RUN only.
+# Apply deletions with:
+#   bash scripts/cleanup_priority_workspace.sh --apply
+#
+# Goal:
+#   - keep Python source, tests, YAML configs, Linux priority scripts,
+#     documentation, VERSION, LICENSE, requirements, and final results;
+#   - remove obsolete Windows launchers, legacy root launchers/backups,
+#     caches, temporary tuning/debug artifacts, and patch/archive clutter.
 
-rm -rf .pytest_cache __pycache__ tests/__pycache__
-find . -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
-find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
+MODE="${1:---dry-run}"
+if [[ "${MODE}" != "--dry-run" && "${MODE}" != "--apply" ]]; then
+    echo "Usage: $0 [--dry-run|--apply]"
+    exit 2
+fi
 
-rm -f utils_v161_backup.py
-rm -f scripts/run_dense_keep100_seeds_12025_12027.sh
+ROOT="$(pwd)"
 
-# Obsolete tuning configurations; frozen/final/priority configs are preserved.
-rm -rf configs/cifar_tune
+if [[ ! -f "${ROOT}/main.py" || ! -f "${ROOT}/main_cifar10.py" ]]; then
+    echo "ERROR: run this from the AirCompBayesFL_cifar10_src project root."
+    exit 1
+fi
 
-# Temporary result namespaces only.
-rm -rf results/tune_* results/debug_* results/archive_*
+if pgrep -f "python.*main_cifar10.py" >/dev/null 2>&1; then
+    echo "ERROR: an active main_cifar10.py simulation was detected."
+    echo "Stop/wait for the simulation before cleaning the source tree."
+    pgrep -af "python.*main_cifar10.py" || true
+    exit 1
+fi
 
-remove_dense_if_incomplete() {
-    local dir="$1"
-    local metrics="$dir/metrics.csv"
-    [ -d "$dir" ] || return 0
+declare -a TARGETS=()
 
-    if [ ! -f "$metrics" ]; then
-        echo "Removing incomplete dense directory without metrics: $dir"
-        rm -rf "$dir"
-        return 0
-    fi
-
-    local max_round
-    max_round="$({ python - "$metrics" <<'PY'
-import sys
-import pandas as pd
-p = sys.argv[1]
-df = pd.read_csv(p)
-print(int(df["round"].max()) if len(df) else -1)
-PY
-    } 2>/dev/null || echo -1)"
-
-    if [ "$max_round" -lt 80 ]; then
-        echo "Removing interrupted dense result: $dir (max logical round=$max_round)"
-        rm -rf "$dir"
-    else
-        echo "Keeping completed dense result: $dir (max logical round=$max_round)"
-    fi
+add_if_exists() {
+    local p="$1"
+    [[ -e "$p" || -L "$p" ]] && TARGETS+=("$p")
 }
 
-# The uploaded snapshot showed these old campaign outputs stopped at round 14.
-# The guard above prevents deletion if either has since become a complete run.
-remove_dense_if_incomplete results/dense_cifar_keep100_seed12025
-remove_dense_if_incomplete results/dense_cifar_keep100_seed12026
+# Obsolete top-level platform/legacy launchers.
+for p in \
+    run_cifar10_sparse_rep3.ps1 \
+    run_sparse_proposed.ps1 \
+    run_windows_gpu.ps1 \
+    run_smoke.bat \
+    run_smoke.sh
+do
+    add_if_exists "$p"
+done
 
-# Runtime logs are reproducible artifacts; keep an empty directory for nohup.
-rm -rf logs
-mkdir -p logs
+# Catch any other top-level Windows launchers.
+while IFS= read -r -d '' p; do
+    TARGETS+=("$p")
+done < <(find . -maxdepth 1 -type f \( -name '*.ps1' -o -name '*.bat' -o -name '*.cmd' \) -print0)
 
-echo 'Cleanup complete.'
-echo 'Preserved result entries:'
-find results -maxdepth 1 -mindepth 1 -print | sort
+# Explicit obsolete/backup/debug artifacts.
+for p in \
+    utils_v161_backup.py \
+    debug_aircomp_optimizer_upgrade_bundle.txt \
+    scripts/run_dense_keep100_seeds_12025_12027.sh
+do
+    add_if_exists "$p"
+done
+
+# Project-root patch/archive clutter after installation.
+while IFS= read -r -d '' p; do
+    TARGETS+=("$p")
+done < <(
+    find . -maxdepth 1 -type f \
+      \( -name '*.patch' -o -name '*.diff' -o -name '*.zip' \
+         -o -name '*.tar' -o -name '*.tar.gz' -o -name '*.tgz' \) \
+      -print0
+)
+
+# Python/test/editor/OS caches.
+while IFS= read -r -d '' p; do
+    TARGETS+=("$p")
+done < <(
+    find . \
+      \( -type d \( -name '__pycache__' -o -name '.pytest_cache' \
+                    -o -name '.mypy_cache' -o -name '.ruff_cache' \
+                    -o -name '.ipynb_checkpoints' \) \
+         -o -type f \( -name '*.pyc' -o -name '*.pyo' \
+                       -o -name '.DS_Store' -o -name 'Thumbs.db' \
+                       -o -name 'desktop.ini' \) \) \
+      -print0
+)
+
+# Old CIFAR tuning configs.
+add_if_exists "configs/cifar_tune"
+
+# Temporary result/log families only.
+# KEEP: results/dense_*, results/sparse_*, results/plot_*.
+for base in results logs; do
+    [[ -d "$base" ]] || continue
+    while IFS= read -r -d '' p; do
+        TARGETS+=("$p")
+    done < <(
+        find "$base" -mindepth 1 -maxdepth 1 \
+          \( -name 'tune_*' -o -name 'debug_*' -o -name 'archive_*' \) \
+          -print0
+    )
+done
+
+mapfile -t TARGETS < <(printf '%s\n' "${TARGETS[@]:-}" | sed '/^$/d' | sort -u)
+
+echo "============================================================"
+echo "AirCompBayesFL source-oriented cleanup"
+echo "Mode: ${MODE}"
+echo "Root: ${ROOT}"
+echo "============================================================"
+echo
+echo "WILL KEEP intentionally:"
+echo "  - *.py source files (except explicit obsolete backups)"
+echo "  - tests/"
+echo "  - configs/cifar_final/"
+echo "  - configs/cifar_priority/"
+echo "  - other non-tuning YAML configs"
+echo "  - scripts/ current Linux priority launch/summary scripts"
+echo "  - README.md, CHANGELOG.md, VALIDATION.md, PRIORITY_BASELINE_*.md"
+echo "  - VERSION, LICENSE, requirements*.txt, .gitignore"
+echo "  - results/dense_*, results/sparse_*, results/plot_*"
+echo "  - data/download directories (not touched)"
+echo
+echo "PLANNED REMOVALS:"
+if [[ "${#TARGETS[@]}" -eq 0 ]]; then
+    echo "  (nothing)"
+else
+    printf '  %s\n' "${TARGETS[@]}"
+fi
+echo
+
+if [[ "${MODE}" == "--dry-run" ]]; then
+    echo "DRY RUN ONLY: nothing was deleted."
+    echo
+    echo "If this list looks correct, apply with:"
+    echo "  bash scripts/cleanup_priority_workspace.sh --apply"
+    exit 0
+fi
+
+for p in "${TARGETS[@]}"; do
+    rm -rf -- "$p"
+done
+
+if [[ -d logs ]] && [[ -z "$(find logs -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+    rmdir logs
+fi
+
+echo "Cleanup complete."
+echo
+echo "===== TOP-LEVEL FILES AFTER CLEANUP ====="
+find . -maxdepth 1 -type f -printf '%f\n' | sort
+echo
+echo "===== TOP-LEVEL DIRECTORIES AFTER CLEANUP ====="
+find . -mindepth 1 -maxdepth 1 -type d -printf '%f/\n' | sort
