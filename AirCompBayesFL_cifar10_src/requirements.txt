@@ -11,3 +11,4 @@ pandas>=2.2,<3
 matplotlib>=3.8,<4
 PyYAML>=6,<7
 pytest>=8,<10
+bayesian-torch==0.5.0

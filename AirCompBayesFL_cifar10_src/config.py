@@ -53,6 +53,7 @@ class TrainingConfig:
     bayesian_local_mode: str = "paper_two_phase"
     fedprox_mu: float = 0.01
     gradient_clip_norm: float = 10.0
+    bayesian_backend: str = "pyro"
     num_rounds: Optional[int] = 3
     max_channel_uses: int = 30_000_000
     evaluate_every: int = 1

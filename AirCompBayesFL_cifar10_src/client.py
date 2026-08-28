@@ -11,7 +11,7 @@ import flwr as fl
 import numpy as np
 import torch
 
-from bayes_vi import BayesianVITrainer
+from bayesian_backend import create_bayesian_trainer
 from bayesian_protocol import NATURAL_MEAN_PHASE, PRECISION_PHASE
 from config import SimulationConfig
 from dataset import load_client_loader
@@ -203,7 +203,7 @@ class AirCompNumPyClient(fl.client.NumPyClient):
     def _sparse_mask_for_precision_phase(
         self,
         *,
-        trainer: BayesianVITrainer,
+        trainer,
         global_mean: np.ndarray,
         global_precision: np.ndarray,
         local_precision: np.ndarray,
@@ -287,12 +287,12 @@ class AirCompNumPyClient(fl.client.NumPyClient):
             )
         global_mean = np.asarray(parameters[0], dtype=np.float32)
         global_precision = np.asarray(parameters[1], dtype=np.float64)
-        trainer = BayesianVITrainer(
-            self.model,
-            self.layout,
-            self.config.model,
-            self.config.training,
-            self.device,
+        trainer = create_bayesian_trainer(
+            model=self.model,
+            layout=self.layout,
+            model_cfg=self.config.model,
+            train_cfg=self.config.training,
+            device=self.device,
             learning_rate=learning_rate,
         )
 

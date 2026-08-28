@@ -887,3 +887,795 @@ Baseline optimization and convergence study complete.
 Ready for Bayesian-Torch implementation.
 
 
+
+## EXP-013 — Bayesian-Torch parameter adapter validation
+
+### Objective
+
+Validate a complete mapping between the deterministic AirComp
+communication coordinates and Bayesian-Torch posterior parameters.
+
+### Environment
+
+- Bayesian-Torch: 0.5.0
+- Backend type: Reparameterization
+- CIFAR model dimension: 78,042
+
+### Adapter coverage
+
+The Bayesian-Torch adapter maps:
+
+- Conv2d coordinates: 76,720
+- GroupNorm affine coordinates: 672
+- Linear coordinates: 650
+- Total coordinates: 78,042
+
+Therefore every coordinate in the original deterministic
+ParameterLayout is represented by both a posterior mean and posterior
+scale parameter.
+
+GroupNorm requires a custom variational compatibility wrapper because
+Bayesian-Torch 0.5.0 does not convert nn.GroupNorm automatically.
+
+### Numerical validation
+
+Starting from:
+
+- global precision = 10,000
+- global variance = 0.0001
+
+the adapter produced:
+
+- deterministic mean round-trip max error: 0
+- reconstructed precision: approximately 9,999.997
+- initial total KL: approximately 0.01395
+
+The small precision discrepancy is numerical and arises from the
+float32 unconstrained rho / softplus representation used by
+Bayesian-Torch.
+
+The initial KL corresponds to a negligible average discrepancy across
+78,042 coordinates.
+
+### Trainability validation
+
+With posterior mean frozen and posterior scale enabled:
+
+- trainable mean coordinates: 0
+- trainable scale coordinates: 78,042
+
+The Bayesianized CIFAR model also completed a valid forward pass with
+output shape (4, 10).
+
+### Tests
+
+The complete test suite passed:
+
+- 53 tests passed
+- existing 13 Matplotlib/PyParsing warnings only
+
+### Decision
+
+Accept BayesianTorchParameterAdapter as the communication-coordinate
+bridge.
+
+Proceed to a standalone BayesianTorchVITrainer implementation before
+making any changes to Flower client/server routing.
+
+### Status
+
+Adapter implementation complete.
+Standalone trainer implementation pending.
+
+---
+
+## EXP-014 — Standalone Bayesian-Torch VI trainer validation
+
+### Objective
+
+Validate the complete two-phase Bayesian-Torch trainer on one real
+CIFAR-10 client before connecting it to Flower and AirComp aggregation.
+
+### Validation status
+
+Unit tests:
+
+- Bayesian-Torch adapter/trainer focused tests: 7 passed
+- complete project test suite: 57 passed
+- existing 13 Matplotlib/PyParsing warnings only
+
+### Real-client setup
+
+- CIFAR-10
+- client 0
+- samples: 57
+- model dimension: 78,042
+- E=1
+- batch size=256
+- LR=0.06
+- SGD
+- momentum=0.9
+- gradient clip norm=10
+- prior precision=10,000
+
+Because the client's 57 samples fit into one batch, each phase contains
+one optimizer step.
+
+### Phase-1 observation
+
+Bayesian-Torch scale-coordinate optimization produced:
+
+- average loss: 2.7282
+- local steps: 1
+- precision mean: 10000.238
+- precision minimum: 8704.254
+- precision maximum: 11276.093
+- precision-delta L2: 7953.55
+- precision-delta max absolute: 1295.75
+- changed fraction: 98.85%
+- applied gradient L2: 6.664
+- applied gradient max absolute: 1.162
+
+The update is much larger than the direct-precision updates observed in
+the Pyro backend, but it remains finite and positive. The gradient norm
+is below the configured clipping threshold of 10.
+
+This difference is consistent with the different optimization
+coordinate:
+
+Pyro:
+    optimize precision rho directly
+
+Bayesian-Torch:
+    optimize unconstrained rho_BT
+    sigma = softplus(rho_BT)
+    precision = 1/sigma^2
+
+Thus the same numerical learning rate does not imply the same
+precision-space step.
+
+### Phase-2 observation
+
+Bayesian-Torch posterior-mean optimization produced:
+
+- average loss: 2.7075
+- local steps: 1
+- mean-update L2: approximately 0.6000
+- mean-update max absolute: approximately 0.07046
+
+Since LR=0.06 and gradient_clip_norm=10, the observed update norm of
+approximately 0.60 is consistent with the Phase-2 gradient reaching the
+gradient-clipping boundary. This is an interpretation to verify during
+the FL smoke test rather than a confirmed failure.
+
+### Decision
+
+Do not tune Bayesian-Torch learning rates yet.
+
+The standalone trainer is numerically valid, so proceed to backend
+routing and a short Flower/AirComp smoke comparison against Pyro.
+
+Use only 3 logical rounds for the first integration test.
+
+Do not launch the 100-round Bayesian-Torch experiment until the
+short integration run confirms stable server-side posterior state.
+
+### Status
+
+Standalone Bayesian-Torch trainer validated.
+Flower integration pending.
+
+---
+
+## EXP-015 — Three-round Flower integration: Bayesian-Torch vs Pyro
+
+### Objective
+
+Validate that the Bayesian-Torch backend works through the complete
+Flower/Ray two-phase Proposed protocol before a long simulation.
+
+### Result
+
+Both Bayesian-Torch and Pyro completed:
+
+- 3 logical rounds
+- 6 physical Proposed rounds
+- all 40 clients
+- precision phase and natural-mean phase
+- AirComp aggregation
+- centralized evaluation
+
+### Final global state
+
+| Metric | Bayesian-Torch | Pyro |
+|---|---:|---:|
+| predictive accuracy | 10.01% | 10.02% |
+| posterior-mean accuracy | 11.31% | 11.36% |
+| NLL | 2.3968 | 2.3938 |
+| global precision mean | 10000.046 | 10000.000 |
+| global variance | 9.99996e-5 | 1.00000e-4 |
+| global precision-update L2 | 1.7709 | 2.18e-9 |
+| global mean-update L2 | 7.55e-5 | 7.31e-5 |
+
+Accuracy is not interpreted because three logical rounds are only an
+integration test.
+
+### Bayesian-Torch local precision behavior
+
+Across all precision-phase client calls:
+
+- mean local precision: approximately 10000.04
+- observed local precision minimum: approximately 7500.94
+- observed local precision maximum: approximately 12934.68
+- mean local precision-delta L2: approximately 3536.58
+- maximum client precision-delta L2: approximately 9625.72
+- mean changed fraction: approximately 79.8%
+- mean applied gradient L2: approximately 5.68
+- maximum observed gradient L2 remains below the configured clip norm 10
+
+By logical round:
+
+- round 1 mean local precision-delta L2: approximately 7329.20
+- round 2 mean local precision-delta L2: approximately 3269.69
+- round 3 mean local precision-delta L2: approximately 10.83
+
+### Pyro comparison
+
+Pyro local precision changes remain numerically tiny:
+
+- mean local precision-delta L2: approximately 4.25e-6
+- mean precision remains effectively 10000
+
+Thus Bayesian-Torch produces substantially stronger local uncertainty
+adaptation than the direct-precision Pyro implementation.
+
+Despite these large local Bayesian-Torch precision movements, server
+aggregation leaves the global mean precision close to 10000 after three
+logical rounds.
+
+### Important scheduler observation
+
+This three-round test uses a cosine scheduler stretched over only three
+logical rounds, approximately:
+
+- round 1: LR 0.06
+- round 2: LR 0.030
+- round 3: LR 0.0001
+
+It therefore does not stress Bayesian-Torch under the prolonged
+high-learning-rate portion of the final 100-round schedule.
+
+### Decision
+
+Do not tune Bayesian-Torch yet.
+
+Before launching the full 100-round comparison, run a 10-logical-round
+integration stress test with constant LR=0.06.
+
+Constant 0.06 is slightly more aggressive than the first ten rounds of
+the intended 100-round cosine schedule and therefore provides a useful
+stability check for the Bayesian-Torch scale coordinate.
+
+### Status
+
+Three-round integration passed.
+High-LR stress test pending.
+
+---
+
+## EXP-016 — Bayesian-Torch high-LR integration stress test
+
+### Objective
+
+Test Bayesian-Torch under sustained LR=0.06 before launching the
+100-round cosine experiment.
+
+This 10-logical-round constant-LR test is slightly more aggressive than
+the first ten rounds of the final 100-round cosine schedule.
+
+### Result
+
+Both Bayesian-Torch and Pyro completed all 10 logical rounds and all
+20 Proposed physical phases.
+
+No NaN, Inf, shape, state-transfer, AirComp, or Flower failures occurred.
+
+### Bayesian-Torch global state
+
+At logical round 10:
+
+- predictive accuracy: 10.70%
+- posterior-mean accuracy: 11.36%
+- global precision mean: 10000.3545
+- posterior variance summary: approximately 9.99966e-5
+- global precision-update L2: approximately 1027.50
+- global mean-update L2: approximately 0.03055
+- precision AirComp NMSE: approximately 0.01494
+- mean AirComp NMSE: approximately 0.30172
+
+Accuracy is not interpreted because this is a short constant-LR stress
+experiment rather than the final training schedule.
+
+### Bayesian-Torch local precision behavior
+
+Across all clients and all 10 logical rounds:
+
+- minimum local precision observed: approximately 6319.56
+- maximum local precision observed: approximately 14002.09
+- local precision remained strictly positive
+- no configured precision boundary was repeatedly reached
+- typical local precision-delta L2 remained approximately 6000-7000
+- applied gradient L2 remained below the gradient clipping threshold 10
+
+The global mean precision changed only slightly despite large
+coordinate-wise local precision movements.
+
+### Pyro comparison
+
+Pyro precision remained effectively fixed at 10000.
+
+At logical round 10:
+
+- Pyro posterior precision mean: 10000
+- Pyro global precision-update L2: approximately 1.23e-6
+- Bayesian-Torch global precision-update L2: approximately 1027.5
+
+This confirms a major difference in uncertainty adaptation between the
+two implementations.
+
+The difference is expected because the local optimization coordinates
+are different:
+
+Pyro:
+    direct precision rho
+
+Bayesian-Torch:
+    unconstrained posterior scale coordinate
+    followed by precision = 1 / sigma^2
+
+### Decision
+
+The Bayesian-Torch implementation passes the high-LR stress test.
+
+Do not perform backend-specific learning-rate tuning before the first
+full comparison.
+
+Proceed with the same final configuration used for the Pyro reference:
+
+- seed: 12025
+- 100 logical rounds
+- E=1
+- batch size=256
+- SGD
+- initial LR=0.06
+- cosine schedule to 1e-4
+- MC train samples=5
+- MC evaluation samples=5
+- KL weight=2e-5
+- initial prior std=0.01
+- 40 clients
+- one label/client
+- mean samples/client=50
+- wireless power=23 dBm
+
+### Status
+
+Bayesian-Torch integration validated.
+Ready for full 100-round comparison.
+
+---
+
+## EXP-017 — Full 100-round Pyro vs Bayesian-Torch comparison, seed 12025
+
+### Objective
+
+Compare the validated Pyro implementation with the new Bayesian-Torch
+backend under the same 100-logical-round training budget and FL
+configuration.
+
+### Common setting
+
+- CIFAR-10
+- 40 clients
+- one label/client
+- mean samples/client: 50
+- model dimension: 78,042
+- E=1
+- batch size=256
+- SGD
+- initial LR=0.06
+- cosine decay to 1e-4 over 100 logical rounds
+- KL weight=2e-5
+- MC train samples=5
+- MC evaluation samples=5
+- initial prior std=0.01
+- wireless power=23 dBm
+- seed=12025
+
+### Accuracy results
+
+| Metric | Pyro | Bayesian-Torch |
+|---|---:|---:|
+| best predictive accuracy | 20.64% | 20.80% |
+| final predictive accuracy | 19.61% | 19.65% |
+| late predictive mean R80-100 | 20.2743% | 20.2729% |
+| best posterior-mean accuracy | 20.33% | 20.32% |
+| final posterior-mean accuracy | 20.31% | 20.31% |
+| late posterior-mean R80-100 | 20.3000% | 20.3029% |
+| late posterior-mean std | 0.0164 pp | 0.0193 pp |
+
+The posterior-mean and late-window results are effectively identical.
+The difference in best predictive accuracy should not be interpreted as
+a library advantage because predictive evaluation contains Monte-Carlo
+sampling variation.
+
+### NLL and calibration
+
+Final:
+
+- Pyro NLL: 2.20421
+- Bayesian-Torch NLL: 2.20552
+- Pyro ECE: 0.10299
+- Bayesian-Torch ECE: 0.10150
+
+These differences are small and do not establish a clear advantage for
+either backend.
+
+### Posterior uncertainty behavior
+
+Pyro:
+
+- posterior precision mean: approximately 10000
+- posterior precision minimum: approximately 10000
+- posterior precision maximum: approximately 10000
+
+Thus Pyro posterior variance remains effectively fixed.
+
+Bayesian-Torch at round 100:
+
+- posterior precision mean: 10001.414
+- posterior precision minimum: 9400.869
+- posterior precision maximum: 11163.021
+- global precision-update L2: 1.826
+
+The corresponding coordinate posterior standard deviations range
+approximately from 0.00946 to 0.01031 around the initial value 0.01.
+
+Therefore Bayesian-Torch learns meaningful coordinate-wise uncertainty
+variation while retaining nearly the same mean precision.
+
+### Bayesian-Torch convergence
+
+Global precision-update L2 decreases approximately:
+
+- round 1: 1216
+- round 20: 1098
+- round 40: 723
+- round 60: 384
+- round 80: 109
+- round 90: 28
+- round 100: 1.83
+
+Mean local precision-delta L2 decreases approximately:
+
+- round 1: 7329
+- round 20: 6650
+- round 40: 4383
+- round 60: 2309
+- round 80: 655
+- round 90: 177
+- round 100: 11
+
+The scale-update trajectory therefore converges together with the
+learning-rate decay.
+
+All observed client precisions remain finite and strictly positive.
+
+### Interpretation
+
+On seed 12025, changing from Pyro's direct precision/natural-coordinate
+optimization to Bayesian-Torch's native scale/mean optimization changes
+posterior uncertainty behavior substantially but does not materially
+change converged classification performance.
+
+The result supports the narrower conclusion that posterior
+parameterization strongly affects learned uncertainty in this
+implementation.
+
+It does not support claiming that one Bayesian library has better
+predictive accuracy from a single seed.
+
+### Decision
+
+Do not perform backend-specific hyperparameter tuning.
+
+Keep the common training configuration fixed and replicate the
+Pyro/Bayesian-Torch comparison on additional data-partition seeds.
+
+Next: paired seed 12026 comparison.
+
+### Status
+
+Seed-12025 library comparison complete.
+Replication pending.
+
+---
+
+## EXP-018 — Two-seed Pyro vs Bayesian-Torch replication
+
+### Objective
+
+Test whether the seed-12025 comparison between the Pyro and
+Bayesian-Torch Proposed backends reproduces on a second independent
+data-partition/run seed.
+
+### Seed 12026 results
+
+Pyro:
+
+- best predictive accuracy: 20.45%
+- late predictive mean R80-100: 19.4381%
+- final predictive accuracy: 19.44%
+- best posterior-mean accuracy: 20.50%
+- late posterior-mean accuracy: 20.4771%
+- final posterior-mean accuracy: 20.48%
+- final NLL: 2.191993
+- final ECE: 0.112841
+- final precision mean: 10000
+- precision effectively fixed
+
+Bayesian-Torch:
+
+- best predictive accuracy: 20.50%
+- late predictive mean R80-100: 19.5167%
+- final predictive accuracy: 19.45%
+- best posterior-mean accuracy: 20.64%
+- late posterior-mean accuracy: 20.6038%
+- final posterior-mean accuracy: 20.62%
+- final NLL: 2.194918
+- final ECE: 0.109240
+- final precision mean: 10001.306
+- final precision minimum: 9519.643
+- final precision maximum: 10780.758
+- final global precision-update L2: 2.121
+
+### Paired two-seed observations
+
+Bayesian-Torch minus Pyro:
+
+Late predictive accuracy:
+
+- seed 12025: -0.0014 percentage points
+- seed 12026: +0.0786 percentage points
+- paired mean: +0.0386 percentage points
+
+Late posterior-mean accuracy:
+
+- seed 12025: +0.0029 percentage points
+- seed 12026: +0.1267 percentage points
+- paired mean: +0.0648 percentage points
+
+Final posterior-mean accuracy:
+
+- seed 12025: 0.0000 percentage points
+- seed 12026: +0.1400 percentage points
+- paired mean: +0.0700 percentage points
+
+Final NLL:
+
+- seed 12025: Bayesian-Torch +0.00131
+- seed 12026: Bayesian-Torch +0.00293
+- paired mean: Bayesian-Torch +0.00212
+
+Final ECE:
+
+- seed 12025: Bayesian-Torch -0.00149
+- seed 12026: Bayesian-Torch -0.00360
+- paired mean: Bayesian-Torch -0.00255
+
+### Interpretation
+
+The second seed reproduces the principal implementation-level finding:
+
+Pyro:
+    posterior precision remains effectively fixed
+
+Bayesian-Torch:
+    learns substantial coordinate-wise posterior precision variation
+
+The converged posterior-mean classification performances remain close.
+Bayesian-Torch has a small average advantage across the first two seeds,
+but two replications are insufficient to establish a predictive
+advantage.
+
+Bayesian-Torch has lower ECE but slightly higher NLL on both seeds.
+This is currently treated as a reproducible calibration observation,
+not evidence that one backend is uniformly superior.
+
+### Decision
+
+Do not tune either backend.
+
+Run one final paired replication using seed 12027 with exactly the same
+100-round configuration.
+
+After seed 12027, stop the Pyro/Bayesian-Torch replication experiment
+and summarize the three paired seeds.
+
+### Status
+
+Two paired seeds complete.
+Final replication seed 12027 pending.
+
+---
+
+## EXP-019 — Three-seed Bayesian backend comparison complete
+
+### Question
+
+Does replacing the Pyro direct-precision/natural-coordinate local VI
+implementation with Bayesian-Torch native scale/mean optimization
+materially change predictive performance or learned posterior
+uncertainty?
+
+### Setup
+
+Paired runs were completed for seeds:
+
+- 12025
+- 12026
+- 12027
+
+Common setting:
+
+- CIFAR-10
+- 40 clients
+- one label/client
+- mean samples/client=50
+- model dimension=78,042
+- 100 logical rounds
+- E=1
+- batch size=256
+- SGD
+- momentum=0.9
+- LR=0.06
+- cosine schedule to 1e-4
+- KL weight=2e-5
+- MC train samples=5
+- MC evaluation samples=5
+- initial prior std=0.01
+- wireless power=23 dBm
+
+No backend-specific hyperparameter tuning was performed.
+
+### Three-seed predictive results
+
+Pyro mean across seeds:
+
+- best predictive accuracy: 21.290%
+- late predictive accuracy R80-100: 20.335%
+- final predictive accuracy: 20.427%
+- best posterior-mean accuracy: 21.103%
+- late posterior-mean accuracy: 21.062%
+- final posterior-mean accuracy: 21.077%
+- final NLL: 2.15717
+- final ECE: 0.08120
+
+Bayesian-Torch mean across seeds:
+
+- best predictive accuracy: 21.447%
+- late predictive accuracy R80-100: 20.507%
+- final predictive accuracy: 20.520%
+- best posterior-mean accuracy: 21.160%
+- late posterior-mean accuracy: 21.127%
+- final posterior-mean accuracy: 21.130%
+- final NLL: 2.15893
+- final ECE: 0.08125
+
+Mean paired Bayesian-Torch minus Pyro differences:
+
+- best predictive accuracy: +0.157 percentage points
+- late predictive accuracy: +0.172 percentage points
+- final predictive accuracy: +0.093 percentage points
+- best posterior-mean accuracy: +0.057 percentage points
+- late posterior-mean accuracy: +0.065 percentage points
+- final posterior-mean accuracy: +0.053 percentage points
+- final NLL: +0.00176
+- final ECE: approximately +0.00005
+
+The predictive differences are small relative to between-seed
+variation and do not establish superiority of either backend.
+
+### Posterior uncertainty
+
+Pyro final precision:
+
+- mean: 10000 on all three seeds
+- precision width: approximately 1e-6
+- final global precision-update L2: approximately 1e-9
+
+The Pyro posterior covariance is therefore effectively fixed.
+
+Bayesian-Torch final precision:
+
+Seed 12025:
+- mean: 10001.414
+- min: 9400.869
+- max: 11163.021
+- width: 1762.152
+
+Seed 12026:
+- mean: 10001.306
+- min: 9519.643
+- max: 10780.758
+- width: 1261.115
+
+Seed 12027:
+- mean: 10001.446
+- min: 9435.425
+- max: 10848.735
+- width: 1413.310
+
+Three-seed Bayesian-Torch precision-width mean:
+
+- 1478.86 ± 256.87
+
+Three-seed final global precision-update L2:
+
+- 2.033 ± 0.181
+
+Thus Bayesian-Torch reproducibly learns coordinate-dependent posterior
+uncertainty while keeping the average precision close to its initial
+value.
+
+### Interpretation
+
+The backend choice strongly affects posterior uncertainty adaptation but
+does not materially change converged classification performance under
+the tested configuration.
+
+This distinction follows from the local optimization coordinates:
+
+Pyro:
+    direct precision rho
+    natural coordinate nu
+
+Bayesian-Torch:
+    unconstrained scale rho_BT
+    posterior mean mu
+
+The server state, AirComp protocol, communication budget, model,
+dataset partitions, and common training hyperparameters remain the
+same.
+
+### Sparse-learning implication
+
+The Bayesian sparsification score is
+
+    |mu_k - mu_G| / (sigma_k + eps)
+
+With the current Pyro implementation, sigma_k is effectively constant,
+so the uncertainty denominator contributes little to coordinate
+ranking.
+
+With Bayesian-Torch, coordinate-wise sigma_k is adaptive. Therefore
+Bayesian-Torch provides a meaningful test of genuinely
+uncertainty-aware Bayesian sparsification.
+
+### Decision
+
+Close the Bayesian backend comparison after three paired seeds.
+
+Do not perform backend-specific hyperparameter tuning.
+
+Use Bayesian-Torch as the primary Bayesian backend for the next
+uncertainty-aware sparse experiments.
+
+Retain Pyro as the validated reference implementation.
+
+### Status
+
+Bayesian backend study complete.
+Ready for Bayesian-Torch sparse validation.
+
+---
