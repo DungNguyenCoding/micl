@@ -10,6 +10,7 @@ logs/
 # Temporary experiment outputs only. Final dense/sparse/plot results remain
 # eligible for Git by design.
 results/tune_*/
+results/smoke_*/
 results/debug_*/
 results/archive_*/
 

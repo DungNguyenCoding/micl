@@ -75,10 +75,97 @@ def partition_filename(
     num_clients: int,
     labels_per_client: int,
     mean_samples: float,
+    label_pairing_mode: str = "uniform",
 ) -> Path:
     safe_mean = str(mean_samples).replace(".", "p")
+
+    pairing_mode = str(
+        label_pairing_mode
+    ).strip().lower()
+
+    suffix = (
+        ""
+        if pairing_mode == "uniform"
+        else f"_{pairing_mode}"
+    )
+
     return Path(partition_dir) / (
-        f"mnist_seed{seed}_k{num_clients}_l{labels_per_client}_m{safe_mean}.json"
+        f"mnist_seed{seed}_k{num_clients}_l{labels_per_client}_"
+        f"m{safe_mean}{suffix}.json"
+    )
+
+
+def _sample_client_labels(
+    rng: np.random.Generator,
+    labels_per_client: int,
+    label_pairing_mode: str,
+) -> List[int]:
+    """Sample one client's class-label set.
+
+    uniform:
+        Original behavior.
+
+    random_nonadjacent:
+        Uniform random draw over unordered two-class pairs satisfying
+        abs(label_a - label_b) > 1.
+
+        Therefore:
+            (0, 1), (1, 2), ..., (8, 9) are forbidden.
+            (0, 9) is allowed.
+    """
+
+    labels_per_client = int(
+        labels_per_client
+    )
+
+    mode = str(
+        label_pairing_mode
+    ).strip().lower()
+
+    if mode == "random_nonadjacent":
+
+        if labels_per_client != 2:
+            raise ValueError(
+                "random_nonadjacent pairing requires "
+                "labels_per_client=2"
+            )
+
+        allowed_pairs = [
+            (a, b)
+            for a in range(10)
+            for b in range(a + 1, 10)
+            if abs(a - b) > 1
+        ]
+
+        pair = allowed_pairs[
+            int(
+                rng.integers(
+                    0,
+                    len(allowed_pairs),
+                )
+            )
+        ]
+
+        return [
+            int(pair[0]),
+            int(pair[1]),
+        ]
+
+    if mode != "uniform":
+        raise ValueError(
+            f"Unknown label pairing mode: {mode!r}"
+        )
+
+    if labels_per_client == 10:
+        return list(range(10))
+
+    return sorted(
+        int(v)
+        for v in rng.choice(
+            10,
+            size=labels_per_client,
+            replace=False,
+        ).tolist()
     )
 
 
@@ -102,6 +189,7 @@ def prepare_partitions(
         data_cfg.num_clients,
         data_cfg.labels_per_client,
         data_cfg.mean_samples_per_client,
+        data_cfg.label_pairing_mode,
     )
     if path.exists() and not force:
         return path
@@ -123,15 +211,11 @@ def prepare_partitions(
         n_samples = int(rng.poisson(data_cfg.mean_samples_per_client))
         n_samples = max(data_cfg.min_samples_per_client, n_samples)
 
-        if data_cfg.labels_per_client == 10:
-            client_labels = list(range(10))
-        else:
-            client_labels = sorted(
-                int(v)
-                for v in rng.choice(
-                    10, size=data_cfg.labels_per_client, replace=False
-                ).tolist()
-            )
+        client_labels = _sample_client_labels(
+            rng,
+            data_cfg.labels_per_client,
+            data_cfg.label_pairing_mode,
+        )
 
         base = n_samples // len(client_labels)
         remainder = n_samples % len(client_labels)
@@ -174,6 +258,7 @@ def prepare_partitions(
         "seed": seed,
         "num_clients": data_cfg.num_clients,
         "labels_per_client": data_cfg.labels_per_client,
+        "label_pairing_mode": data_cfg.label_pairing_mode,
         "mean_samples_per_client": data_cfg.mean_samples_per_client,
         "bs_radius_m": data_cfg.bs_radius_m,
         "clients": clients,

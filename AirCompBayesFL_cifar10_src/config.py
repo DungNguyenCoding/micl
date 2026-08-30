@@ -14,6 +14,7 @@ class DataConfig:
     root: str = "data"
     num_clients: int = 40
     labels_per_client: int = 1
+    label_pairing_mode: str = "uniform"
     mean_samples_per_client: float = 10.0
     min_samples_per_client: int = 1
     bs_radius_m: float = 200.0
@@ -178,6 +179,30 @@ class SimulationConfig:
             raise ValueError("data.num_clients must be positive")
         if self.data.labels_per_client not in range(1, 11):
             raise ValueError("data.labels_per_client must be between 1 and 10")
+
+        pairing_mode = str(
+            self.data.label_pairing_mode
+        ).strip().lower()
+
+        if pairing_mode not in {
+            "uniform",
+            "random_nonadjacent",
+        }:
+            raise ValueError(
+                "data.label_pairing_mode must be "
+                "'uniform' or 'random_nonadjacent'"
+            )
+
+        if (
+            pairing_mode == "random_nonadjacent"
+            and int(self.data.labels_per_client) != 2
+        ):
+            raise ValueError(
+                "data.label_pairing_mode='random_nonadjacent' "
+                "requires data.labels_per_client=2"
+            )
+
+        self.data.label_pairing_mode = pairing_mode
         if self.training.local_epochs <= 0:
             raise ValueError("training.local_epochs must be positive")
         if self.training.batch_size <= 0:
