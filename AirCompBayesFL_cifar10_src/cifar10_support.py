@@ -32,6 +32,17 @@ CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
 CIFAR10_STD = (0.2470, 0.2435, 0.2616)
 CIFAR10_PARAMETER_COUNT = 78_042
 
+from resnet56_gn import (
+    CIFAR10ResNet56GN,
+    CIFAR10_RESNET56_GN_PARAMETER_COUNT,
+)
+
+CIFAR10_PARAMETER_COUNTS = {
+    "paper_cnn": CIFAR10_PARAMETER_COUNT,
+    "cifar_residual_cnn": CIFAR10_PARAMETER_COUNT,
+    "resnet56_gn": CIFAR10_RESNET56_GN_PARAMETER_COUNT,
+}
+
 
 def cifar10_transform() -> transforms.Compose:
     # No augmentation by design: this extension changes the dataset/model only,
@@ -271,64 +282,40 @@ class CIFAR10ResidualCNN(nn.Module):
 CIFAR10PaperCNN = CIFAR10ResidualCNN
 
 
-def cifar10_parameter_count() -> int:
-    model = CIFAR10ResidualCNN()
-
-    return int(
-        sum(
-            p.numel()
-            for p in model.parameters()
-            if p.requires_grad
-        )
-    )
+def cifar10_parameter_count(model_name: str = "paper_cnn") -> int:
+    model = _cifar_build_model(model_name, 10)
+    return int(sum(p.numel() for p in model.parameters() if p.requires_grad))
 
 
 def _cifar_build_model(
     *args: Any,
     **kwargs: Any,
 ) -> nn.Module:
-
-    # Core build_model() normally passes:
-    #   name
-    #   num_classes
-    #
-    # The CIFAR extension supports 10 classes only.
-    num_classes = 10
-
-    if "num_classes" in kwargs:
-        num_classes = int(
-            kwargs["num_classes"]
-        )
-    elif len(args) >= 2:
-        num_classes = int(args[1])
+    name = str(kwargs.get("name", args[0] if len(args) >= 1 else "paper_cnn"))
+    name = name.strip().lower()
+    num_classes = int(kwargs.get("num_classes", args[1] if len(args) >= 2 else 10))
 
     if num_classes != 10:
+        raise ValueError("CIFAR-10 extension requires num_classes=10")
+
+    if name in {"paper_cnn", "cifar_residual_cnn"}:
+        model = CIFAR10ResidualCNN(num_classes=num_classes)
+        expected = CIFAR10_PARAMETER_COUNT
+    elif name == "resnet56_gn":
+        model = CIFAR10ResNet56GN(num_classes=num_classes)
+        expected = CIFAR10_RESNET56_GN_PARAMETER_COUNT
+    else:
         raise ValueError(
-            "CIFAR-10 extension requires "
-            "num_classes=10"
+            f"Unsupported CIFAR-10 model: {name!r}; expected "
+            "paper_cnn, cifar_residual_cnn, or resnet56_gn"
         )
 
-    model = CIFAR10ResidualCNN(
-        num_classes=num_classes
-    )
-
-    count = int(
-        sum(
-            p.numel()
-            for p in model.parameters()
-            if p.requires_grad
-        )
-    )
-
-    if count != CIFAR10_PARAMETER_COUNT:
+    count = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
+    if count != expected:
         raise RuntimeError(
-            f"CIFAR-10 model parameter count "
-            f"changed: {count:,} != "
-            f"{CIFAR10_PARAMETER_COUNT:,}"
+            f"CIFAR-10 model parameter count changed: {count:,} != {expected:,}"
         )
-
     return model
-
 
 
 def install_cifar10_overrides() -> None:
@@ -358,9 +345,11 @@ def install_cifar10_overrides() -> None:
     # well-known names inside the opt-in CIFAR process.
     def _assert_cifar_count(model: nn.Module) -> int:
         count = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
-        if count != CIFAR10_PARAMETER_COUNT:
+        supported = set(CIFAR10_PARAMETER_COUNTS.values())
+        if count not in supported:
             raise AssertionError(
-                f"Expected CIFAR-10 model dimension {CIFAR10_PARAMETER_COUNT:,}, got {count:,}"
+                f"Unsupported CIFAR-10 model dimension {count:,}; "
+                f"expected one of {sorted(supported)}"
             )
         return count
 

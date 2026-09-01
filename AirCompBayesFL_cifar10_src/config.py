@@ -20,6 +20,10 @@ class DataConfig:
     bs_radius_m: float = 200.0
     num_workers: int = 0
     pin_memory: bool = False
+    # legacy: original Poisson + fixed label-count partition.
+    # dirichlet: Poisson-scarce client sizes with Dirichlet class mixtures.
+    partition_mode: str = "legacy"
+    dirichlet_alpha: float = 0.1
 
 
 @dataclass
@@ -179,6 +183,12 @@ class SimulationConfig:
             raise ValueError("data.num_clients must be positive")
         if self.data.labels_per_client not in range(1, 11):
             raise ValueError("data.labels_per_client must be between 1 and 10")
+        partition_mode = str(self.data.partition_mode).strip().lower()
+        if partition_mode not in {"legacy", "dirichlet"}:
+            raise ValueError("data.partition_mode must be legacy or dirichlet")
+        self.data.partition_mode = partition_mode
+        if float(self.data.dirichlet_alpha) <= 0.0:
+            raise ValueError("data.dirichlet_alpha must be positive")
 
         pairing_mode = str(
             self.data.label_pairing_mode

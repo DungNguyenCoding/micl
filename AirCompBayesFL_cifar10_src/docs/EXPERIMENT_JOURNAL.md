@@ -1679,3 +1679,78 @@ Bayesian backend study complete.
 Ready for Bayesian-Torch sparse validation.
 
 ---
+
+## EXP-020 — Dirichlet alpha=0.1 + ResNet-56-GN validation
+
+### Question
+
+Can the CIFAR experiment be extended to a stronger model and a
+Dirichlet-controlled non-IID data distribution while preserving a
+common comparison setting for FedAvg, Proposed/Pyro, and
+Proposed/Bayesian-Torch?
+
+### Implementation
+
+Added:
+
+- scarce client-wise Dirichlet partition mode
+- Dirichlet alpha = 0.1
+- CIFAR ResNet-56 with GroupNorm
+- preserved legacy partition/model paths
+- preserved common AirComp/server protocol
+- preserved Pyro and Bayesian-Torch backend selection
+
+### ResNet-56-GN validation
+
+Model dimension:
+
+- total trainable coordinates: 855,770
+- Conv2d coordinates: 850,864
+- GroupNorm coordinates: 4,256
+- Linear coordinates: 650
+
+Bayesian-Torch adapter mapped all 855,770 coordinates.
+
+### Partition validation
+
+Seed 12025:
+
+- clients: 40
+- Dirichlet alpha: 0.1
+- mean samples/client configuration: 50
+- selected samples: 2,071
+- unique selected samples: 2,071
+- duplicate indices across clients: 0
+- actual mean samples/client: 51.775
+- minimum samples/client: 37
+- maximum samples/client: 70
+- mean active classes/client: 3.825
+- minimum active classes/client: 1
+- maximum active classes/client: 7
+
+The selected global class totals are not balanced because this is a
+scarce client-wise Dirichlet-multinomial construction rather than a
+full-dataset class-wise Dirichlet split.
+
+### Tests
+
+Complete test suite:
+
+- 65 tests passed
+- 13 existing Matplotlib/PyParsing warnings
+
+### Decision
+
+Proceed with one seed-12025 dense pilot comparison:
+
+- FedAvg
+- Proposed/Pyro
+- Proposed/Bayesian-Torch
+
+Use exactly the same Dirichlet partition, ResNet-56-GN architecture,
+training schedule, wireless configuration, and seed.
+
+Do not perform method-specific tuning before observing the pilot result.
+
+---
+

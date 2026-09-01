@@ -1,0 +1,74 @@
+data:
+  root: data
+  num_clients: 40
+  labels_per_client: 1
+  mean_samples_per_client: 50
+  min_samples_per_client: 1
+  bs_radius_m: 200
+  num_workers: 0
+  pin_memory: false
+  partition_mode: dirichlet
+  dirichlet_alpha: 0.1
+model:
+  name: resnet56_gn
+  num_classes: 10
+  initial_prior_std: 0.01
+  min_posterior_std: 0.0001
+  max_posterior_std: 10.0
+  min_precision: 1.0e-06
+  max_precision: 100000000.0
+training:
+  local_epochs: 1
+  batch_size: 256
+  learning_rate: 0.06
+  optimizer: sgd
+  momentum: 0.9
+  weight_decay: 0.0
+  lr_scheduler: cosine
+  min_learning_rate: 0.0001
+  kl_weight: 2.0e-05
+  mc_train_samples: 5
+  mc_eval_samples: 5
+  bayesian_local_mode: paper_two_phase
+  fedprox_mu: 0.01
+  gradient_clip_norm: 10.0
+  num_rounds: null
+  max_channel_uses: 30000000
+  evaluate_every: 1
+  bayesian_backend: bayesian_torch
+wireless:
+  enabled: true
+  power_dbm: 23.0
+  noise_dbm: -74
+  num_subchannels: 1024
+  path_loss_exponent: 4
+  path_loss_reference_m: 1000.0
+  gamma_db: 10
+  min_channel_power: 1.0e-14
+  power_control_mode: paper_reference_kkt
+  deterministic_payload_mode: update
+  deterministic_reference_power_mode: coordinated_aggregate
+  bisection_steps: 60
+runtime:
+  backend: ray
+  seed: 2025
+  replications: 1
+  client_num_cpus: 1
+  client_num_gpus: 0.125
+  ray_include_dashboard: false
+  torch_num_threads: 1
+  client_device: cuda
+  server_device: cpu
+  verbose_flower: false
+  cleanup_cuda_after_fit: true
+  cleanup_phase_state: true
+  fail_on_client_failure: true
+output:
+  directory: results/priority_baseline
+  metrics_filename: metrics.csv
+  reliability_filename: reliability.csv
+  clients_filename: client_metrics.csv
+  save_checkpoints: true
+sparse:
+  enabled: false
+  keep_ratio: 1.0

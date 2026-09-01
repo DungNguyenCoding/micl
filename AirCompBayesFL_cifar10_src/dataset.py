@@ -69,6 +69,10 @@ def _training_targets(root: str | Path) -> np.ndarray:
     return np.asarray(targets, dtype=np.int64)
 
 
+def _float_token(value: float) -> str:
+    return f"{float(value):g}".replace(".", "p")
+
+
 def partition_filename(
     partition_dir: str | Path,
     seed: int,
@@ -76,19 +80,26 @@ def partition_filename(
     labels_per_client: int,
     mean_samples: float,
     label_pairing_mode: str = "uniform",
+    partition_mode: str = "legacy",
+    dirichlet_alpha: float = 0.1,
 ) -> Path:
-    safe_mean = str(mean_samples).replace(".", "p")
+    """Return a stable filename without changing legacy cache names."""
+    mode = str(partition_mode).strip().lower()
+    safe_mean = _float_token(mean_samples)
 
-    pairing_mode = str(
-        label_pairing_mode
-    ).strip().lower()
+    if mode == "dirichlet":
+        dataset_name = (
+            os.environ.get("AIRCOMP_DATASET", "mnist").strip().lower()
+            or "mnist"
+        )
+        safe_alpha = _float_token(dirichlet_alpha)
+        return Path(partition_dir) / (
+            f"{dataset_name}_seed{seed}_k{num_clients}_"
+            f"dirichlet_a{safe_alpha}_m{safe_mean}.json"
+        )
 
-    suffix = (
-        ""
-        if pairing_mode == "uniform"
-        else f"_{pairing_mode}"
-    )
-
+    pairing = str(label_pairing_mode).strip().lower()
+    suffix = "" if pairing == "uniform" else f"_{pairing}"
     return Path(partition_dir) / (
         f"mnist_seed{seed}_k{num_clients}_l{labels_per_client}_"
         f"m{safe_mean}{suffix}.json"
@@ -100,61 +111,26 @@ def _sample_client_labels(
     labels_per_client: int,
     label_pairing_mode: str,
 ) -> List[int]:
-    """Sample one client's class-label set.
-
-    uniform:
-        Original behavior.
-
-    random_nonadjacent:
-        Uniform random draw over unordered two-class pairs satisfying
-        abs(label_a - label_b) > 1.
-
-        Therefore:
-            (0, 1), (1, 2), ..., (8, 9) are forbidden.
-            (0, 9) is allowed.
-    """
-
-    labels_per_client = int(
-        labels_per_client
-    )
-
-    mode = str(
-        label_pairing_mode
-    ).strip().lower()
+    """Sample labels for the original fixed-label partition mode."""
+    labels_per_client = int(labels_per_client)
+    mode = str(label_pairing_mode).strip().lower()
 
     if mode == "random_nonadjacent":
-
         if labels_per_client != 2:
             raise ValueError(
-                "random_nonadjacent pairing requires "
-                "labels_per_client=2"
+                "random_nonadjacent pairing requires labels_per_client=2"
             )
-
         allowed_pairs = [
             (a, b)
             for a in range(10)
             for b in range(a + 1, 10)
             if abs(a - b) > 1
         ]
-
-        pair = allowed_pairs[
-            int(
-                rng.integers(
-                    0,
-                    len(allowed_pairs),
-                )
-            )
-        ]
-
-        return [
-            int(pair[0]),
-            int(pair[1]),
-        ]
+        pair = allowed_pairs[int(rng.integers(0, len(allowed_pairs)))]
+        return [int(pair[0]), int(pair[1])]
 
     if mode != "uniform":
-        raise ValueError(
-            f"Unknown label pairing mode: {mode!r}"
-        )
+        raise ValueError(f"Unknown label pairing mode: {mode!r}")
 
     if labels_per_client == 10:
         return list(range(10))
@@ -169,35 +145,10 @@ def _sample_client_labels(
     )
 
 
-def prepare_partitions(
-    data_cfg: DataConfig,
-    seed: int,
-    partition_dir: str | Path,
-    force: bool = False,
-) -> Path:
-    """Create a deterministic partition file shared by all methods in a run.
-
-    Each client receives a Poisson-distributed number of examples and data from
-    ``labels_per_client`` labels. Distances are sampled uniformly in area in a
-    circular cell, i.e. r = R*sqrt(U).
-    """
-    partition_dir = Path(partition_dir)
-    partition_dir.mkdir(parents=True, exist_ok=True)
-    path = partition_filename(
-        partition_dir,
-        seed,
-        data_cfg.num_clients,
-        data_cfg.labels_per_client,
-        data_cfg.mean_samples_per_client,
-        data_cfg.label_pairing_mode,
-    )
-    if path.exists() and not force:
-        return path
-
-    ensure_mnist(data_cfg.root)
-    targets = _training_targets(data_cfg.root)
-    rng = np.random.default_rng(seed)
-
+def _build_label_pools(
+    targets: np.ndarray,
+    rng: np.random.Generator,
+) -> tuple[Dict[int, np.ndarray], Dict[int, int]]:
     pools: Dict[int, np.ndarray] = {}
     offsets: Dict[int, int] = {}
     for label in range(10):
@@ -205,62 +156,152 @@ def prepare_partitions(
         rng.shuffle(indices)
         pools[label] = indices
         offsets[label] = 0
+    return pools, offsets
+
+
+def _take_from_pool(
+    *,
+    label: int,
+    count: int,
+    pools: Dict[int, np.ndarray],
+    offsets: Dict[int, int],
+) -> np.ndarray:
+    """Take unique examples from one label pool without replacement."""
+    if count <= 0:
+        return np.empty(0, dtype=np.int64)
+    pool = pools[int(label)]
+    start = int(offsets[int(label)])
+    end = start + int(count)
+    if end > len(pool):
+        raise RuntimeError(
+            f"Partition requested {end} examples from class {label}, "
+            f"but only {len(pool)} are available without replacement. "
+            "Reduce mean_samples_per_client or use a larger dataset."
+        )
+    offsets[int(label)] = end
+    return pool[start:end]
+
+
+def prepare_partitions(
+    data_cfg: DataConfig,
+    seed: int,
+    partition_dir: str | Path,
+    force: bool = False,
+) -> Path:
+    """Create one deterministic partition file shared by all methods.
+
+    ``legacy`` preserves the original scarce/non-IID partition rule.
+
+    ``dirichlet`` preserves the existing data-scarcity budget: each client
+    first receives a Poisson-distributed total sample count with mean
+    ``mean_samples_per_client``.  Its ten-class mixture is then sampled as
+
+        pi_k ~ Dirichlet(alpha * 1_10)
+        n_k,* ~ Multinomial(n_k, pi_k)
+
+    where ``alpha=data_cfg.dirichlet_alpha``.  Examples are allocated without
+    replacement, so the same image never belongs to two clients.
+    """
+    partition_dir = Path(partition_dir)
+    partition_dir.mkdir(parents=True, exist_ok=True)
+
+    pairing_mode = str(getattr(data_cfg, "label_pairing_mode", "uniform"))
+    partition_mode = str(getattr(data_cfg, "partition_mode", "legacy")).strip().lower()
+    dirichlet_alpha = float(getattr(data_cfg, "dirichlet_alpha", 0.1))
+
+    path = partition_filename(
+        partition_dir,
+        seed,
+        data_cfg.num_clients,
+        data_cfg.labels_per_client,
+        data_cfg.mean_samples_per_client,
+        pairing_mode,
+        partition_mode,
+        dirichlet_alpha,
+    )
+    if path.exists() and not force:
+        return path
+
+    ensure_mnist(data_cfg.root)
+    targets = _training_targets(data_cfg.root)
+    rng = np.random.default_rng(seed)
+    pools, offsets = _build_label_pools(targets, rng)
 
     clients: Dict[str, Dict[str, object]] = {}
+
     for client_id in range(data_cfg.num_clients):
         n_samples = int(rng.poisson(data_cfg.mean_samples_per_client))
         n_samples = max(data_cfg.min_samples_per_client, n_samples)
 
-        client_labels = _sample_client_labels(
-            rng,
-            data_cfg.labels_per_client,
-            data_cfg.label_pairing_mode,
-        )
+        if partition_mode == "dirichlet":
+            proportions = rng.dirichlet(
+                np.full(10, dirichlet_alpha, dtype=np.float64)
+            )
+            counts = rng.multinomial(n_samples, proportions).astype(np.int64)
+            client_labels = [int(i) for i in np.flatnonzero(counts > 0)]
+        elif partition_mode == "legacy":
+            client_labels = _sample_client_labels(
+                rng,
+                data_cfg.labels_per_client,
+                pairing_mode,
+            )
+            base = n_samples // len(client_labels)
+            remainder = n_samples % len(client_labels)
+            counts = np.zeros(10, dtype=np.int64)
+            for i, label in enumerate(client_labels):
+                counts[int(label)] = base + (1 if i < remainder else 0)
+        else:
+            raise ValueError(f"Unknown partition_mode: {partition_mode!r}")
 
-        base = n_samples // len(client_labels)
-        remainder = n_samples % len(client_labels)
-        counts = [base + (1 if i < remainder else 0) for i in range(len(client_labels))]
         client_indices: List[int] = []
-
-        for label, count in zip(client_labels, counts):
-            if count == 0:
-                continue
-            pool = pools[label]
-            start = offsets[label]
-            end = start + count
-            if end <= len(pool):
-                selected = pool[start:end]
-                offsets[label] = end
-            else:
-                # The paper-scale configuration never exhausts MNIST, but this
-                # branch keeps custom large simulations usable.
-                first = pool[start:]
-                remaining = count - len(first)
-                reshuffled = pool.copy()
-                rng.shuffle(reshuffled)
-                pools[label] = reshuffled
-                second = reshuffled[:remaining]
-                offsets[label] = remaining
-                selected = np.concatenate([first, second])
+        for label in range(10):
+            selected = _take_from_pool(
+                label=label,
+                count=int(counts[label]),
+                pools=pools,
+                offsets=offsets,
+            )
             client_indices.extend(int(v) for v in selected.tolist())
 
         rng.shuffle(client_indices)
         distance = float(data_cfg.bs_radius_m * math.sqrt(rng.uniform(0.0, 1.0)))
         distance = max(1.0, distance)
+
         clients[str(client_id)] = {
             "indices": client_indices,
             "labels": client_labels,
+            "class_counts": {
+                str(label): int(counts[label])
+                for label in range(10)
+                if int(counts[label]) > 0
+            },
             "distance_m": distance,
             "num_examples": len(client_indices),
         }
 
+    all_indices = [
+        int(index)
+        for client in clients.values()
+        for index in client["indices"]
+    ]
+    if len(all_indices) != len(set(all_indices)):
+        raise RuntimeError("Partition contains duplicate training indices across clients")
+
     payload = {
         "seed": seed,
         "num_clients": data_cfg.num_clients,
+        "partition_mode": partition_mode,
         "labels_per_client": data_cfg.labels_per_client,
-        "label_pairing_mode": data_cfg.label_pairing_mode,
+        "label_pairing_mode": pairing_mode,
         "mean_samples_per_client": data_cfg.mean_samples_per_client,
+        "dirichlet_alpha": dirichlet_alpha if partition_mode == "dirichlet" else None,
+        "dirichlet_allocation": (
+            "client_label_proportions" if partition_mode == "dirichlet" else None
+        ),
         "bs_radius_m": data_cfg.bs_radius_m,
+        "dataset_train_size": int(len(targets)),
+        "total_selected_examples": int(len(all_indices)),
+        "unique_selected_examples": int(len(set(all_indices))),
         "clients": clients,
     }
 

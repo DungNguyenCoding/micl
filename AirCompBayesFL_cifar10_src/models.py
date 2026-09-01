@@ -69,8 +69,11 @@ if (
     from cifar10_support import (
         CIFAR10PaperCNN as _AirCompCIFAR10PaperCNN,
         CIFAR10_PARAMETER_COUNT as _AIRCOMP_CIFAR_D,
+        CIFAR10_PARAMETER_COUNTS as _AIRCOMP_CIFAR_D_BY_MODEL,
         _cifar_build_model as _aircomp_cifar_build_model,
     )
+
+    _AIRCOMP_CIFAR_D_VALUES = set(_AIRCOMP_CIFAR_D_BY_MODEL.values())
 
     # Replace model factory.
     build_model = _aircomp_cifar_build_model
@@ -98,10 +101,10 @@ if (
             )
         )
 
-        if count != _AIRCOMP_CIFAR_D:
+        if count not in _AIRCOMP_CIFAR_D_VALUES:
             raise AssertionError(
-                f"Expected CIFAR-10 model dimension "
-                f"{_AIRCOMP_CIFAR_D:,}, got {count:,}"
+                f"Unsupported CIFAR-10 model dimension {count:,}; "
+                f"expected one of {sorted(_AIRCOMP_CIFAR_D_VALUES)}"
             )
 
         return count
