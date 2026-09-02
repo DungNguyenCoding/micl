@@ -1,10 +1,11 @@
-numpy>=1.26,<3
-torch>=2.5
-torchvision>=0.20
+# Keep the user's existing CUDA-enabled PyTorch installation:
+#   torch 2.7.0+cu128
+#   torchvision 0.22.x built for the same CUDA/PyTorch stack
+# Installing torch from this file is intentionally avoided so pip does not
+# replace the working CUDA 12.8 build.
+flwr[simulation]==1.30.0
 bayesian-torch==0.5.0
-flwr[simulation]>=1.29,<2
-ray[default]>=2.51,<3
-pandas>=2.2,<3
+PyYAML>=6.0,<7
+numpy>=1.26,<3
 matplotlib>=3.8,<4
-PyYAML>=6,<7
-pytest>=8,<10
+pytest>=8,<9

@@ -1,0 +1,76 @@
+run_name: fedavg_cifar10_smoke
+method: fedavg
+data:
+  dataset: cifar10
+  root: ./data
+  num_classes: 10
+  augment: false
+  crop_padding: 4
+  random_flip: true
+  normalize_mean:
+  - 0.5
+  - 0.5
+  - 0.5
+  normalize_std:
+  - 0.5
+  - 0.5
+  - 0.5
+  partition:
+    type: sparse_dirichlet
+    dirichlet_alpha: 0.1
+    classes_per_client: 4
+    avg_samples_per_client: 64
+    min_samples_per_client: 1
+federation:
+  num_clients: 4
+  clients_per_round: 4
+model:
+  name: resnet56_gn8
+  group_norm_groups: 8
+training:
+  optimizer: sgd
+  lr: 0.05
+  momentum: 0.9
+  weight_decay: 0.0
+  batch_size: 128
+  local_epochs: 1
+  rounds: 5
+  lr_schedule: cosine
+  lr_min: 0.0001
+  lr_decay_rounds: 400
+bbb:
+  posterior_mu_init: 0.0
+  posterior_rho_init: -3.0
+  prior_pi: 0.5
+  prior_sigma1: 1.0
+  prior_sigma2: 0.0024787521766663585
+  kl_weight: null
+  kl_scheme: equal_minibatch
+  kl_weight_schedule: false
+  kl_warmup_rounds: 20
+  lambda_scale_by_size: true
+  mc_train: 2
+  mc_eval: 5
+  variance_floor_ratio: 0.5
+  rho_lr_multiplier: 0.1
+  aggregation: gaussian_product
+fola:
+  prior_lambda: 1.0
+  lambda_scale_by_size: true
+  mc_eval: 5
+  variance_floor_ratio: 0.5
+  precision_min: 1.0e-08
+  precision_max: 100000000.0
+  initial_precision: 1.0
+runtime:
+  client_num_cpus: 1.0
+  client_num_gpus: 0.25
+  central_eval_device: auto
+  seed: 0
+  torch_num_threads: 1
+  verbose_flower: false
+output:
+  logs_dir: ./logs
+  outputs_dir: ./outputs
+  checkpoint_every: 10
+  save_full_client_posteriors: false

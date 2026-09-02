@@ -1,7 +1,17 @@
+# Python
 __pycache__/
+*.py[cod]
 .pytest_cache/
-*.pyc
-logs/
-/results/
-/data/
-archive_baseline_v200_preapply_*/
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Datasets and experiment artifacts
+data/
+logs/*.log
+outputs/*
+!outputs/plots/
+!outputs/plots/.gitkeep
+!outputs/partitions/
+!outputs/partitions/.gitkeep
