@@ -1,160 +1,47 @@
-"""Append-only CSV loggers used by the server strategy."""
+"""Append-only CSV logging for the unified baseline."""
 
 from __future__ import annotations
 
 import csv
 import json
 from pathlib import Path
-from typing import Dict, Iterable, Mapping
+from typing import Iterable, Mapping
 
 import numpy as np
 
 
-_BASE_AIRCOMP_FIELDS = [
-    "nmse",
-    "distortion_nmse",
-    "clipped_fraction",
-    "average_symbol_power_watts",
-    "maximum_symbol_power_watts",
-    "noise_l2",
-    "ideal_l2",
-    "received_l2",
-    "delta_bar",
-    "retained_magnitude_ratio",
-    "distorted_to_ideal_norm_ratio",
-]
-
-
-def _prefixed(prefix: str) -> list[str]:
-    return [f"{prefix}_{name}" for name in _BASE_AIRCOMP_FIELDS]
-
-
 METRIC_FIELDS = [
-    "run_id",
-    "experiment",
-    "condition",
-    "method",
-    "realization",
-    "seed",
-    "round",
-    "logical_round",
-    "physical_round",
-    "phase",
-    "num_clients",
-    "labels_per_client",
-    "mean_samples_per_client",
-    "local_epochs",
-    "batch_size",
-    "optimizer",
-    "momentum",
-    "weight_decay",
-    "lr_scheduler",
-    "min_learning_rate",
-    "learning_rate",
-    "power_dbm",
-    "noise_dbm",
-    "num_subchannels",
-    "path_loss_exponent",
-    "path_loss_reference_m",
-    "gamma_db",
-    "power_control_mode",
-    "deterministic_payload_mode",
-    "deterministic_reference_power_mode",
-    "sparse_enabled",
-    "sparse_selection",
-    "sparse_keep_ratio",
-    "sparse_kept_coordinates",
-    "accuracy",
-    "nll",
-    "ece",
-    "posterior_predictive_accuracy",
-    "posterior_predictive_nll",
-    "posterior_predictive_ece",
-    "posterior_mean_accuracy",
-    "posterior_mean_nll",
-    "posterior_mean_ece",
-    "train_loss",
-    "phase1_train_loss",
-    "phase2_train_loss",
-    "posterior_variance",
-    "posterior_precision_mean",
-    "posterior_precision_min",
-    "posterior_precision_max",
-    "posterior_precision_std",
-    "posterior_precision_offset_l2",
-    "posterior_precision_offset_max_abs",
-    "global_mean_update_l2",
-    "global_mean_update_max_abs",
-    "global_model_update_l2",
-    "ideal_model_update_l2",
-    "received_model_update_l2",
-    "global_precision_update_l2",
-    "global_precision_update_max_abs",
-    "channel_uses_round",
-    "channel_uses_cumulative",
-    "ofdm_symbols_round",
-    "ofdm_symbols_cumulative",
-    *_prefixed("aircomp"),
-    *_prefixed("precision_aircomp"),
-    *_prefixed("mean_aircomp"),
+    "run_id", "dataset", "model", "method", "seed", "round",
+    "num_clients", "selected_clients", "client_fraction", "selected_client_ids",
+    "partition", "dirichlet_alpha", "partition_total_samples", "partition_mean_size",
+    "partition_min_size", "partition_max_size", "mean_classes_per_client",
+    "local_epochs", "batch_size", "optimizer", "momentum", "weight_decay",
+    "lr_scheduler", "lr_decay_rounds", "min_learning_rate", "learning_rate",
+    "train_loss", "accuracy", "nll", "ece",
+    "posterior_predictive_accuracy", "posterior_predictive_nll", "posterior_predictive_ece",
+    "posterior_mean_accuracy", "posterior_mean_nll", "posterior_mean_ece",
+    "bayesian_dimension", "deterministic_dimension", "model_dimension", "payload_scalars_per_client",
+    "kl_weight_config", "kl_weight_resolved", "kl_weight_schedule", "kl_warmup_rounds",
+    "lambda_scale_by_size", "mc_train", "mc_eval", "variance_floor_ratio",
+    "posterior_sigma_mean", "posterior_sigma_min", "posterior_sigma_max",
+    "global_state_update_l2", "upload_scalars_round", "upload_scalars_cumulative",
     "wall_time_sec",
 ]
 
-RELIABILITY_FIELDS = [
-    "run_id",
-    "experiment",
-    "condition",
-    "method",
-    "realization",
-    "round",
-    "logical_round",
-    "physical_round",
-    "phase",
-    "sparse_enabled",
-    "sparse_selection",
-    "sparse_keep_ratio",
-    "sparse_kept_coordinates",
-    "bin",
-    "lower",
-    "upper",
-    "count",
-    "confidence",
-    "accuracy",
+CLIENT_FIELDS = [
+    "run_id", "round", "client_id", "num_examples", "learning_rate",
+    "train_loss", "ce_loss", "kl_sum", "local_steps",
+    "kl_weight_base", "kl_weight_client", "kl_warmup_factor",
+    "mu_update_l2", "rho_update_l2", "deterministic_update_l2",
+    "sigma_mean", "sigma_min", "sigma_max", "variance_floor_clipped_fraction",
+    "model_update_l2", "model_update_max_abs",
 ]
 
-CLIENT_FIELDS = [
-    "run_id",
-    "round",
-    "logical_round",
-    "physical_round",
-    "phase",
-    "client_id",
-    "num_examples",
-    "distance_m",
-    "train_loss",
-    "phase1_loss",
-    "phase2_loss",
-    "local_steps",
-    "learning_rate",
-    "local_precision_mean",
-    "local_precision_min",
-    "local_precision_max",
-    "local_precision_delta_l2",
-    "local_precision_delta_max_abs",
-    "local_precision_changed_fraction",
-    "local_precision_gradient_l2_mean",
-    "local_precision_gradient_max_abs",
-    "local_nu_l2",
-    "local_implied_mean_l2",
-    "sparse_enabled",
-    "sparse_selection",
-    "sparse_keep_ratio",
-    "sparse_kept_coordinates",
-    "sparse_total_coordinates",
-    "sparse_score_threshold",
-    "sparse_score_mean",
-    "sparse_selected_score_mean",
-    "sparse_dropped_score_mean",
+PARTICIPATION_FIELDS = ["run_id", "round", "client_id", "num_examples"]
+
+RELIABILITY_FIELDS = [
+    "run_id", "method", "round", "evaluation", "bin", "lower", "upper",
+    "count", "confidence", "accuracy",
 ]
 
 
@@ -166,7 +53,7 @@ class CsvAppender:
 
     def append(self, row: Mapping[str, object]) -> None:
         exists = self.path.exists() and self.path.stat().st_size > 0
-        with self.path.open("a", newline="", encoding="utf-8") as handle:
+        with self.path.open("a", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=self.fields, extrasaction="ignore")
             if not exists:
                 writer.writeheader()
@@ -174,47 +61,38 @@ class CsvAppender:
 
 
 class RunLogger:
-    def __init__(
-        self,
-        output_dir: str | Path,
-        metrics_filename: str,
-        reliability_filename: str,
-        clients_filename: str,
-    ) -> None:
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
-        self.output_dir = output_dir
-        self.metrics = CsvAppender(output_dir / metrics_filename, METRIC_FIELDS)
-        self.reliability = CsvAppender(
-            output_dir / reliability_filename, RELIABILITY_FIELDS
-        )
-        self.clients = CsvAppender(output_dir / clients_filename, CLIENT_FIELDS)
+    def __init__(self, output_dir, metrics_filename, clients_filename, reliability_filename, participation_filename):
+        root = Path(output_dir)
+        root.mkdir(parents=True, exist_ok=True)
+        self.metrics = CsvAppender(root / metrics_filename, METRIC_FIELDS)
+        self.clients = CsvAppender(root / clients_filename, CLIENT_FIELDS)
+        self.participation = CsvAppender(root / participation_filename, PARTICIPATION_FIELDS)
+        self.reliability = CsvAppender(root / reliability_filename, RELIABILITY_FIELDS)
+        self.output_dir = root
 
-    def log_reliability(self, base: Dict[str, object], evaluation: object) -> None:
-        for index in range(len(evaluation.bin_count)):
+    def log_reliability(self, base: Mapping[str, object], evaluation, label: str) -> None:
+        for i in range(len(evaluation.bin_count)):
             row = dict(base)
             row.update(
                 {
-                    "bin": index,
-                    "lower": float(evaluation.bin_lower[index]),
-                    "upper": float(evaluation.bin_upper[index]),
-                    "count": int(evaluation.bin_count[index]),
-                    "confidence": float(evaluation.bin_confidence[index]),
-                    "accuracy": float(evaluation.bin_accuracy[index]),
+                    "evaluation": label,
+                    "bin": i,
+                    "lower": float(evaluation.bin_lower[i]),
+                    "upper": float(evaluation.bin_upper[i]),
+                    "count": int(evaluation.bin_count[i]),
+                    "confidence": float(evaluation.bin_confidence[i]),
+                    "accuracy": float(evaluation.bin_accuracy[i]),
                 }
             )
             self.reliability.append(row)
 
-    def save_checkpoint(
-        self,
-        run_id: str,
-        parameters: list[np.ndarray],
-        metadata: Mapping[str, object],
-    ) -> Path:
-        checkpoint_dir = self.output_dir / "checkpoints"
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
-        path = checkpoint_dir / f"{run_id}.npz"
-        arrays = {f"parameter_{index}": value for index, value in enumerate(parameters)}
-        arrays["metadata_json"] = np.asarray(json.dumps(dict(metadata)))
-        np.savez_compressed(path, **arrays)
+    def save_checkpoint(self, run_id: str, state: np.ndarray, metadata: Mapping[str, object]) -> Path:
+        root = self.output_dir / "checkpoints"
+        root.mkdir(parents=True, exist_ok=True)
+        path = root / f"{run_id}.npz"
+        np.savez_compressed(
+            path,
+            state=np.asarray(state),
+            metadata_json=np.asarray(json.dumps(dict(metadata))),
+        )
         return path

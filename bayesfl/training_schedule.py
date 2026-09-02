@@ -1,9 +1,4 @@
-"""Round-level learning-rate schedules shared by all FL methods.
-
-The schedule is keyed by *logical* round so methods with different numbers of
-physical Flower rounds (e.g. Proposed has rho/nu phases) receive the same
-learning rate at the same FL round.
-"""
+"""Round-level learning-rate schedule with fixed cosine horizon."""
 
 from __future__ import annotations
 
@@ -12,31 +7,22 @@ import math
 from config import TrainingConfig
 
 
-def learning_rate_for_round(
-    train_cfg: TrainingConfig,
-    logical_round: int,
-    total_logical_rounds: int,
-) -> float:
-    """Return the learning rate for one logical FL round.
+def learning_rate_for_round(train_cfg: TrainingConfig, server_round: int) -> float:
+    """Return LR for 1-based Flower server round.
 
-    ``constant`` reproduces the legacy behavior. ``cosine`` starts exactly at
-    ``learning_rate`` on logical round 1 and reaches ``min_learning_rate`` on
-    the final logical round. Round 0 (initial evaluation) is treated as round 1.
+    Cosine uses 0-based r=server_round-1 and the fixed horizon H from
+    training.lr_decay_rounds.  The run length does not alter the schedule.
     """
-    base_lr = float(train_cfg.learning_rate)
-    scheduler = str(train_cfg.lr_scheduler).strip().lower()
-
-    if scheduler == "constant":
-        return base_lr
-    if scheduler != "cosine":
+    base = float(train_cfg.learning_rate)
+    mode = str(train_cfg.lr_scheduler).strip().lower()
+    if mode == "constant":
+        return base
+    if mode != "cosine":
         raise ValueError(f"Unsupported lr_scheduler: {train_cfg.lr_scheduler!r}")
-
-    min_lr = float(train_cfg.min_learning_rate)
-    total = max(1, int(total_logical_rounds))
-    if total <= 1:
-        return base_lr
-
-    round_index = min(max(1, int(logical_round)), total)
-    progress = float(round_index - 1) / float(total - 1)
-    cosine = 0.5 * (1.0 + math.cos(math.pi * progress))
-    return min_lr + (base_lr - min_lr) * cosine
+    minimum = float(train_cfg.min_learning_rate)
+    horizon = max(1, int(train_cfg.lr_decay_rounds))
+    if horizon == 1:
+        return minimum
+    r = min(max(int(server_round) - 1, 0), horizon - 1)
+    cosine = 0.5 * (1.0 + math.cos(math.pi * float(r) / float(horizon - 1)))
+    return minimum + (base - minimum) * cosine

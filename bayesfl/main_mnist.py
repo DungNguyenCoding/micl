@@ -9,5 +9,5 @@ import main
 
 if __name__ == "__main__":
     if "--dataset" not in sys.argv:
-        sys.argv[1:1] = ["--dataset", "cifar10"]
+        sys.argv[1:1] = ["--dataset", "mnist"]
     main.main()

@@ -1,15 +1,10 @@
-"""Flower/Ray and native-Windows local backends for AirCompBayesFL.
-
-Version 1.3 maps every logical proposed-method round to two physical fit
-rounds.  Precision is aggregated and broadcast before any client starts the
-natural-mean phase, matching Algorithm 1 of the paper.
-"""
+"""Flower/Ray and local execution for one-phase FedAvg and BayesAvg."""
 
 from __future__ import annotations
 
 import gc
-import math
-import shutil
+import json
+import random
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -17,35 +12,21 @@ from typing import Dict, List, Mapping, Sequence
 
 import flwr as fl
 import numpy as np
-import torch
 from flwr.client import ClientApp
 from flwr.common import Context, Parameters, ndarrays_to_parameters, parameters_to_ndarrays
 from flwr.server import ServerApp, ServerAppComponents, ServerConfig
 from flwr.server.strategy import FedAvg
 from flwr.simulation import run_simulation
 
-from aggregation import (
-    aggregate_deterministic,
-    aggregate_gaussian_natural_mean_phase,
-    aggregate_gaussian_precision_phase,
-    aggregate_scaffold,
-    normalized_weights,
-)
-from aircomp import AirCompStats, combine_stats
-from bayesian_protocol import (
-    MODEL_PHASE,
-    NATURAL_MEAN_PHASE,
-    PRECISION_PHASE,
-    PhaseContext,
-    phase_context,
-    physical_round_count,
-)
-from client import AirCompNumPyClient
+from aggregation import normalized_weights, weighted_average
+from bayesian_torch_backend import BayesianTorchStateAdapter, build_initial_states
+from bayesian_training import resolved_base_kl_weight
+from client import BaselineNumPyClient
 from config import SimulationConfig
-from dataset import load_test_loader
-from experiments import RunSpec, payload_multiplier
+from dataset import load_partition, load_test_loader
+from experiments import RunSpec
 from logger import RunLogger
-from metrics import evaluate_bayesian, evaluate_bayesian_mean, evaluate_deterministic
+from metrics import evaluate_bayesian_state, evaluate_deterministic
 from models import build_model
 from runtime_utils import (
     configure_runtime_environment,
@@ -54,28 +35,18 @@ from runtime_utils import (
     resolve_device,
     should_pin_memory,
 )
-from sparse_posterior import kept_coordinate_count
-from serialization import (
-    ParameterLayout,
-    initial_model_vector,
-    normalize_server_state_dtypes,
-)
+from serialization import ParameterLayout
 from training_schedule import learning_rate_for_round
-from wireless import sample_rayleigh_channels
 
 
 @dataclass
 class ClientFitPayload:
-    """Backend-neutral representation of one successful client fit result."""
-
-    arrays: List[np.ndarray]
+    state: np.ndarray
     num_examples: int
     metrics: Mapping[str, object]
 
 
-class AirCompStrategy(FedAvg):
-    """Full-participation strategy with phase-aware wireless aggregation."""
-
+class BaselineStrategy(FedAvg):
     def __init__(
         self,
         *,
@@ -85,877 +56,324 @@ class AirCompStrategy(FedAvg):
     ) -> None:
         self.config_obj = config
         self.run_spec = run_spec
-        self.partition_path = partition_path
-        self.method = run_spec.method.lower()
-        self.model = build_model(config.model.name, config.model.num_classes)
+        self.partition_path = str(partition_path)
+        self.method = str(run_spec.method).lower()
+        self.model = build_model(config.data.dataset, config.model.name, config.model.num_classes)
         self.layout = ParameterLayout(self.model)
-        self.dimension = self.layout.total_numel
         self.server_device = resolve_device(config.runtime.server_device)
         self.test_loader = load_test_loader(
             config.data,
             pin_memory=should_pin_memory(config.data.pin_memory, self.server_device),
         )
+        self.partition_summary = load_partition(partition_path)
 
-        initial_model = initial_model_vector(self.model, run_spec.seed)
-        if self.method == "proposed":
-            initial_precision = np.full(
-                self.dimension,
-                1.0 / (config.model.initial_prior_std**2),
-                dtype=np.float64,
-            )
-            initial_arrays = [initial_model, initial_precision]
-        elif self.method == "scaffold":
-            initial_arrays = [
-                initial_model,
-                np.zeros(self.dimension, dtype=np.float32),
-            ]
-        else:
-            initial_arrays = [initial_model]
+        bayes_state, matched_mean, bayesian_d, deterministic_d = build_initial_states(
+            dataset=config.data.dataset,
+            model_cfg=config.model,
+            variational_cfg=config.variational,
+            seed=run_spec.seed,
+        )
+        self.bayesian_dimension = int(bayesian_d)
+        self.deterministic_dimension = int(deterministic_d)
+        self.model_dimension = int(self.layout.total_numel)
+        self.current_state = (
+            bayes_state.copy() if self.method == "bayesavg" else matched_mean.copy()
+        )
+        self.payload_dimension = int(self.current_state.size)
 
-        self.current_arrays = [array.copy() for array in initial_arrays]
         self.last_train_loss = float("nan")
-        self.last_phase1_train_loss = 0.0
-        self.last_phase2_train_loss = 0.0
-        self.last_aircomp_stats = AirCompStats.zero()
-        self.last_precision_aircomp_stats = AirCompStats.zero()
-        self.last_mean_aircomp_stats = AirCompStats.zero()
-        self.last_global_mean_update_l2 = 0.0
-        self.last_global_mean_update_max_abs = 0.0
-        self.last_global_model_update_l2 = 0.0
-        self.last_ideal_model_update_l2 = 0.0
-        self.last_received_model_update_l2 = 0.0
-        self.last_global_precision_update_l2 = 0.0
-        self.last_global_precision_update_max_abs = 0.0
-        self.pending_precision_logical_round: int | None = None
-        self.channel_uses_cumulative = 0
-        self.ofdm_symbols_cumulative = 0
+        self.last_state_update_l2 = 0.0
+        self.last_selected_client_ids: List[int] = []
+        self.last_selected_count = 0
+        self.upload_scalars_cumulative = 0
         self.started_at = time.perf_counter()
         self.logger = RunLogger(
             config.output.directory,
             config.output.metrics_filename,
-            config.output.reliability_filename,
             config.output.clients_filename,
+            config.output.reliability_filename,
+            config.output.participation_filename,
         )
 
+        selected = config.participating_clients()
         super().__init__(
-            fraction_fit=1.0,
+            fraction_fit=float(config.federation.client_fraction),
             fraction_evaluate=0.0,
-            min_fit_clients=config.data.num_clients,
+            min_fit_clients=int(selected),
             min_evaluate_clients=0,
-            min_available_clients=config.data.num_clients,
+            min_available_clients=int(config.data.num_clients),
             evaluate_fn=None,
             on_fit_config_fn=self.fit_config_for_round,
-            accept_failures=not config.runtime.fail_on_client_failure,
-            initial_parameters=ndarrays_to_parameters(initial_arrays),
+            accept_failures=not bool(config.runtime.fail_on_client_failure),
+            initial_parameters=ndarrays_to_parameters([self.current_state]),
         )
 
-    @property
-    def physical_rounds(self) -> int:
-        return physical_round_count(self.method, self.run_spec.rounds)
-
-    def context_for_round(self, physical_round: int) -> PhaseContext:
-        return phase_context(self.method, int(physical_round))
-
-    def fit_config_for_round(self, physical_round: int) -> Dict[str, fl.common.Scalar]:
-        context = self.context_for_round(physical_round)
-        effective_lr = learning_rate_for_round(
-            self.config_obj.training,
-            context.logical_round,
-            self.run_spec.rounds,
-        )
+    def fit_config_for_round(self, server_round: int) -> Dict[str, fl.common.Scalar]:
         return {
-            "server_round": int(context.logical_round),
-            "logical_round": int(context.logical_round),
-            "physical_round": int(context.physical_round),
-            "phase": str(context.phase),
-            "learning_rate": float(effective_lr),
-            "total_logical_rounds": int(self.run_spec.rounds),
+            "server_round": int(server_round),
+            "learning_rate": float(
+                learning_rate_for_round(self.config_obj.training, int(server_round))
+            ),
         }
 
+    def configure_fit(self, server_round, parameters, client_manager):  # type: ignore[override]
+        # Flower's SimpleClientManager samples using Python's random module.
+        # Seed it per round so separate method runs receive reproducible cohorts
+        # when the same supernode IDs are available.
+        state = random.getstate()
+        random.seed(int(self.run_spec.seed) + 1_000_003 * int(server_round))
+        try:
+            return super().configure_fit(server_round, parameters, client_manager)
+        finally:
+            random.setstate(state)
+
     def aggregate_fit(self, server_round, results, failures):  # type: ignore[override]
-        """Flower callback; convert results then use the backend-neutral path."""
         if failures and self.config_obj.runtime.fail_on_client_failure:
             raise RuntimeError(
-                f"Physical round {server_round}: {len(failures)} client job(s) "
-                "failed. The run is aborted so invalid metrics are not recorded. "
-                f"First failure: {failures[0]!r}"
+                f"Round {server_round}: {len(failures)} client job(s) failed; "
+                f"first failure: {failures[0]!r}"
             )
         if not results:
-            raise RuntimeError(
-                f"Physical round {server_round}: Flower returned zero successful "
-                "client results."
-            )
+            raise RuntimeError(f"Round {server_round}: no successful client results")
 
         payloads: List[ClientFitPayload] = []
-        for _client_proxy, fit_res in results:
+        for _proxy, fit_res in results:
+            arrays = parameters_to_ndarrays(fit_res.parameters)
+            if len(arrays) != 1:
+                raise ValueError("Each client must return one flat state vector")
             payloads.append(
                 ClientFitPayload(
-                    arrays=[np.asarray(value) for value in parameters_to_ndarrays(
-                        fit_res.parameters
-                    )],
+                    state=np.asarray(arrays[0], dtype=np.float32),
                     num_examples=int(fit_res.num_examples),
                     metrics=dict(fit_res.metrics or {}),
                 )
             )
         return self.aggregate_payloads(int(server_round), payloads)
 
-    def _sparse_proposed_active(self) -> bool:
-        return bool(
-            self.method == "proposed"
-            and self.config_obj.sparse.enabled
-            and float(self.config_obj.sparse.keep_ratio) < 1.0
-        )
-
-    def _phase_payload_dimension(self) -> int:
-        if self.method == "proposed" and self.config_obj.sparse.enabled:
-            return kept_coordinate_count(
-                self.dimension,
-                float(self.config_obj.sparse.keep_ratio),
-                int(self.config_obj.sparse.min_keep),
-            )
-        return int(self.dimension)
-
     def aggregate_payloads(
         self,
-        physical_round: int,
+        server_round: int,
         payloads: Sequence[ClientFitPayload],
     ) -> tuple[Parameters, Dict[str, float]]:
-        """Aggregate one physical phase from either execution backend."""
-        context = self.context_for_round(physical_round)
-        if not payloads:
-            raise RuntimeError(
-                f"Physical round {physical_round}: no client payloads to aggregate"
-            )
-        expected = int(self.config_obj.data.num_clients)
-        if len(payloads) != expected and self.config_obj.runtime.fail_on_client_failure:
-            raise RuntimeError(
-                f"Physical round {physical_round}: expected {expected} client "
-                f"payloads, received {len(payloads)}."
-            )
+        ordered = sorted(payloads, key=lambda x: int(x.metrics.get("client_id", -1)))
+        examples = [int(p.num_examples) for p in ordered]
+        states = [np.asarray(p.state, dtype=np.float32) for p in ordered]
+        weights = normalized_weights(examples)
 
-        # Flower/Ray result arrival order is not guaranteed. Stable client order
-        # is required so one channel row always belongs to the same client in
-        # both phases of a logical Bayesian round.
-        ordered = sorted(
-            payloads,
-            key=lambda payload: int(payload.metrics.get("client_id", -1)),
+        previous = self.current_state.astype(np.float64, copy=True)
+        self.current_state = weighted_average(states, examples).astype(np.float32)
+        self.last_state_update_l2 = float(
+            np.linalg.norm(self.current_state.astype(np.float64) - previous)
         )
-        local_arrays: List[List[np.ndarray]] = []
-        examples: List[int] = []
-        distances: List[float] = []
-        losses: List[float] = []
+        losses = np.asarray(
+            [float(p.metrics.get("train_loss", np.nan)) for p in ordered],
+            dtype=np.float64,
+        )
+        finite = np.isfinite(losses)
+        self.last_train_loss = (
+            float(np.sum(weights[finite] * losses[finite]) / np.sum(weights[finite]))
+            if np.any(finite) and float(np.sum(weights[finite])) > 0
+            else float("nan")
+        )
+
+        self.last_selected_client_ids = [
+            int(p.metrics.get("client_id", -1)) for p in ordered
+        ]
+        self.last_selected_count = len(ordered)
+        self.upload_scalars_cumulative += self.payload_dimension * len(ordered)
 
         for payload in ordered:
-            payload_dtype = (
-                np.float64
-                if self.method == "proposed" and context.phase == PRECISION_PHASE
-                else np.float32
-            )
-            arrays = [np.asarray(value, dtype=payload_dtype) for value in payload.arrays]
-            local_arrays.append(arrays)
-            examples.append(int(payload.num_examples))
-            metrics = payload.metrics
-            distances.append(float(metrics.get("distance_m", 1.0)))
-            losses.append(float(metrics.get("train_loss", float("nan"))))
-            self.logger.clients.append(
+            m = dict(payload.metrics)
+            client_id = int(m.get("client_id", -1))
+            base = {
+                "run_id": self.run_spec.run_id,
+                "round": int(server_round),
+                "client_id": client_id,
+                "num_examples": int(payload.num_examples),
+            }
+            base.update(m)
+            self.logger.clients.append(base)
+            self.logger.participation.append(
                 {
                     "run_id": self.run_spec.run_id,
-                    "round": int(context.logical_round),
-                    "logical_round": int(context.logical_round),
-                    "physical_round": int(context.physical_round),
-                    "phase": str(context.phase),
-                    "client_id": int(metrics.get("client_id", -1)),
+                    "round": int(server_round),
+                    "client_id": client_id,
                     "num_examples": int(payload.num_examples),
-                    "distance_m": float(metrics.get("distance_m", float("nan"))),
-                    "train_loss": float(metrics.get("train_loss", float("nan"))),
-                    "phase1_loss": float(metrics.get("phase1_loss", 0.0)),
-                    "phase2_loss": float(metrics.get("phase2_loss", 0.0)),
-                    "local_steps": int(metrics.get("local_steps", 0)),
-                    "local_precision_mean": float(
-                        metrics.get("local_precision_mean", float("nan"))
-                    ),
-                    "local_precision_min": float(
-                        metrics.get("local_precision_min", float("nan"))
-                    ),
-                    "local_precision_max": float(
-                        metrics.get("local_precision_max", float("nan"))
-                    ),
-                    "local_precision_delta_l2": float(
-                        metrics.get("local_precision_delta_l2", float("nan"))
-                    ),
-                    "local_precision_delta_max_abs": float(
-                        metrics.get(
-                            "local_precision_delta_max_abs", float("nan")
-                        )
-                    ),
-                    "local_precision_changed_fraction": float(
-                        metrics.get(
-                            "local_precision_changed_fraction", float("nan")
-                        )
-                    ),
-                    "local_precision_gradient_l2_mean": float(
-                        metrics.get(
-                            "local_precision_gradient_l2_mean", float("nan")
-                        )
-                    ),
-                    "local_precision_gradient_max_abs": float(
-                        metrics.get(
-                            "local_precision_gradient_max_abs", float("nan")
-                        )
-                    ),
-                    "local_nu_l2": float(metrics.get("local_nu_l2", 0.0)),
-                    "local_implied_mean_l2": float(
-                        metrics.get("local_implied_mean_l2", 0.0)
-                    ),
-                    "sparse_enabled": bool(metrics.get("sparse_enabled", False)),
-                    "sparse_selection": str(metrics.get("sparse_selection", "")),
-                    "sparse_keep_ratio": float(metrics.get("sparse_keep_ratio", 1.0)),
-                    "sparse_kept_coordinates": int(metrics.get("sparse_kept_coordinates", 0)),
-                    "sparse_total_coordinates": int(metrics.get("sparse_total_coordinates", 0)),
-                    "sparse_score_threshold": float(metrics.get("sparse_score_threshold", float("nan"))),
-                    "sparse_score_mean": float(metrics.get("sparse_score_mean", float("nan"))),
-                    "sparse_selected_score_mean": float(metrics.get("sparse_selected_score_mean", float("nan"))),
-                    "sparse_dropped_score_mean": float(metrics.get("sparse_dropped_score_mean", float("nan"))),
                 }
             )
 
-        weights = normalized_weights(examples)
-        weighted_loss = self._weighted_finite_mean(losses, weights)
-        channels = self._sample_channels(context.logical_round, distances)
-        phase_rng = self._phase_rng(context)
-
-        if self.method in {"fedavg", "fedprox"}:
-            self._expect_array_count(local_arrays, 1, context)
-            previous_model = self.current_arrays[0].astype(np.float64, copy=True)
-            aggregation = aggregate_deterministic(
-                self.current_arrays[0],
-                [arrays[0] for arrays in local_arrays],
-                weights,
-                channels,
-                self.config_obj.wireless,
-                phase_rng,
-            )
-            self.current_arrays = [aggregation.parameters[0].astype(np.float32)]
-            model_delta = self.current_arrays[0].astype(np.float64) - previous_model
-            self.last_global_mean_update_l2 = float(np.linalg.norm(model_delta))
-            self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
-            self.last_global_model_update_l2 = float(
-                aggregation.diagnostics.get(
-                    "global_model_update_l2", self.last_global_mean_update_l2
-                )
-            )
-            self.last_ideal_model_update_l2 = float(
-                aggregation.diagnostics.get("ideal_model_update_l2", 0.0)
-            )
-            self.last_received_model_update_l2 = float(
-                aggregation.diagnostics.get("received_model_update_l2", 0.0)
-            )
-            self.last_global_precision_update_l2 = 0.0
-            self.last_global_precision_update_max_abs = 0.0
-            self.last_train_loss = weighted_loss
-            self.last_phase1_train_loss = 0.0
-            self.last_phase2_train_loss = weighted_loss
-            self.last_aircomp_stats = aggregation.aircomp_stats
-            self.last_precision_aircomp_stats = AirCompStats.zero()
-            self.last_mean_aircomp_stats = aggregation.aircomp_stats
-            phase_multiplier = 1
-
-        elif self.method == "scaffold":
-            self._expect_array_count(local_arrays, 2, context)
-            previous_model = self.current_arrays[0].astype(np.float64, copy=True)
-            aggregation = aggregate_scaffold(
-                self.current_arrays[0],
-                self.current_arrays[1],
-                [arrays[0] for arrays in local_arrays],
-                [arrays[1] for arrays in local_arrays],
-                weights,
-                channels,
-                self.config_obj.wireless,
-                phase_rng,
-            )
-            self.current_arrays = [
-                array.astype(np.float32) for array in aggregation.parameters
-            ]
-            model_delta = self.current_arrays[0].astype(np.float64) - previous_model
-            self.last_global_mean_update_l2 = float(np.linalg.norm(model_delta))
-            self.last_global_mean_update_max_abs = float(np.max(np.abs(model_delta)))
-            self.last_global_model_update_l2 = self.last_global_mean_update_l2
-            # The SCAFFOLD AirCompStats object combines model and control-variate
-            # transmissions, so the FedAvg-specific ideal/received model-update
-            # diagnostics are intentionally left at zero here.
-            self.last_ideal_model_update_l2 = 0.0
-            self.last_received_model_update_l2 = 0.0
-            self.last_global_precision_update_l2 = 0.0
-            self.last_global_precision_update_max_abs = 0.0
-            self.last_train_loss = weighted_loss
-            self.last_phase1_train_loss = 0.0
-            self.last_phase2_train_loss = weighted_loss
-            self.last_aircomp_stats = aggregation.aircomp_stats
-            self.last_precision_aircomp_stats = AirCompStats.zero()
-            self.last_mean_aircomp_stats = aggregation.aircomp_stats
-            phase_multiplier = 2
-
-        elif self.method == "proposed" and context.phase == PRECISION_PHASE:
-            self._expect_array_count(local_arrays, 1, context)
-            previous_precision = self.current_arrays[1].astype(np.float64, copy=True)
-            aggregation = aggregate_gaussian_precision_phase(
-                current_precision=self.current_arrays[1],
-                local_precisions=[arrays[0] for arrays in local_arrays],
-                weights=weights,
-                channels=channels,
-                wireless_cfg=self.config_obj.wireless,
-                model_cfg=self.config_obj.model,
-                rng=phase_rng,
-                sparse_missing_is_silent=self._sparse_proposed_active(),
-            )
-            # Critical Algorithm-1 boundary: keep mu_t unchanged and broadcast
-            # the newly aggregated rho_{t+1} before phase 2 starts.  Phase 2
-            # also needs rho_t because Eq. (15) regularizes against the
-            # round-start global posterior q_{theta_t}.  The temporary third
-            # array is removed after the natural-mean aggregation.
-            round_start_precision = self.current_arrays[1].astype(
-                np.float64, copy=True
-            )
-            self.current_arrays = [
-                self.current_arrays[0].astype(np.float32, copy=True),
-                aggregation.parameters[0].astype(np.float64),
-                round_start_precision,
-            ]
-            precision_delta = self.current_arrays[1] - previous_precision
-            self.last_global_precision_update_l2 = float(
-                np.linalg.norm(precision_delta)
-            )
-            self.last_global_precision_update_max_abs = float(
-                np.max(np.abs(precision_delta))
-            )
-            self.last_global_model_update_l2 = 0.0
-            self.last_ideal_model_update_l2 = 0.0
-            self.last_received_model_update_l2 = 0.0
-            # Keep the previous logical round's mean-update diagnostic until
-            # phase 2 completes; it is overwritten below before evaluation.
-            self.last_phase1_train_loss = weighted_loss
-            self.last_phase2_train_loss = 0.0
-            self.last_train_loss = weighted_loss
-            self.last_precision_aircomp_stats = aggregation.aircomp_stats
-            self.last_mean_aircomp_stats = AirCompStats.zero()
-            self.last_aircomp_stats = aggregation.aircomp_stats
-            self.pending_precision_logical_round = context.logical_round
-            phase_multiplier = 1
-
-        elif self.method == "proposed" and context.phase == NATURAL_MEAN_PHASE:
-            if self.pending_precision_logical_round != context.logical_round:
-                raise RuntimeError(
-                    "Natural-mean phase started without the matching server-side "
-                    f"precision aggregation. pending={self.pending_precision_logical_round}, "
-                    f"requested={context.logical_round}."
-                )
-            self._expect_array_count(local_arrays, 1, context)
-            previous_mean = self.current_arrays[0].astype(np.float64, copy=True)
-            aggregation = aggregate_gaussian_natural_mean_phase(
-                current_mean=self.current_arrays[0],
-                local_nus=[arrays[0] for arrays in local_arrays],
-                weights=weights,
-                channels=channels,
-                wireless_cfg=self.config_obj.wireless,
-                rng=phase_rng,
-                sparse_missing_is_silent=self._sparse_proposed_active(),
-            )
-            if len(self.current_arrays) != 3:
-                raise RuntimeError(
-                    "Natural-mean phase requires [mu_t, rho_{t+1}, rho_t] "
-                    f"from the preceding precision phase; got "
-                    f"{len(self.current_arrays)} arrays"
-                )
-            self.current_arrays = [
-                aggregation.parameters[0].astype(np.float32),
-                self.current_arrays[1].astype(np.float64, copy=True),
-            ]
-            mean_delta = self.current_arrays[0].astype(np.float64) - previous_mean
-            self.last_global_mean_update_l2 = float(np.linalg.norm(mean_delta))
-            self.last_global_mean_update_max_abs = float(np.max(np.abs(mean_delta)))
-            self.last_phase2_train_loss = weighted_loss
-            self.last_train_loss = (
-                self.last_phase1_train_loss + self.last_phase2_train_loss
-            )
-            self.last_mean_aircomp_stats = aggregation.aircomp_stats
-            self.last_aircomp_stats = combine_stats(
-                self.last_precision_aircomp_stats,
-                self.last_mean_aircomp_stats,
-            )
-            self.pending_precision_logical_round = None
-            phase_multiplier = 1
-
-        else:
-            raise ValueError(
-                f"Unknown method/phase combination: {self.method}/{context.phase}"
-            )
-
-        phase_payload_dimension = self._phase_payload_dimension()
-        self.channel_uses_cumulative += phase_multiplier * phase_payload_dimension
-        self.ofdm_symbols_cumulative += phase_multiplier * math.ceil(
-            phase_payload_dimension / self.config_obj.wireless.num_subchannels
-        )
-        parameters = ndarrays_to_parameters(self.current_arrays)
-        return parameters, {
+        return ndarrays_to_parameters([self.current_state]), {
             "train_loss": float(self.last_train_loss),
-            "phase_train_loss": float(weighted_loss),
-            "aircomp_nmse": float(aggregation.aircomp_stats.nmse),
-            "logical_round": float(context.logical_round),
-            "physical_round": float(context.physical_round),
+            "selected_clients": float(self.last_selected_count),
+        }
+
+    def _metric_base(self, server_round: int) -> Dict[str, object]:
+        p = self.partition_summary
+        cfg = self.config_obj
+        base_kl = (
+            resolved_base_kl_weight(cfg.variational, self.bayesian_dimension)
+            if self.method == "bayesavg"
+            else 0.0
+        )
+        return {
+            "run_id": self.run_spec.run_id,
+            "dataset": cfg.data.dataset,
+            "model": cfg.model.name,
+            "method": self.method,
+            "seed": self.run_spec.seed,
+            "round": int(server_round),
+            "num_clients": int(cfg.data.num_clients),
+            "selected_clients": int(self.last_selected_count if server_round else 0),
+            "client_fraction": float(cfg.federation.client_fraction),
+            "selected_client_ids": json.dumps(self.last_selected_client_ids),
+            "partition": cfg.data.partition,
+            "dirichlet_alpha": (
+                float(cfg.data.dirichlet_alpha)
+                if cfg.data.partition == "sparse_dirichlet"
+                else ""
+            ),
+            "partition_total_samples": int(p["total_samples_used"]),
+            "partition_mean_size": float(p["mean_size"]),
+            "partition_min_size": int(p["min_size"]),
+            "partition_max_size": int(p["max_size"]),
+            "mean_classes_per_client": float(p["mean_classes_per_client"]),
+            "local_epochs": int(cfg.training.local_epochs),
+            "batch_size": int(cfg.training.batch_size),
+            "optimizer": cfg.training.optimizer,
+            "momentum": float(cfg.training.momentum),
+            "weight_decay": float(cfg.training.weight_decay),
+            "lr_scheduler": cfg.training.lr_scheduler,
+            "lr_decay_rounds": int(cfg.training.lr_decay_rounds),
+            "min_learning_rate": float(cfg.training.min_learning_rate),
+            "learning_rate": float(
+                learning_rate_for_round(cfg.training, max(1, int(server_round)))
+            ),
+            "train_loss": float(self.last_train_loss),
+            "bayesian_dimension": int(self.bayesian_dimension),
+            "deterministic_dimension": int(self.deterministic_dimension),
+            "model_dimension": int(self.model_dimension),
+            "payload_scalars_per_client": int(self.payload_dimension),
+            "kl_weight_config": (
+                "" if cfg.variational.kl_weight is None else float(cfg.variational.kl_weight)
+            ),
+            "kl_weight_resolved": float(base_kl),
+            "kl_weight_schedule": bool(cfg.variational.kl_weight_schedule),
+            "kl_warmup_rounds": int(cfg.variational.kl_warmup_rounds),
+            "lambda_scale_by_size": bool(cfg.variational.lambda_scale_by_size),
+            "mc_train": int(cfg.variational.mc_train),
+            "mc_eval": int(cfg.variational.mc_eval),
+            "variance_floor_ratio": float(cfg.variational.variance_floor_ratio),
+            "global_state_update_l2": float(self.last_state_update_l2),
+            "upload_scalars_round": int(
+                0 if int(server_round) == 0 else self.payload_dimension * self.last_selected_count
+            ),
+            "upload_scalars_cumulative": int(self.upload_scalars_cumulative),
+            "wall_time_sec": float(time.perf_counter() - self.started_at),
         }
 
     def evaluate(self, server_round: int, parameters: Parameters):  # type: ignore[override]
-        """Evaluate at round zero and after complete logical rounds only."""
-        context = self.context_for_round(int(server_round))
-        if self.method == "proposed" and context.phase == PRECISION_PHASE:
-            return None
-
-        logical_round = int(context.logical_round)
         if (
-            logical_round != 0
-            and logical_round != self.run_spec.rounds
-            and logical_round % self.config_obj.training.evaluate_every != 0
+            int(server_round) != 0
+            and int(server_round) != int(self.run_spec.rounds)
+            and int(server_round) % int(self.config_obj.training.evaluate_every) != 0
         ):
             return None
 
-        # Do not blanket-cast decoded Flower parameters to float32.  The
-        # proposed method keeps rho in float64; downcasting here used to erase
-        # the sub-float32-ULP precision update after every logical round.
-        arrays = normalize_server_state_dtypes(
-            self.method, parameters_to_ndarrays(parameters)
-        )
-        self.current_arrays = [value.copy() for value in arrays]
+        arrays = parameters_to_ndarrays(parameters)
+        if len(arrays) != 1:
+            raise ValueError("Server state expects one flat vector")
+        self.current_state = np.asarray(arrays[0], dtype=np.float32)
+        base = self._metric_base(int(server_round))
 
-        if self.method == "proposed":
-            if len(arrays) != 2:
-                raise ValueError("Proposed evaluation expects [global_mean, precision]")
-            evaluation = evaluate_bayesian(
-                self.model,
-                self.layout,
-                arrays[0],
-                arrays[1],
-                self.test_loader,
-                self.server_device,
-                mc_samples=self.config_obj.training.mc_eval_samples,
-                seed=self.run_spec.seed + logical_round,
-            )
-            posterior_mean_evaluation = evaluate_bayesian_mean(
-                self.model,
-                self.layout,
-                arrays[0],
-                self.test_loader,
-                self.server_device,
-            )
-            posterior_variance = float(
-                np.mean(1.0 / np.maximum(arrays[1], 1.0e-12))
-            )
-        else:
+        if self.method == "fedavg":
             evaluation = evaluate_deterministic(
                 self.model,
                 self.layout,
-                arrays[0],
+                self.current_state,
                 self.test_loader,
                 self.server_device,
             )
-            posterior_mean_evaluation = evaluation
-            posterior_variance = 0.0
-
-        multiplier = payload_multiplier(self.method)
-        payload_dimension = self._phase_payload_dimension()
-        channel_uses_round = (
-            0 if logical_round == 0 else multiplier * payload_dimension
-        )
-        ofdm_symbols_round = (
-            0
-            if logical_round == 0
-            else multiplier
-            * math.ceil(
-                payload_dimension / self.config_obj.wireless.num_subchannels
-            )
-        )
-        base = {
-            "run_id": self.run_spec.run_id,
-            "experiment": self.run_spec.experiment,
-            "condition": self.run_spec.condition,
-            "method": self.method,
-            "realization": self.run_spec.realization,
-            "seed": self.run_spec.seed,
-            "round": logical_round,
-            "logical_round": logical_round,
-            "physical_round": int(context.physical_round),
-            "phase": MODEL_PHASE if logical_round == 0 else context.phase,
-            "num_clients": self.config_obj.data.num_clients,
-            "labels_per_client": self.config_obj.data.labels_per_client,
-            "mean_samples_per_client": self.config_obj.data.mean_samples_per_client,
-            "local_epochs": self.config_obj.training.local_epochs,
-            "batch_size": self.config_obj.training.batch_size,
-            "optimizer": str(self.config_obj.training.optimizer),
-            "momentum": float(self.config_obj.training.momentum),
-            "weight_decay": float(self.config_obj.training.weight_decay),
-            "lr_scheduler": str(self.config_obj.training.lr_scheduler),
-            "min_learning_rate": float(self.config_obj.training.min_learning_rate),
-            "learning_rate": float(
-                learning_rate_for_round(
-                    self.config_obj.training,
-                    max(1, logical_round),
-                    self.run_spec.rounds,
-                )
-            ),
-            "power_dbm": self.config_obj.wireless.power_dbm,
-            "noise_dbm": self.config_obj.wireless.noise_dbm,
-            "num_subchannels": self.config_obj.wireless.num_subchannels,
-            "path_loss_exponent": self.config_obj.wireless.path_loss_exponent,
-            "path_loss_reference_m": self.config_obj.wireless.path_loss_reference_m,
-            "gamma_db": self.config_obj.wireless.gamma_db,
-            "power_control_mode": self.config_obj.wireless.power_control_mode,
-            "deterministic_payload_mode": (
-                self.config_obj.wireless.deterministic_payload_mode
-            ),
-            "deterministic_reference_power_mode": (
-                self.config_obj.wireless.deterministic_reference_power_mode
-            ),
-            "sparse_enabled": bool(
-                self.method == "proposed" and self.config_obj.sparse.enabled
-            ),
-            "sparse_selection": (
-                str(self.config_obj.sparse.selection)
-                if self.method == "proposed" and self.config_obj.sparse.enabled
-                else ""
-            ),
-            "sparse_keep_ratio": (
-                float(self.config_obj.sparse.keep_ratio)
-                if self.method == "proposed" and self.config_obj.sparse.enabled
-                else 1.0
-            ),
-            "sparse_kept_coordinates": (
-                self._phase_payload_dimension()
-                if self.method == "proposed" and self.config_obj.sparse.enabled
-                else self.dimension
-            ),
-        }
-        if self.method == "proposed":
-            initial_precision_value = 1.0 / (
-                self.config_obj.model.initial_prior_std**2
-            )
-            precision_offset = arrays[1] - initial_precision_value
-            posterior_precision_std = float(np.std(arrays[1], dtype=np.float64))
-            posterior_precision_offset_l2 = float(
-                np.linalg.norm(precision_offset.astype(np.float64))
-            )
-            posterior_precision_offset_max_abs = float(
-                np.max(np.abs(precision_offset))
-            )
+            mean_eval = evaluation
+            sigma_stats = (0.0, 0.0, 0.0)
         else:
-            posterior_precision_std = 0.0
-            posterior_precision_offset_l2 = 0.0
-            posterior_precision_offset_max_abs = 0.0
+            evaluation, mean_eval, sigma_stats, _mean_vector = evaluate_bayesian_state(
+                self.model,
+                self.layout,
+                self.current_state,
+                self.config_obj.variational,
+                self.test_loader,
+                self.server_device,
+                seed=int(self.run_spec.seed) + 7_000_001 * int(server_round),
+            )
 
-        self.logger.metrics.append(
+        base.update(
             {
-                **base,
-                "accuracy": evaluation.accuracy,
-                "nll": evaluation.nll,
-                "ece": evaluation.ece,
-                "posterior_predictive_accuracy": (
-                    evaluation.accuracy if self.method == "proposed" else 0.0
-                ),
-                "posterior_predictive_nll": (
-                    evaluation.nll if self.method == "proposed" else 0.0
-                ),
-                "posterior_predictive_ece": (
-                    evaluation.ece if self.method == "proposed" else 0.0
-                ),
-                "posterior_mean_accuracy": (
-                    posterior_mean_evaluation.accuracy
-                    if self.method == "proposed" else evaluation.accuracy
-                ),
-                "posterior_mean_nll": (
-                    posterior_mean_evaluation.nll
-                    if self.method == "proposed" else evaluation.nll
-                ),
-                "posterior_mean_ece": (
-                    posterior_mean_evaluation.ece
-                    if self.method == "proposed" else evaluation.ece
-                ),
-                "train_loss": self.last_train_loss,
-                "phase1_train_loss": self.last_phase1_train_loss,
-                "phase2_train_loss": self.last_phase2_train_loss,
-                "posterior_variance": posterior_variance,
-                "posterior_precision_mean": (
-                    float(np.mean(arrays[1])) if self.method == "proposed" else 0.0
-                ),
-                "posterior_precision_min": (
-                    float(np.min(arrays[1])) if self.method == "proposed" else 0.0
-                ),
-                "posterior_precision_max": (
-                    float(np.max(arrays[1])) if self.method == "proposed" else 0.0
-                ),
-                "posterior_precision_std": posterior_precision_std,
-                "posterior_precision_offset_l2": posterior_precision_offset_l2,
-                "posterior_precision_offset_max_abs": (
-                    posterior_precision_offset_max_abs
-                ),
-                "global_mean_update_l2": (
-                    0.0 if logical_round == 0 else self.last_global_mean_update_l2
-                ),
-                "global_mean_update_max_abs": (
-                    0.0 if logical_round == 0 else self.last_global_mean_update_max_abs
-                ),
-                "global_model_update_l2": (
-                    0.0 if logical_round == 0 else self.last_global_model_update_l2
-                ),
-                "ideal_model_update_l2": (
-                    0.0 if logical_round == 0 else self.last_ideal_model_update_l2
-                ),
-                "received_model_update_l2": (
-                    0.0 if logical_round == 0 else self.last_received_model_update_l2
-                ),
-                "global_precision_update_l2": (
-                    0.0 if logical_round == 0 else self.last_global_precision_update_l2
-                ),
-                "global_precision_update_max_abs": (
-                    0.0
-                    if logical_round == 0
-                    else self.last_global_precision_update_max_abs
-                ),
-                "channel_uses_round": channel_uses_round,
-                "channel_uses_cumulative": self.channel_uses_cumulative,
-                "ofdm_symbols_round": ofdm_symbols_round,
-                "ofdm_symbols_cumulative": self.ofdm_symbols_cumulative,
-                **self._stats_row("aircomp", self.last_aircomp_stats),
-                **self._stats_row(
-                    "precision_aircomp", self.last_precision_aircomp_stats
-                ),
-                **self._stats_row("mean_aircomp", self.last_mean_aircomp_stats),
-                "wall_time_sec": time.perf_counter() - self.started_at,
+                "accuracy": float(evaluation.accuracy),
+                "nll": float(evaluation.nll),
+                "ece": float(evaluation.ece),
+                "posterior_predictive_accuracy": float(evaluation.accuracy),
+                "posterior_predictive_nll": float(evaluation.nll),
+                "posterior_predictive_ece": float(evaluation.ece),
+                "posterior_mean_accuracy": float(mean_eval.accuracy),
+                "posterior_mean_nll": float(mean_eval.nll),
+                "posterior_mean_ece": float(mean_eval.ece),
+                "posterior_sigma_mean": float(sigma_stats[0]),
+                "posterior_sigma_min": float(sigma_stats[1]),
+                "posterior_sigma_max": float(sigma_stats[2]),
             }
         )
-        self.logger.log_reliability(base, evaluation)
+        self.logger.metrics.append(base)
+        rel_base = {
+            "run_id": self.run_spec.run_id,
+            "method": self.method,
+            "round": int(server_round),
+        }
+        self.logger.log_reliability(rel_base, evaluation, "predictive")
+        if self.method == "bayesavg":
+            self.logger.log_reliability(rel_base, mean_eval, "posterior_mean")
 
-        if logical_round == self.run_spec.rounds and self.config_obj.output.save_checkpoints:
+        if int(server_round) == int(self.run_spec.rounds) and self.config_obj.output.save_checkpoints:
             self.logger.save_checkpoint(
                 self.run_spec.run_id,
-                arrays,
+                self.current_state,
                 {
-                    **base,
-                    "accuracy": evaluation.accuracy,
-                    "ece": evaluation.ece,
-                    "nll": evaluation.nll,
-                    "protocol": "server_separated_rho_nu",
+                    "method": self.method,
+                    "dataset": self.config_obj.data.dataset,
+                    "round": int(server_round),
+                    "seed": self.run_spec.seed,
                 },
             )
-        return float(evaluation.nll), {
-            "accuracy": float(evaluation.accuracy),
-            "ece": float(evaluation.ece),
-        }
 
-    def _sample_channels(
-        self,
-        logical_round: int,
-        distances: Sequence[float],
-    ) -> np.ndarray:
-        # Both proposed phases reuse the same block-fading realization. Noise
-        # remains independent because phase-specific RNGs are used below.
-        channel_rng = np.random.default_rng(
-            self.run_spec.seed + 1_000_033 * int(logical_round)
-        )
-        return sample_rayleigh_channels(
-            np.asarray(distances, dtype=np.float64),
-            self.config_obj.wireless.num_subchannels,
-            self.config_obj.wireless.path_loss_exponent,
-            channel_rng,
-            self.config_obj.wireless.path_loss_reference_m,
-        )
-
-    def _phase_rng(self, context: PhaseContext) -> np.random.Generator:
-        phase_offset = {
-            MODEL_PHASE: 11,
-            PRECISION_PHASE: 101,
-            NATURAL_MEAN_PHASE: 211,
-        }[context.phase]
-        return np.random.default_rng(
-            self.run_spec.seed
-            + 9_000_091 * int(context.logical_round)
-            + phase_offset
-        )
-
-    @staticmethod
-    def _weighted_finite_mean(losses: Sequence[float], weights: np.ndarray) -> float:
-        values = np.asarray(losses, dtype=np.float64)
-        mask = np.isfinite(values)
-        if not np.any(mask):
-            return float("nan")
-        selected = np.asarray(weights, dtype=np.float64)[mask]
-        selected = selected / max(float(selected.sum()), 1.0e-30)
-        return float(np.dot(selected, values[mask]))
-
-    @staticmethod
-    def _expect_array_count(
-        local_arrays: Sequence[Sequence[np.ndarray]],
-        count: int,
-        context: PhaseContext,
-    ) -> None:
-        invalid = [index for index, arrays in enumerate(local_arrays) if len(arrays) != count]
-        if invalid:
-            raise ValueError(
-                f"Phase {context.phase} expected {count} returned array(s) per "
-                f"client; invalid payload indices: {invalid[:5]}"
-            )
-
-    @staticmethod
-    def _stats_row(prefix: str, stats: AirCompStats) -> Dict[str, float]:
-        return {
-            f"{prefix}_nmse": stats.nmse,
-            f"{prefix}_distortion_nmse": stats.distortion_nmse,
-            f"{prefix}_clipped_fraction": stats.clipped_fraction,
-            f"{prefix}_average_symbol_power_watts": stats.average_symbol_power_watts,
-            f"{prefix}_maximum_symbol_power_watts": stats.maximum_symbol_power_watts,
-            f"{prefix}_noise_l2": stats.noise_l2,
-            f"{prefix}_ideal_l2": stats.ideal_l2,
-            f"{prefix}_received_l2": stats.received_l2,
-            f"{prefix}_delta_bar": stats.delta_bar,
-            f"{prefix}_retained_magnitude_ratio": stats.retained_magnitude_ratio,
-            f"{prefix}_distorted_to_ideal_norm_ratio": stats.distorted_to_ideal_norm_ratio,
-        }
-
-
-def _prepare_state_dir(config: SimulationConfig, run_spec: RunSpec) -> Path:
-    state_dir = Path(config.output.directory) / "client_state" / run_spec.run_id
-    if state_dir.exists():
-        shutil.rmtree(state_dir)
-    state_dir.mkdir(parents=True, exist_ok=True)
-    return state_dir
-
-
-def run_local_simulation(
-    config: SimulationConfig,
-    run_spec: RunSpec,
-    partition_path: str,
-) -> None:
-    """Run physical client phases sequentially in the launcher process."""
-    state_dir = _prepare_state_dir(config, run_spec)
-    strategy = AirCompStrategy(
-        config=config,
-        run_spec=run_spec,
-        partition_path=partition_path,
-    )
-
-    local_client_device = resolve_device(config.runtime.client_device)
-    print(
-        "Local backend: clients execute sequentially; "
-        f"client_device={local_client_device}, "
-        f"server_device={config.runtime.server_device}."
-    )
-    if run_spec.method == "proposed":
         print(
-            "Proposed protocol: each logical round executes precision -> "
-            "server aggregation/broadcast -> natural_mean."
+            f"Round {server_round}/{self.run_spec.rounds} | {self.method} | "
+            f"accuracy={evaluation.accuracy:.4f} | "
+            f"posterior_mean={mean_eval.accuracy:.4f} | "
+            f"nll={evaluation.nll:.4f} | lr={base['learning_rate']:.6f}"
         )
-
-    initial = strategy.evaluate(0, ndarrays_to_parameters(strategy.current_arrays))
-    if initial is not None:
-        initial_loss, initial_metrics = initial
-        print(
-            f"Round 0: loss={initial_loss:.6f}, "
-            f"accuracy={initial_metrics['accuracy']:.4f}, "
-            f"ece={initial_metrics['ece']:.4f}"
-        )
-
-    for physical_round in range(1, strategy.physical_rounds + 1):
-        phase_started = time.perf_counter()
-        context = strategy.context_for_round(physical_round)
-        global_arrays = [value.copy() for value in strategy.current_arrays]
-        payloads: List[ClientFitPayload] = []
-        fit_config = strategy.fit_config_for_round(physical_round)
-
-        for client_id in range(int(config.data.num_clients)):
-            client: AirCompNumPyClient | None = None
-            try:
-                client = AirCompNumPyClient(
-                    client_id=client_id,
-                    method=run_spec.method,
-                    config=config,
-                    partition_path=partition_path,
-                    run_seed=run_spec.seed,
-                    state_dir=str(state_dir),
-                )
-                arrays, num_examples, metrics = client.fit(
-                    [value.copy() for value in global_arrays],
-                    fit_config,
-                )
-                payloads.append(
-                    ClientFitPayload(
-                        arrays=[np.asarray(value) for value in arrays],
-                        num_examples=int(num_examples),
-                        metrics=dict(metrics),
-                    )
-                )
-            except Exception as exc:
-                raise RuntimeError(
-                    f"Local backend client {client_id} failed in logical round "
-                    f"{context.logical_round}, phase {context.phase}: {exc}"
-                ) from exc
-            finally:
-                if client is not None:
-                    del client
-                gc.collect()
-                if local_client_device.type == "cuda":
-                    release_cuda_memory(local_client_device)
-
-        parameters, aggregate_metrics = strategy.aggregate_payloads(
-            physical_round, payloads
-        )
-        evaluation = strategy.evaluate(physical_round, parameters)
-        elapsed = time.perf_counter() - phase_started
-
-        if evaluation is None:
-            print(
-                f"Logical round {context.logical_round}/{run_spec.rounds}, "
-                f"phase={context.phase}: "
-                f"phase_loss={aggregate_metrics['phase_train_loss']:.6f}, "
-                f"aircomp_nmse={aggregate_metrics['aircomp_nmse']:.6f}, "
-                f"elapsed={elapsed:.2f}s"
-            )
-        else:
-            loss, metrics = evaluation
-            print(
-                f"Round {context.logical_round}/{run_spec.rounds}: "
-                f"loss={loss:.6f}, accuracy={metrics['accuracy']:.4f}, "
-                f"ece={metrics['ece']:.4f}, "
-                f"train_loss={aggregate_metrics['train_loss']:.6f}, "
-                f"elapsed={elapsed:.2f}s"
-            )
+        return float(evaluation.nll), {"accuracy": float(evaluation.accuracy)}
 
 
-def run_flower_simulation(
-    config: SimulationConfig,
-    run_spec: RunSpec,
-    partition_path: str,
-) -> None:
-    """Execute one simulation with Flower's Ray backend."""
-    state_dir = _prepare_state_dir(config, run_spec)
-
+def run_flower_simulation(config: SimulationConfig, run_spec: RunSpec, partition_path: str) -> None:
     def client_fn(context: Context):
         client_id = int(context.node_config["partition-id"])
-        return AirCompNumPyClient(
+        return BaselineNumPyClient(
             client_id=client_id,
             method=run_spec.method,
             config=config,
             partition_path=partition_path,
             run_seed=run_spec.seed,
-            state_dir=str(state_dir),
         ).to_client()
 
     def server_fn(context: Context) -> ServerAppComponents:
         del context
-        strategy = AirCompStrategy(
+        strategy = BaselineStrategy(
             config=config,
             run_spec=run_spec,
             partition_path=partition_path,
         )
         return ServerAppComponents(
             strategy=strategy,
-            config=ServerConfig(num_rounds=strategy.physical_rounds),
+            config=ServerConfig(num_rounds=int(run_spec.rounds)),
         )
 
     client_app = ClientApp(client_fn=client_fn)
@@ -975,10 +393,10 @@ def run_flower_simulation(
         run_simulation(
             server_app=server_app,
             client_app=client_app,
-            num_supernodes=config.data.num_clients,
+            num_supernodes=int(config.data.num_clients),
             backend_name="ray",
             backend_config=backend_config,
-            verbose_logging=config.runtime.verbose_flower,
+            verbose_logging=bool(config.runtime.verbose_flower),
         )
     finally:
         try:
@@ -990,16 +408,51 @@ def run_flower_simulation(
             pass
 
 
-def run_configured_simulation(
-    config: SimulationConfig,
-    run_spec: RunSpec,
-    partition_path: str,
-) -> None:
-    """Dispatch to the resolved backend."""
+def run_local_simulation(config: SimulationConfig, run_spec: RunSpec, partition_path: str) -> None:
+    strategy = BaselineStrategy(config=config, run_spec=run_spec, partition_path=partition_path)
+    parameters = ndarrays_to_parameters([strategy.current_state])
+    strategy.evaluate(0, parameters)
+
+    for server_round in range(1, int(run_spec.rounds) + 1):
+        count = config.participating_clients()
+        rng = np.random.default_rng(int(run_spec.seed) + 1_000_003 * server_round)
+        if count >= int(config.data.num_clients):
+            selected = np.arange(int(config.data.num_clients), dtype=np.int64)
+        else:
+            selected = np.sort(
+                rng.choice(int(config.data.num_clients), size=count, replace=False)
+            )
+        payloads: List[ClientFitPayload] = []
+        fit_config = strategy.fit_config_for_round(server_round)
+        for client_id in selected.tolist():
+            client = BaselineNumPyClient(
+                client_id=int(client_id),
+                method=run_spec.method,
+                config=config,
+                partition_path=partition_path,
+                run_seed=run_spec.seed,
+            )
+            arrays, n, metrics = client.fit([strategy.current_state.copy()], fit_config)
+            payloads.append(
+                ClientFitPayload(
+                    state=np.asarray(arrays[0], dtype=np.float32),
+                    num_examples=int(n),
+                    metrics=metrics,
+                )
+            )
+            del client
+            gc.collect()
+            if strategy.server_device.type == "cuda":
+                release_cuda_memory(strategy.server_device)
+        parameters, _ = strategy.aggregate_payloads(server_round, payloads)
+        strategy.evaluate(server_round, parameters)
+
+
+def run_configured_simulation(config: SimulationConfig, run_spec: RunSpec, partition_path: str) -> None:
     backend = resolve_backend(config)
-    if backend == "local":
-        run_local_simulation(config, run_spec, partition_path)
-    elif backend == "ray":
+    if backend == "ray":
         run_flower_simulation(config, run_spec, partition_path)
+    elif backend == "local":
+        run_local_simulation(config, run_spec, partition_path)
     else:
         raise ValueError(f"Unsupported runtime backend: {backend}")

@@ -1,24 +1,20 @@
-"""Neural network architecture used in the paper simulations."""
+"""Dataset-selectable neural networks for the unified baseline."""
 
 from __future__ import annotations
 
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
+
+
+MNIST_PAPER_CNN_PARAMETER_COUNT = 62_346
+CIFAR10_RESNET56_GN_PARAMETER_COUNT = 855_770
+CIFAR10_RESNET56_GN_BAYESIAN_PARAMETER_COUNT = 851_514
+CIFAR10_RESNET56_GN_GROUPNORM_PARAMETER_COUNT = 4_256
 
 
 class PaperCNN(nn.Module):
-    """MNIST CNN with exactly 62,346 trainable parameters.
-
-    The parameter count implied by the paper is obtained by two unpadded 5x5
-    convolution layers, each followed by 2x2 max pooling, and a final
-    1024-to-10 linear classifier:
-
-    * Conv(1, 32, 5): 832 parameters
-    * Conv(32, 64, 5): 51,264 parameters
-    * Linear(1024, 10): 10,250 parameters
-    * Total: 62,346 parameters
-    """
+    """Original MNIST CNN from the v1.6.1 reproduction path."""
 
     def __init__(self, num_classes: int = 10) -> None:
         super().__init__()
@@ -33,89 +29,124 @@ class PaperCNN(nn.Module):
         return self.fc(x)
 
 
-def build_model(name: str = "paper_cnn", num_classes: int = 10) -> nn.Module:
-    if name != "paper_cnn":
-        raise ValueError(f"Unsupported model: {name}")
-    model = PaperCNN(num_classes=num_classes)
-    expected = 62_346 if num_classes == 10 else None
-    if expected is not None:
-        actual = count_parameters(model)
-        if actual != expected:
-            raise RuntimeError(f"PaperCNN parameter count mismatch: {actual} != {expected}")
-    return model
+class CIFARResNetBasicBlock(nn.Module):
+    expansion = 1
+
+    def __init__(self, in_channels: int, out_channels: int, stride: int = 1) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels,
+            out_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            bias=False,
+        )
+        self.gn1 = nn.GroupNorm(_gn_groups(out_channels), out_channels)
+        self.conv2 = nn.Conv2d(
+            out_channels,
+            out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            bias=False,
+        )
+        self.gn2 = nn.GroupNorm(_gn_groups(out_channels), out_channels)
+
+        if stride != 1 or in_channels != out_channels:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(
+                    in_channels,
+                    out_channels,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.GroupNorm(_gn_groups(out_channels), out_channels),
+            )
+        else:
+            self.shortcut = nn.Identity()
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        identity = self.shortcut(x)
+        out = F.relu(self.gn1(self.conv1(x)))
+        out = self.gn2(self.conv2(out))
+        return F.relu(out + identity)
+
+
+def _gn_groups(channels: int) -> int:
+    if channels == 16:
+        return 4
+    return 8
+
+
+class CIFAR10ResNet56GN(nn.Module):
+    """CIFAR ResNet-56 (6n+2, n=9) with GroupNorm instead of BatchNorm.
+
+    The projection shortcuts use Conv1x1 + GroupNorm.  The resulting model has
+    exactly 855,770 trainable parameters.  Native Bayesian-Torch conversion
+    Bayesianizes Conv2d and Linear modules but leaves GroupNorm deterministic,
+    so the Bayesian dimension is 851,514.
+    """
+
+    def __init__(self, num_classes: int = 10) -> None:
+        super().__init__()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=1, padding=1, bias=False)
+        self.gn1 = nn.GroupNorm(4, 16)
+        self.stage1 = self._make_stage(16, 16, blocks=9, first_stride=1)
+        self.stage2 = self._make_stage(16, 32, blocks=9, first_stride=2)
+        self.stage3 = self._make_stage(32, 64, blocks=9, first_stride=2)
+        self.fc = nn.Linear(64, num_classes)
+
+        actual = count_parameters(self)
+        if num_classes == 10 and actual != CIFAR10_RESNET56_GN_PARAMETER_COUNT:
+            raise RuntimeError(
+                f"ResNet-56-GN parameter count changed: {actual:,} != "
+                f"{CIFAR10_RESNET56_GN_PARAMETER_COUNT:,}"
+            )
+
+    @staticmethod
+    def _make_stage(
+        in_channels: int,
+        out_channels: int,
+        *,
+        blocks: int,
+        first_stride: int,
+    ) -> nn.Sequential:
+        layers = [CIFARResNetBasicBlock(in_channels, out_channels, first_stride)]
+        for _ in range(1, blocks):
+            layers.append(CIFARResNetBasicBlock(out_channels, out_channels, 1))
+        return nn.Sequential(*layers)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = F.relu(self.gn1(self.conv1(x)))
+        x = self.stage1(x)
+        x = self.stage2(x)
+        x = self.stage3(x)
+        x = F.adaptive_avg_pool2d(x, 1)
+        x = torch.flatten(x, 1)
+        return self.fc(x)
+
+
+def build_model(dataset: str, name: str | None = None, num_classes: int = 10) -> nn.Module:
+    dataset = str(dataset).strip().lower()
+    if dataset == "mnist":
+        expected = "paper_cnn"
+        if name is not None and str(name).strip().lower() != expected:
+            raise ValueError("MNIST requires model paper_cnn")
+        model = PaperCNN(num_classes=num_classes)
+        if num_classes == 10 and count_parameters(model) != MNIST_PAPER_CNN_PARAMETER_COUNT:
+            raise RuntimeError("PaperCNN parameter count changed")
+        return model
+
+    if dataset == "cifar10":
+        expected = "resnet56_gn"
+        if name is not None and str(name).strip().lower() != expected:
+            raise ValueError("CIFAR-10 requires model resnet56_gn")
+        return CIFAR10ResNet56GN(num_classes=num_classes)
+
+    raise ValueError("dataset must be mnist or cifar10")
 
 
 def count_parameters(model: nn.Module) -> int:
-    return sum(parameter.numel() for parameter in model.parameters())
-
-
-# ============================================================
-# AIRCOMP_RAY_SAFE_CIFAR_MODEL
-#
-# Ray actors import models.py independently from the driver.
-# Install the same CIFAR model override based on the
-# process-visible AIRCOMP_DATASET environment variable.
-# ============================================================
-
-import os as _aircomp_os
-
-if (
-    _aircomp_os.environ
-    .get("AIRCOMP_DATASET", "mnist")
-    .strip()
-    .lower()
-    == "cifar10"
-):
-    from cifar10_support import (
-        CIFAR10PaperCNN as _AirCompCIFAR10PaperCNN,
-        CIFAR10_PARAMETER_COUNT as _AIRCOMP_CIFAR_D,
-        CIFAR10_PARAMETER_COUNTS as _AIRCOMP_CIFAR_D_BY_MODEL,
-        _cifar_build_model as _aircomp_cifar_build_model,
-    )
-
-    _AIRCOMP_CIFAR_D_VALUES = set(_AIRCOMP_CIFAR_D_BY_MODEL.values())
-
-    # Replace model factory.
-    build_model = _aircomp_cifar_build_model
-
-    # Replace common model class symbol when present.
-    if "PaperCNN" in globals():
-        PaperCNN = _AirCompCIFAR10PaperCNN
-
-    # Replace known expected-dimension constants when present.
-    for _name in (
-        "EXPECTED_PARAMETER_COUNT",
-        "PAPER_PARAMETER_COUNT",
-        "EXPECTED_D",
-        "MODEL_DIMENSION",
-    ):
-        if _name in globals():
-            globals()[_name] = _AIRCOMP_CIFAR_D
-
-    def _aircomp_assert_cifar_parameter_count(model):
-        count = int(
-            sum(
-                p.numel()
-                for p in model.parameters()
-                if p.requires_grad
-            )
-        )
-
-        if count not in _AIRCOMP_CIFAR_D_VALUES:
-            raise AssertionError(
-                f"Unsupported CIFAR-10 model dimension {count:,}; "
-                f"expected one of {sorted(_AIRCOMP_CIFAR_D_VALUES)}"
-            )
-
-        return count
-
-    for _name in (
-        "assert_expected_parameter_count",
-        "assert_paper_parameter_count",
-        "assert_parameter_count",
-    ):
-        if _name in globals():
-            globals()[_name] = (
-                _aircomp_assert_cifar_parameter_count
-            )
-
+    return int(sum(parameter.numel() for parameter in model.parameters() if parameter.requires_grad))

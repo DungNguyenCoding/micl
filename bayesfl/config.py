@@ -1,8 +1,13 @@
-"""Configuration loading and validation for AirCompBayesFL."""
+"""Configuration profiles for the unified MNIST/CIFAR-10 Bayesian-FL baseline.
+
+This baseline intentionally contains no wireless/AirComp configuration.  Every
+federated round has exactly one Flower fit round for both FedAvg and BayesAvg.
+"""
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, replace
+from copy import deepcopy
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -11,134 +16,102 @@ import yaml
 
 @dataclass
 class DataConfig:
-    root: str = "data"
+    dataset: str = "mnist"  # mnist | cifar10
+    root: str = "./data"
+    num_classes: int = 10
     num_clients: int = 40
+
+    # MNIST v1.6.1-compatible scarce single-label partition.
+    partition: str = "single_label"  # single_label | sparse_dirichlet
     labels_per_client: int = 1
-    label_pairing_mode: str = "uniform"
-    mean_samples_per_client: float = 10.0
+
+    # Scarce-data client size.  CIFAR sparse_dirichlet uses the exact seed-0
+    # size rule 1 + Poisson(avg_samples_per_client - 1), which gives the
+    # requested 10046 total examples for avg=100, K=100, seed=0.
+    avg_samples_per_client: float = 10.0
     min_samples_per_client: int = 1
-    bs_radius_m: float = 200.0
+
+    # CIFAR sparse Dirichlet settings.
+    dirichlet_alpha: float = 0.1
+    sparse_classes_per_client: int = 4
+
+    augment: bool = False
+    crop_padding: int = 4
+    random_flip: bool = True
     num_workers: int = 0
     pin_memory: bool = False
-    # legacy: original Poisson + fixed label-count partition.
-    # dirichlet: Poisson-scarce client sizes with Dirichlet class mixtures.
-    partition_mode: str = "legacy"
-    dirichlet_alpha: float = 0.1
 
 
 @dataclass
 class ModelConfig:
-    name: str = "paper_cnn"
+    name: str = "paper_cnn"  # paper_cnn | resnet56_gn
     num_classes: int = 10
-    initial_prior_std: float = 0.05
-    min_posterior_std: float = 1.0e-4
-    max_posterior_std: float = 10.0
-    min_precision: float = 1.0e-6
-    max_precision: float = 1.0e8
+
+
+@dataclass
+class VariationalConfig:
+    # Fixed standard-normal prior, used on every client and every round.
+    prior_mu: float = 0.0
+    prior_sigma: float = 1.0
+
+    # Native Bayesian-Torch initialization centers.  Bayesian-Torch 0.5.0
+    # samples tensor initializations around these values.
+    posterior_mu_init: float = 0.0
+    posterior_rho_init: float = -3.0
+
+    # null/None resolves to 1 / Bayesian_dimension (Conv+Linear only).
+    kl_weight: Optional[float] = None
+    kl_weight_schedule: bool = False
+    kl_warmup_rounds: int = 20
+    lambda_scale_by_size: bool = True
+
+    mc_train: int = 2
+    mc_eval: int = 5
+
+    # Enforce sigma_local >= variance_floor_ratio * sigma_global after every
+    # optimizer step.  Despite the historical name, the ratio is applied to
+    # posterior standard deviation, matching the project specification.
+    variance_floor_ratio: float = 0.5
 
 
 @dataclass
 class TrainingConfig:
-    local_epochs: int = 3
-    batch_size: int = 10
-    learning_rate: float = 0.1
-    # Legacy/paper configs keep constant LR, zero momentum, and zero weight
-    # decay. CIFAR baseline tuning can opt into cosine round-level decay and
-    # momentum without changing the MNIST reproduction path.
     optimizer: str = "sgd"
+    learning_rate: float = 0.1
     momentum: float = 0.0
     weight_decay: float = 0.0
+    batch_size: int = 10
+    local_epochs: int = 3
+    num_rounds: int = 240
+
     lr_scheduler: str = "constant"  # constant | cosine
     min_learning_rate: float = 0.0
-    kl_weight: float = 1.0 / 50_000.0
-    mc_train_samples: int = 5
-    mc_eval_samples: int = 5
-    # v1.3 implements Algorithm 1 exactly as two server-controlled phases.
-    # "two_phase" and "paper_two_phase" are accepted aliases.
-    bayesian_local_mode: str = "paper_two_phase"
-    fedprox_mu: float = 0.01
+    # Fixed cosine horizon.  It is intentionally independent of num_rounds.
+    lr_decay_rounds: int = 240
+
     gradient_clip_norm: float = 10.0
-    bayesian_backend: str = "pyro"
-    num_rounds: Optional[int] = 3
-    max_channel_uses: int = 30_000_000
     evaluate_every: int = 1
 
 
 @dataclass
-class WirelessConfig:
-    enabled: bool = True
-    power_dbm: float = 23.0
-    noise_dbm: float = -74.0
-    num_subchannels: int = 1024
-    path_loss_exponent: float = 4.0
-    # The power-law r^{-alpha} is dimensionless. Distances stored by the data
-    # module are in metres, so divide them by this reference before applying
-    # the exponent. Set this to 1.0 to reproduce the legacy raw-metre model.
-    # The paper does not disclose the numerical distance normalization used by
-    # the authors; 1000 m (distances expressed in km) is the documented default.
-    path_loss_reference_m: float = 1000.0
-    gamma_db: float = 10.0
-    min_channel_power: float = 1.0e-14
-    bisection_steps: int = 60
-    # v1.5.0 shares the KKT/QCQP magnitude optimizer across methods but uses
-    # the source-appropriate power-scale normalization for each algorithm:
-    # - Proposed: target-2025 Eqs. (27),(28),(31)
-    # - FedAvg/FedProx/SCAFFOLD: Hong-2023 ref. [13] Eqs. (8),(10),(20)
-    # This corrects v1.4.x, which applied the Proposed normalization to every
-    # method and therefore did not faithfully implement the cited benchmark.
-    power_control_mode: str = "paper_reference_kkt"
-    deterministic_payload_mode: str = "update"
-    # Reference [13] obtains rho_ref from a BS-local update. The target paper
-    # borrows its power allocation for conventional FL but has no BS dataset.
-    # Its exact adaptation is not disclosed. The default below implements the
-    # conventional coordinated-aggregate interpretation described in Remark 6:
-    # rho_ref = ||sum_k pi_k Delta_k||^2 / d. ``weighted_local`` is available
-    # as a documented sensitivity alternative.
-    deterministic_reference_power_mode: str = "coordinated_aggregate"
+class FederationConfig:
+    client_fraction: float = 1.0
 
-
-
-
-@dataclass
-class SparsePosteriorConfig:
-    """Optional research extension for sparse posterior-evidence communication.
-
-    Disabled by default so the paper-reproduction path is unchanged.  When
-    enabled for Proposed with keep_ratio < 1, each client selects a fixed-size
-    coordinate mask once per logical round and applies that same mask to both
-    Delta-rho and Delta-nu transmissions.
-    """
-
-    enabled: bool = False
-    selection: str = "bayesian"  # bayesian | random
-    keep_ratio: float = 1.0
-    score_epsilon: float = 1.0e-12
-    min_keep: int = 1
 
 @dataclass
 class RuntimeConfig:
-    seed: int = 2025
+    seed: int = 0
     replications: int = 1
-
-    # auto: native Windows + CUDA -> local sequential GPU backend;
-    #       otherwise -> Flower/Ray backend.
-    # ray:  force Flower/Ray (recommended on Linux/WSL2).
-    # local: run virtual clients sequentially in the launcher process.
-    backend: str = "auto"  # auto | ray | local
+    backend: str = "ray"  # ray | local | auto
 
     client_num_cpus: float = 1.0
-    client_num_gpus: float = 0.0
+    client_num_gpus: float = 0.125
     ray_include_dashboard: bool = False
     torch_num_threads: int = 1
-    client_device: str = "cpu"  # cpu | cuda | cuda:N | auto
+    client_device: str = "cuda"
     server_device: str = "cpu"
     verbose_flower: bool = False
     cleanup_cuda_after_fit: bool = True
-    # Delete client-specific rho state after the corresponding nu phase.
-    cleanup_phase_state: bool = True
-
-    # Do not silently continue when all or some client jobs fail. This prevents
-    # random/untrained models from being written to metrics.csv as valid runs.
     fail_on_client_failure: bool = True
 
 
@@ -146,167 +119,228 @@ class RuntimeConfig:
 class OutputConfig:
     directory: str = "results"
     metrics_filename: str = "metrics.csv"
-    reliability_filename: str = "reliability.csv"
     clients_filename: str = "client_metrics.csv"
+    reliability_filename: str = "reliability.csv"
+    participation_filename: str = "participation.csv"
     save_checkpoints: bool = True
+    save_resolved_config: bool = True
 
 
 @dataclass
 class SimulationConfig:
     data: DataConfig = field(default_factory=DataConfig)
     model: ModelConfig = field(default_factory=ModelConfig)
+    variational: VariationalConfig = field(default_factory=VariationalConfig)
     training: TrainingConfig = field(default_factory=TrainingConfig)
-    wireless: WirelessConfig = field(default_factory=WirelessConfig)
-    sparse: SparsePosteriorConfig = field(default_factory=SparsePosteriorConfig)
+    federation: FederationConfig = field(default_factory=FederationConfig)
     runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
+
+    @classmethod
+    def profile(cls, dataset: str) -> "SimulationConfig":
+        """Return the project baseline profile for one dataset."""
+        dataset = str(dataset).strip().lower()
+        if dataset == "mnist":
+            cfg = cls(
+                data=DataConfig(
+                    dataset="mnist",
+                    root="./data",
+                    num_classes=10,
+                    num_clients=40,
+                    partition="single_label",
+                    labels_per_client=1,
+                    avg_samples_per_client=10.0,
+                    min_samples_per_client=1,
+                    augment=False,
+                ),
+                model=ModelConfig(name="paper_cnn", num_classes=10),
+                variational=VariationalConfig(),
+                training=TrainingConfig(
+                    optimizer="sgd",
+                    learning_rate=0.1,
+                    momentum=0.0,
+                    weight_decay=0.0,
+                    batch_size=10,
+                    local_epochs=3,
+                    # No wireless channel-use budget exists in this baseline.
+                    # 240 preserves the old Proposed logical-round budget.
+                    num_rounds=240,
+                    lr_scheduler="constant",
+                    min_learning_rate=0.0,
+                    lr_decay_rounds=240,
+                    gradient_clip_norm=10.0,
+                    evaluate_every=1,
+                ),
+                federation=FederationConfig(client_fraction=1.0),
+                runtime=RuntimeConfig(seed=0),
+                output=OutputConfig(directory="results/mnist_baseline"),
+            )
+        elif dataset == "cifar10":
+            cfg = cls(
+                data=DataConfig(
+                    dataset="cifar10",
+                    root="./data",
+                    num_classes=10,
+                    num_clients=100,
+                    partition="sparse_dirichlet",
+                    labels_per_client=4,
+                    avg_samples_per_client=100.0,
+                    min_samples_per_client=1,
+                    dirichlet_alpha=0.1,
+                    sparse_classes_per_client=4,
+                    augment=False,
+                    crop_padding=4,
+                    random_flip=True,
+                ),
+                model=ModelConfig(name="resnet56_gn", num_classes=10),
+                variational=VariationalConfig(
+                    prior_mu=0.0,
+                    prior_sigma=1.0,
+                    posterior_mu_init=0.0,
+                    posterior_rho_init=-3.0,
+                    kl_weight=None,
+                    kl_weight_schedule=False,
+                    kl_warmup_rounds=20,
+                    lambda_scale_by_size=True,
+                    mc_train=2,
+                    mc_eval=5,
+                    variance_floor_ratio=0.5,
+                ),
+                training=TrainingConfig(
+                    optimizer="sgd",
+                    learning_rate=0.05,
+                    momentum=0.9,
+                    weight_decay=0.0,
+                    batch_size=128,
+                    local_epochs=10,
+                    num_rounds=300,
+                    lr_scheduler="cosine",
+                    min_learning_rate=0.0001,
+                    lr_decay_rounds=400,
+                    gradient_clip_norm=10.0,
+                    evaluate_every=1,
+                ),
+                federation=FederationConfig(client_fraction=1.0),
+                runtime=RuntimeConfig(seed=0),
+                output=OutputConfig(directory="results/cifar10_baseline"),
+            )
+        else:
+            raise ValueError("dataset must be 'mnist' or 'cifar10'")
+        cfg.validate()
+        return cfg
 
     @classmethod
     def from_yaml(cls, path: str | Path) -> "SimulationConfig":
         path = Path(path)
         with path.open("r", encoding="utf-8") as handle:
             raw: Dict[str, Any] = yaml.safe_load(handle) or {}
-        cfg = cls(
-            data=DataConfig(**raw.get("data", {})),
-            model=ModelConfig(**raw.get("model", {})),
-            training=TrainingConfig(**raw.get("training", {})),
-            wireless=WirelessConfig(**raw.get("wireless", {})),
-            sparse=SparsePosteriorConfig(**raw.get("sparse", {})),
-            runtime=RuntimeConfig(**raw.get("runtime", {})),
-            output=OutputConfig(**raw.get("output", {})),
-        )
+        dataset = str(raw.get("data", {}).get("dataset", "mnist")).strip().lower()
+        cfg = cls.profile(dataset)
+        for section_name, section_cls in (
+            ("data", DataConfig),
+            ("model", ModelConfig),
+            ("variational", VariationalConfig),
+            ("training", TrainingConfig),
+            ("federation", FederationConfig),
+            ("runtime", RuntimeConfig),
+            ("output", OutputConfig),
+        ):
+            values = raw.get(section_name, {}) or {}
+            current = asdict(getattr(cfg, section_name))
+            current.update(values)
+            setattr(cfg, section_name, section_cls(**current))
         cfg.validate()
         return cfg
 
-    def validate(self) -> None:
-        if self.data.num_clients <= 0:
-            raise ValueError("data.num_clients must be positive")
-        if self.data.labels_per_client not in range(1, 11):
-            raise ValueError("data.labels_per_client must be between 1 and 10")
-        partition_mode = str(self.data.partition_mode).strip().lower()
-        if partition_mode not in {"legacy", "dirichlet"}:
-            raise ValueError("data.partition_mode must be legacy or dirichlet")
-        self.data.partition_mode = partition_mode
-        if float(self.data.dirichlet_alpha) <= 0.0:
-            raise ValueError("data.dirichlet_alpha must be positive")
-
-        pairing_mode = str(
-            self.data.label_pairing_mode
-        ).strip().lower()
-
-        if pairing_mode not in {
-            "uniform",
-            "random_nonadjacent",
-        }:
-            raise ValueError(
-                "data.label_pairing_mode must be "
-                "'uniform' or 'random_nonadjacent'"
-            )
-
-        if (
-            pairing_mode == "random_nonadjacent"
-            and int(self.data.labels_per_client) != 2
-        ):
-            raise ValueError(
-                "data.label_pairing_mode='random_nonadjacent' "
-                "requires data.labels_per_client=2"
-            )
-
-        self.data.label_pairing_mode = pairing_mode
-        if self.training.local_epochs <= 0:
-            raise ValueError("training.local_epochs must be positive")
-        if self.training.batch_size <= 0:
-            raise ValueError("training.batch_size must be positive")
-        if self.training.learning_rate <= 0:
-            raise ValueError("training.learning_rate must be positive")
-        if str(self.training.optimizer).strip().lower() != "sgd":
-            raise ValueError("training.optimizer must be 'sgd'")
-        if not (0.0 <= float(self.training.momentum) < 1.0):
-            raise ValueError("training.momentum must be in [0, 1)")
-        if float(self.training.weight_decay) < 0.0:
-            raise ValueError("training.weight_decay cannot be negative")
-        if str(self.training.lr_scheduler).strip().lower() not in {"constant", "cosine"}:
-            raise ValueError("training.lr_scheduler must be constant or cosine")
-        if float(self.training.min_learning_rate) < 0.0:
-            raise ValueError("training.min_learning_rate cannot be negative")
-        if float(self.training.min_learning_rate) > float(self.training.learning_rate):
-            raise ValueError(
-                "training.min_learning_rate cannot exceed training.learning_rate"
-            )
-        if self.training.mc_train_samples <= 0 or self.training.mc_eval_samples <= 0:
-            raise ValueError("Monte Carlo sample counts must be positive")
-        if self.training.bayesian_local_mode not in {"two_phase", "paper_two_phase"}:
-            raise ValueError(
-                "training.bayesian_local_mode must be 'two_phase' or "
-                "'paper_two_phase'; joint client-side optimization was removed "
-                "because it does not implement Algorithm 1"
-            )
-        if self.wireless.num_subchannels <= 0:
-            raise ValueError("wireless.num_subchannels must be positive")
-        if self.wireless.path_loss_reference_m <= 0:
-            raise ValueError("wireless.path_loss_reference_m must be positive")
-        if (
-            str(self.wireless.power_control_mode).strip().lower()
-            != "paper_reference_kkt"
-        ):
-            raise ValueError(
-                "wireless.power_control_mode must be paper_reference_kkt; "
-                "v1.5.0 uses one shared KKT magnitude optimizer with "
-                "source-specific Proposed/Hong-2023 power scaling"
-            )
-        if str(self.wireless.deterministic_payload_mode).strip().lower() != "update":
-            raise ValueError(
-                "wireless.deterministic_payload_mode must be 'update'; "
-                "reference [13] transmits local update vectors"
-            )
-        if (
-            str(self.wireless.deterministic_reference_power_mode).strip().lower()
-            not in {"coordinated_aggregate", "weighted_local"}
-        ):
-            raise ValueError(
-                "wireless.deterministic_reference_power_mode must be "
-                "coordinated_aggregate or weighted_local"
-            )
-        if str(self.sparse.selection).strip().lower() not in {"bayesian", "random"}:
-            raise ValueError("sparse.selection must be bayesian or random")
-        if not (0.0 < float(self.sparse.keep_ratio) <= 1.0):
-            raise ValueError("sparse.keep_ratio must be in (0, 1]")
-        if float(self.sparse.score_epsilon) <= 0.0:
-            raise ValueError("sparse.score_epsilon must be positive")
-        if int(self.sparse.min_keep) <= 0:
-            raise ValueError("sparse.min_keep must be positive")
-        if self.sparse.enabled and self.training.bayesian_local_mode not in {"two_phase", "paper_two_phase"}:
-            raise ValueError("Sparse posterior evidence requires the Proposed two-phase VI mode")
-
-        if self.runtime.replications <= 0:
-            raise ValueError("runtime.replications must be positive")
-        if self.runtime.client_num_cpus <= 0:
-            raise ValueError("runtime.client_num_cpus must be positive")
-        if self.runtime.client_num_gpus < 0:
-            raise ValueError("runtime.client_num_gpus cannot be negative")
-        if str(self.runtime.backend).strip().lower() not in {"auto", "ray", "local"}:
-            raise ValueError("runtime.backend must be auto, ray, or local")
-
-        valid_devices = {"cpu", "cuda", "auto"}
-        for field_name, value in {
-            "runtime.client_device": self.runtime.client_device,
-            "runtime.server_device": self.runtime.server_device,
-        }.items():
-            normalized = str(value).strip().lower()
-            if normalized not in valid_devices and not normalized.startswith("cuda:"):
-                raise ValueError(f"{field_name} must be cpu, cuda, cuda:N, or auto")
+    def copy(self) -> "SimulationConfig":
+        return deepcopy(self)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
-    def copy(self) -> "SimulationConfig":
-        """Return a deep-enough dataclass copy for experiment overrides."""
-        return SimulationConfig(
-            data=replace(self.data),
-            model=replace(self.model),
-            training=replace(self.training),
-            wireless=replace(self.wireless),
-            sparse=replace(self.sparse),
-            runtime=replace(self.runtime),
-            output=replace(self.output),
+    def save_yaml(self, path: str | Path) -> None:
+        path = Path(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as handle:
+            yaml.safe_dump(self.to_dict(), handle, sort_keys=False)
+
+    def validate(self) -> None:
+        dataset = str(self.data.dataset).strip().lower()
+        if dataset not in {"mnist", "cifar10"}:
+            raise ValueError("data.dataset must be mnist or cifar10")
+        self.data.dataset = dataset
+
+        if int(self.data.num_classes) != 10 or int(self.model.num_classes) != 10:
+            raise ValueError("This baseline currently supports exactly 10 classes")
+        if int(self.data.num_clients) <= 0:
+            raise ValueError("data.num_clients must be positive")
+        if float(self.data.avg_samples_per_client) <= 0:
+            raise ValueError("data.avg_samples_per_client must be positive")
+        if int(self.data.min_samples_per_client) <= 0:
+            raise ValueError("data.min_samples_per_client must be positive")
+
+        partition = str(self.data.partition).strip().lower()
+        if partition not in {"single_label", "sparse_dirichlet"}:
+            raise ValueError("data.partition must be single_label or sparse_dirichlet")
+        self.data.partition = partition
+        if partition == "single_label" and not (1 <= int(self.data.labels_per_client) <= 10):
+            raise ValueError("data.labels_per_client must be in [1,10]")
+        if partition == "sparse_dirichlet":
+            if float(self.data.dirichlet_alpha) <= 0:
+                raise ValueError("data.dirichlet_alpha must be positive")
+            if not (1 <= int(self.data.sparse_classes_per_client) <= 10):
+                raise ValueError("data.sparse_classes_per_client must be in [1,10]")
+
+        expected_model = "paper_cnn" if dataset == "mnist" else "resnet56_gn"
+        if str(self.model.name).strip().lower() != expected_model:
+            raise ValueError(
+                f"dataset={dataset!r} requires model.name={expected_model!r} in this baseline"
+            )
+        self.model.name = expected_model
+
+        if str(self.training.optimizer).strip().lower() != "sgd":
+            raise ValueError("training.optimizer must be sgd")
+        if float(self.training.learning_rate) <= 0:
+            raise ValueError("training.learning_rate must be positive")
+        if not (0 <= float(self.training.momentum) < 1):
+            raise ValueError("training.momentum must be in [0,1)")
+        if float(self.training.weight_decay) < 0:
+            raise ValueError("training.weight_decay cannot be negative")
+        if int(self.training.batch_size) <= 0 or int(self.training.local_epochs) <= 0:
+            raise ValueError("batch_size and local_epochs must be positive")
+        if int(self.training.num_rounds) <= 0:
+            raise ValueError("training.num_rounds must be positive")
+        scheduler = str(self.training.lr_scheduler).strip().lower()
+        if scheduler not in {"constant", "cosine"}:
+            raise ValueError("training.lr_scheduler must be constant or cosine")
+        self.training.lr_scheduler = scheduler
+        if float(self.training.min_learning_rate) < 0:
+            raise ValueError("training.min_learning_rate cannot be negative")
+        if int(self.training.lr_decay_rounds) <= 0:
+            raise ValueError("training.lr_decay_rounds must be positive")
+        if int(self.training.evaluate_every) <= 0:
+            raise ValueError("training.evaluate_every must be positive")
+
+        if float(self.variational.prior_sigma) <= 0:
+            raise ValueError("variational.prior_sigma must be positive")
+        if self.variational.kl_weight is not None and float(self.variational.kl_weight) < 0:
+            raise ValueError("variational.kl_weight cannot be negative")
+        if int(self.variational.kl_warmup_rounds) <= 0:
+            raise ValueError("variational.kl_warmup_rounds must be positive")
+        if int(self.variational.mc_train) <= 0 or int(self.variational.mc_eval) <= 0:
+            raise ValueError("variational MC sample counts must be positive")
+        if not (0 < float(self.variational.variance_floor_ratio) <= 1):
+            raise ValueError("variational.variance_floor_ratio must be in (0,1]")
+
+        fraction = float(self.federation.client_fraction)
+        if not (0 < fraction <= 1):
+            raise ValueError("federation.client_fraction must be in (0,1]")
+
+        if str(self.runtime.backend).strip().lower() not in {"ray", "local", "auto"}:
+            raise ValueError("runtime.backend must be ray, local, or auto")
+
+    def participating_clients(self) -> int:
+        return max(
+            1,
+            int(float(self.federation.client_fraction) * int(self.data.num_clients)),
         )

@@ -1,9 +1,9 @@
-"""Stable vector serialization for model and posterior parameters."""
+"""Stable flat-vector serialization for deterministic model parameters."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
+from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
 import torch
@@ -18,53 +18,48 @@ class TensorSpec:
 
 
 class ParameterLayout:
-    """Map named PyTorch parameters to and from one flat vector."""
-
     def __init__(self, model: nn.Module) -> None:
         self.specs: List[TensorSpec] = [
-            TensorSpec(name, tuple(parameter.shape), parameter.numel())
+            TensorSpec(name, tuple(parameter.shape), int(parameter.numel()))
             for name, parameter in model.named_parameters()
         ]
-        self.total_numel = sum(spec.numel for spec in self.specs)
-
-    @staticmethod
-    def site_name(parameter_name: str) -> str:
-        return "w__" + parameter_name.replace(".", "__")
+        self.total_numel = int(sum(spec.numel for spec in self.specs))
 
     def flatten_model(self, model: nn.Module) -> torch.Tensor:
         named = dict(model.named_parameters())
         return torch.cat([named[spec.name].detach().reshape(-1) for spec in self.specs])
 
     def load_model_vector(self, model: nn.Module, vector: torch.Tensor | np.ndarray) -> None:
-        if isinstance(vector, np.ndarray):
-            vector = torch.from_numpy(vector)
-        if vector.numel() != self.total_numel:
+        value = torch.as_tensor(vector).reshape(-1)
+        if int(value.numel()) != self.total_numel:
             raise ValueError(
-                f"Vector contains {vector.numel()} values, expected {self.total_numel}"
+                f"Vector contains {value.numel()} values, expected {self.total_numel}"
             )
+        named = dict(model.named_parameters())
         offset = 0
         with torch.no_grad():
-            for name, parameter in model.named_parameters():
-                spec = next(item for item in self.specs if item.name == name)
-                chunk = vector[offset : offset + spec.numel].reshape(spec.shape)
+            for spec in self.specs:
+                parameter = named[spec.name]
+                chunk = value[offset : offset + spec.numel].reshape(spec.shape)
                 parameter.copy_(chunk.to(device=parameter.device, dtype=parameter.dtype))
                 offset += spec.numel
 
     def vector_to_named(
         self,
-        vector: torch.Tensor,
+        vector: torch.Tensor | np.ndarray,
         *,
         device: torch.device | None = None,
         dtype: torch.dtype | None = None,
     ) -> Dict[str, torch.Tensor]:
-        if vector.numel() != self.total_numel:
+        value = torch.as_tensor(vector).reshape(-1)
+        if int(value.numel()) != self.total_numel:
             raise ValueError(
-                f"Vector contains {vector.numel()} values, expected {self.total_numel}"
+                f"Vector contains {value.numel()} values, expected {self.total_numel}"
             )
         result: Dict[str, torch.Tensor] = {}
         offset = 0
         for spec in self.specs:
-            chunk = vector[offset : offset + spec.numel].reshape(spec.shape)
+            chunk = value[offset : offset + spec.numel].reshape(spec.shape)
             if device is not None or dtype is not None:
                 chunk = chunk.to(device=device or chunk.device, dtype=dtype or chunk.dtype)
             result[spec.name] = chunk
@@ -72,51 +67,4 @@ class ParameterLayout:
         return result
 
     def named_to_vector(self, values: Mapping[str, torch.Tensor]) -> torch.Tensor:
-        missing = [spec.name for spec in self.specs if spec.name not in values]
-        if missing:
-            raise KeyError(f"Missing tensors: {missing}")
         return torch.cat([values[spec.name].reshape(-1) for spec in self.specs])
-
-    def split_vector(self, vector: torch.Tensor) -> List[torch.Tensor]:
-        result: List[torch.Tensor] = []
-        offset = 0
-        for spec in self.specs:
-            result.append(vector[offset : offset + spec.numel].reshape(spec.shape))
-            offset += spec.numel
-        return result
-
-
-
-def normalize_server_state_dtypes(
-    method: str, arrays: Sequence[np.ndarray]
-) -> List[np.ndarray]:
-    """Normalize server state arrays without destroying Bayesian precision.
-
-    Flower preserves ndarray dtypes in ``Parameters``.  The server must also
-    preserve them when decoding parameters after evaluation.  In particular,
-    the proposed method stores ``mu`` in float32 and ``rho`` in float64 because
-    direct rho updates around rho=400 can be smaller than one float32 ULP.
-    """
-    method = str(method).lower()
-    values = [np.asarray(value) for value in arrays]
-    if method == "proposed":
-        if len(values) != 2:
-            raise ValueError(
-                "Proposed server state expects [global_mean, global_precision]"
-            )
-        return [
-            np.asarray(values[0], dtype=np.float32),
-            np.asarray(values[1], dtype=np.float64),
-        ]
-    return [np.asarray(value, dtype=np.float32) for value in values]
-
-def initial_model_vector(model: nn.Module, seed: int) -> np.ndarray:
-    """Deterministically initialize and serialize a model."""
-    with torch.random.fork_rng(devices=[]):
-        torch.manual_seed(seed)
-        for module in model.modules():
-            reset = getattr(module, "reset_parameters", None)
-            if callable(reset):
-                reset()
-    layout = ParameterLayout(model)
-    return layout.flatten_model(model).cpu().numpy().astype(np.float32)

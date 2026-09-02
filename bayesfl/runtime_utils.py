@@ -1,4 +1,4 @@
-"""Runtime, CUDA, and backend helpers shared by clients and the server."""
+"""Runtime, CUDA, and Flower/Ray backend helpers."""
 
 from __future__ import annotations
 

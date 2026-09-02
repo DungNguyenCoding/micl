@@ -1,14 +1,13 @@
-"""MNIST loading and scarce/non-IID client partition generation."""
+"""MNIST/CIFAR-10 loading and deterministic scarce client partitions."""
 
 from __future__ import annotations
 
 import json
-import math
 import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Dict, List, Tuple
 
 import numpy as np
 import torch
@@ -18,54 +17,109 @@ from torchvision import datasets, transforms
 from config import DataConfig, TrainingConfig
 
 
-MNIST_TRANSFORM = transforms.Compose(
-    [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
-)
+MNIST_MEAN = (0.1307,)
+MNIST_STD = (0.3081,)
+CIFAR10_MEAN = (0.4914, 0.4822, 0.4465)
+CIFAR10_STD = (0.2470, 0.2435, 0.2616)
 
 
-def _root_cache_key(root: str | Path) -> str:
-    """Return one stable cache key for a dataset root."""
+def _root_key(root: str | Path) -> str:
     return str(Path(root).resolve())
 
 
-@lru_cache(maxsize=4)
-def _cached_mnist(root_key: str, train: bool) -> datasets.MNIST:
-    """Load each MNIST split once per Python process.
+def _transform(data_cfg: DataConfig, train: bool):
+    dataset = str(data_cfg.dataset).lower()
+    if dataset == "mnist":
+        return transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
+        )
 
-    The native-Windows local backend calls ``load_client_loader`` for every
-    client and every physical phase. Reconstructing ``datasets.MNIST`` on each
-    call repeatedly allocates the full ~47 MB training image tensor and can
-    eventually exhaust/fragment host RAM during long two-phase runs.
+    if dataset == "cifar10":
+        steps = []
+        if train and bool(data_cfg.augment):
+            if int(data_cfg.crop_padding) > 0:
+                steps.append(
+                    transforms.RandomCrop(32, padding=int(data_cfg.crop_padding))
+                )
+            if bool(data_cfg.random_flip):
+                steps.append(transforms.RandomHorizontalFlip())
+        steps.extend(
+            [
+                transforms.ToTensor(),
+                transforms.Normalize(CIFAR10_MEAN, CIFAR10_STD),
+            ]
+        )
+        return transforms.Compose(steps)
 
-    The dataset object is immutable for our usage; client-specific subsets and
-    shuffle order remain separate, so caching does not change the experiment.
-    Ray workers naturally get independent process-local caches.
-    """
-    return datasets.MNIST(
+    raise ValueError(f"Unsupported dataset: {data_cfg.dataset!r}")
+
+
+@lru_cache(maxsize=16)
+def _cached_dataset(
+    dataset_name: str,
+    root_key: str,
+    train: bool,
+    augment: bool,
+    crop_padding: int,
+    random_flip: bool,
+):
+    cfg = DataConfig(
+        dataset=dataset_name,
         root=root_key,
-        train=bool(train),
-        download=False,
-        transform=MNIST_TRANSFORM,
+        augment=augment,
+        crop_padding=crop_padding,
+        random_flip=random_flip,
     )
+    transform = _transform(cfg, bool(train))
+    if dataset_name == "mnist":
+        return datasets.MNIST(
+            root=root_key,
+            train=bool(train),
+            download=False,
+            transform=transform,
+        )
+    if dataset_name == "cifar10":
+        return datasets.CIFAR10(
+            root=root_key,
+            train=bool(train),
+            download=False,
+            transform=transform,
+        )
+    raise ValueError(dataset_name)
 
 
 def clear_dataset_cache() -> None:
-    """Clear process-local dataset objects (mainly useful for tests)."""
-    _cached_mnist.cache_clear()
+    _cached_dataset.cache_clear()
 
 
-def ensure_mnist(root: str | Path) -> None:
-    """Download MNIST once before Ray workers start."""
-    root = str(root)
-    datasets.MNIST(root=root, train=True, download=True, transform=MNIST_TRANSFORM)
-    datasets.MNIST(root=root, train=False, download=True, transform=MNIST_TRANSFORM)
+def ensure_dataset(data_cfg: DataConfig) -> None:
+    root = str(data_cfg.root)
+    if data_cfg.dataset == "mnist":
+        datasets.MNIST(root=root, train=True, download=True, transform=_transform(data_cfg, True))
+        datasets.MNIST(root=root, train=False, download=True, transform=_transform(data_cfg, False))
+    elif data_cfg.dataset == "cifar10":
+        datasets.CIFAR10(root=root, train=True, download=True, transform=_transform(data_cfg, True))
+        datasets.CIFAR10(root=root, train=False, download=True, transform=_transform(data_cfg, False))
+    else:
+        raise ValueError(data_cfg.dataset)
 
 
-def _training_targets(root: str | Path) -> np.ndarray:
-    dataset = _cached_mnist(_root_cache_key(root), True)
-    targets = dataset.targets
+def _dataset(data_cfg: DataConfig, train: bool):
+    return _cached_dataset(
+        str(data_cfg.dataset),
+        _root_key(data_cfg.root),
+        bool(train),
+        bool(data_cfg.augment if train else False),
+        int(data_cfg.crop_padding),
+        bool(data_cfg.random_flip),
+    )
+
+
+def _training_targets(data_cfg: DataConfig) -> np.ndarray:
+    ds = _dataset(data_cfg, True)
+    targets = ds.targets
     if isinstance(targets, torch.Tensor):
-        return targets.cpu().numpy().astype(np.int64)
+        return targets.detach().cpu().numpy().astype(np.int64)
     return np.asarray(targets, dtype=np.int64)
 
 
@@ -73,82 +127,35 @@ def _float_token(value: float) -> str:
     return f"{float(value):g}".replace(".", "p")
 
 
-def partition_filename(
-    partition_dir: str | Path,
-    seed: int,
-    num_clients: int,
-    labels_per_client: int,
-    mean_samples: float,
-    label_pairing_mode: str = "uniform",
-    partition_mode: str = "legacy",
-    dirichlet_alpha: float = 0.1,
-) -> Path:
-    """Return a stable filename without changing legacy cache names."""
-    mode = str(partition_mode).strip().lower()
-    safe_mean = _float_token(mean_samples)
-
-    if mode == "dirichlet":
-        dataset_name = (
-            os.environ.get("AIRCOMP_DATASET", "mnist").strip().lower()
-            or "mnist"
+def partition_filename(data_cfg: DataConfig, seed: int, partition_dir: str | Path) -> Path:
+    root = Path(partition_dir)
+    if data_cfg.partition == "single_label":
+        return root / (
+            f"{data_cfg.dataset}_seed{seed}_k{data_cfg.num_clients}_"
+            f"l{data_cfg.labels_per_client}_m{_float_token(data_cfg.avg_samples_per_client)}.json"
         )
-        safe_alpha = _float_token(dirichlet_alpha)
-        return Path(partition_dir) / (
-            f"{dataset_name}_seed{seed}_k{num_clients}_"
-            f"dirichlet_a{safe_alpha}_m{safe_mean}.json"
-        )
-
-    pairing = str(label_pairing_mode).strip().lower()
-    suffix = "" if pairing == "uniform" else f"_{pairing}"
-    return Path(partition_dir) / (
-        f"mnist_seed{seed}_k{num_clients}_l{labels_per_client}_"
-        f"m{safe_mean}{suffix}.json"
+    return root / (
+        f"{data_cfg.dataset}_seed{seed}_k{data_cfg.num_clients}_"
+        f"sparse_dirichlet_a{_float_token(data_cfg.dirichlet_alpha)}_"
+        f"m{_float_token(data_cfg.avg_samples_per_client)}_"
+        f"c{data_cfg.sparse_classes_per_client}.json"
     )
 
 
-def _sample_client_labels(
-    rng: np.random.Generator,
-    labels_per_client: int,
-    label_pairing_mode: str,
-) -> List[int]:
-    """Sample labels for the original fixed-label partition mode."""
-    labels_per_client = int(labels_per_client)
-    mode = str(label_pairing_mode).strip().lower()
-
-    if mode == "random_nonadjacent":
-        if labels_per_client != 2:
-            raise ValueError(
-                "random_nonadjacent pairing requires labels_per_client=2"
-            )
-        allowed_pairs = [
-            (a, b)
-            for a in range(10)
-            for b in range(a + 1, 10)
-            if abs(a - b) > 1
-        ]
-        pair = allowed_pairs[int(rng.integers(0, len(allowed_pairs)))]
-        return [int(pair[0]), int(pair[1])]
-
-    if mode != "uniform":
-        raise ValueError(f"Unknown label pairing mode: {mode!r}")
-
-    if labels_per_client == 10:
-        return list(range(10))
-
-    return sorted(
-        int(v)
-        for v in rng.choice(
-            10,
-            size=labels_per_client,
-            replace=False,
-        ).tolist()
-    )
+def _atomic_json(path: Path, payload: Dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp_name = tempfile.mkstemp(prefix=path.name, suffix=".tmp", dir=path.parent)
+    os.close(fd)
+    try:
+        with open(tmp_name, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2)
+        os.replace(tmp_name, path)
+    finally:
+        if os.path.exists(tmp_name):
+            os.remove(tmp_name)
 
 
-def _build_label_pools(
-    targets: np.ndarray,
-    rng: np.random.Generator,
-) -> tuple[Dict[int, np.ndarray], Dict[int, int]]:
+def _build_pools(targets: np.ndarray, rng) -> tuple[Dict[int, np.ndarray], Dict[int, int]]:
     pools: Dict[int, np.ndarray] = {}
     offsets: Dict[int, int] = {}
     for label in range(10):
@@ -159,27 +166,184 @@ def _build_label_pools(
     return pools, offsets
 
 
-def _take_from_pool(
-    *,
+def _take_unique(
     label: int,
     count: int,
     pools: Dict[int, np.ndarray],
     offsets: Dict[int, int],
 ) -> np.ndarray:
-    """Take unique examples from one label pool without replacement."""
-    if count <= 0:
-        return np.empty(0, dtype=np.int64)
-    pool = pools[int(label)]
-    start = int(offsets[int(label)])
+    start = int(offsets[label])
     end = start + int(count)
+    pool = pools[label]
     if end > len(pool):
         raise RuntimeError(
-            f"Partition requested {end} examples from class {label}, "
-            f"but only {len(pool)} are available without replacement. "
-            "Reduce mean_samples_per_client or use a larger dataset."
+            f"Class {label} exhausted: requested through {end}, available {len(pool)}"
         )
-    offsets[int(label)] = end
+    offsets[label] = end
     return pool[start:end]
+
+
+def _prepare_single_label(
+    data_cfg: DataConfig,
+    seed: int,
+    targets: np.ndarray,
+) -> Dict[str, object]:
+    """v1.6.1-style Poisson scarce partition for MNIST."""
+    rng = np.random.default_rng(int(seed))
+    pools, offsets = _build_pools(targets, rng)
+    clients: Dict[str, Dict[str, object]] = {}
+
+    for client_id in range(int(data_cfg.num_clients)):
+        n_samples = max(
+            int(data_cfg.min_samples_per_client),
+            int(rng.poisson(float(data_cfg.avg_samples_per_client))),
+        )
+        labels = sorted(
+            int(v)
+            for v in rng.choice(
+                10,
+                size=int(data_cfg.labels_per_client),
+                replace=False,
+            ).tolist()
+        )
+        base = n_samples // len(labels)
+        rem = n_samples % len(labels)
+        indices: List[int] = []
+        counts: Dict[str, int] = {}
+        for i, label in enumerate(labels):
+            count = base + (1 if i < rem else 0)
+            picked = _take_unique(label, count, pools, offsets)
+            indices.extend(int(v) for v in picked.tolist())
+            if count:
+                counts[str(label)] = int(count)
+        rng.shuffle(indices)
+        clients[str(client_id)] = {
+            "indices": indices,
+            "labels": labels,
+            "class_counts": counts,
+            "num_examples": len(indices),
+        }
+
+    sizes = np.asarray([int(c["num_examples"]) for c in clients.values()])
+    all_indices = [int(i) for c in clients.values() for i in c["indices"]]
+    return {
+        "seed": int(seed),
+        "dataset": data_cfg.dataset,
+        "partition": "single_label",
+        "num_clients": int(data_cfg.num_clients),
+        "labels_per_client": int(data_cfg.labels_per_client),
+        "avg_samples_per_client": float(data_cfg.avg_samples_per_client),
+        "total_samples_used": int(len(all_indices)),
+        "mean_size": float(sizes.mean()),
+        "min_size": int(sizes.min()),
+        "max_size": int(sizes.max()),
+        "mean_classes_per_client": float(
+            np.mean([len(c["labels"]) for c in clients.values()])
+        ),
+        "empty_client_backfills": 0,
+        "num_empty_clients_after_backfill": 0,
+        "class_draws_exhausted": 0,
+        "unique_samples_used": int(len(set(all_indices))),
+        "clients": clients,
+    }
+
+
+def _prepare_sparse_dirichlet(
+    data_cfg: DataConfig,
+    seed: int,
+    targets: np.ndarray,
+) -> Dict[str, object]:
+    """Sparse-support Dirichlet partition used by the CIFAR-10 baseline.
+
+    For the requested seed-0 configuration (K=100, mean=100, support=4):
+
+      size_k = 1 + Poisson(99)
+
+    gives exactly total=10046, mean=100.46, min=79, max=127.  Each client
+    uniformly chooses four distinct class labels, samples a Dirichlet(alpha)
+    mixture on those four labels, and receives at least one example from each
+    selected class.  Therefore the realized mean number of classes/client is
+    exactly 4.0 while alpha controls within-client skew.
+    """
+    rng = np.random.RandomState(int(seed))
+    mean = float(data_cfg.avg_samples_per_client)
+    minimum = int(data_cfg.min_samples_per_client)
+    support_size = int(data_cfg.sparse_classes_per_client)
+
+    if mean >= 1.0 and minimum == 1:
+        sizes = 1 + rng.poisson(max(0.0, mean - 1.0), size=int(data_cfg.num_clients))
+    else:
+        sizes = np.maximum(
+            minimum,
+            rng.poisson(mean, size=int(data_cfg.num_clients)),
+        )
+    sizes = sizes.astype(np.int64)
+
+    # Build pools only after the size draw so the requested seed-0 size
+    # statistics are invariant to dataset index shuffling.
+    pools, offsets = _build_pools(targets, rng)
+    clients: Dict[str, Dict[str, object]] = {}
+    class_draws_exhausted = 0
+
+    for client_id, n_samples_raw in enumerate(sizes.tolist()):
+        n_samples = max(int(n_samples_raw), support_size)
+        support = np.sort(
+            rng.choice(10, size=support_size, replace=False).astype(np.int64)
+        )
+        proportions = rng.dirichlet(
+            np.full(support_size, float(data_cfg.dirichlet_alpha), dtype=np.float64)
+        )
+        # Guarantee all support classes are represented.
+        counts_support = np.ones(support_size, dtype=np.int64)
+        counts_support += rng.multinomial(n_samples - support_size, proportions)
+
+        indices: List[int] = []
+        class_counts: Dict[str, int] = {}
+        for label, count in zip(support.tolist(), counts_support.tolist()):
+            try:
+                picked = _take_unique(int(label), int(count), pools, offsets)
+            except RuntimeError:
+                class_draws_exhausted += 1
+                raise
+            indices.extend(int(v) for v in picked.tolist())
+            class_counts[str(int(label))] = int(count)
+        rng.shuffle(indices)
+        clients[str(client_id)] = {
+            "indices": indices,
+            "labels": [int(v) for v in support.tolist()],
+            "class_counts": class_counts,
+            "num_examples": len(indices),
+        }
+
+    all_indices = [int(i) for c in clients.values() for i in c["indices"]]
+    if len(all_indices) != len(set(all_indices)):
+        raise RuntimeError("Sparse Dirichlet partition contains duplicate indices")
+
+    realised_sizes = np.asarray(
+        [int(c["num_examples"]) for c in clients.values()], dtype=np.int64
+    )
+    active = np.asarray([len(c["labels"]) for c in clients.values()], dtype=np.int64)
+    empty = int(np.count_nonzero(realised_sizes == 0))
+
+    return {
+        "seed": int(seed),
+        "dataset": data_cfg.dataset,
+        "partition": "sparse_dirichlet",
+        "num_clients": int(data_cfg.num_clients),
+        "dirichlet_alpha": float(data_cfg.dirichlet_alpha),
+        "sparse_classes_per_client": support_size,
+        "avg_samples_per_client": mean,
+        "total_samples_used": int(realised_sizes.sum()),
+        "mean_size": float(realised_sizes.mean()),
+        "min_size": int(realised_sizes.min()),
+        "max_size": int(realised_sizes.max()),
+        "mean_classes_per_client": float(active.mean()),
+        "empty_client_backfills": 0,
+        "num_empty_clients_after_backfill": empty,
+        "class_draws_exhausted": int(class_draws_exhausted),
+        "unique_samples_used": int(len(set(all_indices))),
+        "clients": clients,
+    }
 
 
 def prepare_partitions(
@@ -188,142 +352,38 @@ def prepare_partitions(
     partition_dir: str | Path,
     force: bool = False,
 ) -> Path:
-    """Create one deterministic partition file shared by all methods.
-
-    ``legacy`` preserves the original scarce/non-IID partition rule.
-
-    ``dirichlet`` preserves the existing data-scarcity budget: each client
-    first receives a Poisson-distributed total sample count with mean
-    ``mean_samples_per_client``.  Its ten-class mixture is then sampled as
-
-        pi_k ~ Dirichlet(alpha * 1_10)
-        n_k,* ~ Multinomial(n_k, pi_k)
-
-    where ``alpha=data_cfg.dirichlet_alpha``.  Examples are allocated without
-    replacement, so the same image never belongs to two clients.
-    """
-    partition_dir = Path(partition_dir)
-    partition_dir.mkdir(parents=True, exist_ok=True)
-
-    pairing_mode = str(getattr(data_cfg, "label_pairing_mode", "uniform"))
-    partition_mode = str(getattr(data_cfg, "partition_mode", "legacy")).strip().lower()
-    dirichlet_alpha = float(getattr(data_cfg, "dirichlet_alpha", 0.1))
-
-    path = partition_filename(
-        partition_dir,
-        seed,
-        data_cfg.num_clients,
-        data_cfg.labels_per_client,
-        data_cfg.mean_samples_per_client,
-        pairing_mode,
-        partition_mode,
-        dirichlet_alpha,
-    )
+    root = Path(partition_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    path = partition_filename(data_cfg, int(seed), root)
     if path.exists() and not force:
         return path
 
-    ensure_mnist(data_cfg.root)
-    targets = _training_targets(data_cfg.root)
-    rng = np.random.default_rng(seed)
-    pools, offsets = _build_label_pools(targets, rng)
-
-    clients: Dict[str, Dict[str, object]] = {}
-
-    for client_id in range(data_cfg.num_clients):
-        n_samples = int(rng.poisson(data_cfg.mean_samples_per_client))
-        n_samples = max(data_cfg.min_samples_per_client, n_samples)
-
-        if partition_mode == "dirichlet":
-            proportions = rng.dirichlet(
-                np.full(10, dirichlet_alpha, dtype=np.float64)
-            )
-            counts = rng.multinomial(n_samples, proportions).astype(np.int64)
-            client_labels = [int(i) for i in np.flatnonzero(counts > 0)]
-        elif partition_mode == "legacy":
-            client_labels = _sample_client_labels(
-                rng,
-                data_cfg.labels_per_client,
-                pairing_mode,
-            )
-            base = n_samples // len(client_labels)
-            remainder = n_samples % len(client_labels)
-            counts = np.zeros(10, dtype=np.int64)
-            for i, label in enumerate(client_labels):
-                counts[int(label)] = base + (1 if i < remainder else 0)
-        else:
-            raise ValueError(f"Unknown partition_mode: {partition_mode!r}")
-
-        client_indices: List[int] = []
-        for label in range(10):
-            selected = _take_from_pool(
-                label=label,
-                count=int(counts[label]),
-                pools=pools,
-                offsets=offsets,
-            )
-            client_indices.extend(int(v) for v in selected.tolist())
-
-        rng.shuffle(client_indices)
-        distance = float(data_cfg.bs_radius_m * math.sqrt(rng.uniform(0.0, 1.0)))
-        distance = max(1.0, distance)
-
-        clients[str(client_id)] = {
-            "indices": client_indices,
-            "labels": client_labels,
-            "class_counts": {
-                str(label): int(counts[label])
-                for label in range(10)
-                if int(counts[label]) > 0
-            },
-            "distance_m": distance,
-            "num_examples": len(client_indices),
-        }
-
-    all_indices = [
-        int(index)
-        for client in clients.values()
-        for index in client["indices"]
-    ]
-    if len(all_indices) != len(set(all_indices)):
-        raise RuntimeError("Partition contains duplicate training indices across clients")
-
-    payload = {
-        "seed": seed,
-        "num_clients": data_cfg.num_clients,
-        "partition_mode": partition_mode,
-        "labels_per_client": data_cfg.labels_per_client,
-        "label_pairing_mode": pairing_mode,
-        "mean_samples_per_client": data_cfg.mean_samples_per_client,
-        "dirichlet_alpha": dirichlet_alpha if partition_mode == "dirichlet" else None,
-        "dirichlet_allocation": (
-            "client_label_proportions" if partition_mode == "dirichlet" else None
-        ),
-        "bs_radius_m": data_cfg.bs_radius_m,
-        "dataset_train_size": int(len(targets)),
-        "total_selected_examples": int(len(all_indices)),
-        "unique_selected_examples": int(len(set(all_indices))),
-        "clients": clients,
-    }
-
-    fd, tmp_name = tempfile.mkstemp(prefix=path.name, suffix=".tmp", dir=path.parent)
-    os.close(fd)
-    try:
-        with open(tmp_name, "w", encoding="utf-8") as handle:
-            json.dump(payload, handle, indent=2)
-        os.replace(tmp_name, path)
-    finally:
-        if os.path.exists(tmp_name):
-            os.remove(tmp_name)
+    ensure_dataset(data_cfg)
+    targets = _training_targets(data_cfg)
+    if data_cfg.partition == "single_label":
+        payload = _prepare_single_label(data_cfg, int(seed), targets)
+    elif data_cfg.partition == "sparse_dirichlet":
+        payload = _prepare_sparse_dirichlet(data_cfg, int(seed), targets)
+    else:
+        raise ValueError(data_cfg.partition)
+    _atomic_json(path, payload)
     return path
 
 
-def load_partition_metadata(partition_path: str | Path, client_id: int) -> Dict[str, object]:
+def load_partition(partition_path: str | Path) -> Dict[str, object]:
     with Path(partition_path).open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+        return json.load(handle)
+
+
+def load_partition_metadata(partition_path: str | Path, client_id: int) -> Dict[str, object]:
+    payload = load_partition(partition_path)
     try:
-        return payload["clients"][str(client_id)]
+        metadata = dict(payload["clients"][str(int(client_id))])
     except KeyError as exc:
         raise KeyError(f"Client {client_id} not found in {partition_path}") from exc
+    metadata["partition_mean_size"] = float(payload["mean_size"])
+    metadata["partition_total_samples"] = int(payload["total_samples_used"])
+    return metadata
 
 
 def load_client_loader(
@@ -334,21 +394,19 @@ def load_client_loader(
     shuffle_seed: int,
     pin_memory: bool | None = None,
 ) -> Tuple[DataLoader, Dict[str, object]]:
-    metadata = load_partition_metadata(partition_path, client_id)
-    dataset = _cached_mnist(_root_cache_key(data_cfg.root), True)
-    subset = Subset(dataset, [int(v) for v in metadata["indices"]])
+    metadata = load_partition_metadata(partition_path, int(client_id))
+    ds = _dataset(data_cfg, True)
+    subset = Subset(ds, [int(v) for v in metadata["indices"]])
     generator = torch.Generator()
     generator.manual_seed(int(shuffle_seed))
-    effective_pin_memory = (
-        data_cfg.pin_memory if pin_memory is None else bool(pin_memory)
-    )
+    use_pin = bool(data_cfg.pin_memory if pin_memory is None else pin_memory)
     loader = DataLoader(
         subset,
-        batch_size=train_cfg.batch_size,
+        batch_size=int(train_cfg.batch_size),
         shuffle=True,
         generator=generator,
-        num_workers=data_cfg.num_workers,
-        pin_memory=effective_pin_memory,
+        num_workers=int(data_cfg.num_workers),
+        pin_memory=use_pin,
         drop_last=False,
     )
     return loader, metadata
@@ -359,47 +417,21 @@ def load_test_loader(
     batch_size: int = 512,
     pin_memory: bool | None = None,
 ) -> DataLoader:
-    dataset = _cached_mnist(_root_cache_key(data_cfg.root), False)
-    effective_pin_memory = (
-        data_cfg.pin_memory if pin_memory is None else bool(pin_memory)
-    )
+    ds = _dataset(data_cfg, False)
+    use_pin = bool(data_cfg.pin_memory if pin_memory is None else pin_memory)
     return DataLoader(
-        dataset,
-        batch_size=batch_size,
+        ds,
+        batch_size=int(batch_size),
         shuffle=False,
-        num_workers=data_cfg.num_workers,
-        pin_memory=effective_pin_memory,
+        num_workers=int(data_cfg.num_workers),
+        pin_memory=use_pin,
         drop_last=False,
     )
 
 
 def client_sizes(partition_path: str | Path) -> List[int]:
-    with Path(partition_path).open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
-    return [int(payload["clients"][str(i)]["num_examples"]) for i in range(payload["num_clients"])]
-
-
-# ============================================================
-# AIRCOMP_RAY_SAFE_CIFAR_DATASET
-#
-# main_cifar10.py sets AIRCOMP_DATASET=cifar10.
-# Local execution already receives the normal in-process
-# override. Ray actors are fresh Python processes, so they
-# need to install the same override when dataset.py imports.
-# ============================================================
-
-import os as _aircomp_os
-
-if (
-    _aircomp_os.environ
-    .get("AIRCOMP_DATASET", "mnist")
-    .strip()
-    .lower()
-    == "cifar10"
-):
-    from cifar10_support import (
-        CIFAR10AsMNIST as _AirCompCIFAR10AsMNIST,
-    )
-
-    datasets.MNIST = _AirCompCIFAR10AsMNIST
-
+    payload = load_partition(partition_path)
+    return [
+        int(payload["clients"][str(i)]["num_examples"])
+        for i in range(int(payload["num_clients"]))
+    ]

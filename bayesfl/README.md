@@ -1,290 +1,215 @@
-# AirCompBayesFL
+# bayesfl baseline v2.0
 
-**Version 1.5.2 — Paired-condition seed + MNIST memory fixes**
+Unified Flower/Ray baseline for future federated Bayesian-learning work.
 
-A modular Pyro + Flower/Ray reproduction framework for:
+This branch intentionally removes all wireless/AirComp simulation and the old
+two-phase precision/natural-mean protocol.  Each FL round contains exactly one
+client fit call for both methods:
 
-> *Distribution-Level AirComp for Wireless Federated Learning under Data
-> Scarcity and Heterogeneity* — Jun-Pyo Hong, Hyowoon Seo, Kisong Lee.
+- `fedavg`: deterministic FedAvg
+- `bayesavg`: one-phase Bayesian-Torch variational FL
 
-This is an independent reproduction, not the authors' original source. The
-paper reports Blitz for Bayesian layers; this project intentionally uses Pyro.
-Undisclosed details are exposed as configuration values instead of being hidden.
+`proposed` is accepted as a compatibility alias for `bayesavg`, but new logs
+use the canonical name `bayesavg`.
 
-## v1.5.2 experiment-control fixes
+## Dataset/model selection
 
-- Keeps the v1.5.1 process-local MNIST cache, preventing repeated full-dataset reloads during long native-Windows runs.
-- Uses `seed = base_seed + realization` for every condition in a figure sweep. Matching conditions therefore share the same realization seed instead of receiving the old condition-specific `+10,000` offset.
-- In Figure 5, `P=3/23/33 dBm` now use the exact same client partition, model initialization, channel RNG seed, and noise RNG seed within each replication; only transmit power changes.
-- No Bayesian VI, deterministic SGD, AirComp, KKT, wireless, or metric equation was changed from the v1.5.0 algorithmic implementation.
+```bash
+python main.py --dataset mnist --method fedavg
+python main.py --dataset mnist --method bayesavg
 
-## v1.5.0 priorities
-
-Development and experiments are intentionally ordered as:
-
-1. make the **Proposed** method trustworthy and reproduce its learning curve;
-2. run **FedAvg** under the same wireless/power-control implementation;
-3. add FedProx and SCAFFOLD comparisons afterward.
-
-## Paper-reference optimal power control
-
-v1.5.0 corrects the main benchmark mismatch found after inspecting the actual
-IEEE TWC 2023 reference [13]. The **KKT/QCQP magnitude optimizer is shared**,
-but the transmit-power scale is not identical between the Bayesian method and
-the conventional baselines.
-
-```yaml
-wireless:
-  power_control_mode: paper_reference_kkt
-  deterministic_payload_mode: update
-  deterministic_reference_power_mode: coordinated_aggregate
+python main.py --dataset cifar10 --method fedavg
+python main.py --dataset cifar10 --method bayesavg
 ```
 
-For the Proposed method, `Delta-rho` and `Delta-nu` retain the target 2025
-paper's Eqs. (27),(28),(31):
+Canonical model mapping:
+
+- MNIST -> `PaperCNN`, 62,346 parameters
+- CIFAR-10 -> `ResNet56-GN`, 855,770 parameters
+
+CIFAR Bayesian-Torch scope:
+
+- Bayesian Conv/Linear coordinates: 851,514
+- deterministic GroupNorm affine coordinates: 4,256
+- BayesAvg upload state: `mu + rho_BT + GroupNorm` = 1,707,284 scalars/client/round
+
+## Bayesian variational configuration
 
 ```text
-delta_bar = sum_k pi_k ||Delta_k||^2 / d
-u_k = pi_k^2 * gamma / delta_bar * |h_k|^-2
+prior                     N(0, 1)
+posterior_mu_init          0.0
+posterior_rho_init         -3.0
+kl_weight                  null -> 1 / Bayesian dimension
+kl_weight_schedule         false
+kl_warmup_rounds           20 (inert while schedule=false)
+lambda_scale_by_size       true
+mc_train                   2
+mc_eval                    5
+variance_floor_ratio       0.5
 ```
 
-For FedAvg/FedProx/SCAFFOLD, local update vectors use Hong et al. (2023)
-Eqs. (8),(10),(20):
+For CIFAR-10:
 
 ```text
-u_k = w_k^2 * gamma * sigma_z^2 / rho_ref * |h_k|^-2
-receiver_scale = sqrt(rho_ref / (gamma * sigma_z^2))
+d = 851,514
+1/d = 1.1743788123272196e-6
 ```
 
-Both paths call the same `_optimal_magnitude()` implementation of
-`v = |Delta|` when feasible and `v = |Delta|/(1 + lambda*u)` otherwise.
-Therefore v1.5.0 is source-faithful without maintaining two unrelated power
-optimizers.
-
-Reference [13] obtains `rho_ref` from a BS-local update, but the target 2025
-paper has no BS dataset in the conventional benchmark setup and does not state
-how it adapts this scalar. The default `coordinated_aggregate` mode follows
-Remark 6 of [13], which describes conventional AirComp as coordinating power
-with statistics of the aggregated update:
+The local loss is
 
 ```text
-rho_ref = ||sum_k pi_k Delta_k||^2 / d
+mean MC cross entropy
++ lambda_client * full coordinate-sum KL(q || N(0,I))
 ```
 
-`weighted_local` remains available as a sensitivity mode. This adaptation is
-logged in every `metrics.csv` row and must be reported as a reproduction
-assumption.
-
-### Deterministic payload semantics
-
-FedAvg and FedProx transmit `Delta-w = w_local - w_global` and the server
-applies the recovered update additively. This matches the local-update
-transmission in reference [13] and avoids replacing the global state with an
-attenuated absolute model. Communication accounting remains `d` values per
-round.
-
-## Proposed Algorithm 1 implementation
-
-Each Proposed logical round has a real server boundary between phases:
+where
 
 ```text
-rho phase
-  client: rho_t,k <- rho_t and optimize rho_t,k
-  server: AirComp aggregate Delta-rho -> rho_t+1
-  server: broadcast rho_t+1
-
-nu phase
-  client: reload its own rho_t,k
-  client: initialize/optimize nu_t,k using rho_t+1
-  server: AirComp aggregate Delta-nu -> mu_t+1
-
-server evaluates q(mu_t+1, rho_t+1)
+lambda_client = (1/d) * |D_k| / realised_mean_client_size
 ```
 
-Precision is preserved in float64 end-to-end because the direct Eq. (25) update
-can be below one float32 ULP near rho=400. CNN forward computation remains
-float32.
+when `lambda_scale_by_size=true`.
 
-## New Proposed diagnostics
+The global posterior initializes each client's local posterior.  The KL prior
+remains the fixed standard normal every round.
 
-`metrics.csv` now records both forms of Bayesian evaluation:
+## BayesAvg aggregation
+
+The server sample-size-weighted averages Bayesian-Torch variational state
+coordinates directly:
+
+- posterior `mu`
+- Bayesian-Torch unconstrained `rho`
+- deterministic GroupNorm weight/bias
+
+This is a transparent baseline aggregation rule, not the old natural-parameter
+AirComp algorithm.
+
+## Client participation
+
+Default CIFAR setting is full participation:
 
 ```text
-accuracy                         # paper-style posterior predictive accuracy
-posterior_predictive_accuracy
-posterior_predictive_nll
-posterior_predictive_ece
-posterior_mean_accuracy          # diagnostic at w = mu
-posterior_mean_nll
-posterior_mean_ece
+100 / 100 clients every round
 ```
 
-It also records actual global coordinate movement:
+Override from the CLI:
+
+```bash
+python main.py \
+  --dataset cifar10 \
+  --method bayesavg \
+  --client-fraction 0.1
+```
+
+With 100 total clients, this selects 10 clients/round.
+
+## CIFAR-10 baseline
 
 ```text
-global_mean_update_l2
-global_mean_update_max_abs
-global_precision_update_l2
-global_precision_update_max_abs
+clients                    100
+partition                  sparse_dirichlet
+alpha                      0.1
+average client size        100
+support classes/client     4
+augmentation               false
+
+optimizer                  SGD
+LR                         0.05
+momentum                   0.9
+weight decay               0
+batch                      128
+local epochs               10
+round max                  300
+cosine horizon             400
+minimum LR                 0.0001
 ```
 
-These fields answer the key debugging question:
-
-- mean accuracy high, predictive accuracy low -> covariance/sampling issue;
-- both low -> the `nu`/mean-learning path is the main issue.
-
-The phase-1 precision state is reloaded as float64 in phase 2.
-
-## Recommended Windows environment
-
-The combination that worked on the RTX 3060 Laptop GPU during this project is:
+The fixed-horizon schedule is
 
 ```text
-Python       3.12
-PyTorch      2.5.1+cu121
-Torchvision  0.20.1+cu121
-Pyro         1.9.1
-Flower       1.32.1
-Ray          2.55.1
+lr(r) = lr_min + 0.5*(lr-lr_min)*(1+cos(pi*min(r,H-1)/(H-1)))
+r = server_round - 1
+H = 400
 ```
 
-Native Windows CUDA uses the sequential `local` backend. WSL2/Linux can use
-Flower/Ray virtual clients in parallel.
+Expected checkpoints:
+
+```text
+round   1 : 0.05000000
+round  50 : 0.04816603
+round 100 : 0.04279619
+round 150 : 0.03471127
+round 200 : 0.02514822
+round 250 : 0.01557015
+round 300 : 0.00744245
+round 400 : 0.00010000
+```
+
+For seed 0, the sparse-Dirichlet partition is regression-tested to record:
+
+```text
+total_samples_used                10046
+mean_size                         100.46
+min_size                          79
+max_size                          127
+mean_classes_per_client           4.0
+empty_client_backfills            0
+num_empty_clients_after_backfill  0
+class_draws_exhausted             0
+```
+
+Each client selects four random distinct class labels; alpha=0.1 controls the
+within-client mixture on those labels. Every selected class receives at least
+one example. Dataset indices are unique across clients.
+
+## MNIST baseline
+
+The local/data/model profile preserves the old v1.6.1 settings that remain
+meaningful after removing wireless communication:
+
+```text
+model                      PaperCNN, d=62,346
+clients                    40
+labels/client              1
+Poisson mean samples       10
+optimizer                  SGD
+LR                         0.1
+momentum                   0
+batch                      10
+local epochs               3
+LR schedule                constant
+```
+
+The default common round count is 240 because the old method-specific wireless
+channel-use budget no longer exists. `--rounds` can override it.
 
 ## Validation
 
-```powershell
-$env:PYTHONPATH = "."
-.\.venv\Scripts\python.exe -m compileall .
-.\.venv\Scripts\python.exe -m pytest -q
+```bash
+unset AIRCOMP_DATASET
+python -m pytest -q
 ```
 
-The package contains 33 tests in v1.5.0.
+CIFAR dry run:
 
-## Priority stage 1: Proposed only
-
-Start with the validated learning settings, one realization, 60 logical rounds:
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/proposed_gpu.yaml `
-  --experiment fig2 `
-  --methods proposed `
-  --rounds 60 `
-  --replications 1 `
-  --path-loss-reference-m 1000 `
-  --output results\proposed_v150_60
+```bash
+python main.py \
+  --dataset cifar10 \
+  --methods fedavg,bayesavg \
+  --seed 0 \
+  --dry-run
 ```
 
-Inspect the important fields:
+MNIST dry run:
 
-```powershell
-Import-Csv .\results\proposed_v150_60\metrics.csv |
-  Select-Object `
-    round,channel_uses_cumulative,
-    accuracy,posterior_mean_accuracy,
-    nll,ece,
-    global_mean_update_l2,global_precision_update_l2,
-    posterior_precision_mean,posterior_variance,
-    precision_aircomp_nmse,mean_aircomp_nmse |
-  Format-Table -AutoSize
+```bash
+python main.py \
+  --dataset mnist \
+  --methods fedavg,bayesavg \
+  --seed 0 \
+  --dry-run
 ```
 
-Plot posterior predictive vs posterior mean:
-
-```powershell
-.\.venv\Scripts\python.exe utils.py `
-  --input results\proposed_v150_60 `
-  --figure proposed_debug
-```
-
-The paper-style Figure 2 curve still uses `accuracy`, i.e. posterior predictive
-accuracy.
-
-### Full Proposed communication budget
-
-With `d = 62,346` and `2d` transmitted values per logical Proposed round,
-30,000,000 channel uses correspond to approximately 240 logical rounds. After
-the 60-round trajectory is validated:
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/proposed_gpu.yaml `
-  --experiment fig2 `
-  --methods proposed `
-  --replications 1 `
-  --output results\proposed_v150_full1
-```
-
-`num_rounds: null` derives the round count from the channel-use budget.
-The paper-style final result should later be averaged over 10 independent
-realizations.
-
-## Optional strict-source optimizer diagnostic
-
-The published training table does not list gradient clipping. The working
-configuration retains the previously validated clip value (`10.0`) so v1.5.0
-does not unexpectedly change the trajectory. To test a no-clipping interpretation:
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/proposed_strict_gpu.yaml `
-  --experiment fig2 `
-  --methods proposed `
-  --rounds 20 `
-  --replications 1 `
-  --no-wireless `
-  --output results\proposed_v150_strict20
-```
-
-Treat this as a sensitivity experiment, not as a silent replacement for the
-working configuration.
-
-## Priority stage 2: FedAvg
-
-Only after Proposed is validated, run FedAvg with exactly the same wireless
-wireless channel settings, while using the Hong-2023 reference-[13] scaling:
-
-```powershell
-.\.venv\Scripts\python.exe main.py `
-  --config configs/fedavg_compare_gpu.yaml `
-  --experiment fig2 `
-  --methods fedavg `
-  --replications 1 `
-  --path-loss-reference-m 1000 `
-  --output results\fedavg_v150_compare
-```
-
-Then combine/plot matched communication budgets. FedProx and SCAFFOLD can be
-added after Proposed-vs-FedAvg is credible.
-
-## Reproduction assumptions that remain explicit
-
-- `initial_prior_std: 0.05` is an implementation assumption; the paper does not
-  publish its initial covariance value.
-- `path_loss_reference_m: 1000` is a numerical path-loss normalization
-  assumption; the paper states `r^-alpha` and a 200 m cell but does not publish
-  the reference-distance constant used in code.
-- `gradient_clip_norm: 10.0` is retained in the working configuration for
-  continuity; `proposed_strict_gpu.yaml` disables it for sensitivity testing.
-
-
-## v1.5.0 deterministic AirComp contract
-
-FedAvg/FedProx/SCAFFOLD use the Hong-2023 Eq. (8)/(10)/(20) power scale and
-receiver de-scaling on local update vectors. Proposed retains its target-2025
-normalization. The shared KKT magnitude core is tested directly. See
-`V150_REFERENCE13_POWER_CONTROL.md`.
-
-The deterministic diagnostics `global_model_update_l2`,
-`ideal_model_update_l2`, and `received_model_update_l2` remain in
-`metrics.csv`, and `deterministic_reference_power_mode` records the `rho_ref`
-adaptation used by each run.
-
-## Optional sparse posterior-evidence experiment (v1.6.1)
-
-The paper reproduction remains unchanged. For the separate Bayesian-vs-random
-sparse coordinate experiment, use `--experiment sparse` with
-`configs/sparse_proposed_gpu.yaml`. v1.6.1 trains only the 75/50/25/10/5/2%
-Bayesian/random conditions and reuses an existing dense Figure-2 Proposed run as
-the shared 100% endpoint during plotting. See `SPARSE_POSTERIOR_EXPERIMENT.md`.
+The source has no Pyro, AirComp, wireless, sparse-posterior, or two-phase
+Bayesian dependency.

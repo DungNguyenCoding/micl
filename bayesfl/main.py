@@ -1,336 +1,200 @@
-"""Command-line entry point for AirCompBayesFL simulations."""
+"""Canonical CLI for the unified MNIST/CIFAR-10 baseline."""
 
 from __future__ import annotations
 
 import argparse
-import csv
-import os
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Set
+from typing import List
 
-from bayesian_protocol import physical_round_count
+from bayesian_torch_backend import build_initial_states
+from bayesian_training import resolved_base_kl_weight
 from config import SimulationConfig
-from dataset import ensure_mnist, prepare_partitions
-from experiments import (
-    RunSpec,
-    derive_rounds,
-    experiment_conditions,
-    paired_realization_seed,
-)
+from dataset import ensure_dataset, load_partition, prepare_partitions
+from experiments import RunSpec, normalize_method
 from models import build_model, count_parameters
-from runtime_utils import (
-    configure_runtime_environment,
-    resolve_backend,
-    validate_runtime,
-)
+from runtime_utils import configure_runtime_environment, validate_runtime
 from server import run_configured_simulation
+from training_schedule import learning_rate_for_round
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Reproduce the simulation section of Distribution-Level AirComp for Wireless FL"
+        description="Unified Flower/Ray baseline: FedAvg vs Bayesian-Torch BayesAvg"
     )
-    parser.add_argument("--config", default="configs/smoke.yaml")
+    parser.add_argument("--dataset", required=True, choices=["mnist", "cifar10"])
     parser.add_argument(
-        "--experiment",
-        default="fig2",
-        choices=["fig2", "fig3", "fig4", "fig5", "fig6", "sparse", "all"],
+        "--config",
+        default=None,
+        help="Optional YAML. Without it, configs/baseline_<dataset>.yaml is used.",
     )
     parser.add_argument(
         "--methods",
-        default=None,
-        help="Comma-separated subset: fedavg,fedprox,scaffold,proposed",
+        default="fedavg,bayesavg",
+        help="Comma-separated: fedavg,bayesavg. 'proposed' is accepted as bayesavg alias.",
     )
-    parser.add_argument("--replications", type=int, default=None)
+    parser.add_argument("--method", default=None, help="Single-method alias for --methods")
     parser.add_argument("--rounds", type=int, default=None)
-    parser.add_argument("--output", default=None)
+    parser.add_argument("--client-fraction", type=float, default=None)
     parser.add_argument("--seed", type=int, default=None)
-    parser.add_argument("--no-wireless", action="store_true")
-    parser.add_argument(
-        "--power-control-mode",
-        default=None,
-        choices=["paper_reference_kkt"],
-        help=(
-            "v1.5.0 paper-reference mode: one shared KKT magnitude optimizer "
-            "with target-2025 scaling for Proposed and Hong-2023 reference-[13] "
-            "scaling for deterministic benchmarks."
-        ),
-    )
-    parser.add_argument(
-        "--deterministic-reference-power-mode",
-        default=None,
-        choices=["coordinated_aggregate", "weighted_local"],
-        help=(
-            "rho_ref adaptation for Hong-2023 deterministic benchmark power "
-            "control. Default: coordinated_aggregate."
-        ),
-    )
-    parser.add_argument(
-        "--path-loss-reference-m",
-        type=float,
-        default=None,
-        help=(
-            "Override wireless.path_loss_reference_m. The default configs use "
-            "1000 m, equivalent to expressing distance in km."
-        ),
-    )
-    parser.add_argument(
-        "--sparse-selection",
-        default=None,
-        choices=["bayesian", "random"],
-        help="Manual sparse-posterior selector override for research runs.",
-    )
-    parser.add_argument(
-        "--sparse-keep-ratio",
-        type=float,
-        default=None,
-        help="Manual sparse-posterior keep ratio in (0,1].",
-    )
+    parser.add_argument("--replications", type=int, default=None)
+    parser.add_argument("--output", default=None)
+    parser.add_argument("--backend", choices=["ray", "local", "auto"], default=None)
     parser.add_argument("--force-partitions", action="store_true")
-    parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
 
-def completed_runs(metrics_path: Path) -> Dict[str, int]:
-    if not metrics_path.exists():
-        return {}
-    maximum_round: dict[str, int] = {}
-    with metrics_path.open("r", encoding="utf-8", newline="") as handle:
-        for row in csv.DictReader(handle):
-            run_id = row.get("run_id", "")
-            try:
-                server_round = int(row.get("round", "0"))
-            except ValueError:
-                continue
-            maximum_round[run_id] = max(maximum_round.get(run_id, -1), server_round)
-    return maximum_round
+def _resolve_methods(args: argparse.Namespace) -> List[str]:
+    text = args.method if args.method is not None else args.methods
+    methods = [normalize_method(part) for part in str(text).split(",") if part.strip()]
+    result = []
+    for method in methods:
+        if method not in result:
+            result.append(method)
+    if not result:
+        raise ValueError("At least one method is required")
+    return result
 
 
 def main() -> None:
     args = parse_args()
     project_root = Path(__file__).resolve().parent
-    config_path = Path(args.config)
-    if not config_path.is_absolute():
-        config_path = project_root / config_path
+    dataset = str(args.dataset).lower()
+
+    if args.config is None:
+        config_path = project_root / "configs" / f"baseline_{dataset}.yaml"
+    else:
+        config_path = Path(args.config)
+        if not config_path.is_absolute():
+            config_path = project_root / config_path
     config = SimulationConfig.from_yaml(config_path)
-
-    if args.replications is not None:
-        config.runtime.replications = args.replications
-    if args.rounds is not None:
-        config.training.num_rounds = args.rounds
-    if args.seed is not None:
-        config.runtime.seed = args.seed
-    if args.output is not None:
-        config.output.directory = args.output
-    if args.no_wireless:
-        config.wireless.enabled = False
-    if args.power_control_mode is not None:
-        config.wireless.power_control_mode = args.power_control_mode
-    if args.deterministic_reference_power_mode is not None:
-        config.wireless.deterministic_reference_power_mode = (
-            args.deterministic_reference_power_mode
+    if config.data.dataset != dataset:
+        raise ValueError(
+            f"--dataset={dataset} conflicts with config data.dataset={config.data.dataset}"
         )
-    if args.path_loss_reference_m is not None:
-        config.wireless.path_loss_reference_m = args.path_loss_reference_m
-    if args.sparse_selection is not None:
-        config.sparse.selection = args.sparse_selection
-        config.sparse.enabled = True
-    if args.sparse_keep_ratio is not None:
-        config.sparse.keep_ratio = args.sparse_keep_ratio
-        config.sparse.enabled = True
 
-    # Apply CLI overrides before validating runtime/GPU consistency.
+    if args.rounds is not None:
+        config.training.num_rounds = int(args.rounds)
+    if args.client_fraction is not None:
+        config.federation.client_fraction = float(args.client_fraction)
+    if args.seed is not None:
+        config.runtime.seed = int(args.seed)
+    if args.replications is not None:
+        config.runtime.replications = int(args.replications)
+    if args.output is not None:
+        config.output.directory = str(args.output)
+    if args.backend is not None:
+        config.runtime.backend = str(args.backend)
     config.validate()
-    configure_runtime_environment(config)
-    gpu_status = validate_runtime(config)
 
     data_root = Path(config.data.root)
     if not data_root.is_absolute():
         config.data.root = str((project_root / data_root).resolve())
     output_root = Path(config.output.directory)
     if not output_root.is_absolute():
-        config.output.directory = str((project_root / output_root).resolve())
-    Path(config.output.directory).mkdir(parents=True, exist_ok=True)
+        output_root = (project_root / output_root).resolve()
+        config.output.directory = str(output_root)
+    output_root.mkdir(parents=True, exist_ok=True)
 
-    methods_override: Optional[List[str]] = None
-    if args.methods:
-        methods_override = [part.strip().lower() for part in args.methods.split(",") if part.strip()]
+    configure_runtime_environment(config)
+    gpu = validate_runtime(config)
+    ensure_dataset(config.data)
 
-    experiments = (
-        ["fig2", "fig3", "fig4", "fig5", "fig6"]
-        if args.experiment == "all"
-        else [args.experiment]
+    deterministic_model = build_model(
+        config.data.dataset,
+        config.model.name,
+        config.model.num_classes,
     )
-    model_dimension = count_parameters(
-        build_model(config.model.name, config.model.num_classes)
+    model_dimension = count_parameters(deterministic_model)
+    _bstate, _mean, bayesian_d, deterministic_d = build_initial_states(
+        dataset=config.data.dataset,
+        model_cfg=config.model,
+        variational_cfg=config.variational,
+        seed=config.runtime.seed,
     )
+    resolved_kl = resolved_base_kl_weight(config.variational, bayesian_d)
 
-    ensure_mnist(config.data.root)
-    partition_dir = Path(config.output.directory) / "partitions"
-    metrics_path = Path(config.output.directory) / config.output.metrics_filename
-    finished = completed_runs(metrics_path) if args.resume else {}
-
-    planned: List[tuple[SimulationConfig, RunSpec, str]] = []
-
-    # Optional sparse selector filter for running Bayesian and Random
-    # sparse experiments independently. Unset = original behavior.
-    sparse_selection_only = (
-        os.environ.get("AIRCOMP_SPARSE_SELECTION_ONLY", "")
-        .strip()
-        .lower()
-    )
-    if sparse_selection_only not in {"", "bayesian", "random"}:
-        raise ValueError(
-            "AIRCOMP_SPARSE_SELECTION_ONLY must be "
-            "'bayesian', 'random', or unset"
-        )
-
-    for experiment in experiments:
-        for condition in experiment_conditions(experiment, config, methods_override):
-            if (
-                experiment == "sparse"
-                and sparse_selection_only
-                and condition.sparse_selection != sparse_selection_only
-            ):
-                continue
-
-            condition_cfg = config.copy()
-
-            # CIFAR-10 research extension:
-            # fig2 is the dense baseline and sparse is its communication
-            # extension. For these two cases, preserve the data settings
-            # from the CIFAR YAML (e.g. mean_samples_per_client=50)
-            # instead of overwriting them with the MNIST paper defaults
-            # hard-coded in experiments.py.
-            cifar10_mode = (
-                os.environ.get("AIRCOMP_DATASET", "mnist")
-                .strip()
-                .lower()
-                == "cifar10"
-            )
-
-            if not (
-                cifar10_mode
-                and condition.experiment in {"fig2", "sparse"}
-            ):
-                condition_cfg.data.labels_per_client = (
-                    condition.labels_per_client
-                )
-                condition_cfg.data.mean_samples_per_client = (
-                    condition.mean_samples_per_client
-                )
-
-            # For the CIFAR-10 fig2/sparse research extension,
-            # preserve the wireless power from the YAML as well.
-            # This allows controlled diagnostics such as a high-power
-            # near-ideal AirComp run without affecting the MNIST paper path.
-            if not (
-                cifar10_mode
-                and condition.experiment in {"fig2", "sparse"}
-            ):
-                condition_cfg.wireless.power_dbm = (
-                    condition.power_dbm
-                )
-
-            if condition.experiment == "sparse":
-                condition_cfg.sparse.enabled = True
-                condition_cfg.sparse.selection = condition.sparse_selection
-                condition_cfg.sparse.keep_ratio = condition.sparse_keep_ratio
-
-            for realization in range(condition_cfg.runtime.replications):
-                partition_seed = paired_realization_seed(
-                    condition_cfg.runtime.seed, realization
-                )
-                partition_path = prepare_partitions(
-                    condition_cfg.data,
-                    partition_seed,
-                    partition_dir,
-                    force=args.force_partitions,
-                )
-                for method in condition.methods:
-                    rounds = derive_rounds(condition_cfg, method, model_dimension)
-                    run_id = (
-                        f"{condition.experiment}_{condition.name}_{method}_"
-                        f"rep{realization:02d}_seed{partition_seed}"
-                    )
-                    run_spec = RunSpec(
-                        run_id=run_id,
-                        experiment=condition.experiment,
-                        condition=condition.name,
-                        method=method,
-                        realization=realization,
-                        seed=partition_seed,
-                        rounds=rounds,
-                    )
-                    planned.append((condition_cfg.copy(), run_spec, str(partition_path.resolve())))
-
+    print(f"Dataset: {config.data.dataset}")
+    print(f"Model: {config.model.name}")
     print(f"Model dimension: {model_dimension:,}")
+    print(f"Bayesian Conv/Linear dimension: {bayesian_d:,}")
+    print(f"Deterministic normalization dimension: {deterministic_d:,}")
+    print(f"Resolved KL weight: {resolved_kl:.12g}")
     print(
         "Training: "
-        f"E={config.training.local_epochs}, "
-        f"batch={config.training.batch_size}, "
-        f"optimizer={config.training.optimizer}, "
-        f"momentum={config.training.momentum}, "
-        f"weight_decay={config.training.weight_decay}, "
-        f"lr={config.training.learning_rate}, "
-        f"lr_scheduler={config.training.lr_scheduler}, "
-        f"min_lr={config.training.min_learning_rate}"
+        f"E={config.training.local_epochs}, batch={config.training.batch_size}, "
+        f"lr={config.training.learning_rate}, momentum={config.training.momentum}, "
+        f"rounds={config.training.num_rounds}, scheduler={config.training.lr_scheduler}, "
+        f"horizon={config.training.lr_decay_rounds}"
     )
-    backend = resolve_backend(config)
     print(
-        "Runtime: "
-        f"backend={backend}, "
-        f"client_device={config.runtime.client_device}, "
-        f"client_num_gpus={config.runtime.client_num_gpus}, "
-        f"server_device={config.runtime.server_device}, "
-        f"pin_memory={config.data.pin_memory}, "
-        f"power_control={config.wireless.power_control_mode}, "
-        "proposed_power=target2025_eq27_28_31, "
-        "deterministic_power=hong2023_eq8_10_20, "
-        f"deterministic_reference_power="
-        f"{config.wireless.deterministic_reference_power_mode}"
-        + (
-            f", sparse={config.sparse.selection}@{100.0 * config.sparse.keep_ratio:.0f}%"
-            if config.sparse.enabled else ""
-        )
+        f"Clients: total={config.data.num_clients}, fraction={config.federation.client_fraction}, "
+        f"per_round={config.participating_clients()}"
     )
-    if backend == "local" and config.runtime.client_device.lower().startswith("cuda"):
-        print(
-            "Native-Windows safe mode: CUDA clients run sequentially in the "
-            "launcher process. Use WSL2/Linux with runtime.backend: ray for "
-            "parallel Ray GPU clients."
+    print(
+        f"CUDA: torch_device_available={gpu.available}, devices={gpu.device_count}, "
+        f"GPU={gpu.device_name}"
+    )
+
+    if config.training.lr_scheduler == "cosine":
+        points = [1, 50, 100, 150, 200, 250, 300, config.training.lr_decay_rounds]
+        points = sorted(set(r for r in points if r <= config.training.lr_decay_rounds))
+        print("LR schedule checkpoints:")
+        for r in points:
+            print(f"  round {r:3d}: {learning_rate_for_round(config.training, r):.8f}")
+
+    methods = _resolve_methods(args)
+    partition_dir = output_root / "partitions"
+    planned = []
+    for rep in range(int(config.runtime.replications)):
+        seed = int(config.runtime.seed) + rep
+        partition_path = prepare_partitions(
+            config.data,
+            seed,
+            partition_dir,
+            force=bool(args.force_partitions),
         )
-    if config.runtime.client_device.lower().startswith("cuda"):
+        partition = load_partition(partition_path)
         print(
-            "CUDA: "
-            f"torch={gpu_status.torch_version}, build={gpu_status.cuda_build}, "
-            f"available={gpu_status.available}, devices={gpu_status.device_count}, "
-            f"GPU={gpu_status.device_name}"
+            f"Partition seed={seed}: {partition_path.name} | "
+            f"total={partition['total_samples_used']} mean={partition['mean_size']:.4f} "
+            f"min={partition['min_size']} max={partition['max_size']} "
+            f"classes/client={partition['mean_classes_per_client']:.4f}"
         )
+        for method in methods:
+            run_id = f"{dataset}_{config.model.name}_{method}_rep{rep:02d}_seed{seed}"
+            planned.append(
+                (
+                    config.copy(),
+                    RunSpec(
+                        run_id=run_id,
+                        method=method,
+                        seed=seed,
+                        rounds=int(config.training.num_rounds),
+                        realization=rep,
+                    ),
+                    str(partition_path),
+                )
+            )
+
     print(f"Planned simulations: {len(planned)}")
-    for index, (_, run_spec, partition_path) in enumerate(planned, start=1):
-        status = "SKIP" if finished.get(run_spec.run_id, -1) >= run_spec.rounds else "RUN"
-        physical_rounds = physical_round_count(run_spec.method, run_spec.rounds)
+    for index, (_cfg, run_spec, partition_path) in enumerate(planned, start=1):
         print(
-            f"[{index:03d}/{len(planned):03d}] {status} {run_spec.run_id} "
-            f"logical_rounds={run_spec.rounds} physical_fit_rounds={physical_rounds} "
+            f"[{index:03d}/{len(planned):03d}] RUN {run_spec.run_id} "
+            f"rounds={run_spec.rounds} fit_rounds={run_spec.rounds} "
             f"partition={Path(partition_path).name}"
         )
+
+    if config.output.save_resolved_config:
+        config.save_yaml(output_root / "resolved_config.yaml")
 
     if args.dry_run:
         return
 
-    for index, (run_cfg, run_spec, partition_path) in enumerate(planned, start=1):
-        if finished.get(run_spec.run_id, -1) >= run_spec.rounds:
-            continue
-        print("=" * 88)
-        print(f"Starting {index}/{len(planned)}: {run_spec.run_id}")
-        run_configured_simulation(run_cfg, run_spec, partition_path)
-        print(f"Finished: {run_spec.run_id}")
-
-    print("All requested simulations finished.")
-    print(f"Metrics: {metrics_path}")
+    for cfg, run_spec, partition_path in planned:
+        print(f"\n===== START {run_spec.run_id} =====")
+        run_configured_simulation(cfg, run_spec, partition_path)
+        print(f"===== FINISHED {run_spec.run_id} =====")
 
 
 if __name__ == "__main__":

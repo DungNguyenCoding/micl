@@ -1,14 +1,15 @@
-"""Accuracy, NLL, ECE, and reliability-diagram evaluation."""
+"""Accuracy, NLL, ECE, and Bayesian posterior-predictive evaluation."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+from bayesian_torch_backend import BayesianTorchStateAdapter
+from config import VariationalConfig
 from serialization import ParameterLayout
 
 
@@ -32,60 +33,51 @@ def expected_calibration_error(
     probabilities = np.asarray(probabilities, dtype=np.float64)
     targets = np.asarray(targets, dtype=np.int64)
     predictions = probabilities.argmax(axis=1)
-    confidences = probabilities.max(axis=1)
-    correct = predictions == targets
+    confidence = probabilities.max(axis=1)
+    accuracy = float(np.mean(predictions == targets))
+    true_prob = np.maximum(probabilities[np.arange(len(targets)), targets], 1.0e-12)
+    nll = float(-np.mean(np.log(true_prob)))
 
-    edges = np.linspace(0.0, 1.0, n_bins + 1)
-    bin_count = np.zeros(n_bins, dtype=np.int64)
-    bin_confidence = np.zeros(n_bins, dtype=np.float64)
-    bin_accuracy = np.zeros(n_bins, dtype=np.float64)
+    edges = np.linspace(0.0, 1.0, int(n_bins) + 1)
+    counts = np.zeros(n_bins, dtype=np.int64)
+    bin_conf = np.zeros(n_bins, dtype=np.float64)
+    bin_acc = np.zeros(n_bins, dtype=np.float64)
     ece = 0.0
-
-    for index in range(n_bins):
-        lower, upper = edges[index], edges[index + 1]
-        if index == 0:
-            mask = (confidences >= lower) & (confidences <= upper)
+    for i in range(n_bins):
+        lo = edges[i]
+        hi = edges[i + 1]
+        if i == n_bins - 1:
+            mask = (confidence >= lo) & (confidence <= hi)
         else:
-            mask = (confidences > lower) & (confidences <= upper)
-        count = int(mask.sum())
-        bin_count[index] = count
-        if count > 0:
-            bin_confidence[index] = float(confidences[mask].mean())
-            bin_accuracy[index] = float(correct[mask].mean())
-            ece += (count / len(targets)) * abs(
-                bin_accuracy[index] - bin_confidence[index]
-            )
+            mask = (confidence >= lo) & (confidence < hi)
+        count = int(np.count_nonzero(mask))
+        counts[i] = count
+        if count:
+            bin_conf[i] = float(np.mean(confidence[mask]))
+            bin_acc[i] = float(np.mean(predictions[mask] == targets[mask]))
+            ece += (count / max(1, len(targets))) * abs(bin_acc[i] - bin_conf[i])
 
-    clipped = np.clip(probabilities[np.arange(len(targets)), targets], 1.0e-12, 1.0)
-    nll = float(-np.log(clipped).mean())
-    accuracy = float(correct.mean())
     return EvaluationResult(
         accuracy=accuracy,
         nll=nll,
         ece=float(ece),
         bin_lower=edges[:-1],
         bin_upper=edges[1:],
-        bin_count=bin_count,
-        bin_confidence=bin_confidence,
-        bin_accuracy=bin_accuracy,
+        bin_count=counts,
+        bin_confidence=bin_conf,
+        bin_accuracy=bin_acc,
     )
 
 
-def _predict_model(
-    model: torch.nn.Module,
-    loader: DataLoader,
-    device: torch.device,
-) -> Tuple[np.ndarray, np.ndarray]:
+def _predict_deterministic(model, loader: DataLoader, device: torch.device):
     model.eval()
-    probability_batches: List[np.ndarray] = []
-    target_batches: List[np.ndarray] = []
-    non_blocking = bool(device.type == "cuda" and loader.pin_memory)
+    probability_batches = []
+    target_batches = []
     with torch.no_grad():
         for features, targets in loader:
-            features = features.to(device, non_blocking=non_blocking)
+            features = features.to(device, non_blocking=True)
             logits = model(features)
-            probabilities = torch.softmax(logits, dim=1)
-            probability_batches.append(probabilities.cpu().numpy())
+            probability_batches.append(torch.softmax(logits, dim=1).cpu().numpy())
             target_batches.append(targets.numpy())
     return np.concatenate(probability_batches), np.concatenate(target_batches)
 
@@ -99,62 +91,56 @@ def evaluate_deterministic(
     n_bins: int = 10,
 ) -> EvaluationResult:
     model = model.to(device)
-    layout.load_model_vector(model, model_vector)
-    probabilities, targets = _predict_model(model, loader, device)
+    layout.load_model_vector(model, np.asarray(model_vector, dtype=np.float32))
+    probabilities, targets = _predict_deterministic(model, loader, device)
     return expected_calibration_error(probabilities, targets, n_bins=n_bins)
 
 
-
-def evaluate_bayesian_mean(
-    model: torch.nn.Module,
+def evaluate_bayesian_state(
+    deterministic_model: torch.nn.Module,
     layout: ParameterLayout,
-    mean: np.ndarray,
+    state_vector: np.ndarray,
+    variational_cfg: VariationalConfig,
     loader: DataLoader,
     device: torch.device,
-    n_bins: int = 10,
-) -> EvaluationResult:
-    """Evaluate the deterministic network at the Bayesian posterior mean.
-
-    The paper's reported Proposed accuracy uses probabilistic inference; this
-    diagnostic is intentionally additional. It separates slow/incorrect mean
-    learning from degradation caused by posterior sampling variance.
-    """
-    model = model.to(device)
-    mean_vector = np.asarray(mean, dtype=np.float32).reshape(-1)
-    layout.load_model_vector(model, mean_vector)
-    probabilities, targets = _predict_model(model, loader, device)
-    return expected_calibration_error(probabilities, targets, n_bins=n_bins)
-
-def evaluate_bayesian(
-    model: torch.nn.Module,
-    layout: ParameterLayout,
-    mean: np.ndarray,
-    precision: np.ndarray,
-    loader: DataLoader,
-    device: torch.device,
-    mc_samples: int,
     seed: int,
     n_bins: int = 10,
-) -> EvaluationResult:
-    model = model.to(device)
-    mean = np.asarray(mean, dtype=np.float64)
-    precision = np.maximum(np.asarray(precision, dtype=np.float64), 1.0e-12)
-    std = np.sqrt(1.0 / precision)
-    rng = np.random.default_rng(seed)
+) -> tuple[EvaluationResult, EvaluationResult, tuple[float, float, float], np.ndarray]:
+    """Return predictive eval, posterior-mean eval, sigma stats, mean model vector."""
+    adapter = BayesianTorchStateAdapter(
+        deterministic_model, layout, variational_cfg
+    ).to(device)
+    adapter.load_state(state_vector)
+    adapter.model.eval()
 
-    accumulated: np.ndarray | None = None
-    targets_reference: np.ndarray | None = None
-    for _ in range(int(mc_samples)):
-        sample = rng.normal(mean, std).astype(np.float32)
-        layout.load_model_vector(model, sample)
-        probabilities, targets = _predict_model(model, loader, device)
-        if accumulated is None:
-            accumulated = np.zeros_like(probabilities, dtype=np.float64)
-            targets_reference = targets
-        accumulated += probabilities
+    torch.manual_seed(int(seed))
+    if device.type == "cuda":
+        torch.cuda.manual_seed_all(int(seed))
 
-    assert accumulated is not None and targets_reference is not None
-    posterior_predictive = accumulated / float(mc_samples)
-    return expected_calibration_error(
-        posterior_predictive, targets_reference, n_bins=n_bins
-    )
+    probability_batches = []
+    target_batches = []
+    mc = int(variational_cfg.mc_eval)
+    with torch.no_grad():
+        for features, targets in loader:
+            features = features.to(device, non_blocking=True)
+            accumulated = None
+            for _ in range(mc):
+                logits = adapter.model(features)
+                if isinstance(logits, tuple):
+                    logits = logits[0]
+                probs = torch.softmax(logits, dim=1)
+                accumulated = probs if accumulated is None else accumulated + probs
+            assert accumulated is not None
+            probability_batches.append((accumulated / float(mc)).cpu().numpy())
+            target_batches.append(targets.numpy())
+
+    probabilities = np.concatenate(probability_batches)
+    targets_np = np.concatenate(target_batches)
+    predictive = expected_calibration_error(probabilities, targets_np, n_bins=n_bins)
+
+    mean_vector = adapter.mean_model_vector()
+    mean_eval_model = deterministic_model.to(device)
+    layout.load_model_vector(mean_eval_model, mean_vector)
+    mean_probs, mean_targets = _predict_deterministic(mean_eval_model, loader, device)
+    posterior_mean = expected_calibration_error(mean_probs, mean_targets, n_bins=n_bins)
+    return predictive, posterior_mean, adapter.sigma_stats(), mean_vector
