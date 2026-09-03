@@ -67,15 +67,35 @@ def fola_local_precision(
     global_precision: np.ndarray,
     server_round: int,
     *,
+    initial_precision: float = 1.0,
     precision_min: float = 1e-8,
     precision_max: float = 1e8,
 ) -> np.ndarray:
-    """Eq. (24) from the online-Laplace FL paper, diagonal form."""
+    """Update diagonal FOLA precision while preserving the initial prior.
+
+    The paper's Eq. (25) contains a persistent ``gamma I`` prior term.  Since
+    ``global_precision`` stores the *total* precision (prior + accumulated
+    Fisher), update only the Fisher/history part and add the prior baseline
+    back explicitly.  For an N(0, 1) prior, ``initial_precision`` is 1.
+    """
     if server_round < 1:
         raise ValueError("server_round must be >= 1")
+    if initial_precision <= 0:
+        raise ValueError("initial_precision must be positive")
+
     r = float(server_round)
-    local = (np.asarray(fisher) / r) + ((r - 1.0) / r) * np.asarray(global_precision)
-    return np.clip(local, precision_min, precision_max)
+    fisher_arr = np.asarray(fisher, dtype=np.float64)
+    global_arr = np.asarray(global_precision, dtype=np.float64)
+    prior = float(initial_precision)
+
+    # If P_{r-1} = prior + average(F_1, ..., F_{r-1}), this recurrence gives
+    # P_r = prior + average(F_1, ..., F_r).  In particular, round 1 becomes
+    # P_1 = prior + F_1 instead of discarding the initial prior entirely.
+    history_without_prior = global_arr - prior
+    local = prior + (fisher_arr / r) + ((r - 1.0) / r) * history_without_prior
+    return np.clip(local, precision_min, precision_max).astype(
+        np.asarray(global_precision).dtype, copy=False
+    )
 
 
 def apply_precision_variance_floor(

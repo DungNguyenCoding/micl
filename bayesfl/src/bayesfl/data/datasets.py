@@ -45,9 +45,13 @@ def _labels_from_dataset(dataset) -> np.ndarray:
 def partition_stem(cfg: ExperimentConfig) -> str:
     p = cfg.data.partition
     if cfg.data.dataset == "cifar10":
+        avg = p.get("avg_samples_per_client", 100)
+        target = p.get("target_total_samples")
+        target_tag = f"_t{target}" if target is not None else ""
         return (
             f"cifar10_sparse_dirichlet_a{p.get('dirichlet_alpha', 0.1)}_"
-            f"c{p.get('classes_per_client', 4)}_n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
+            f"c{p.get('classes_per_client', 4)}_m{avg}{target_tag}_"
+            f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
         )
     return (
         f"mnist_dirichlet_lognormal_a{p.get('dirichlet_alpha', 0.3)}_"

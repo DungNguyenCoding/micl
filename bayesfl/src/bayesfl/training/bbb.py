@@ -110,6 +110,8 @@ def train_bbb(
     seen = 0
     correct = 0
     steps = 0
+    rho_grad_l2_sum = 0.0
+    rho_grad_nonzero_steps = 0
     num_batches = max(1, len(loader))
 
     for _ in range(cfg.training.local_epochs):
@@ -138,6 +140,16 @@ def train_bbb(
                 last_logits = logits
             mc_loss = mc_loss / float(cfg.bbb.mc_train)
             mc_loss.backward()
+
+            rho_grad_sq = 0.0
+            for name, param in model.named_parameters():
+                if "rho_" in name and param.grad is not None:
+                    rho_grad_sq += float(param.grad.detach().pow(2).sum())
+            rho_grad_l2 = rho_grad_sq ** 0.5
+            rho_grad_l2_sum += rho_grad_l2
+            if rho_grad_l2 > 0.0:
+                rho_grad_nonzero_steps += 1
+
             optimizer.step()
 
             batch = int(y.numel())
@@ -150,6 +162,16 @@ def train_bbb(
             steps += 1
 
     floor_fraction = apply_bbb_variance_floor(model, global_map, cfg.bbb.variance_floor_ratio)
+
+    rho_update_sq = 0.0
+    for name, param in model.named_parameters():
+        if "rho_" not in name:
+            continue
+        before = np.asarray(global_map[name], dtype=np.float64)
+        after = param.detach().cpu().numpy().astype(np.float64, copy=False)
+        delta = after - before
+        rho_update_sq += float(np.sum(delta * delta))
+
     return {
         "train_loss": objective_sum / max(1, seen),
         "task_loss": task_sum / max(1, seen),
@@ -161,4 +183,7 @@ def train_bbb(
         "bayesian_dimension": float(d),
         "lr": lr,
         "local_steps": float(steps),
+        "rho_grad_l2_mean": rho_grad_l2_sum / max(1, steps),
+        "rho_grad_nonzero_fraction": rho_grad_nonzero_steps / max(1, steps),
+        "rho_update_l2": float(rho_update_sq ** 0.5),
     }

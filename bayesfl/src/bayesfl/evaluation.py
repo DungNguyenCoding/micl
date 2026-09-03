@@ -43,7 +43,7 @@ class CentralEvaluator:
     def _collect_probabilities(
         self,
         parameters: Sequence[np.ndarray],
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray | None, np.ndarray | None]:
         method = self.cfg.method
         if method == "fola":
             mean_arrays, precision_arrays = unpack_fola(parameters, self.layout)
@@ -56,6 +56,7 @@ class CentralEvaluator:
         all_mean_probs: list[np.ndarray] = []
         all_labels: list[np.ndarray] = []
         all_sample_probs: list[np.ndarray] = []
+        all_point_probs: list[np.ndarray] = []
 
         if method == "bbb":
             mc = self.cfg.bbb.mc_eval
@@ -76,6 +77,18 @@ class CentralEvaluator:
 
         for x, y in self.test_loader:
             x = x.to(self.device, non_blocking=True)
+
+            # For FOLA, separately evaluate the posterior mean/MAP model.  The
+            # paper's global accuracy is based on the aggregated model mean, while
+            # Monte Carlo sampling is an additional uncertainty diagnostic here.
+            if method == "fola":
+                assert mean_tensors is not None and precision_tensors is not None
+                with torch.no_grad():
+                    for (_, param), mean in zip(self.model.named_parameters(), mean_tensors):
+                        param.copy_(mean)
+                point_logits = self.model(x)
+                all_point_probs.append(torch.softmax(point_logits, dim=1).cpu().numpy())
+
             samples = []
             for _ in range(mc):
                 if method == "fola":
@@ -104,18 +117,38 @@ class CentralEvaluator:
             sample_probs = np.concatenate(all_sample_probs, axis=1)
         else:
             sample_probs = None
-        return mean_probs, labels, sample_probs
+        point_probs = np.concatenate(all_point_probs, axis=0) if all_point_probs else None
+        return mean_probs, labels, sample_probs, point_probs
 
     def evaluate(self, server_round: int, parameters: Sequence[np.ndarray]) -> tuple[float, dict[str, float]]:
         # Reproducible posterior Monte Carlo evaluation for each communication round.
         seed_everything(self.cfg.runtime.seed + 99_991 * int(server_round))
-        mean_probs, labels, sample_probs = self._collect_probabilities(parameters)
+        mean_probs, labels, sample_probs, point_probs = self._collect_probabilities(parameters)
         metrics, ece = predictive_metric_bundle(
             mean_probs,
             labels,
             sample_probabilities=sample_probs,
             n_bins=15,
         )
+
+        if self.cfg.method == "fola":
+            if point_probs is None:  # pragma: no cover - defensive
+                raise RuntimeError("FOLA point probabilities were not collected")
+            point_metrics, _ = predictive_metric_bundle(
+                point_probs,
+                labels,
+                sample_probabilities=None,
+                n_bins=15,
+            )
+            # Keep the generic metrics as posterior-predictive (MC) metrics, and
+            # expose explicit mean/MAP metrics for algorithm sanity checking.
+            metrics["fola_mc_accuracy"] = metrics["accuracy"]
+            metrics["fola_mc_nll"] = metrics["nll"]
+            metrics["fola_mc_ece"] = metrics["ece"]
+            metrics["fola_mean_accuracy"] = point_metrics["accuracy"]
+            metrics["fola_mean_nll"] = point_metrics["nll"]
+            metrics["fola_mean_ece"] = point_metrics["ece"]
+
         metrics["round"] = float(server_round)
         self.metrics_recorder.append({"round": server_round, **metrics})
 
@@ -133,14 +166,26 @@ class CentralEvaluator:
         ):
             self._save_checkpoint(server_round, parameters)
 
-        self.logger.info(
-            "Round %d centralized eval: loss=%.6f acc=%.4f ece=%.4f mi=%.6f",
-            server_round,
-            metrics["nll"],
-            metrics["accuracy"],
-            metrics["ece"],
-            metrics["mutual_information"],
-        )
+        if self.cfg.method == "fola":
+            self.logger.info(
+                "Round %d centralized eval: mc_loss=%.6f mc_acc=%.4f "
+                "mean_acc=%.4f mc_ece=%.4f mi=%.6f",
+                server_round,
+                metrics["nll"],
+                metrics["fola_mc_accuracy"],
+                metrics["fola_mean_accuracy"],
+                metrics["fola_mc_ece"],
+                metrics["mutual_information"],
+            )
+        else:
+            self.logger.info(
+                "Round %d centralized eval: loss=%.6f acc=%.4f ece=%.4f mi=%.6f",
+                server_round,
+                metrics["nll"],
+                metrics["accuracy"],
+                metrics["ece"],
+                metrics["mutual_information"],
+            )
         flower_metrics = {k: float(v) for k, v in metrics.items() if k != "round"}
         return float(metrics["nll"]), flower_metrics
 

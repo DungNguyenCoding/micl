@@ -13,6 +13,11 @@ def test_gaussian_product_one_dimensional():
 
 def test_fola_round_formula():
     fisher = np.array([4.0, 8.0], dtype=np.float32)
-    prior = np.array([2.0, 2.0], dtype=np.float32)
-    out = fola_local_precision(fisher, prior, 2)
-    assert np.allclose(out, [3.0, 5.0])
+    global_precision = np.array([3.0, 3.0], dtype=np.float32)
+    out = fola_local_precision(
+        fisher,
+        global_precision,
+        2,
+        initial_precision=1.0,
+    )
+    assert np.allclose(out, [4.0, 6.0])

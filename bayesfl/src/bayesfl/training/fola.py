@@ -75,9 +75,14 @@ def train_fola(
                 create_graph=False,
                 allow_unused=True,
             )
+            # ``task_loss`` is a minibatch mean. Squaring its gradient directly
+            # under-scales the diagonal Fisher roughly by the batch size.
+            # Multiplying by B gives a practical O(d) minibatch approximation to
+            # the mean per-example squared gradient required by empirical Fisher.
+            batch_size = int(y.numel())
             for acc, grad in zip(fisher_accum, task_grads):
                 if grad is not None:
-                    acc.add_(grad.detach().pow(2))
+                    acc.add_(grad.detach().pow(2), alpha=float(batch_size))
 
             prior_loss = torch.zeros((), device=device)
             for p, mu_g, prec_g in zip(params, global_means, global_precs):
@@ -102,6 +107,7 @@ def train_fola(
             fisher,
             np.asarray(global_p),
             server_round,
+            initial_precision=cfg.fola.initial_precision,
             precision_min=cfg.fola.precision_min,
             precision_max=cfg.fola.precision_max,
         )
