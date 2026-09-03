@@ -67,6 +67,7 @@ class BBBConfig:
     variance_floor_ratio: float = 0.5
     rho_lr_multiplier: float = 0.1
     aggregation: str = "gaussian_product"
+    match_deterministic_init: bool = False
 
 
 @dataclass

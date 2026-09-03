@@ -14,7 +14,7 @@ from bayesfl.client import BayesFLNumPyClient
 from bayesfl.config import ExperimentConfig
 from bayesfl.data.datasets import load_test_loader
 from bayesfl.evaluation import CentralEvaluator
-from bayesfl.models.factory import build_model, count_bayesian_random_variables
+from bayesfl.models.factory import build_model, count_bayesian_random_variables, initialize_model
 from bayesfl.posterior.packing import ParameterLayout, initial_fola_state, model_to_ndarrays
 from bayesfl.strategies.research_strategy import ResearchStrategy
 from bayesfl.runtime_utils import seed_everything
@@ -30,7 +30,7 @@ def run_flower_simulation(
 ) -> None:
     # Make the initial server state reproducible across runs.
     seed_everything(cfg.runtime.seed)
-    initial_model = build_model(cfg)
+    initial_model = initialize_model(cfg)
     layout = ParameterLayout.from_model(initial_model)
     if cfg.method == "fola":
         initial_arrays = initial_fola_state(initial_model, cfg.fola.initial_precision)

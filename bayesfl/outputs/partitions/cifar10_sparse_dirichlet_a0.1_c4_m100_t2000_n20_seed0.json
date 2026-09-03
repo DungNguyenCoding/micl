@@ -1,0 +1,18 @@
+{
+  "avg_samples_per_client_config": 100.0,
+  "class_draws_exhausted": 0,
+  "classes_per_client_config": 4,
+  "dirichlet_alpha": 0.1,
+  "empty_client_backfills": 0,
+  "max_size": 124,
+  "mean_classes_per_client": 4.0,
+  "mean_size": 100.0,
+  "min_size": 82,
+  "num_classes": 10,
+  "num_clients": 20,
+  "num_empty_clients_after_backfill": 0,
+  "seed": 0,
+  "sha256": "b185343a9105fe70d761d8f4507625fbdde424198fa15167c44b0c5745053b2d",
+  "total_samples_used": 2000,
+  "type": "sparse_dirichlet"
+}

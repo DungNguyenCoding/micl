@@ -19,12 +19,12 @@ data:
     type: sparse_dirichlet
     dirichlet_alpha: 0.1
     classes_per_client: 4
-    avg_samples_per_client: 512
+    avg_samples_per_client: 100
     min_samples_per_client: 1
-    target_total_samples: 2048
+    target_total_samples: 2000
 federation:
-  num_clients: 4
-  clients_per_round: 4
+  num_clients: 20
+  clients_per_round: 20
 model:
   name: resnet56_gn8
   group_norm_groups: 8
@@ -34,7 +34,7 @@ training:
   momentum: 0.9
   weight_decay: 0.0
   batch_size: 128
-  local_epochs: 2
+  local_epochs: 5
   rounds: 5
   lr_schedule: cosine
   lr_min: 0.0001

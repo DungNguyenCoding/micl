@@ -134,20 +134,51 @@ class CentralEvaluator:
         if self.cfg.method == "fola":
             if point_probs is None:  # pragma: no cover - defensive
                 raise RuntimeError("FOLA point probabilities were not collected")
-            point_metrics, _ = predictive_metric_bundle(
+
+            # Preserve posterior-predictive MC metrics as uncertainty diagnostics.
+            mc_metrics = dict(metrics)
+
+            # Paper-faithful FOLA performance is evaluated at the aggregated
+            # posterior mean/MAP model theta = mu_S.
+            point_metrics, point_ece = predictive_metric_bundle(
                 point_probs,
                 labels,
                 sample_probabilities=None,
                 n_bins=15,
             )
-            # Keep the generic metrics as posterior-predictive (MC) metrics, and
-            # expose explicit mean/MAP metrics for algorithm sanity checking.
-            metrics["fola_mc_accuracy"] = metrics["accuracy"]
-            metrics["fola_mc_nll"] = metrics["nll"]
-            metrics["fola_mc_ece"] = metrics["ece"]
-            metrics["fola_mean_accuracy"] = point_metrics["accuracy"]
-            metrics["fola_mean_nll"] = point_metrics["nll"]
-            metrics["fola_mean_ece"] = point_metrics["ece"]
+
+            tracked = (
+                "accuracy",
+                "nll",
+                "brier",
+                "ece",
+                "mce",
+                "mean_confidence",
+                "predictive_entropy",
+                "expected_entropy",
+            )
+
+            for key in tracked:
+                metrics[f"fola_mc_{key}"] = mc_metrics[key]
+                metrics[f"fola_mean_{key}"] = point_metrics[key]
+
+            # Keep MC mutual information as an explicit Bayesian diagnostic.
+            metrics["fola_mc_mutual_information"] = mc_metrics[
+                "mutual_information"
+            ]
+
+            # Generic performance fields are the FOLA posterior-mean model.
+            # This makes Flower summaries and standard plots paper-faithful.
+            for key in tracked:
+                metrics[key] = point_metrics[key]
+
+            # Preserve MC epistemic uncertainty in the generic MI field too.
+            metrics["mutual_information"] = mc_metrics[
+                "mutual_information"
+            ]
+
+            # Main reliability diagram corresponds to the reported mean model.
+            ece = point_ece
 
         metrics["round"] = float(server_round)
         self.metrics_recorder.append({"round": server_round, **metrics})
@@ -168,14 +199,17 @@ class CentralEvaluator:
 
         if self.cfg.method == "fola":
             self.logger.info(
-                "Round %d centralized eval: mc_loss=%.6f mc_acc=%.4f "
-                "mean_acc=%.4f mc_ece=%.4f mi=%.6f",
+                "Round %d centralized eval: "
+                "mean_loss=%.6f mean_acc=%.4f mean_ece=%.4f "
+                "mc_acc=%.4f mc_nll=%.6f mc_ece=%.4f mi=%.6f",
                 server_round,
                 metrics["nll"],
+                metrics["accuracy"],
+                metrics["ece"],
                 metrics["fola_mc_accuracy"],
-                metrics["fola_mean_accuracy"],
+                metrics["fola_mc_nll"],
                 metrics["fola_mc_ece"],
-                metrics["mutual_information"],
+                metrics["fola_mc_mutual_information"],
             )
         else:
             self.logger.info(

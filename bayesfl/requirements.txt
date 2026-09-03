@@ -3,7 +3,7 @@
 #   torchvision 0.22.x built for the same CUDA/PyTorch stack
 # Installing torch from this file is intentionally avoided so pip does not
 # replace the working CUDA 12.8 build.
-flwr[simulation]==1.30.0
+flwr[simulation]==1.29.0
 bayesian-torch==0.5.0
 PyYAML>=6.0,<7
 numpy>=1.26,<3
