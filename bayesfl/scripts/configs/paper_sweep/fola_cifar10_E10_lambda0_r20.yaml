@@ -1,5 +1,5 @@
-run_name: bbb_cifar10_paper_env_keep_optim
-method: bbb
+run_name: paper_sweep_fola_cifar10_E10_lambda0_r20
+method: fola
 data:
   dataset: cifar10
   root: ./data
@@ -35,7 +35,7 @@ training:
   weight_decay: 0.0
   batch_size: 128
   local_epochs: 10
-  rounds: 300
+  rounds: 20
   lr_schedule: cosine
   lr_min: 0.0001
   lr_decay_rounds: 400
@@ -61,7 +61,7 @@ bbb:
   aggregation: gaussian_product
   match_deterministic_init: false
 fola:
-  prior_lambda: 100.0
+  prior_lambda: 0.0
   lambda_scale_by_size: false
   mc_eval: 5
   variance_floor_ratio: 0.5

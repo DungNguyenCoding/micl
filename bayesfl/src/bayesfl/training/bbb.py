@@ -129,6 +129,9 @@ def train_bbb(
                 task_loss = F.cross_entropy(logits, y, reduction="mean")
                 complexity = bbb_complexity_cost(
                     model,
+                    prior_type=cfg.bbb.prior_type,
+                    prior_mean=cfg.bbb.prior_mean,
+                    prior_sigma=cfg.bbb.prior_sigma,
                     pi=cfg.bbb.prior_pi,
                     sigma1=cfg.bbb.prior_sigma1,
                     sigma2=cfg.bbb.prior_sigma2,
@@ -150,6 +153,8 @@ def train_bbb(
             if rho_grad_l2 > 0.0:
                 rho_grad_nonzero_steps += 1
 
+            if cfg.training.grad_clip_norm is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.training.grad_clip_norm)
             optimizer.step()
 
             batch = int(y.numel())

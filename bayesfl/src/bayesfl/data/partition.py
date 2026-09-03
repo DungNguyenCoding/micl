@@ -219,3 +219,84 @@ def load_partition(npz_path: str | Path) -> list[np.ndarray]:
     with np.load(npz_path, allow_pickle=False) as data:
         keys = sorted(data.files)
         return [np.asarray(data[key], dtype=np.int64) for key in keys]
+
+
+def build_paper_dirichlet_indices(
+    labels: np.ndarray,
+    *,
+    num_clients: int,
+    num_classes: int,
+    alpha: float,
+    seed: int,
+) -> PartitionResult:
+    """Reproduce the CIFAR class-wise Dirichlet partition from the authors' code.
+
+    For each class, a Dirichlet vector allocates a fraction of that class to
+    every client.  Integer flooring is applied client-by-client, exactly as in
+    the released ``dirichlet_data.py`` logic.  This intentionally differs from
+    the project's old sparse four-class/Poisson partition.
+    """
+    if alpha <= 0:
+        raise ValueError("alpha must be positive")
+    rng = np.random.RandomState(int(seed))
+
+    class_indices = [
+        np.flatnonzero(labels == c).astype(np.int64)
+        for c in range(num_classes)
+    ]
+    # sample_matrix[client, class], same orientation as the released code after .T
+    sample_matrix = rng.dirichlet(
+        np.full(num_clients, float(alpha), dtype=np.float64),
+        size=num_classes,
+    ).T
+
+    cursor = np.zeros(num_classes, dtype=np.int64)
+    partitions: list[np.ndarray] = []
+    empty_backfills = 0
+
+    for cid in range(num_clients):
+        chunks: list[np.ndarray] = []
+        for c in range(num_classes):
+            start = int(cursor[c])
+            count = int(len(class_indices[c]) * float(sample_matrix[cid, c]))
+            end = min(start + count, len(class_indices[c]))
+            if end > start:
+                chunks.append(class_indices[c][start:end])
+            cursor[c] = end
+
+        if chunks:
+            arr = np.concatenate(chunks).astype(np.int64, copy=False)
+        else:
+            # The reference implementation backfills an empty client with the
+            # first example of class 0.  Preserve that behavior for fidelity.
+            arr = class_indices[0][0:1].copy()
+            empty_backfills += 1
+        partitions.append(arr)
+
+    realized_sizes = np.asarray([len(p) for p in partitions], dtype=np.int64)
+    realized_classes = [len(np.unique(labels[p])) for p in partitions]
+    unique_used = len(np.unique(np.concatenate(partitions))) if partitions else 0
+    unassigned_per_class = [
+        int(len(class_indices[c]) - cursor[c]) for c in range(num_classes)
+    ]
+    metadata = {
+        "type": "paper_dirichlet",
+        "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+        "seed": int(seed),
+        "num_clients": int(num_clients),
+        "num_classes": int(num_classes),
+        "dirichlet_alpha": float(alpha),
+        "total_samples_used": int(realized_sizes.sum()),
+        "total_unique_samples_used": int(unique_used),
+        "total_unassigned_samples": int(sum(unassigned_per_class)),
+        "unassigned_per_class": unassigned_per_class,
+        "mean_size": float(realized_sizes.mean()),
+        "min_size": int(realized_sizes.min()),
+        "max_size": int(realized_sizes.max()),
+        "mean_classes_per_client": float(np.mean(realized_classes)),
+        "empty_client_backfills": int(empty_backfills),
+        "num_empty_clients_after_backfill": int(np.sum(realized_sizes == 0)),
+        "class_draws_exhausted": 0,
+    }
+    metadata["sha256"] = _hash_partitions(partitions)
+    return PartitionResult(partitions, metadata)

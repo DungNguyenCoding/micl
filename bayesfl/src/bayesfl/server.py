@@ -14,7 +14,7 @@ from bayesfl.client import BayesFLNumPyClient
 from bayesfl.config import ExperimentConfig
 from bayesfl.data.datasets import load_test_loader
 from bayesfl.evaluation import CentralEvaluator
-from bayesfl.models.factory import build_model, count_bayesian_random_variables, initialize_model
+from bayesfl.models.factory import count_bayesian_random_variables, initialize_model
 from bayesfl.posterior.packing import ParameterLayout, initial_fola_state, model_to_ndarrays
 from bayesfl.strategies.research_strategy import ResearchStrategy
 from bayesfl.runtime_utils import seed_everything
@@ -28,7 +28,6 @@ def run_flower_simulation(
     run_dir: Path,
     logger,
 ) -> None:
-    # Make the initial server state reproducible across runs.
     seed_everything(cfg.runtime.seed)
     initial_model = initialize_model(cfg)
     layout = ParameterLayout.from_model(initial_model)
@@ -40,12 +39,21 @@ def run_flower_simulation(
     if cfg.method == "bbb":
         d = count_bayesian_random_variables(initial_model)
         logger.info(
-            "BBB Bayesian dimension=%d resolved_kl_weight=%.12g",
+            "BBB Bayesian dimension=%d kl_reference_dimension=%s resolved_kl_weight=%.12g",
             d,
+            str(cfg.bbb.kl_reference_dimension or d),
             cfg.resolved_kl_weight(d),
         )
-        if cfg.data.dataset == "cifar10" and d != 851_514:
-            raise RuntimeError(f"CIFAR-10 Bayesian dimension must be 851,514, got {d:,}")
+        expected = None
+        if cfg.data.dataset == "cifar10":
+            if cfg.model.name == "resnet56_gn8":
+                expected = 851_514
+            elif cfg.model.name == "paper_basiccnn":
+                expected = 878_538
+        if expected is not None and d != expected:
+            raise RuntimeError(
+                f"{cfg.model.name} Bayesian dimension must be {expected:,}, got {d:,}"
+            )
 
     test_loader = load_test_loader(cfg)
     evaluator = CentralEvaluator(cfg, test_loader, run_dir, logger=logger)

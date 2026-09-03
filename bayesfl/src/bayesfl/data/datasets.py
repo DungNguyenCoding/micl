@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Tuple
 
 import numpy as np
 import torch
@@ -15,6 +14,7 @@ from torchvision import datasets
 from bayesfl.config import ExperimentConfig
 from .partition import (
     build_mnist_dirichlet_lognormal_indices,
+    build_paper_dirichlet_indices,
     build_sparse_dirichlet_indices,
     load_partition,
     save_partition,
@@ -45,11 +45,18 @@ def _labels_from_dataset(dataset) -> np.ndarray:
 def partition_stem(cfg: ExperimentConfig) -> str:
     p = cfg.data.partition
     if cfg.data.dataset == "cifar10":
+        kind = str(p.get("type", "sparse_dirichlet")).lower()
+        alpha = p.get("dirichlet_alpha", 0.1)
+        if kind == "paper_dirichlet":
+            return (
+                f"cifar10_paper_dirichlet_a{alpha}_"
+                f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
+            )
         avg = p.get("avg_samples_per_client", 100)
         target = p.get("target_total_samples")
         target_tag = f"_t{target}" if target is not None else ""
         return (
-            f"cifar10_sparse_dirichlet_a{p.get('dirichlet_alpha', 0.1)}_"
+            f"cifar10_sparse_dirichlet_a{alpha}_"
             f"c{p.get('classes_per_client', 4)}_m{avg}{target_tag}_"
             f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
         )
@@ -73,17 +80,29 @@ def prepare_partition(cfg: ExperimentConfig) -> tuple[Path, dict]:
     labels = _labels_from_dataset(raw)
     part = cfg.data.partition
     if cfg.data.dataset == "cifar10":
-        result = build_sparse_dirichlet_indices(
-            labels,
-            num_clients=cfg.federation.num_clients,
-            num_classes=cfg.data.num_classes,
-            alpha=float(part.get("dirichlet_alpha", 0.1)),
-            avg_samples_per_client=float(part.get("avg_samples_per_client", 100)),
-            classes_per_client=int(part.get("classes_per_client", 4)),
-            min_samples_per_client=int(part.get("min_samples_per_client", 1)),
-            seed=cfg.runtime.seed,
-            target_total_samples=part.get("target_total_samples"),
-        )
+        kind = str(part.get("type", "sparse_dirichlet")).lower()
+        if kind == "paper_dirichlet":
+            result = build_paper_dirichlet_indices(
+                labels,
+                num_clients=cfg.federation.num_clients,
+                num_classes=cfg.data.num_classes,
+                alpha=float(part.get("dirichlet_alpha", 0.01)),
+                seed=cfg.runtime.seed,
+            )
+        elif kind == "sparse_dirichlet":
+            result = build_sparse_dirichlet_indices(
+                labels,
+                num_clients=cfg.federation.num_clients,
+                num_classes=cfg.data.num_classes,
+                alpha=float(part.get("dirichlet_alpha", 0.1)),
+                avg_samples_per_client=float(part.get("avg_samples_per_client", 100)),
+                classes_per_client=int(part.get("classes_per_client", 4)),
+                min_samples_per_client=int(part.get("min_samples_per_client", 1)),
+                seed=cfg.runtime.seed,
+                target_total_samples=part.get("target_total_samples"),
+            )
+        else:
+            raise ValueError(f"Unknown CIFAR partition type: {kind}")
     else:
         result = build_mnist_dirichlet_lognormal_indices(
             labels,
@@ -105,11 +124,14 @@ def _cached_transformed_dataset(
     train: bool,
     augment: bool,
     crop_padding: int,
+    crop_fill: int,
     random_flip: bool,
+    autoaugment_policy: str,
+    cutout_holes: int,
+    cutout_length: int,
     mean: tuple[float, ...],
     std: tuple[float, ...],
 ):
-    # Rebuild a small config-like object only to construct transforms.
     from bayesfl.config import DataConfig
 
     cfg = DataConfig(
@@ -117,12 +139,33 @@ def _cached_transformed_dataset(
         root=root,
         augment=augment,
         crop_padding=crop_padding,
+        crop_fill=crop_fill,
         random_flip=random_flip,
+        autoaugment_policy=autoaugment_policy,
+        cutout_holes=cutout_holes,
+        cutout_length=cutout_length,
         normalize_mean=list(mean),
         normalize_std=list(std),
     )
     cls = _dataset_class(dataset_name)
     return cls(root=root, train=train, download=False, transform=build_transform(cfg, train=train))
+
+
+def _dataset_args(cfg: ExperimentConfig, *, train: bool):
+    return (
+        cfg.data.dataset,
+        str(Path(cfg.data.root).resolve()),
+        train,
+        cfg.data.augment if train else False,
+        cfg.data.crop_padding,
+        cfg.data.crop_fill,
+        cfg.data.random_flip if train else False,
+        cfg.data.autoaugment_policy if train else "none",
+        cfg.data.cutout_holes if train else 0,
+        cfg.data.cutout_length,
+        tuple(cfg.data.normalize_mean),
+        tuple(cfg.data.normalize_std),
+    )
 
 
 def load_client_loader(
@@ -135,16 +178,7 @@ def load_client_loader(
     parts = load_partition(partition_path)
     if client_id < 0 or client_id >= len(parts):
         raise IndexError(f"client_id {client_id} outside [0, {len(parts)})")
-    dataset = _cached_transformed_dataset(
-        cfg.data.dataset,
-        str(Path(cfg.data.root).resolve()),
-        True,
-        cfg.data.augment,
-        cfg.data.crop_padding,
-        cfg.data.random_flip,
-        tuple(cfg.data.normalize_mean),
-        tuple(cfg.data.normalize_std),
-    )
+    dataset = _cached_transformed_dataset(*_dataset_args(cfg, train=True))
     subset = Subset(dataset, parts[client_id].tolist())
     generator = torch.Generator()
     if shuffle_seed is None:
@@ -163,17 +197,7 @@ def load_client_loader(
 
 
 def load_test_loader(cfg: ExperimentConfig, batch_size: int = 512) -> DataLoader:
-    # Download=False is safe because prepare_partition downloads the same dataset archive.
-    dataset = _cached_transformed_dataset(
-        cfg.data.dataset,
-        str(Path(cfg.data.root).resolve()),
-        False,
-        False,
-        cfg.data.crop_padding,
-        False,
-        tuple(cfg.data.normalize_mean),
-        tuple(cfg.data.normalize_std),
-    )
+    dataset = _cached_transformed_dataset(*_dataset_args(cfg, train=False))
     return DataLoader(
         dataset,
         batch_size=batch_size,

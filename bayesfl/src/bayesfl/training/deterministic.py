@@ -39,6 +39,8 @@ def train_fedavg(
             logits = model(x)
             loss = torch.nn.functional.cross_entropy(logits, y)
             loss.backward()
+            if cfg.training.grad_clip_norm is not None:
+                torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.training.grad_clip_norm)
             optimizer.step()
             batch = int(y.numel())
             loss_sum += float(loss.detach()) * batch

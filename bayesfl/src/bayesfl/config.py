@@ -18,7 +18,11 @@ class DataConfig:
     num_classes: int = 10
     augment: bool = False
     crop_padding: int = 4
+    crop_fill: int = 0
     random_flip: bool = True
+    autoaugment_policy: str = "none"
+    cutout_holes: int = 0
+    cutout_length: int = 16
     normalize_mean: list[float] = field(default_factory=lambda: [0.1307])
     normalize_std: list[float] = field(default_factory=lambda: [0.3081])
     partition: Dict[str, Any] = field(default_factory=dict)
@@ -48,16 +52,28 @@ class TrainingConfig:
     lr_schedule: str = "cosine"
     lr_min: float = 0.0001
     lr_decay_rounds: int = 100
+    grad_clip_norm: Optional[float] = None
 
 
 @dataclass
 class BBBConfig:
     posterior_mu_init: float = 0.0
     posterior_rho_init: float = -3.0
+    # BBB prior is configurable so the CIFAR paper-environment extension can
+    # keep the requested standard Normal N(0,1) prior while MNIST can retain
+    # the existing scale-mixture prior if desired.
+    prior_type: str = "scale_mixture"
+    prior_mean: float = 0.0
+    prior_sigma: float = 1.0
     prior_pi: float = 0.5
     prior_sigma1: float = 1.0
     prior_sigma2: float = math.exp(-6.0)
     kl_weight: Optional[float] = None
+    # Optional denominator override used only when kl_weight is null.
+    # This is needed for the hybrid CIFAR profile: the paper BasicCNN has
+    # 878,538 Bayesian variables, but the user explicitly asked to preserve
+    # the historical 1/851,514 KL normalization.
+    kl_reference_dimension: Optional[int] = None
     kl_scheme: str = "equal_minibatch"
     kl_weight_schedule: bool = False
     kl_warmup_rounds: int = 20
@@ -67,6 +83,8 @@ class BBBConfig:
     variance_floor_ratio: float = 0.5
     rho_lr_multiplier: float = 0.1
     aggregation: str = "gaussian_product"
+    # Required for the paper BasicCNN comparison so BBB starts from the same
+    # Xavier point as deterministic FedAvg/FOLA. BBB itself is not in the FOLA paper.
     match_deterministic_init: bool = False
 
 
@@ -79,6 +97,13 @@ class FOLAConfig:
     precision_min: float = 1e-8
     precision_max: float = 1e8
     initial_precision: float = 1.0
+    # online_recurrence preserves the existing project implementation.
+    # paper_reference reproduces the released CIFAR implementation semantics:
+    # omega starts at zero, accumulates task-gradient squares online, and the
+    # server performs omega-weighted Gaussian-product aggregation.
+    mode: str = "online_recurrence"
+    aggregation_epsilon: float = 1e-5
+    paper_mean_only_eval: bool = False
 
 
 @dataclass
@@ -115,6 +140,9 @@ class ExperimentConfig:
     def validate(self) -> None:
         self.method = self.method.lower()
         self.data.dataset = self.data.dataset.lower()
+        self.data.autoaugment_policy = self.data.autoaugment_policy.lower()
+        self.fola.mode = self.fola.mode.lower()
+
         if self.method not in {"fedavg", "bbb", "fola"}:
             raise ValueError(f"Unsupported method: {self.method}")
         if self.data.dataset not in {"mnist", "cifar10"}:
@@ -127,19 +155,44 @@ class ExperimentConfig:
             raise ValueError("rounds and local_epochs must be positive")
         if self.training.lr_decay_rounds < 1:
             raise ValueError("lr_decay_rounds must be positive")
+        if self.training.grad_clip_norm is not None and self.training.grad_clip_norm <= 0:
+            raise ValueError("grad_clip_norm must be positive when provided")
         if self.bbb.mc_train < 1 or self.bbb.mc_eval < 1 or self.fola.mc_eval < 1:
             raise ValueError("Monte Carlo sample counts must be positive")
+        self.bbb.prior_type = self.bbb.prior_type.lower()
+        if self.bbb.prior_type not in {"scale_mixture", "standard_normal", "normal"}:
+            raise ValueError("bbb.prior_type must be scale_mixture, standard_normal, or normal")
+        if self.bbb.prior_sigma <= 0:
+            raise ValueError("BBB prior_sigma must be positive")
         if not 0.0 < self.bbb.prior_pi < 1.0:
             raise ValueError("BBB prior_pi must be in (0, 1)")
         if self.bbb.prior_sigma1 <= 0 or self.bbb.prior_sigma2 <= 0:
             raise ValueError("BBB prior sigmas must be positive")
+        if self.bbb.kl_reference_dimension is not None and self.bbb.kl_reference_dimension <= 0:
+            raise ValueError("bbb.kl_reference_dimension must be positive when provided")
         if self.bbb.aggregation not in {"gaussian_product", "fedavg_variational"}:
             raise ValueError("bbb.aggregation must be gaussian_product or fedavg_variational")
+        if self.fola.mode not in {"online_recurrence", "paper_reference"}:
+            raise ValueError("fola.mode must be online_recurrence or paper_reference")
+        if self.fola.initial_precision < 0:
+            raise ValueError("fola.initial_precision must be >= 0")
+        if self.fola.aggregation_epsilon <= 0:
+            raise ValueError("fola.aggregation_epsilon must be > 0")
         for ratio in (self.bbb.variance_floor_ratio, self.fola.variance_floor_ratio):
             if ratio <= 0:
                 raise ValueError("variance_floor_ratio must be > 0")
-        if self.data.dataset == "cifar10" and self.model.name != "resnet56_gn8":
-            raise ValueError("CIFAR-10 baseline expects model.name=resnet56_gn8")
+        if self.data.autoaugment_policy not in {"none", "cifar10"}:
+            raise ValueError("autoaugment_policy must be none or cifar10")
+        if self.data.cutout_holes < 0 or self.data.cutout_length < 1:
+            raise ValueError("cutout settings are invalid")
+
+        if self.data.dataset == "cifar10" and self.model.name not in {
+            "resnet56_gn8",
+            "paper_basiccnn",
+        }:
+            raise ValueError(
+                "CIFAR-10 model.name must be resnet56_gn8 or paper_basiccnn"
+            )
         if self.data.dataset == "mnist" and self.model.name != "mlp_784_500_300_10":
             raise ValueError("MNIST baseline expects model.name=mlp_784_500_300_10")
 
@@ -148,7 +201,12 @@ class ExperimentConfig:
             return float(self.bbb.kl_weight)
         if bayesian_dimension <= 0:
             raise ValueError("bayesian_dimension must be positive")
-        return 1.0 / float(bayesian_dimension)
+        denominator = (
+            int(self.bbb.kl_reference_dimension)
+            if self.bbb.kl_reference_dimension is not None
+            else int(bayesian_dimension)
+        )
+        return 1.0 / float(denominator)
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

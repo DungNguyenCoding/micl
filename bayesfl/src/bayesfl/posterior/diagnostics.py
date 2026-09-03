@@ -89,15 +89,16 @@ def fola_posterior_summary(
     numel = 0
     for mean, precision in zip(means, precisions):
         mean64 = np.asarray(mean, dtype=np.float64)
-        p = np.maximum(np.asarray(precision, dtype=np.float64), precision_min)
+        raw_p = np.asarray(precision, dtype=np.float64)
+        p = np.maximum(raw_p, precision_min)
         count = int(mean64.size)
         if not count:
             continue
         mean_abs_sum += float(np.sum(np.abs(mean64)))
-        precision_sum += float(np.sum(p))
+        precision_sum += float(np.sum(raw_p))
         sigma_sum += float(np.sum(1.0 / np.sqrt(p)))
-        precision_min_seen = min(precision_min_seen, float(np.min(p)))
-        precision_max_seen = max(precision_max_seen, float(np.max(p)))
+        precision_min_seen = min(precision_min_seen, float(np.min(raw_p)))
+        precision_max_seen = max(precision_max_seen, float(np.max(raw_p)))
         numel += count
     if numel == 0:
         return {}

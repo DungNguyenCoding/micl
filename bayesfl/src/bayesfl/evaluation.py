@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Sequence
 
 import numpy as np
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 
 from bayesfl.config import ExperimentConfig
 from bayesfl.logging_utils import CsvRecorder
 from bayesfl.metrics import predictive_metric_bundle
-from bayesfl.models.factory import build_model, count_bayesian_random_variables
+from bayesfl.models.factory import build_model
 from bayesfl.posterior.gaussian import softplus_np
 from bayesfl.posterior.packing import ParameterLayout, ndarrays_to_model, unpack_fola
 from bayesfl.runtime_utils import resolve_device, seed_everything
@@ -53,7 +51,7 @@ class CentralEvaluator:
             precision_arrays = None
 
         self.model.eval()
-        all_mean_probs: list[np.ndarray] = []
+        all_primary_probs: list[np.ndarray] = []
         all_labels: list[np.ndarray] = []
         all_sample_probs: list[np.ndarray] = []
         all_point_probs: list[np.ndarray] = []
@@ -61,7 +59,7 @@ class CentralEvaluator:
         if method == "bbb":
             mc = self.cfg.bbb.mc_eval
         elif method == "fola":
-            mc = self.cfg.fola.mc_eval
+            mc = 1 if self.cfg.fola.paper_mean_only_eval else self.cfg.fola.mc_eval
         else:
             mc = 1
 
@@ -69,116 +67,103 @@ class CentralEvaluator:
         precision_tensors = None
         if method == "fola":
             params = [p for _, p in self.model.named_parameters()]
-            mean_tensors = [torch.as_tensor(a, device=self.device, dtype=p.dtype) for p, a in zip(params, mean_arrays)]
+            mean_tensors = [
+                torch.as_tensor(a, device=self.device, dtype=p.dtype)
+                for p, a in zip(params, mean_arrays)
+            ]
             precision_tensors = [
-                torch.as_tensor(a, device=self.device, dtype=p.dtype).clamp_min(self.cfg.fola.precision_min)
+                torch.as_tensor(a, device=self.device, dtype=p.dtype).clamp_min(
+                    self.cfg.fola.precision_min
+                )
                 for p, a in zip(params, precision_arrays)
             ]
 
         for x, y in self.test_loader:
             x = x.to(self.device, non_blocking=True)
 
-            # For FOLA, separately evaluate the posterior mean/MAP model.  The
-            # paper's global accuracy is based on the aggregated model mean, while
-            # Monte Carlo sampling is an additional uncertainty diagnostic here.
             if method == "fola":
                 assert mean_tensors is not None and precision_tensors is not None
-                with torch.no_grad():
-                    for (_, param), mean in zip(self.model.named_parameters(), mean_tensors):
-                        param.copy_(mean)
+                for (_, param), mean in zip(self.model.named_parameters(), mean_tensors):
+                    param.copy_(mean)
                 point_logits = self.model(x)
-                all_point_probs.append(torch.softmax(point_logits, dim=1).cpu().numpy())
+                point_probs = torch.softmax(point_logits, dim=1)
+                all_point_probs.append(point_probs.cpu().numpy())
+
+                if self.cfg.fola.paper_mean_only_eval:
+                    # The paper reports global accuracy of the aggregated mode,
+                    # not Monte Carlo samples from the Laplace covariance.
+                    all_primary_probs.append(point_probs.cpu().numpy())
+                    all_labels.append(y.numpy())
+                    continue
 
             samples = []
             for _ in range(mc):
                 if method == "fola":
                     assert mean_tensors is not None and precision_tensors is not None
-                    with torch.no_grad():
-                        for (_, param), mean, precision in zip(
-                            self.model.named_parameters(), mean_tensors, precision_tensors
-                        ):
-                            param.copy_(mean + torch.randn_like(mean) * torch.rsqrt(precision))
+                    for (_, param), mean, precision in zip(
+                        self.model.named_parameters(), mean_tensors, precision_tensors
+                    ):
+                        param.copy_(mean + torch.randn_like(mean) * torch.rsqrt(precision))
                 logits = self.model(x)
                 samples.append(torch.softmax(logits, dim=1))
+
             stack = torch.stack(samples, dim=0)
-            all_mean_probs.append(stack.mean(dim=0).cpu().numpy())
+            all_primary_probs.append(stack.mean(dim=0).cpu().numpy())
             all_labels.append(y.numpy())
             if mc > 1:
                 all_sample_probs.append(stack.cpu().numpy())
 
-        # Restore posterior mean after FOLA sampling.
         if method == "fola":
             ndarrays_to_model(self.model, mean_arrays)
 
-        mean_probs = np.concatenate(all_mean_probs, axis=0)
+        primary_probs = np.concatenate(all_primary_probs, axis=0)
         labels = np.concatenate(all_labels, axis=0)
-        if mc > 1:
-            # list of [S,B,C] -> [S,N,C]
-            sample_probs = np.concatenate(all_sample_probs, axis=1)
-        else:
-            sample_probs = None
+        sample_probs = (
+            np.concatenate(all_sample_probs, axis=1) if all_sample_probs else None
+        )
         point_probs = np.concatenate(all_point_probs, axis=0) if all_point_probs else None
-        return mean_probs, labels, sample_probs, point_probs
+        return primary_probs, labels, sample_probs, point_probs
 
     def evaluate(self, server_round: int, parameters: Sequence[np.ndarray]) -> tuple[float, dict[str, float]]:
-        # Reproducible posterior Monte Carlo evaluation for each communication round.
         seed_everything(self.cfg.runtime.seed + 99_991 * int(server_round))
-        mean_probs, labels, sample_probs, point_probs = self._collect_probabilities(parameters)
-        metrics, ece = predictive_metric_bundle(
-            mean_probs,
-            labels,
-            sample_probabilities=sample_probs,
-            n_bins=15,
-        )
+        primary_probs, labels, sample_probs, point_probs = self._collect_probabilities(parameters)
 
-        if self.cfg.method == "fola":
-            if point_probs is None:  # pragma: no cover - defensive
+        if self.cfg.method != "fola":
+            metrics, ece = predictive_metric_bundle(
+                primary_probs,
+                labels,
+                sample_probabilities=sample_probs,
+                n_bins=15,
+            )
+        else:
+            if point_probs is None:  # pragma: no cover
                 raise RuntimeError("FOLA point probabilities were not collected")
-
-            # Preserve posterior-predictive MC metrics as uncertainty diagnostics.
-            mc_metrics = dict(metrics)
-
-            # Paper-faithful FOLA performance is evaluated at the aggregated
-            # posterior mean/MAP model theta = mu_S.
-            point_metrics, point_ece = predictive_metric_bundle(
+            point_metrics, ece = predictive_metric_bundle(
                 point_probs,
                 labels,
                 sample_probabilities=None,
                 n_bins=15,
             )
+            metrics = dict(point_metrics)
+            metrics["fola_mean_accuracy"] = point_metrics["accuracy"]
+            metrics["fola_mean_nll"] = point_metrics["nll"]
+            metrics["fola_mean_brier"] = point_metrics["brier"]
+            metrics["fola_mean_ece"] = point_metrics["ece"]
+            metrics["fola_mean_mce"] = point_metrics["mce"]
+            metrics["fola_mean_mean_confidence"] = point_metrics["mean_confidence"]
+            metrics["fola_mean_predictive_entropy"] = point_metrics["predictive_entropy"]
+            metrics["fola_mean_expected_entropy"] = point_metrics["expected_entropy"]
+            metrics["fola_mean_mutual_information"] = point_metrics["mutual_information"]
 
-            tracked = (
-                "accuracy",
-                "nll",
-                "brier",
-                "ece",
-                "mce",
-                "mean_confidence",
-                "predictive_entropy",
-                "expected_entropy",
-            )
-
-            for key in tracked:
-                metrics[f"fola_mc_{key}"] = mc_metrics[key]
-                metrics[f"fola_mean_{key}"] = point_metrics[key]
-
-            # Keep MC mutual information as an explicit Bayesian diagnostic.
-            metrics["fola_mc_mutual_information"] = mc_metrics[
-                "mutual_information"
-            ]
-
-            # Generic performance fields are the FOLA posterior-mean model.
-            # This makes Flower summaries and standard plots paper-faithful.
-            for key in tracked:
-                metrics[key] = point_metrics[key]
-
-            # Preserve MC epistemic uncertainty in the generic MI field too.
-            metrics["mutual_information"] = mc_metrics[
-                "mutual_information"
-            ]
-
-            # Main reliability diagram corresponds to the reported mean model.
-            ece = point_ece
+            if not self.cfg.fola.paper_mean_only_eval:
+                mc_metrics, _ = predictive_metric_bundle(
+                    primary_probs,
+                    labels,
+                    sample_probabilities=sample_probs,
+                    n_bins=15,
+                )
+                for key, value in mc_metrics.items():
+                    metrics[f"fola_mc_{key}"] = value
 
         metrics["round"] = float(server_round)
         self.metrics_recorder.append({"round": server_round, **metrics})
@@ -198,19 +183,27 @@ class CentralEvaluator:
             self._save_checkpoint(server_round, parameters)
 
         if self.cfg.method == "fola":
-            self.logger.info(
-                "Round %d centralized eval: "
-                "mean_loss=%.6f mean_acc=%.4f mean_ece=%.4f "
-                "mc_acc=%.4f mc_nll=%.6f mc_ece=%.4f mi=%.6f",
-                server_round,
-                metrics["nll"],
-                metrics["accuracy"],
-                metrics["ece"],
-                metrics["fola_mc_accuracy"],
-                metrics["fola_mc_nll"],
-                metrics["fola_mc_ece"],
-                metrics["fola_mc_mutual_information"],
-            )
+            if self.cfg.fola.paper_mean_only_eval:
+                self.logger.info(
+                    "Round %d centralized eval: mean_loss=%.6f mean_acc=%.4f mean_ece=%.4f",
+                    server_round,
+                    metrics["nll"],
+                    metrics["accuracy"],
+                    metrics["ece"],
+                )
+            else:
+                self.logger.info(
+                    "Round %d centralized eval: mean_loss=%.6f mean_acc=%.4f mean_ece=%.4f "
+                    "mc_acc=%.4f mc_nll=%.6f mc_ece=%.4f mi=%.6f",
+                    server_round,
+                    metrics["nll"],
+                    metrics["accuracy"],
+                    metrics["ece"],
+                    metrics.get("fola_mc_accuracy", float("nan")),
+                    metrics.get("fola_mc_nll", float("nan")),
+                    metrics.get("fola_mc_ece", float("nan")),
+                    metrics.get("fola_mc_mutual_information", float("nan")),
+                )
         else:
             self.logger.info(
                 "Round %d centralized eval: loss=%.6f acc=%.4f ece=%.4f mi=%.6f",
@@ -227,7 +220,6 @@ class CentralEvaluator:
         names = self.layout.names
         if self.cfg.method == "bbb":
             name_to_arr = {name: np.asarray(a) for name, a in zip(names, parameters)}
-            rows = []
             for name in names:
                 if "mu_" not in name:
                     continue
@@ -237,7 +229,7 @@ class CentralEvaluator:
                 mu = name_to_arr[name]
                 sigma = softplus_np(name_to_arr[rho_name])
                 snr = np.abs(mu) / np.maximum(sigma, 1e-12)
-                rows.append(
+                self.posterior_recorder.append(
                     {
                         "round": server_round,
                         "parameter": name,
@@ -250,12 +242,11 @@ class CentralEvaluator:
                         "snr_mean": float(np.mean(snr)),
                     }
                 )
-            for row in rows:
-                self.posterior_recorder.append(row)
         elif self.cfg.method == "fola":
             means, precisions = unpack_fola(parameters, self.layout)
             for name, mean, precision in zip(names, means, precisions):
-                p = np.maximum(np.asarray(precision), self.cfg.fola.precision_min)
+                raw_p = np.asarray(precision)
+                p = np.maximum(raw_p, self.cfg.fola.precision_min)
                 sigma = 1.0 / np.sqrt(p)
                 self.posterior_recorder.append(
                     {
@@ -265,9 +256,10 @@ class CentralEvaluator:
                         "numel": mean.size,
                         "mean_abs": float(np.mean(np.abs(mean))),
                         "sigma_mean": float(np.mean(sigma)),
-                        "precision_mean": float(np.mean(p)),
-                        "precision_min": float(np.min(p)),
-                        "precision_max": float(np.max(p)),
+                        "precision_mean": float(np.mean(raw_p)),
+                        "precision_min": float(np.min(raw_p)),
+                        "precision_max": float(np.max(raw_p)),
+                        "zero_precision_fraction": float(np.mean(raw_p <= 0)),
                     }
                 )
 

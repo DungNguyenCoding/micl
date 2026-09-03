@@ -1,12 +1,16 @@
-run_name: fola_cifar10_smoke
+run_name: smoke_fola_cifar10_paper_env
 method: fola
 data:
   dataset: cifar10
   root: ./data
   num_classes: 10
-  augment: false
+  augment: true
   crop_padding: 4
+  crop_fill: 128
   random_flip: true
+  autoaugment_policy: cifar10
+  cutout_holes: 1
+  cutout_length: 16
   normalize_mean:
   - 0.5
   - 0.5
@@ -16,12 +20,8 @@ data:
   - 0.5
   - 0.5
   partition:
-    type: sparse_dirichlet
-    dirichlet_alpha: 0.1
-    classes_per_client: 4
-    avg_samples_per_client: 100
-    min_samples_per_client: 1
-    target_total_samples: 2000
+    type: paper_dirichlet
+    dirichlet_alpha: 0.01
 federation:
   num_clients: 20
   clients_per_round: 20
@@ -34,14 +34,18 @@ training:
   momentum: 0.9
   weight_decay: 0.0
   batch_size: 128
-  local_epochs: 5
-  rounds: 5
+  local_epochs: 10
+  rounds: 2
   lr_schedule: cosine
   lr_min: 0.0001
   lr_decay_rounds: 400
+  grad_clip_norm: null
 bbb:
   posterior_mu_init: 0.0
   posterior_rho_init: -3.0
+  prior_type: standard_normal
+  prior_mean: 0.0
+  prior_sigma: 1.0
   prior_pi: 0.5
   prior_sigma1: 1.0
   prior_sigma2: 0.0024787521766663585
@@ -55,16 +59,20 @@ bbb:
   variance_floor_ratio: 0.5
   rho_lr_multiplier: 0.1
   aggregation: gaussian_product
+  match_deterministic_init: false
 fola:
-  prior_lambda: 1.0
-  lambda_scale_by_size: true
+  prior_lambda: 100.0
+  lambda_scale_by_size: false
   mc_eval: 5
   variance_floor_ratio: 0.5
-  precision_min: 1.0e-08
-  precision_max: 100000000.0
-  initial_precision: 1.0
+  precision_min: 1.0e-12
+  precision_max: 1000000000000.0
+  initial_precision: 0.0
+  mode: paper_reference
+  aggregation_epsilon: 1.0e-05
+  paper_mean_only_eval: true
 runtime:
-  client_num_cpus: 1.0
+  client_num_cpus: 2.0
   client_num_gpus: 0.25
   central_eval_device: auto
   seed: 0
