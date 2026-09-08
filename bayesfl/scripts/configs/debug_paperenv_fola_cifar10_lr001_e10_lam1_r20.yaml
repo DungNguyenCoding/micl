@@ -1,0 +1,85 @@
+bbb:
+  aggregation: gaussian_product
+  kl_scheme: equal_minibatch
+  kl_warmup_rounds: 20
+  kl_weight: null
+  kl_weight_schedule: false
+  lambda_scale_by_size: true
+  match_deterministic_init: false
+  mc_eval: 5
+  mc_train: 2
+  posterior_mu_init: 0.0
+  posterior_rho_init: -3.0
+  prior_mean: 0.0
+  prior_pi: 0.5
+  prior_sigma: 1.0
+  prior_sigma1: 1.0
+  prior_sigma2: 0.0024787521766663585
+  prior_type: standard_normal
+  rho_lr_multiplier: 0.1
+  variance_floor_ratio: 0.5
+data:
+  augment: true
+  autoaugment_policy: cifar10
+  crop_fill: 128
+  crop_padding: 4
+  cutout_holes: 1
+  cutout_length: 16
+  dataset: cifar10
+  normalize_mean:
+  - 0.5
+  - 0.5
+  - 0.5
+  normalize_std:
+  - 0.5
+  - 0.5
+  - 0.5
+  num_classes: 10
+  partition:
+    dirichlet_alpha: 0.01
+    type: paper_dirichlet
+  random_flip: true
+  root: ./data
+federation:
+  clients_per_round: 20
+  num_clients: 20
+fola:
+  aggregation_epsilon: 1.0e-05
+  initial_precision: 0.0
+  lambda_scale_by_size: false
+  mc_eval: 5
+  mode: paper_reference
+  paper_mean_only_eval: true
+  precision_max: 1000000000000.0
+  precision_min: 1.0e-12
+  prior_lambda: 1.0
+  variance_floor_ratio: 0.5
+method: fola
+model:
+  group_norm_groups: 8
+  name: resnet56_gn8
+output:
+  checkpoint_every: 10
+  logs_dir: ./logs
+  outputs_dir: ./outputs
+  save_full_client_posteriors: false
+run_name: debug_paperenv_fola_cifar10_lr001_e10_lam1_r20
+runtime:
+  central_eval_device: auto
+  client_num_cpus: 2.0
+  client_num_gpus: 0.25
+  seed: 0
+  torch_num_threads: 1
+  verbose_flower: false
+training:
+  batch_size: 128
+  grad_clip_norm: null
+  local_epochs: 10
+  lr: 0.01
+  lr_decay_rounds: 400
+  lr_min: 0.0001
+  lr_schedule: cosine
+  momentum: 0.9
+  optimizer: sgd
+  rounds: 20
+  weight_decay: 0.0

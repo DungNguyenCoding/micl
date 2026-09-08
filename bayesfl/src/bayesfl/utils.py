@@ -8,8 +8,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import glob
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Sequence
+
+import yaml
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -163,6 +166,211 @@ def plot_posterior_summary(run_dir: str | Path) -> list[Path]:
     return paths
 
 
+
+def _load_run_config(run_dir: Path) -> dict:
+    """Load resolved/source config metadata for labeling comparison plots."""
+    for name in ("resolved_config.yaml", "source_config.yaml"):
+        path = run_dir / name
+        if not path.exists():
+            continue
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                data = yaml.safe_load(handle)
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+    return {}
+
+
+def _display_method(method: str) -> str:
+    key = str(method or "").strip().lower()
+    return {
+        "fedavg": "FedAvg",
+        "fola": "FOLA",
+        "bbb": "BBB",
+    }.get(key, method or "Unknown")
+
+
+def _display_model(model_name: str) -> str:
+    key = str(model_name or "").strip().lower()
+    return {
+        "paper_basiccnn": "BasicCNN",
+        "resnet56_gn8": "ResNet-56",
+    }.get(key, model_name or "Unknown")
+
+
+def _comparison_label(run_dir: Path, cfg: dict) -> tuple[str, str, str]:
+    method = str(cfg.get("method", ""))
+    model_cfg = cfg.get("model", {})
+    model_name = str(model_cfg.get("name", "")) if isinstance(model_cfg, dict) else ""
+
+    method_label = _display_method(method)
+    model_label = _display_model(model_name)
+
+    if method and model_name:
+        label = f"{method_label} — {model_label}"
+    elif method:
+        label = method_label
+    else:
+        label = run_dir.name
+
+    return label, method_label, model_label
+
+
+def _accuracy_for_comparison(
+    rows: list[dict[str, str]],
+    method: str,
+) -> tuple[np.ndarray, np.ndarray, str]:
+    """Return finite round/accuracy arrays using each method's primary metric."""
+    rounds = _numeric(rows, "round")
+
+    candidates = (
+        ("fola_mean_accuracy", "accuracy")
+        if str(method).lower() == "fola"
+        else ("accuracy",)
+    )
+
+    selected = "accuracy"
+    values = np.full_like(rounds, np.nan, dtype=np.float64)
+
+    for metric in candidates:
+        y = _numeric(rows, metric)
+        if not np.all(np.isnan(y)):
+            values = y
+            selected = metric
+            break
+
+    mask = np.isfinite(rounds) & np.isfinite(values)
+    return rounds[mask], values[mask], selected
+
+
+def plot_accuracy_comparison(
+    run_dirs: Sequence[str | Path],
+    *,
+    labels: Sequence[str] | None = None,
+    output_dir: str | Path = "outputs/plots",
+    output_stem: str = "accuracy_comparison",
+    title: str = "Accuracy vs Communication Round",
+) -> list[Path]:
+    """Plot primary global accuracy for multiple BayesFL runs.
+
+    FOLA uses ``fola_mean_accuracy`` when present (falling back to ``accuracy``).
+    FedAvg and BBB use the generic ``accuracy`` field. Values are rendered as
+    percentages. The function saves PNG, PDF, and a long-form CSV containing the
+    merged curves.
+    """
+    run_paths = [Path(p) for p in run_dirs]
+    if not run_paths:
+        raise ValueError("run_dirs must contain at least one run directory")
+
+    if labels is not None and len(labels) != len(run_paths):
+        raise ValueError("labels must have the same length as run_dirs")
+
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    loaded: list[dict[str, object]] = []
+
+    for idx, run_dir in enumerate(run_paths):
+        rows = _read_csv(run_dir / "metrics" / "global_metrics.csv")
+        if not rows:
+            print(f"WARNING: missing global_metrics.csv for {run_dir}")
+            continue
+
+        cfg = _load_run_config(run_dir)
+        auto_label, method_label, model_label = _comparison_label(run_dir, cfg)
+        method = str(cfg.get("method", ""))
+
+        rounds, accuracy, metric = _accuracy_for_comparison(rows, method)
+        if rounds.size == 0:
+            print(f"WARNING: no finite accuracy data for {run_dir}")
+            continue
+
+        label = labels[idx] if labels is not None else auto_label
+        linestyle = "--" if model_label == "ResNet-56" else "-"
+
+        loaded.append(
+            {
+                "run_dir": run_dir,
+                "label": label,
+                "method": method_label,
+                "model": model_label,
+                "metric": metric,
+                "rounds": rounds,
+                "accuracy": accuracy * 100.0,
+                "linestyle": linestyle,
+            }
+        )
+
+    if not loaded:
+        raise RuntimeError("No usable runs were found for accuracy comparison")
+
+    fig, ax = plt.subplots(figsize=(10, 6.5))
+
+    for item in loaded:
+        ax.plot(
+            item["rounds"],
+            item["accuracy"],
+            linestyle=item["linestyle"],
+            linewidth=2.0,
+            label=item["label"],
+        )
+
+    ax.set_xlabel("Communication Round")
+    ax.set_ylabel("Test Accuracy (%)")
+    ax.set_title(title)
+    ax.set_xlim(left=0)
+    ax.set_ylim(0, 100)
+    ax.grid(True, alpha=0.3)
+    ax.legend(loc="best", fontsize=9)
+    fig.tight_layout()
+
+    png_path = out_dir / f"{output_stem}.png"
+    pdf_path = out_dir / f"{output_stem}.pdf"
+    csv_path = out_dir / f"{output_stem}.csv"
+
+    fig.savefig(png_path, dpi=220, bbox_inches="tight")
+    fig.savefig(pdf_path, bbox_inches="tight")
+    plt.close(fig)
+
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(
+            [
+                "label",
+                "method",
+                "model",
+                "metric",
+                "round",
+                "accuracy_percent",
+                "run_dir",
+            ]
+        )
+        for item in loaded:
+            for rnd, acc in zip(item["rounds"], item["accuracy"]):
+                writer.writerow(
+                    [
+                        item["label"],
+                        item["method"],
+                        item["model"],
+                        item["metric"],
+                        int(rnd),
+                        float(acc),
+                        str(item["run_dir"]),
+                    ]
+                )
+
+    return [png_path, pdf_path, csv_path]
+
+
+def latest_matching_run(pattern: str) -> Path:
+    """Return the newest directory matching a shell-style glob pattern."""
+    matches = [Path(p) for p in glob.glob(pattern) if Path(p).is_dir()]
+    if not matches:
+        raise FileNotFoundError(f"No run directory matches pattern: {pattern}")
+    return max(matches, key=lambda p: p.stat().st_mtime)
+
 def generate_all_plots(run_dir: str | Path) -> list[Path]:
     paths = []
     paths.extend(plot_global_metrics(run_dir))
@@ -175,10 +383,54 @@ def generate_all_plots(run_dir: str | Path) -> list[Path]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate plots for a BayesFL run")
-    parser.add_argument("--run-dir", required=True)
+    parser = argparse.ArgumentParser(description="Generate plots for BayesFL runs")
+    parser.add_argument(
+        "--run-dir",
+        action="append",
+        default=[],
+        help="Run directory. Repeat for comparison plots.",
+    )
+    parser.add_argument(
+        "--latest-glob",
+        action="append",
+        default=[],
+        help="Add the newest run matching this glob. Repeat as needed.",
+    )
+    parser.add_argument(
+        "--compare-accuracy",
+        action="store_true",
+        help="Generate one multi-run accuracy-vs-round comparison.",
+    )
+    parser.add_argument(
+        "--label",
+        action="append",
+        default=None,
+        help="Optional custom label; repeat once per comparison run.",
+    )
+    parser.add_argument("--output-dir", default="outputs/plots")
+    parser.add_argument("--output-stem", default="accuracy_comparison")
+    parser.add_argument("--title", default="Accuracy vs Communication Round")
     args = parser.parse_args()
-    paths = generate_all_plots(args.run_dir)
+
+    run_dirs = [Path(p) for p in args.run_dir]
+    for pattern in args.latest_glob:
+        run_dirs.append(latest_matching_run(pattern))
+
+    if args.compare_accuracy:
+        if not run_dirs:
+            parser.error("--compare-accuracy requires --run-dir and/or --latest-glob")
+        paths = plot_accuracy_comparison(
+            run_dirs,
+            labels=args.label,
+            output_dir=args.output_dir,
+            output_stem=args.output_stem,
+            title=args.title,
+        )
+    else:
+        if len(run_dirs) != 1:
+            parser.error("normal plotting mode requires exactly one --run-dir")
+        paths = generate_all_plots(run_dirs[0])
+
     for path in paths:
         print(path)
 

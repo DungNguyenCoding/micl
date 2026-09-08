@@ -15,7 +15,7 @@ def test_main_cifar_configs_use_paper_environment_resnet56_and_kept_optimizer():
         cfg = load_config(ROOT / "scripts" / "configs" / f"{method}_cifar10.yaml")
         assert cfg.data.dataset == "cifar10"
         assert cfg.data.partition["type"] == "paper_dirichlet"
-        assert cfg.data.partition["dirichlet_alpha"] == 0.01
+        assert cfg.data.partition["dirichlet_alpha"] == 0.1
         assert cfg.federation.num_clients == 20
         assert cfg.federation.clients_per_round == 20
 

@@ -1,0 +1,31 @@
+{
+  "class_draws_exhausted": 0,
+  "dirichlet_alpha": 0.1,
+  "empty_client_backfills": 0,
+  "max_size": 6619,
+  "mean_classes_per_client": 5.1,
+  "mean_size": 2497.0,
+  "min_size": 103,
+  "num_classes": 10,
+  "num_clients": 20,
+  "num_empty_clients_after_backfill": 0,
+  "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+  "seed": 0,
+  "sha256": "a930583247095aba8ff947062647623dc05c8cf80d99a436c54737d57096254f",
+  "total_samples_used": 49940,
+  "total_unassigned_samples": 60,
+  "total_unique_samples_used": 49940,
+  "type": "paper_dirichlet",
+  "unassigned_per_class": [
+    6,
+    4,
+    9,
+    6,
+    6,
+    6,
+    6,
+    6,
+    8,
+    3
+  ]
+}

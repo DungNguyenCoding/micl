@@ -21,7 +21,7 @@ data:
   - 0.5
   partition:
     type: paper_dirichlet
-    dirichlet_alpha: 0.01
+    dirichlet_alpha: 0.1
 federation:
   num_clients: 20
   clients_per_round: 20

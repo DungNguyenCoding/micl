@@ -7,11 +7,27 @@ build/
 dist/
 .venv/
 
-# Datasets and experiment artifacts
+# Datasets
 data/
+
+# Logs
 logs/*.log
+
+# Experiment outputs
+# Ignore everything in outputs/ by default
 outputs/*
+
+# Keep plots
 !outputs/plots/
+!outputs/plots/**
 !outputs/plots/.gitkeep
+
+# Keep reusable partitions
 !outputs/partitions/
+!outputs/partitions/**
 !outputs/partitions/.gitkeep
+
+# Keep FULL simulation results only
+# Any output directory whose run_name starts with "run"
+!outputs/run*/
+!outputs/run*/**
