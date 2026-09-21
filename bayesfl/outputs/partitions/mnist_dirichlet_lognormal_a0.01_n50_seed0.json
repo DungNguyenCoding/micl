@@ -1,0 +1,17 @@
+{
+  "class_draws_exhausted": 0,
+  "dirichlet_alpha": 0.01,
+  "empty_client_backfills": 2740,
+  "lognormal_sigma": 0.5,
+  "max_size": 5353,
+  "mean_classes_per_client": 3.22,
+  "mean_size": 1200.0,
+  "min_size": 100,
+  "num_classes": 10,
+  "num_clients": 50,
+  "num_empty_clients_after_backfill": 0,
+  "seed": 0,
+  "sha256": "913a36cb4c63be9cdf1022dbd34a703b556a95ef16631a3a8180f0e95dfa2a50",
+  "total_samples_used": 60000,
+  "type": "dirichlet_lognormal"
+}

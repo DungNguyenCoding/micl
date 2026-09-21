@@ -1,0 +1,2 @@
+scripts/configs/debug_cifar_r56_a0p01_localfrac_fedavg_n20_f0p5_e10_b32_lr001_r50.yaml
+scripts/configs/debug_cifar_r56_a0p01_localfrac_fola_n20_f0p5_e10_b32_lr001_lam0p01_r50.yaml

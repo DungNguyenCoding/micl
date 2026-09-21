@@ -13,6 +13,7 @@ from torchvision import datasets
 
 from bayesfl.config import ExperimentConfig
 from .partition import (
+    apply_local_data_fraction,
     build_mnist_dirichlet_lognormal_indices,
     build_paper_dirichlet_indices,
     build_sparse_dirichlet_indices,
@@ -44,24 +45,48 @@ def _labels_from_dataset(dataset) -> np.ndarray:
 
 def partition_stem(cfg: ExperimentConfig) -> str:
     p = cfg.data.partition
+
+    local_fraction = float(
+        p.get("local_data_fraction", 1.0)
+    )
+
+    if not (0.0 < local_fraction <= 1.0):
+        raise ValueError(
+            "local_data_fraction must satisfy 0 < fraction <= 1"
+        )
+
+    fraction_tag = (
+        ""
+        if local_fraction == 1.0
+        else f"_f{local_fraction:g}"
+    )
     if cfg.data.dataset == "cifar10":
         kind = str(p.get("type", "sparse_dirichlet")).lower()
         alpha = p.get("dirichlet_alpha", 0.1)
         if kind == "paper_dirichlet":
             return (
-                f"cifar10_paper_dirichlet_a{alpha}_"
+                f"cifar10_paper_dirichlet_a{alpha}{fraction_tag}_"
                 f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
             )
         avg = p.get("avg_samples_per_client", 100)
         target = p.get("target_total_samples")
         target_tag = f"_t{target}" if target is not None else ""
         return (
-            f"cifar10_sparse_dirichlet_a{alpha}_"
+            f"cifar10_sparse_dirichlet_a{alpha}{fraction_tag}_"
             f"c{p.get('classes_per_client', 4)}_m{avg}{target_tag}_"
             f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
         )
+    kind = str(p.get("type", "dirichlet_lognormal")).lower()
+    alpha = p.get("dirichlet_alpha", 0.3)
+
+    if kind == "paper_dirichlet":
+        return (
+            f"mnist_paper_dirichlet_a{alpha}{fraction_tag}_"
+            f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
+        )
+
     return (
-        f"mnist_dirichlet_lognormal_a{p.get('dirichlet_alpha', 0.3)}_"
+        f"mnist_dirichlet_lognormal_a{alpha}{fraction_tag}_"
         f"n{cfg.federation.num_clients}_seed{cfg.runtime.seed}"
     )
 
@@ -104,15 +129,35 @@ def prepare_partition(cfg: ExperimentConfig) -> tuple[Path, dict]:
         else:
             raise ValueError(f"Unknown CIFAR partition type: {kind}")
     else:
-        result = build_mnist_dirichlet_lognormal_indices(
-            labels,
-            num_clients=cfg.federation.num_clients,
-            num_classes=cfg.data.num_classes,
-            alpha=float(part.get("dirichlet_alpha", 0.3)),
-            lognormal_sigma=float(part.get("lognormal_sigma", 0.5)),
-            min_samples_per_client=int(part.get("min_samples_per_client", 100)),
-            seed=cfg.runtime.seed,
-        )
+        kind = str(part.get("type", "dirichlet_lognormal")).lower()
+
+        if kind == "paper_dirichlet":
+            result = build_paper_dirichlet_indices(
+                labels,
+                num_clients=cfg.federation.num_clients,
+                num_classes=cfg.data.num_classes,
+                alpha=float(part.get("dirichlet_alpha", 0.01)),
+                seed=cfg.runtime.seed,
+            )
+        else:
+            result = build_mnist_dirichlet_lognormal_indices(
+                labels,
+                num_clients=cfg.federation.num_clients,
+                num_classes=cfg.data.num_classes,
+                alpha=float(part.get("dirichlet_alpha", 0.3)),
+                lognormal_sigma=float(part.get("lognormal_sigma", 0.5)),
+                min_samples_per_client=int(part.get("min_samples_per_client", 100)),
+                seed=cfg.runtime.seed,
+            )
+    result = apply_local_data_fraction(
+        result,
+        labels=labels,
+        fraction=float(
+            part.get("local_data_fraction", 1.0)
+        ),
+        seed=cfg.runtime.seed,
+    )
+
     save_partition(result, npz_path, metadata_path)
     return npz_path, result.metadata
 

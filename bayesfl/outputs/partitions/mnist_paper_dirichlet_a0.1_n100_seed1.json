@@ -1,0 +1,31 @@
+{
+  "class_draws_exhausted": 0,
+  "dirichlet_alpha": 0.1,
+  "empty_client_backfills": 1,
+  "max_size": 2158,
+  "mean_classes_per_client": 4.62,
+  "mean_size": 597.27,
+  "min_size": 1,
+  "num_classes": 10,
+  "num_clients": 100,
+  "num_empty_clients_after_backfill": 0,
+  "reference": "OnlineLaplaceApproximationBayesianFL released dirichlet_data.py",
+  "seed": 1,
+  "sha256": "220ba9bf5fa4f84e0598d4957ac673c4bcd98b2c52d98e99534d3757bed07075",
+  "total_samples_used": 59727,
+  "total_unassigned_samples": 274,
+  "total_unique_samples_used": 59726,
+  "type": "paper_dirichlet",
+  "unassigned_per_class": [
+    25,
+    23,
+    28,
+    29,
+    28,
+    25,
+    31,
+    28,
+    34,
+    23
+  ]
+}

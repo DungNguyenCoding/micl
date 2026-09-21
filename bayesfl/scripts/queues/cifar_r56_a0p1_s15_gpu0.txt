@@ -1,0 +1,1 @@
+scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s15_f0.006_e10_b32_lr002_r50.yaml

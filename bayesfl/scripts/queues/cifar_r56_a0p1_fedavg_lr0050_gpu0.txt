@@ -1,0 +1,1 @@
+scripts/configs/debug_cifar_r56_a0p1_lrboundary_fedavg_n20_f1_e10_b32_lr0050_r50.yaml

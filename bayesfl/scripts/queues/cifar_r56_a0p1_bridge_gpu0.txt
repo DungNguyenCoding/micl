@@ -1,0 +1,2 @@
+scripts/configs/debug_cifar_r56_a0p1_bridge_fedavg_n20_f0p5_e10_b32_lr002_r50.yaml
+scripts/configs/debug_cifar_r56_a0p1_bridge_fola_n20_f0p5_e10_b32_lr002_lam0p1_r50.yaml

@@ -207,6 +207,194 @@ def build_mnist_dirichlet_lognormal_indices(
     return PartitionResult(arrays, metadata)
 
 
+
+def apply_local_data_fraction(
+    result: PartitionResult,
+    *,
+    labels: np.ndarray,
+    fraction: float,
+    seed: int,
+) -> PartitionResult:
+    """Deterministically reduce each client's local dataset.
+
+    The full federated partition is constructed first.  A fixed permutation is
+    then generated for every client and only the first
+
+        max(1, floor(fraction * client_size))
+
+    indices are retained.
+
+    Because the permutation depends on the partition seed but NOT on the
+    fraction, smaller fractions are nested subsets of larger fractions.
+    """
+    fraction = float(fraction)
+
+    if not (0.0 < fraction <= 1.0):
+        raise ValueError(
+            "local_data_fraction must satisfy 0 < fraction <= 1"
+        )
+
+    # Preserve the exact original partition when fraction=1.
+    if fraction == 1.0:
+        return result
+
+    original = [
+        np.asarray(arr, dtype=np.int64)
+        for arr in result.indices
+    ]
+
+    # Independent RNG stream from the partition-generation RNG.
+    # Same seed for every fraction => nested subsets.
+    rng = np.random.RandomState(
+        (int(seed) + 104729) % (2**32 - 1)
+    )
+
+    reduced: list[np.ndarray] = []
+
+    for arr in original:
+        n = len(arr)
+
+        if n == 0:
+            reduced.append(arr.copy())
+            continue
+
+        keep = max(
+            1,
+            int(np.floor(fraction * n)),
+        )
+
+        order = rng.permutation(n)
+
+        reduced.append(
+            arr[order[:keep]].copy()
+        )
+
+    before_sizes = np.asarray(
+        [len(x) for x in original],
+        dtype=np.int64,
+    )
+
+    after_sizes = np.asarray(
+        [len(x) for x in reduced],
+        dtype=np.int64,
+    )
+
+    before_all = (
+        np.concatenate(original)
+        if original
+        else np.asarray([], dtype=np.int64)
+    )
+
+    after_all = (
+        np.concatenate(reduced)
+        if reduced
+        else np.asarray([], dtype=np.int64)
+    )
+
+    unique_after = np.unique(after_all)
+
+    realized_classes = [
+        len(np.unique(labels[idx]))
+        if len(idx)
+        else 0
+        for idx in reduced
+    ]
+
+    # Count unique retained examples by class. This correctly handles the
+    # reference implementation's possible duplicated empty-client backfills.
+    unique_class_counts = np.bincount(
+        labels[unique_after],
+        minlength=int(np.max(labels)) + 1,
+    )
+
+    dataset_class_counts = np.bincount(
+        labels,
+        minlength=len(unique_class_counts),
+    )
+
+    unassigned_per_class = (
+        dataset_class_counts
+        - unique_class_counts
+    ).astype(np.int64)
+
+    metadata = dict(result.metadata)
+
+    base_sha = metadata.get(
+        "sha256",
+        _hash_partitions(original),
+    )
+
+    metadata.update(
+        {
+            "local_data_fraction": float(fraction),
+            "local_data_subsample_strategy": (
+                "deterministic_nested_fraction"
+            ),
+            "local_data_subsample_seed": int(seed),
+
+            "base_partition_sha256": base_sha,
+
+            "pre_subsample_total_samples_used": int(
+                before_sizes.sum()
+            ),
+            "pre_subsample_mean_size": float(
+                before_sizes.mean()
+            ),
+            "pre_subsample_min_size": int(
+                before_sizes.min()
+            ),
+            "pre_subsample_max_size": int(
+                before_sizes.max()
+            ),
+
+            "total_samples_used": int(
+                after_sizes.sum()
+            ),
+            "total_unique_samples_used": int(
+                len(unique_after)
+            ),
+            "total_unassigned_samples": int(
+                len(labels) - len(unique_after)
+            ),
+            "unassigned_per_class": [
+                int(x)
+                for x in unassigned_per_class
+            ],
+
+            "mean_size": float(
+                after_sizes.mean()
+            ),
+            "min_size": int(
+                after_sizes.min()
+            ),
+            "max_size": int(
+                after_sizes.max()
+            ),
+            "mean_classes_per_client": float(
+                np.mean(realized_classes)
+            ),
+
+            "num_empty_clients_after_backfill": int(
+                np.sum(after_sizes == 0)
+            ),
+
+            "realized_local_data_fraction": float(
+                after_sizes.sum()
+                / max(1, before_sizes.sum())
+            ),
+        }
+    )
+
+    metadata["sha256"] = _hash_partitions(
+        reduced
+    )
+
+    return PartitionResult(
+        reduced,
+        metadata,
+    )
+
+
 def save_partition(result: PartitionResult, npz_path: Path, metadata_path: Path) -> None:
     npz_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {f"client_{cid:04d}": arr for cid, arr in enumerate(result.indices)}
@@ -281,7 +469,7 @@ def build_paper_dirichlet_indices(
     ]
     metadata = {
         "type": "paper_dirichlet",
-        "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+        "reference": "OnlineLaplaceApproximationBayesianFL released dirichlet_data.py",
         "seed": int(seed),
         "num_clients": int(num_clients),
         "num_classes": int(num_classes),

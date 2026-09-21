@@ -121,7 +121,17 @@ class OutputConfig:
     logs_dir: str = "./logs"
     outputs_dir: str = "./outputs"
     checkpoint_every: int = 10
+
+    # When enabled for FOLA, save the exact incoming global
+    # distribution, every outgoing client distribution, and the
+    # uncompressed outgoing global distribution at selected rounds.
+    #
+    # This instrumentation is OFF by default and therefore has no
+    # disk-I/O or trajectory effect during normal tuning runs.
     save_full_client_posteriors: bool = False
+    full_client_posterior_rounds: list[int] = field(
+        default_factory=lambda: [1, 5, 10, 25, 40, 50]
+    )
 
 
 @dataclass

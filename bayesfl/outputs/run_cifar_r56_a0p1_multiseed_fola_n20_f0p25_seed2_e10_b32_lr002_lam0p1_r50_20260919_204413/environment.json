@@ -1,0 +1,13 @@
+{
+  "python": "3.10.20",
+  "platform": "Linux-6.8.0-40-generic-x86_64-with-glibc2.35",
+  "torch": "2.11.0+cu128",
+  "cuda": "12.8",
+  "cudnn": 91900,
+  "gpu": "NVIDIA GeForce RTX 5090",
+  "numpy": "1.26.4",
+  "torchvision": "0.26.0+cu128",
+  "flwr": "1.29.0",
+  "ray": "2.51.1",
+  "bayesian_torch": "0.5.0"
+}
