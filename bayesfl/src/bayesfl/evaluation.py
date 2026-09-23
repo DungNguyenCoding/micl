@@ -26,7 +26,9 @@ class CentralEvaluator:
         run_dir: Path,
         *,
         logger,
+        state=None,
     ) -> None:
+        self.state = state
         self.cfg = cfg
         self.test_loader = test_loader
         self.run_dir = run_dir
@@ -166,7 +168,9 @@ class CentralEvaluator:
                     metrics[f"fola_mc_{key}"] = value
 
         metrics["round"] = float(server_round)
-        self.metrics_recorder.append({"round": server_round, **metrics})
+        extra = self.state.evaluation_fields() if self.state is not None else {}
+        self.metrics_recorder.append({"round": server_round, **metrics, **extra,
+                                      "global_accuracy": metrics["accuracy"], "global_loss": metrics["nll"]})
 
         np.savez_compressed(
             self.run_dir / "reliability" / f"round_{server_round:04d}.npz",
@@ -176,7 +180,7 @@ class CentralEvaluator:
             bin_count=ece.bin_count,
         )
         self._record_posterior(server_round, parameters)
-        if server_round == 0 or (
+        if server_round == 0 or (self.state is not None and self.state.stop_reason() != "running") or (
             self.cfg.output.checkpoint_every > 0
             and server_round % self.cfg.output.checkpoint_every == 0
         ):
@@ -213,6 +217,9 @@ class CentralEvaluator:
                 metrics["ece"],
                 metrics["mutual_information"],
             )
+        if self.state is not None:
+            self.state.save_resume(metrics)
+
         flower_metrics = {k: float(v) for k, v in metrics.items() if k != "round"}
         return float(metrics["nll"]), flower_metrics
 

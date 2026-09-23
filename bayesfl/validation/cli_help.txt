@@ -1,0 +1,24 @@
+usage: main.py [-h] [--config CONFIG] [--dataset {mnist,cifar10}]
+               [--method {fedavg,bbb,fola,fedavg_dense,fola_dense,fola_sparse,fola_sparse_kl_global_local,fola_sparse_kl_local_global,fola_sparse_random}]
+               [--rounds ROUNDS] [--seed SEED]
+               [--selection-rule {dense,kl_global_local,kl_local_global,random}]
+               [--keep-ratio KEEP_RATIO]
+               [--precision-policy {strict,floor_for_score}]
+               [--max-communication-bytes MAX_COMMUNICATION_BYTES]
+               [--resume RESUME]
+
+Bayesian Federated Learning baseline
+
+options:
+  -h, --help            show this help message and exit
+  --config CONFIG       YAML experiment config
+  --dataset {mnist,cifar10}
+  --method {fedavg,bbb,fola,fedavg_dense,fola_dense,fola_sparse,fola_sparse_kl_global_local,fola_sparse_kl_local_global,fola_sparse_random}
+  --rounds ROUNDS
+  --seed SEED
+  --selection-rule {dense,kl_global_local,kl_local_global,random}
+  --keep-ratio KEEP_RATIO
+  --precision-policy {strict,floor_for_score}
+  --max-communication-bytes MAX_COMMUNICATION_BYTES
+  --resume RESUME       Resume an existing run directory at its latest
+                        completed evaluated round

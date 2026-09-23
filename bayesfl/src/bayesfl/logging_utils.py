@@ -88,6 +88,11 @@ class CsvRecorder:
         self._lock = Lock()
         self._rows: list[Dict[str, Any]] = []
         self._fields: list[str] = []
+        if self.path.exists():
+            with self.path.open(newline="", encoding="utf-8") as handle:
+                reader = csv.DictReader(handle)
+                self._fields = list(reader.fieldnames or [])
+                self._rows = list(reader)
 
     def append(self, row: Dict[str, Any]) -> None:
         clean = {str(k): _scalar(v) for k, v in row.items()}
@@ -96,10 +101,12 @@ class CsvRecorder:
             for key in clean:
                 if key not in self._fields:
                     self._fields.append(key)
-            with self.path.open("w", newline="", encoding="utf-8") as handle:
+            temp = self.path.with_name(self.path.name + ".tmp")
+            with temp.open("w", newline="", encoding="utf-8") as handle:
                 writer = csv.DictWriter(handle, fieldnames=self._fields)
                 writer.writeheader()
                 writer.writerows(self._rows)
+            temp.replace(self.path)
 
 
 def _scalar(value: Any) -> Any:

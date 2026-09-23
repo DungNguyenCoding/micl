@@ -1,0 +1,17 @@
+{
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "packages": {
+    "numpy": "2.3.5",
+    "torch": "2.10.0+cpu",
+    "torchvision": "0.25.0+cpu",
+    "pytest": "9.0.2",
+    "matplotlib": "3.10.8",
+    "flwr": null,
+    "ray": null,
+    "bayesian-torch": null
+  },
+  "all_yaml_validated": 408,
+  "original_yaml_byte_identical": 398,
+  "python310_syntax_checked": 72,
+  "original_zip_sha256": "39e6782c00d21bf7fd83708f64b6e4f30fd9d7f657f284d83746bfeb3f36d802"
+}

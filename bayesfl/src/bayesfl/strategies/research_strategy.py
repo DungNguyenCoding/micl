@@ -7,11 +7,15 @@ from pathlib import Path
 from typing import Sequence
 
 import numpy as np
-from flwr.common import ndarrays_to_parameters, parameters_to_ndarrays
+from flwr.common import Code, FitIns, GetPropertiesIns, ndarrays_to_parameters, parameters_to_ndarrays
 from flwr.server.strategy import FedAvg
 
 from bayesfl.config import ExperimentConfig, round_learning_rate
 from bayesfl.logging_utils import CsvRecorder
+from bayesfl.communication import payload_components
+from bayesfl.experiment_state import RunState
+from bayesfl.posterior.sparse import dedicated_rng
+from bayesfl.posterior.aggregation import aggregate_fola
 from bayesfl.posterior.gaussian import gaussian_product, inverse_softplus_np, softplus_np
 from bayesfl.posterior.packing import ParameterLayout, pack_fola, unpack_fola
 from .common import normalized_example_weights, weighted_average_arrays, weighted_metrics
@@ -28,6 +32,7 @@ class ResearchStrategy(FedAvg):
         initial_arrays: Sequence[np.ndarray],
         run_dir: Path,
         logger,
+        state: RunState | None = None,
     ) -> None:
         fraction_fit = cfg.federation.clients_per_round / float(cfg.federation.num_clients)
         super().__init__(
@@ -43,6 +48,9 @@ class ResearchStrategy(FedAvg):
                 "learning_rate": float(round_learning_rate(cfg.training, rnd)),
             },
         )
+        self.state = state or RunState(cfg, layout, initial_arrays, run_dir)
+        self._identity_by_proxy = {}
+        self._recipient_by_proxy = {}
         self.cfg = cfg
         self.layout = layout
         self.logger = logger
@@ -75,20 +83,112 @@ class ResearchStrategy(FedAvg):
         else:
             self._snapshot_current_global = None
 
-    def aggregate_fit(self, server_round, results, failures):
-        if failures:
-            first = failures[0]
-            raise RuntimeError(
-                f"Round {server_round}: {len(failures)} client job(s) failed; first={first!r}"
-            )
-        if len(results) != self.cfg.federation.clients_per_round:
-            raise RuntimeError(
-                f"Round {server_round}: expected {self.cfg.federation.clients_per_round} results, "
-                f"received {len(results)}"
-            )
+    def _resolve_identities(self, client_manager):
+        client_manager.wait_for(self.cfg.federation.num_clients)
+        proxies = client_manager.all()
+        if len(proxies) != self.cfg.federation.num_clients:
+            raise RuntimeError("Expected the configured fixed client roster")
+        for proxy_id, proxy in proxies.items():
+            if proxy_id in self._identity_by_proxy:
+                continue
+            # These messages carry only scalar identity/control data. Arrays=0;
+            # envelope bytes are explicitly unavailable rather than called free.
+            attempt = self.state.ledger.event_count
+            zero = payload_components([], method="control")
+            self.state.ledger.record(round_id=0, client_id="identity_" + str(proxy_id),
+                                     phase="initialize", direction="downlink", components=zero,
+                                     attempt_id=attempt, serialized_tensor_bytes=0)
+            res = proxy.get_properties(GetPropertiesIns(config={}), timeout=60.0, group_id=0)
+            self.state.ledger.record(round_id=0, client_id="identity_" + str(proxy_id),
+                                     phase="initialize", direction="uplink", components=zero,
+                                     attempt_id=attempt, serialized_tensor_bytes=0)
+            cid = res.properties.get("client_id")
+            if res.status.code != Code.OK or isinstance(cid, bool) or not isinstance(cid, int):
+                raise RuntimeError("Client get_properties must return an integer client_id")
+            self._identity_by_proxy[proxy_id] = cid
+        if sorted(self._identity_by_proxy.values()) != list(range(self.cfg.federation.num_clients)):
+            raise RuntimeError("Logical client IDs must be unique and cover the partition manifest")
+        return proxies
 
-        client_arrays = [parameters_to_ndarrays(fit_res.parameters) for _, fit_res in results]
-        counts = [int(fit_res.num_examples) for _, fit_res in results]
+    def configure_fit(self, server_round, parameters, client_manager):
+        if self.cfg.communication.deterministic_client_schedule or self.cfg.sparse_enabled:
+            proxies = self._resolve_identities(client_manager)
+        if self.cfg.communication.deterministic_client_schedule:
+            logical_to_proxy = {self._identity_by_proxy[cid]: proxy for cid, proxy in proxies.items()}
+            rng = dedicated_rng(self.cfg.runtime.seed, 0, server_round, domain="client_schedule")
+            selected = sorted(rng.choice(self.cfg.federation.num_clients,
+                                         size=self.cfg.federation.clients_per_round, replace=False).tolist())
+            fit_config = self.on_fit_config_fn(server_round) if self.on_fit_config_fn else {}
+            instructions = [(logical_to_proxy[cid], FitIns(parameters, dict(fit_config))) for cid in selected]
+        else:
+            # Preserve the supplied sampler on legacy configurations.
+            instructions = super().configure_fit(server_round, parameters, client_manager)
+        self._recipient_by_proxy = {
+            proxy.cid: str(self._identity_by_proxy.get(proxy.cid, proxy.cid))
+            for proxy, _ in instructions
+        }
+        arrays = parameters_to_ndarrays(parameters)
+        extra = self.state.prepare_round(
+            server_round, list(self._recipient_by_proxy.values()), arrays,
+            serialized_tensor_bytes=sum(len(t) for t in parameters.tensors),
+        )
+        return [(proxy, FitIns(ins.parameters, {**ins.config, **extra})) for proxy, ins in instructions]
+
+    def _decode_arrival(self, server_round, proxy, fit_res):
+        try:
+            return parameters_to_ndarrays(fit_res.parameters)
+        except Exception as exc:
+            self.state.ledger.record_undecodable(
+                round_id=server_round,
+                client_id=self._recipient_by_proxy.get(proxy.cid, proxy.cid),
+                serialized_tensor_bytes=sum(len(t) for t in fit_res.parameters.tensors),
+                reason=f"Tensor deserialization failed: {exc}",
+            )
+            raise
+
+    def aggregate_fit(self, server_round, results, failures):
+        client_arrays, masks, counts, valid_results, errors = [], [], [], [], []
+        # Charge every arrived reply, including a later-rejected packet. Continue
+        # processing arrivals after an error, then fail the round as the baseline did.
+        arrivals = list(results)
+        for failure in failures:
+            if isinstance(failure, tuple) and len(failure) == 2 and hasattr(failure[1], "parameters"):
+                proxy, res = failure
+                try:
+                    arrays = self._decode_arrival(server_round, proxy, res)
+                except Exception as exc:
+                    errors.append(exc)
+                    continue
+                self.state.ledger.record(
+                    round_id=server_round, client_id=self._recipient_by_proxy.get(proxy.cid, proxy.cid),
+                    phase="fit", direction="uplink", status="rejected",
+                    components=payload_components(arrays, method=self.cfg.method,
+                                                  sparse_upload=self.cfg.sparse_enabled, tensor_count=self.layout.size),
+                    serialized_tensor_bytes=sum(len(t) for t in res.parameters.tensors),
+                )
+        # Stable aggregation order is used for matched new experiments. Legacy
+        # dense configurations retain their supplied result-order policy.
+        if self.cfg.communication.deterministic_client_schedule:
+            arrivals.sort(key=lambda pair: self._identity_by_proxy[pair[0].cid])
+        for proxy, fit_res in arrivals:
+            try:
+                arrays = self._decode_arrival(server_round, proxy, fit_res)
+                reconstructed, mask = self.state.receive_packet(
+                    round_id=server_round, recipient_id=self._recipient_by_proxy.get(proxy.cid, proxy.cid),
+                    arrays=arrays, metrics=dict(fit_res.metrics), num_examples=fit_res.num_examples,
+                    expected_client_id=self._identity_by_proxy.get(proxy.cid),
+                    serialized_tensor_bytes=sum(len(t) for t in fit_res.parameters.tensors),
+                )
+                client_arrays.append(reconstructed)
+                masks.append(mask)
+                counts.append(int(fit_res.num_examples))
+                valid_results.append((proxy, fit_res))
+            except Exception as exc:
+                errors.append(exc)
+        if failures or errors or len(valid_results) != self.cfg.federation.clients_per_round:
+            first = (errors or failures or ["result-count mismatch"])[0]
+            raise RuntimeError(f"Round {server_round}: rejected/failed/absent client results; first={first!r}")
+        results = valid_results
         weights = normalized_example_weights(counts)
         if self.cfg.method == "fedavg":
             aggregated = weighted_average_arrays(client_arrays, weights)
@@ -98,6 +198,9 @@ class ResearchStrategy(FedAvg):
             aggregated = self._aggregate_fola(client_arrays, weights)
         else:  # pragma: no cover
             raise ValueError(self.cfg.method)
+        aggregated = self.state.finish_round(
+            aggregated, masks=masks, counts=counts, client_metrics=[dict(r.metrics) for _, r in results],
+        )
 
         # Snapshot only COPIES of the FOLA states. The actual aggregated
         # arrays returned to Flower are never reconstructed/compressed here,
@@ -135,7 +238,7 @@ class ResearchStrategy(FedAvg):
             self.client_metrics.append(client_row)
 
         metrics = weighted_metrics([(int(res.num_examples), dict(res.metrics)) for _, res in results])
-        row = {"round": server_round, "num_clients": len(results), "num_examples": sum(counts), **metrics}
+        row = {**metrics, "round": server_round, "num_clients": len(results), "num_examples": sum(counts), **self.state.evaluation_fields()}
         self.round_metrics.append(row)
         self.logger.info(
             "Round %d aggregation complete: clients=%d examples=%d train_loss=%s",
@@ -373,47 +476,5 @@ class ResearchStrategy(FedAvg):
             processed.add(mu_name)
         return result
 
-    def _aggregate_fola(
-        self,
-        clients: Sequence[Sequence[np.ndarray]],
-        weights: Sequence[float],
-    ) -> list[np.ndarray]:
-        means_by_client = []
-        precs_by_client = []
-        for client in clients:
-            means, precs = unpack_fola(client, self.layout)
-            means_by_client.append(means)
-            precs_by_client.append(precs)
-
-        global_means: list[np.ndarray] = []
-        global_precs: list[np.ndarray] = []
-        for param_idx in range(self.layout.size):
-            means = [m[param_idx] for m in means_by_client]
-            precs = [p[param_idx] for p in precs_by_client]
-
-            if self.cfg.fola.mode == "paper_reference":
-                # Released CIFAR implementation:
-                #   omega_S = sum pi_n omega_n
-                #   mu_S = sum pi_n omega_n mu_n / (omega_S + eps)
-                denom = np.zeros_like(precs[0], dtype=np.float64)
-                numer = np.zeros_like(means[0], dtype=np.float64)
-                for mu_n, omega_n, weight in zip(means, precs, weights):
-                    omega64 = np.asarray(omega_n, dtype=np.float64)
-                    w = float(weight)
-                    denom += w * omega64
-                    numer += w * omega64 * np.asarray(mu_n, dtype=np.float64)
-                mu = numer / (denom + float(self.cfg.fola.aggregation_epsilon))
-                precision = denom
-                global_means.append(mu.astype(means[0].dtype, copy=False))
-                global_precs.append(precision.astype(precs[0].dtype, copy=False))
-            else:
-                mu, precision = gaussian_product(
-                    means,
-                    precs,
-                    weights,
-                    precision_min=self.cfg.fola.precision_min,
-                    precision_max=self.cfg.fola.precision_max,
-                )
-                global_means.append(mu)
-                global_precs.append(precision)
-        return pack_fola(global_means, global_precs)
+    def _aggregate_fola(self, clients, weights):
+        return aggregate_fola(clients, weights, layout=self.layout, cfg=self.cfg)

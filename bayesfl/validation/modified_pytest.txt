@@ -1,0 +1,9 @@
+ss...................s..............s................................... [ 63%]
+..........................................                               [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_sparse_flower_integration.py:13: Real Flower 1.29 API unavailable; do not substitute a mocked flwr package
+SKIPPED [1] tests/test_bbb_matched_initialization.py:25: could not import 'bayesian_torch': No module named 'bayesian_torch'
+SKIPPED [1] tests/test_bbb_rho_update.py:17: could not import 'bayesian_torch': No module named 'bayesian_torch'
+SKIPPED [1] tests/test_flower_smoke.py:11: could not import 'flwr': No module named 'flwr'
+SKIPPED [1] tests/test_parameter_count.py:28: could not import 'bayesian_torch': No module named 'bayesian_torch'
+110 passed, 5 skipped in 5.36s

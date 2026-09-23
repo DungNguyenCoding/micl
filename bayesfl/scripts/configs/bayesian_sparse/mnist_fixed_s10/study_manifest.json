@@ -1,0 +1,57 @@
+{
+  "tag": "mnist_fixed_s10",
+  "d": 545810,
+  "clients_per_round": 100,
+  "seed": 0,
+  "max_communication_bytes": 130994400000,
+  "covariance_representation": "raw_precision",
+  "precision_policy": "strict",
+  "bases": [
+    {
+      "path": "scripts/configs/run_mnist_fixed1c_s10_official_fola_n100_seed0_e10_b32_lr001_lam0p01_r150.yaml",
+      "sha256": "e1f2782062fa8dcd38532c194cfc643c01e12b4dd8e80aaa46c85a83b841cdd4"
+    },
+    {
+      "path": "scripts/configs/run_mnist_fixed1c_s10_official_fedavg_n100_seed0_e10_b32_lr001_r150.yaml",
+      "sha256": "f98ac9ef0a34483f4ae37992b4b4b97bd8a409e0e2f28259b6580aa9dd2c89a5"
+    }
+  ],
+  "inherited_lr_schedule_caveat": "FOLA versus FedAvg keeps original locked LR/schedule differences; the three sparse rules share the FOLA trainer.",
+  "runs": [
+    {
+      "method": "fedavg_dense",
+      "keep_ratio": 1.0,
+      "config": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fedavg_dense_seed0.yaml",
+      "round_array_bytes": 436648000,
+      "affordable_rounds": 300
+    },
+    {
+      "method": "fola_dense",
+      "keep_ratio": 1.0,
+      "config": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_dense_seed0.yaml",
+      "round_array_bytes": 873296000,
+      "affordable_rounds": 150
+    },
+    {
+      "method": "fola_sparse_kl_global_local",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_kl_global_local_keep0p5_seed0.yaml",
+      "round_array_bytes": 661794700,
+      "affordable_rounds": 197
+    },
+    {
+      "method": "fola_sparse_kl_local_global",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_kl_local_global_keep0p5_seed0.yaml",
+      "round_array_bytes": 661794700,
+      "affordable_rounds": 197
+    },
+    {
+      "method": "fola_sparse_random",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_random_keep0p5_seed0.yaml",
+      "round_array_bytes": 661794700,
+      "affordable_rounds": 197
+    }
+  ]
+}

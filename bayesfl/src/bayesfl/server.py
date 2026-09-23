@@ -7,10 +7,14 @@ from pathlib import Path
 from flwr.app import Context
 from flwr.clientapp import ClientApp
 from flwr.server import ServerAppComponents, ServerConfig
+from flwr.server.client_manager import SimpleClientManager
 from flwr.serverapp import ServerApp
 from flwr.simulation import run_simulation
 
 from bayesfl.client import BayesFLNumPyClient
+from bayesfl.budget_server import BudgetServer
+from bayesfl.experiment_state import RunState
+from bayesfl.logging_utils import save_resolved_config
 from bayesfl.config import ExperimentConfig
 from bayesfl.data.datasets import load_test_loader
 from bayesfl.evaluation import CentralEvaluator
@@ -27,6 +31,7 @@ def run_flower_simulation(
     partition_metadata: dict,
     run_dir: Path,
     logger,
+    resume: bool = False,
 ) -> None:
     seed_everything(cfg.runtime.seed)
     initial_model = initialize_model(cfg)
@@ -55,14 +60,29 @@ def run_flower_simulation(
                 f"{cfg.model.name} Bayesian dimension must be {expected:,}, got {d:,}"
             )
 
+    if cfg.sparse_enabled:
+        # The uploaded deterministic architectures have no persistent buffers.
+        # Do not silently drop future BatchNorm running statistics or aliased
+        # distinct parameter objects from the sparse coordinate manifest.
+        if list(initial_model.named_buffers()):
+            raise ValueError("Sparse transport requires an explicit buffer policy for this new model")
+        storages = [p.untyped_storage().data_ptr() for p in initial_model.parameters()]
+        if len(set(storages)) != len(storages):
+            raise ValueError("Aliased distinct parameter storage needs a dedicated sparse layout adapter")
+    state = RunState(cfg, layout, initial_arrays, run_dir,
+                     partition_sha256=partition_metadata["sha256"], resume=resume)
+    initial_arrays = state.current
+    if resume:
+        save_resolved_config(cfg, run_dir)
     test_loader = load_test_loader(cfg)
-    evaluator = CentralEvaluator(cfg, test_loader, run_dir, logger=logger)
+    evaluator = CentralEvaluator(cfg, test_loader, run_dir, logger=logger, state=state)
     strategy = ResearchStrategy(
         cfg=cfg,
         layout=layout,
         initial_arrays=initial_arrays,
         run_dir=run_dir,
         logger=logger,
+        state=state,
     )
     strategy.evaluate_fn = lambda rnd, arrays, _config: evaluator.evaluate(rnd, arrays)
 
@@ -81,7 +101,7 @@ def run_flower_simulation(
 
     def server_fn(context: Context):
         return ServerAppComponents(
-            strategy=strategy,
+            server=BudgetServer(client_manager=SimpleClientManager(), strategy=strategy),
             config=ServerConfig(num_rounds=cfg.training.rounds),
         )
 

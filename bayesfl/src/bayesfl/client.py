@@ -20,6 +20,7 @@ from bayesfl.posterior.packing import (
     pack_fola,
     unpack_fola,
 )
+from bayesfl.posterior.sparse import compress_update
 from bayesfl.runtime_utils import release_cuda_memory, resolve_device, seed_everything
 from bayesfl.training.bbb import train_bbb
 from bayesfl.training.deterministic import train_fedavg
@@ -39,6 +40,10 @@ class BayesFLNumPyClient(fl.client.NumPyClient):
         self.cfg = cfg
         self.partition_path = str(partition_path)
         self.average_client_size = float(average_client_size)
+
+    def get_properties(self, config):
+        # Scalar identity handshake; no model parameters are transferred.
+        return {"client_id": self.client_id}
 
     def get_parameters(self, config):
         model = build_model(self.cfg)
@@ -95,7 +100,8 @@ class BayesFLNumPyClient(fl.client.NumPyClient):
                 metrics.update(bbb_posterior_summary(model))
 
             elif self.cfg.method == "fola":
-                global_means, global_precs = unpack_fola(parameters, layout)
+                broadcast = [np.asarray(a).copy() for a in parameters] if self.cfg.sparse_enabled else parameters
+                global_means, global_precs = unpack_fola(broadcast, layout)
                 ndarrays_to_model(model, global_means)
                 local_precs, metrics = train_fola(
                     model,
@@ -110,6 +116,13 @@ class BayesFLNumPyClient(fl.client.NumPyClient):
                 )
                 local_means = model_to_ndarrays(model)
                 updated = pack_fola(local_means, local_precs)
+                if self.cfg.sparse_enabled:
+                    updated, packet_metadata = compress_update(
+                        broadcast, updated, layout, self.cfg,
+                        round_id=server_round, client_id=self.client_id,
+                        base_snapshot_id=str(config["base_snapshot_id"]),
+                    )
+                    metrics.update(packet_metadata)
                 metrics.update(update_norms(local_means, global_means))
                 metrics.update(
                     fola_posterior_summary(
@@ -123,7 +136,7 @@ class BayesFLNumPyClient(fl.client.NumPyClient):
 
             metrics = {
                 **metrics,
-                "client_id": float(self.client_id),
+                "client_id": int(self.client_id),
                 "num_examples": float(client_size),
                 "server_round": float(server_round),
             }

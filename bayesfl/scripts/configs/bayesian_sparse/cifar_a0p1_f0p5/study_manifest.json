@@ -1,0 +1,57 @@
+{
+  "tag": "cifar_a0p1_f0p5",
+  "d": 878538,
+  "clients_per_round": 20,
+  "seed": 0,
+  "max_communication_bytes": 42169824000,
+  "covariance_representation": "raw_precision",
+  "precision_policy": "floor_for_score",
+  "bases": [
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p1_r150.yaml",
+      "sha256": "775f907eef7c3cfd460a44ceb9ea27454e90af078e6bdb53c906e324d9e8726f"
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f0p5_seed0_e10_b32_lr002_r150.yaml",
+      "sha256": "af6fa2314f1665d9c2f6486703e596450418731b431b49befa9b1d89581de693"
+    }
+  ],
+  "inherited_lr_schedule_caveat": "FOLA versus FedAvg keeps original locked LR/schedule differences; the three sparse rules share the FOLA trainer.",
+  "runs": [
+    {
+      "method": "fedavg_dense",
+      "keep_ratio": 1.0,
+      "config": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fedavg_dense_seed0.yaml",
+      "round_array_bytes": 140566080,
+      "affordable_rounds": 300
+    },
+    {
+      "method": "fola_dense",
+      "keep_ratio": 1.0,
+      "config": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_dense_seed0.yaml",
+      "round_array_bytes": 281132160,
+      "affordable_rounds": 150
+    },
+    {
+      "method": "fola_sparse_kl_global_local",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_kl_global_local_keep0p5_seed0.yaml",
+      "round_array_bytes": 213045480,
+      "affordable_rounds": 197
+    },
+    {
+      "method": "fola_sparse_kl_local_global",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_kl_local_global_keep0p5_seed0.yaml",
+      "round_array_bytes": 213045480,
+      "affordable_rounds": 197
+    },
+    {
+      "method": "fola_sparse_random",
+      "keep_ratio": 0.5,
+      "config": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_random_keep0p5_seed0.yaml",
+      "round_array_bytes": 213045480,
+      "affordable_rounds": 197
+    }
+  ]
+}

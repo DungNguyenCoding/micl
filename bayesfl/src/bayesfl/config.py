@@ -135,6 +135,28 @@ class OutputConfig:
 
 
 @dataclass
+class CompressionConfig:
+    # Dense defaults leave old YAMLs and baseline training unchanged.
+    selection_rule: str = "dense"  # dense | kl_global_local | kl_local_global | random
+    keep_ratio: float = 1.0
+    # Keep raw float32 precision/omega on the wire to preserve the baseline.
+    covariance_representation: str = "precision"
+    # A true finite Gaussian requires positive precision. CIFAR's raw zero
+    # omega needs the explicitly selected score-only surrogate below.
+    precision_policy: str = "strict"  # strict | floor_for_score
+    score_precision_floor: Optional[float] = None  # None -> fola.precision_min
+
+
+@dataclass
+class CommunicationConfig:
+    max_communication_bytes: Optional[int] = None
+    budget_metric: str = "cumulative_all_array_bytes"
+    # False preserves legacy sampling for existing YAMLs. Matched new configs
+    # select True; client IDs are resolved by a scalar-only get_properties call.
+    deterministic_client_schedule: bool = False
+
+
+@dataclass
 class ExperimentConfig:
     run_name: str
     method: str
@@ -147,11 +169,71 @@ class ExperimentConfig:
     runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
     output: OutputConfig = field(default_factory=OutputConfig)
 
+    compression: CompressionConfig = field(default_factory=CompressionConfig)
+    communication: CommunicationConfig = field(default_factory=CommunicationConfig)
+
+    @property
+    def sparse_enabled(self) -> bool:
+        return self.method == "fola" and self.compression.selection_rule != "dense"
+
+    @property
+    def method_id(self) -> str:
+        if self.sparse_enabled:
+            return "fola_sparse_" + self.compression.selection_rule
+        return self.method + "_dense" if self.method in {"fola", "fedavg"} else self.method
+
+    @property
+    def score_precision_floor(self) -> float:
+        value = self.compression.score_precision_floor
+        return float(self.fola.precision_min if value is None else value)
+
     def validate(self) -> None:
         self.method = self.method.lower()
+        aliases = {
+            "fedavg_dense": ("fedavg", "dense"),
+            "fola_dense": ("fola", "dense"),
+            "fola_sparse_kl_global_local": ("fola", "kl_global_local"),
+            "fola_sparse_kl_local_global": ("fola", "kl_local_global"),
+            "fola_sparse_random": ("fola", "random"),
+        }
+        if self.method in aliases:
+            self.method, self.compression.selection_rule = aliases[self.method]
+        if self.method == "fola_sparse":
+            self.method = "fola"
+            if self.compression.selection_rule == "dense":
+                raise ValueError("fola_sparse requires an explicit compression.selection_rule")
         self.data.dataset = self.data.dataset.lower()
         self.data.autoaugment_policy = self.data.autoaugment_policy.lower()
         self.fola.mode = self.fola.mode.lower()
+
+        c, comm = self.compression, self.communication
+        if c.selection_rule not in {"dense", "kl_global_local", "kl_local_global", "random"}:
+            raise ValueError("Invalid compression.selection_rule")
+        if c.selection_rule != "dense" and self.method != "fola":
+            raise ValueError("Communication sparsification is implemented only for FOLA")
+        if not math.isfinite(c.keep_ratio) or not 0 < c.keep_ratio <= 1:
+            raise ValueError("compression.keep_ratio must be in (0, 1]")
+        if c.covariance_representation != "precision":
+            raise ValueError("This baseline-preserving protocol transmits raw precision, not variance")
+        if c.precision_policy not in {"strict", "floor_for_score"}:
+            raise ValueError("precision_policy must be strict or floor_for_score")
+        if not math.isfinite(self.score_precision_floor) or self.score_precision_floor <= 0:
+            raise ValueError("Score precision floor must be finite and positive")
+        if self.sparse_enabled and c.precision_policy == "strict" and self.fola.initial_precision <= 0:
+            raise ValueError(
+                "Zero initial omega is not a finite Gaussian. Preserve the baseline by explicitly "
+                "setting compression.precision_policy: floor_for_score (see SPARSE_README.md)."
+            )
+        if self.sparse_enabled and self.output.save_full_client_posteriors:
+            raise ValueError("Dense server-side client snapshots would defeat sparse transport; disable them")
+        if comm.budget_metric not in {"cumulative_all_array_bytes", "cumulative_train_total_array_bytes"}:
+            raise ValueError("Only strict all-array or training-array budgets are supported")
+        if comm.max_communication_bytes is not None:
+            b = comm.max_communication_bytes
+            if isinstance(b, bool) or not isinstance(b, int) or b < 0:
+                raise ValueError("max_communication_bytes must be a nonnegative integer or null")
+        if self.federation.num_clients < 1 or self.federation.clients_per_round < 1:
+            raise ValueError("Client counts must be positive")
 
         if self.method not in {"fedavg", "bbb", "fola"}:
             raise ValueError(f"Unsupported method: {self.method}")
@@ -241,6 +323,8 @@ def load_config(path: str | Path) -> ExperimentConfig:
         fola=_make_section(FOLAConfig, raw.get("fola")),
         runtime=_make_section(RuntimeConfig, raw.get("runtime")),
         output=_make_section(OutputConfig, raw.get("output")),
+        compression=_make_section(CompressionConfig, raw.get("compression")),
+        communication=_make_section(CommunicationConfig, raw.get("communication")),
     )
     cfg.validate()
     return cfg
@@ -253,6 +337,10 @@ def apply_overrides(
     method: str | None = None,
     rounds: int | None = None,
     seed: int | None = None,
+    selection_rule: str | None = None,
+    keep_ratio: float | None = None,
+    precision_policy: str | None = None,
+    max_communication_bytes: int | None = None,
 ) -> ExperimentConfig:
     out = copy.deepcopy(cfg)
     if dataset is not None:
@@ -263,6 +351,14 @@ def apply_overrides(
         out.training.rounds = int(rounds)
     if seed is not None:
         out.runtime.seed = int(seed)
+    if selection_rule is not None:
+        out.compression.selection_rule = selection_rule
+    if keep_ratio is not None:
+        out.compression.keep_ratio = keep_ratio
+    if precision_policy is not None:
+        out.compression.precision_policy = precision_policy
+    if max_communication_bytes is not None:
+        out.communication.max_communication_bytes = max_communication_bytes
     out.validate()
     return out
 

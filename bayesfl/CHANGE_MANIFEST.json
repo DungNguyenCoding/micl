@@ -1,0 +1,4044 @@
+{
+  "original_zip_sha256": "39e6782c00d21bf7fd83708f64b6e4f30fd9d7f657f284d83746bfeb3f36d802",
+  "protocol": "sparse_fola_bitmap_precision_v1",
+  "counts": {
+    "unchanged": 520,
+    "modified": 8,
+    "added": 48
+  },
+  "note": "Manifest excludes its own hash to avoid a circular checksum; all original file paths retained.",
+  "files": [
+    {
+      "path": ".gitignore",
+      "status": "unchanged",
+      "original_sha256": "d191b15455a17c08c9994d4cd560c788ea06659788ff6976d5a2c8e4a0ab2d08",
+      "sha256": "d191b15455a17c08c9994d4cd560c788ea06659788ff6976d5a2c8e4a0ab2d08",
+      "bytes": 520
+    },
+    {
+      "path": "IMPLEMENTATION_REPORT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "381e56a98f7a2a69ddc566b8875dc6c02a0d8b03c7e21d7ff3cd836eb113b975",
+      "bytes": 15812
+    },
+    {
+      "path": "PACKAGE_MANIFEST.txt",
+      "status": "unchanged",
+      "original_sha256": "72c79974ceb38ae8c502d666cd4be3e70de1aae3d492a058f60a453f571ad39c",
+      "sha256": "72c79974ceb38ae8c502d666cd4be3e70de1aae3d492a058f60a453f571ad39c",
+      "bytes": 2884
+    },
+    {
+      "path": "README.md",
+      "status": "modified",
+      "original_sha256": "6d15a00e098d646a78fbff6fa5ca13706e7dca9b36b8d69eabdd8e07adc5d43d",
+      "sha256": "1d8faa77be747a5265bc54b3cf743fd6bf6c94a51ca98db2439bd79df045363d",
+      "bytes": 2264
+    },
+    {
+      "path": "SPARSE_README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6f5259ebacee8e84f48a80e6e812ce767afab629193667c00cf3883e6fb33e26",
+      "bytes": 20650
+    },
+    {
+      "path": "VALIDATION.md",
+      "status": "unchanged",
+      "original_sha256": "a5422e2c5430f1854d137df159b17b42e77de15ab60cc48f381292dc3cb2bac8",
+      "sha256": "a5422e2c5430f1854d137df159b17b42e77de15ab60cc48f381292dc3cb2bac8",
+      "bytes": 897
+    },
+    {
+      "path": "VALIDATION_SPARSE.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7f38766ec1758c339619af28c6c2d897d24c859d0c497ce6b7f99d9bb3589255",
+      "bytes": 5465
+    },
+    {
+      "path": "docs/ALGORITHM_NOTES.md",
+      "status": "unchanged",
+      "original_sha256": "ca5bef4006e486c7458e3b1f4bdfcb8ba72ee4379205b8e15e8f5edd09da2f4b",
+      "sha256": "ca5bef4006e486c7458e3b1f4bdfcb8ba72ee4379205b8e15e8f5edd09da2f4b",
+      "bytes": 3917
+    },
+    {
+      "path": "docs/BASELINE_ARCHIVE_README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6d15a00e098d646a78fbff6fa5ca13706e7dca9b36b8d69eabdd8e07adc5d43d",
+      "bytes": 9039
+    },
+    {
+      "path": "docs/BASELINE_HANDOFF_README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "e4c455226bab8f8ba8a837fc9db5174add7fddd6a58c739d7efef2e9ca3c2e13",
+      "bytes": 91576
+    },
+    {
+      "path": "docs/PAPER_CIFAR10_PROFILE.md",
+      "status": "unchanged",
+      "original_sha256": "5c1bcefd6f95e4fd481ccd9d5884f32c216b277b5f93a6ea619c59049fab5c3c",
+      "sha256": "5c1bcefd6f95e4fd481ccd9d5884f32c216b277b5f93a6ea619c59049fab5c3c",
+      "bytes": 3294
+    },
+    {
+      "path": "docs/SPARSE_IMPLEMENTATION_GUIDELINE.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "57154e6b9f4c71133dd61fd51474663d7c51580adfb89d24f51c0066f391c7d8",
+      "bytes": 48638
+    },
+    {
+      "path": "logs/.gitkeep",
+      "status": "unchanged",
+      "original_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "pyproject.toml",
+      "status": "unchanged",
+      "original_sha256": "1f94cd39a633f632a7da9eb351f1eeb6a31a911ff02f830c5512945ceb1226be",
+      "sha256": "1f94cd39a633f632a7da9eb351f1eeb6a31a911ff02f830c5512945ceb1226be",
+      "bytes": 800
+    },
+    {
+      "path": "requirements.txt",
+      "status": "unchanged",
+      "original_sha256": "b4d49924646e9db423f724405bf92eae932555efea08b688c46f472bf2134054",
+      "sha256": "b4d49924646e9db423f724405bf92eae932555efea08b688c46f472bf2134054",
+      "bytes": 379
+    },
+    {
+      "path": "scripts/_run_gpu_queue.sh",
+      "status": "unchanged",
+      "original_sha256": "55dbcf5609c9c50fc21d10a7b83e8caa6c7fad7c3df9c5f910806038d7687a58",
+      "sha256": "55dbcf5609c9c50fc21d10a7b83e8caa6c7fad7c3df9c5f910806038d7687a58",
+      "bytes": 3319
+    },
+    {
+      "path": "scripts/_run_nohup.sh",
+      "status": "unchanged",
+      "original_sha256": "ae2388043402bf3b51e9c74e4b6057b7aa30554f2acb2dcf5390f40b83c310da",
+      "sha256": "ae2388043402bf3b51e9c74e4b6057b7aa30554f2acb2dcf5390f40b83c310da",
+      "bytes": 472
+    },
+    {
+      "path": "scripts/check_environment.sh",
+      "status": "unchanged",
+      "original_sha256": "5f31732b549228630a1aa19a0188371deb780cd65a61c2b4162fa72c69853c89",
+      "sha256": "5f31732b549228630a1aa19a0188371deb780cd65a61c2b4162fa72c69853c89",
+      "bytes": 728
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/queue.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "fc2a75aae4dc7e3a62823b239af1b5997c27f9ff1c76128cd2eb7294193efdae",
+      "bytes": 533
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fedavg_dense_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "0d7f27fd6221c5613b855281aee235d09c90fd46a901c29e453fe2ca02eeddbc",
+      "bytes": 2146
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_dense_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "50888874938424a0ac9e0267f541b04797e80c1d4dc73ced1294a40e74d99d32",
+      "bytes": 2140
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_kl_global_local_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "02b524d9cb5d6b571853494f2ff98dd6e3f1c0f24b9873de6a725562f488772f",
+      "bytes": 2175
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_kl_local_global_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "9c13d834a28481b25f7d96ca789fe37c58b37faa19efe7af7318fe462809909e",
+      "bytes": 2175
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/sparse_cifar_a0p1_f0p5_fola_sparse_random_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4ecdf667d849fe8b93dfa1e9358d784171b5284fc5554a676bdf704ec4bef076",
+      "bytes": 2157
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/cifar_a0p1_f0p5/study_manifest.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4d93896027eff2353c48e3b7f0b9d47c63b8ad8edd44a27ac6c1c4d738d97a1c",
+      "bytes": 2184
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/queue.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d5f643bdac64b1b3bf87ab1f402d4b54df9592896fd6a0b9dacd33f5b70d92de",
+      "bytes": 533
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fedavg_dense_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "b57a2d88b3bd55c31b9c02593e4b17d2000b16e5d06ac80f98400fb84fde1ada",
+      "bytes": 2103
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_dense_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "cb91dfcbf9ca333bb357dfcdcf86781d3150e95ebbe54ecd81c3a8257d6a55e3",
+      "bytes": 2098
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_kl_global_local_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "dff4a8fc250563f682d751c6062c7202f915a6982c5cd43562594aa72906b1ea",
+      "bytes": 2133
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_kl_local_global_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "18ba55d0a04b8086efb8597280956ae92e1b29bc9d8518511d4c6e83f1c5b81b",
+      "bytes": 2133
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/sparse_mnist_fixed_s10_fola_sparse_random_keep0p5_seed0.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "c4b0447ba7ee5785a45ecce73e82552b9b7b618a11253e846593dd783cf17a29",
+      "bytes": 2115
+    },
+    {
+      "path": "scripts/configs/bayesian_sparse/mnist_fixed_s10/study_manifest.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "3985c274a5bae70adb8927feb6fa855ae2b2c0368484c5fae2f83866cf7135ff",
+      "bytes": 2159
+    },
+    {
+      "path": "scripts/configs/bbb_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "614e7a0a15e18ace1c7181d2e3903ede373b787b38d4ae93ed4da34c9d78386b",
+      "sha256": "614e7a0a15e18ace1c7181d2e3903ede373b787b38d4ae93ed4da34c9d78386b",
+      "bytes": 1789
+    },
+    {
+      "path": "scripts/configs/bbb_cifar10_full300.yaml",
+      "status": "unchanged",
+      "original_sha256": "df239cca690d0cd72a78121301e7851acae84ae4d7c1c22a52321a3d44e10bc8",
+      "sha256": "df239cca690d0cd72a78121301e7851acae84ae4d7c1c22a52321a3d44e10bc8",
+      "bytes": 1705
+    },
+    {
+      "path": "scripts/configs/bbb_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "aa38c2c2cbf1ae1cb0e8a47b5840a977727c3eaa60a4818ee0e80b3e8990d55e",
+      "sha256": "aa38c2c2cbf1ae1cb0e8a47b5840a977727c3eaa60a4818ee0e80b3e8990d55e",
+      "bytes": 1495
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_lr0001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "d8bfc5afacf71f20acf272c201ff3ed6db12ccfb1140319f4002276e73f11ed6",
+      "sha256": "d8bfc5afacf71f20acf272c201ff3ed6db12ccfb1140319f4002276e73f11ed6",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_lr001_e2_kl01x_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "17f49adcb871f7ce7542216f5e82a6e33cd709ce8c1b699391af1d83eac745a0",
+      "sha256": "17f49adcb871f7ce7542216f5e82a6e33cd709ce8c1b699391af1d83eac745a0",
+      "bytes": 1628
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "322267e85b4cbc1c432ebd2e4ee18ec8d31fc9fecc9974a7003bfa9943df2215",
+      "sha256": "322267e85b4cbc1c432ebd2e4ee18ec8d31fc9fecc9974a7003bfa9943df2215",
+      "bytes": 1604
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_lr001_e2_rho5_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "4cad7130631ecb8b9cffc4bbe7bd00d826a1161851c00754cf6707b65b3eac19",
+      "sha256": "4cad7130631ecb8b9cffc4bbe7bd00d826a1161851c00754cf6707b65b3eac19",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_matchedinit_fedavgvar_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "01029c7b5a76bd5aa1e1bda169805df59d3b731300e3c0a3db614efb8ac6fe46",
+      "sha256": "01029c7b5a76bd5aa1e1bda169805df59d3b731300e3c0a3db614efb8ac6fe46",
+      "bytes": 1662
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_matchedinit_fedavgvar_rho5_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "942752d894a22946fb0f1718605d733e9bebf7a6152f5b4e02bb5a126e4629c4",
+      "sha256": "942752d894a22946fb0f1718605d733e9bebf7a6152f5b4e02bb5a126e4629c4",
+      "bytes": 1667
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_matchedinit_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "2b8ba85c4bfa781e4059b093a767ace959dd6945ed8377cf1aff41c08d6cf7c1",
+      "sha256": "2b8ba85c4bfa781e4059b093a767ace959dd6945ed8377cf1aff41c08d6cf7c1",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug100_bbb_cifar10_matchedinit_rho5_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "69f0c32a0a23fe87cb6c8cc29c40c8d56a4278d013370930301ff4ac0244d510",
+      "sha256": "69f0c32a0a23fe87cb6c8cc29c40c8d56a4278d013370930301ff4ac0244d510",
+      "bytes": 1655
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr001_e1.yaml",
+      "status": "unchanged",
+      "original_sha256": "d445792a500ddf016b2bcd05643a1a801073596abae5adc8ebba2d6cee664a96",
+      "sha256": "d445792a500ddf016b2bcd05643a1a801073596abae5adc8ebba2d6cee664a96",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr001_e10.yaml",
+      "status": "unchanged",
+      "original_sha256": "99e3c4f66b3cde7600199a4472363286ae72a52c0006378b86a81019f374c207",
+      "sha256": "99e3c4f66b3cde7600199a4472363286ae72a52c0006378b86a81019f374c207",
+      "bytes": 1608
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr001_e2.yaml",
+      "status": "unchanged",
+      "original_sha256": "9c5ea71e151c30a462c197c56fe11f8e224435f1f4d8cd7d3c97f2f03f7a2fc3",
+      "sha256": "9c5ea71e151c30a462c197c56fe11f8e224435f1f4d8cd7d3c97f2f03f7a2fc3",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr001_e2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e459dc1f55438161b15cb7d8985d375821770602c69b942ad09032912238bc82",
+      "sha256": "e459dc1f55438161b15cb7d8985d375821770602c69b942ad09032912238bc82",
+      "bytes": 1610
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr001_e5.yaml",
+      "status": "unchanged",
+      "original_sha256": "e53a5452638df2076c2bb71802732939a2e65631957493627fac0b97e4fe1cb9",
+      "sha256": "e53a5452638df2076c2bb71802732939a2e65631957493627fac0b97e4fe1cb9",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug100_fedavg_cifar10_lr005_e1.yaml",
+      "status": "unchanged",
+      "original_sha256": "d1c765d4e6bd5b1be00ab29173bd37d575e4b382fc585c8cdf8c90156353ca04",
+      "sha256": "d1c765d4e6bd5b1be00ab29173bd37d575e4b382fc585c8cdf8c90156353ca04",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug100_fola_cifar10_lr001_e2_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "1f9158ed8f5905d2c0205aa82d025e0ce7adc60cd1a0d59d6a80002bc50dabe4",
+      "sha256": "1f9158ed8f5905d2c0205aa82d025e0ce7adc60cd1a0d59d6a80002bc50dabe4",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_arch_fedavg_cifar10_a0p1_basiccnn_lr001_e10_r100.yaml",
+      "status": "unchanged",
+      "original_sha256": "09fa230661fc80feb79ac87a98c507be221ca6c148c62c3d3c88b55a8cffe722",
+      "sha256": "09fa230661fc80feb79ac87a98c507be221ca6c148c62c3d3c88b55a8cffe722",
+      "bytes": 1816
+    },
+    {
+      "path": "scripts/configs/debug_arch_fola_cifar10_a0p1_basiccnn_lr001_e10_lam1_r100.yaml",
+      "status": "unchanged",
+      "original_sha256": "4f8e2d7fbc3f30f634ed02241b90a27a5b95af058e56049240b8f79458d1fccf",
+      "sha256": "4f8e2d7fbc3f30f634ed02241b90a27a5b95af058e56049240b8f79458d1fccf",
+      "bytes": 1815
+    },
+    {
+      "path": "scripts/configs/debug_bbb_cifar10_noniid20.yaml",
+      "status": "unchanged",
+      "original_sha256": "5b026e6497a3407a87cfe38890581f17b24b13328b8738c8e0269be002d62d62",
+      "sha256": "5b026e6497a3407a87cfe38890581f17b24b13328b8738c8e0269be002d62d62",
+      "bytes": 1594
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fedavg_constant_full_seed0_e10_b32_lr001_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "13851a3643db61e1f80ed47a4277c1518bf976f086f80ac9d912cb02cb5b42a2",
+      "sha256": "13851a3643db61e1f80ed47a4277c1518bf976f086f80ac9d912cb02cb5b42a2",
+      "bytes": 1864
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fedavg_constant_full_seed0_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7eb2f83083ddac0bccc02de64330ac330369932248bf7f5d35d10cc06decb820",
+      "sha256": "7eb2f83083ddac0bccc02de64330ac330369932248bf7f5d35d10cc06decb820",
+      "bytes": 1862
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fola_constant_full_seed0_e10_b32_lr001_lam0p01_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "4fd27460aef4da9596912b99d21fa3d548ec744553d46dd065ba6f1a8da5758f",
+      "sha256": "4fd27460aef4da9596912b99d21fa3d548ec744553d46dd065ba6f1a8da5758f",
+      "bytes": 1867
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fola_constant_full_seed0_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2050b83dfa792295d231e6b22fbd914edbda69e621ccfb5c7e7446840d6bb0bb",
+      "sha256": "2050b83dfa792295d231e6b22fbd914edbda69e621ccfb5c7e7446840d6bb0bb",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fola_cos400_full_seed0_e10_b32_lr002_lam0p01_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "6e53aa3e7bdfc9cb09e68242a46877c4c6be8bd409b1779baaab8a3e47e578be",
+      "sha256": "6e53aa3e7bdfc9cb09e68242a46877c4c6be8bd409b1779baaab8a3e47e578be",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p01_fola_cos400_full_seed0_e10_b32_lr002_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d5bbb5c8175e56d3192fbe2e87ed1ee865c0f0d027c5156f6f747e605a2639ee",
+      "sha256": "d5bbb5c8175e56d3192fbe2e87ed1ee865c0f0d027c5156f6f747e605a2639ee",
+      "bytes": 1863
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fedavg_const_n20_f0p125_seed0_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "690ae174245c06a140d6f37289a2104645334baa73178a188abb0fbde4e05fc3",
+      "sha256": "690ae174245c06a140d6f37289a2104645334baa73178a188abb0fbde4e05fc3",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fedavg_const_n20_f0p25_seed0_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3c5c57f59ab519896c9a53024b8ad64f2003db4a9e505d5d5cf01df93045e026",
+      "sha256": "3c5c57f59ab519896c9a53024b8ad64f2003db4a9e505d5d5cf01df93045e026",
+      "bytes": 1863
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fedavg_constant_full_seed0_e10_b32_lr002_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "d2df7e0325c3bd3250b47bab613b309e28b18cf4f009ec8a9777a9ab41c36892",
+      "sha256": "d2df7e0325c3bd3250b47bab613b309e28b18cf4f009ec8a9777a9ab41c36892",
+      "bytes": 1862
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fedavg_constant_full_seed0_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e8592b2d52c6e07549d405cb835a725f3d5f264b29ae5913262503e384911876",
+      "sha256": "e8592b2d52c6e07549d405cb835a725f3d5f264b29ae5913262503e384911876",
+      "bytes": 1860
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_constant_full_seed0_e10_b32_lr002_lam0p1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "1f0f641616cee5ad08066c11fc8dc144f1ed946c52deca8769200484f614541c",
+      "sha256": "1f0f641616cee5ad08066c11fc8dc144f1ed946c52deca8769200484f614541c",
+      "bytes": 1863
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_constant_full_seed0_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "130fed94bfd3e0966f1ee61cd15b65c5e9894e094c2418d3f10ad1086ed2ea8e",
+      "sha256": "130fed94bfd3e0966f1ee61cd15b65c5e9894e094c2418d3f10ad1086ed2ea8e",
+      "bytes": 1861
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_cos400_full_seed0_e10_b32_lr002_lam0p1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "277884346bb63a9c109abd8374976bd74eaa35e50ac512b56f6294de279dd872",
+      "sha256": "277884346bb63a9c109abd8374976bd74eaa35e50ac512b56f6294de279dd872",
+      "bytes": 1861
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_cos400_full_seed0_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "80aed8061cdba06789ce5b1df7f051e918d12c84655d0122d2feeb6256b49e1f",
+      "sha256": "80aed8061cdba06789ce5b1df7f051e918d12c84655d0122d2feeb6256b49e1f",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_cos400_n20_f0p125_seed0_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "fcbbd5c0d924757433d1c89bedcdbf0e0fe4d0bd72d49d9054381316aa7fe4c8",
+      "sha256": "fcbbd5c0d924757433d1c89bedcdbf0e0fe4d0bd72d49d9054381316aa7fe4c8",
+      "bytes": 1867
+    },
+    {
+      "path": "scripts/configs/debug_cifar_basiccnn_a0p1_fola_cos400_n20_f0p25_seed0_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7d62cbfafbef8637c4cc3f776aada51093ac7076944b0f7682a0720195e7105d",
+      "sha256": "7d62cbfafbef8637c4cc3f776aada51093ac7076944b0f7682a0720195e7105d",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_fola_cos400_full_seed0_e10_b32_lr002_lam0p01_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "2e24802a58bd4290cb2aad7d7ae6c965b42f8be34575661c43f2e6c4db9b6997",
+      "sha256": "2e24802a58bd4290cb2aad7d7ae6c965b42f8be34575661c43f2e6c4db9b6997",
+      "bytes": 1858
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_fola_cos400_full_seed0_e10_b32_lr002_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c3a42279fc7b9fac570d6252573357dc2410f0faf0a4f46bc3a6ca24f1101ce3",
+      "sha256": "c3a42279fc7b9fac570d6252573357dc2410f0faf0a4f46bc3a6ca24f1101ce3",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fedavg_n20_f0p125_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "066d66e5d18726bf892540228d30ec5450aff4aa3bcdf0ff834fe37633568b64",
+      "sha256": "066d66e5d18726bf892540228d30ec5450aff4aa3bcdf0ff834fe37633568b64",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fedavg_n20_f0p25_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3546c4ef2634fd8e468f5521d7c82f750b1f30ad842216df0184de168cb96868",
+      "sha256": "3546c4ef2634fd8e468f5521d7c82f750b1f30ad842216df0184de168cb96868",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fedavg_n20_f0p5_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "572ba9906c1f0758c9c1475ad39c535bef585dac4fb86dad243242d615fd4786",
+      "sha256": "572ba9906c1f0758c9c1475ad39c535bef585dac4fb86dad243242d615fd4786",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fola_n20_f0p125_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1900b8c17ea282ab39ab3537e18f8e03318577383f8a988650a8fa64dd4e4375",
+      "sha256": "1900b8c17ea282ab39ab3537e18f8e03318577383f8a988650a8fa64dd4e4375",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fola_n20_f0p25_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1238d27392e9b5635adb1c4d8ec420709a36c6a7749ff8c97374ff339fdf0e02",
+      "sha256": "1238d27392e9b5635adb1c4d8ec420709a36c6a7749ff8c97374ff339fdf0e02",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_localfrac_fola_n20_f0p5_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "55b5e7f317d961b6632eb4c48124685b0483d99be3703f78658f28f6e8d9f2e6",
+      "sha256": "55b5e7f317d961b6632eb4c48124685b0483d99be3703f78658f28f6e8d9f2e6",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fedavg_n20_f1_e10_b32_lr0005_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3d50811dfce3ec1b33df4e86df96e4475f213b073b0e28c6aec1c9038ba8a65f",
+      "sha256": "3d50811dfce3ec1b33df4e86df96e4475f213b073b0e28c6aec1c9038ba8a65f",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fedavg_n20_f1_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "21816fb155cd1f256b0bd35043714057982640a93877e0147f66c049ed490dea",
+      "sha256": "21816fb155cd1f256b0bd35043714057982640a93877e0147f66c049ed490dea",
+      "bytes": 1845
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fedavg_n20_f1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "060728a64983f12a9b5982167cfb9b2daa3332bfca28196235049057d544e8e6",
+      "sha256": "060728a64983f12a9b5982167cfb9b2daa3332bfca28196235049057d544e8e6",
+      "bytes": 1845
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr0005_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "cd2ac302aad3129f5153b1baf4d963858165d0c89b39ffa17aead2a9c5998ec5",
+      "sha256": "cd2ac302aad3129f5153b1baf4d963858165d0c89b39ffa17aead2a9c5998ec5",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr0005_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "007c3223f9f65ffd3af1f83db5c9d63a6a48e1656fcb8d8ce18c5fd25e552d0a",
+      "sha256": "007c3223f9f65ffd3af1f83db5c9d63a6a48e1656fcb8d8ce18c5fd25e552d0a",
+      "bytes": 1853
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr0005_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2d18ffe6a40e3722a7de309e0c277c5b6d767d948ce09a5b61814fbc684d5a3c",
+      "sha256": "2d18ffe6a40e3722a7de309e0c277c5b6d767d948ce09a5b61814fbc684d5a3c",
+      "bytes": 1851
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr0005_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a5ab3395ce8a9ea52361cb3200fc40c2f1272d8bd83433ad511b585cb5ecb19f",
+      "sha256": "a5ab3395ce8a9ea52361cb3200fc40c2f1272d8bd83433ad511b585cb5ecb19f",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr001_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "516da382942cfc3b07e689ff1f0600bf8b2c853a743bd5fb012d09ad17b0d668",
+      "sha256": "516da382942cfc3b07e689ff1f0600bf8b2c853a743bd5fb012d09ad17b0d668",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr001_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "299f194b0550d97ae978bdc58171db3560bc1e71f92a2b98dede3465ad35dd92",
+      "sha256": "299f194b0550d97ae978bdc58171db3560bc1e71f92a2b98dede3465ad35dd92",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "36e44acef64e6298be15c34aba2005b7f4134d90c4e0d2c68201a475189e22f5",
+      "sha256": "36e44acef64e6298be15c34aba2005b7f4134d90c4e0d2c68201a475189e22f5",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr001_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4fcabefab86fc1f6e569aeaff79b17bc9cd3dcc1ce0f9d2a1df05c5af67da0f6",
+      "sha256": "4fcabefab86fc1f6e569aeaff79b17bc9cd3dcc1ce0f9d2a1df05c5af67da0f6",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr002_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "9501fb349e86cdb0fd3a8dda5ab79e10781c16d3670b7628fdee06094001c309",
+      "sha256": "9501fb349e86cdb0fd3a8dda5ab79e10781c16d3670b7628fdee06094001c309",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr002_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2cd3ec0f5751ad075b474d6f9969e4baf4d32dfdfd8d168d016ae2f5f2a0be35",
+      "sha256": "2cd3ec0f5751ad075b474d6f9969e4baf4d32dfdfd8d168d016ae2f5f2a0be35",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr002_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "38a07ae84d8568164e336d11a7ed83f77613c3b1728665aea089caa127e44c06",
+      "sha256": "38a07ae84d8568164e336d11a7ed83f77613c3b1728665aea089caa127e44c06",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p01_lock_fola_n20_f1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "310a298ae6f00221fa2daeb285054924a455f4fbb7ebd9da36d077cb45e907d8",
+      "sha256": "310a298ae6f00221fa2daeb285054924a455f4fbb7ebd9da36d077cb45e907d8",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fedavg_n20_f0p125_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4be8f36416e8cc2d23bd51054a253e776f5f6741b73668ef5322239b1b47b24b",
+      "sha256": "4be8f36416e8cc2d23bd51054a253e776f5f6741b73668ef5322239b1b47b24b",
+      "bytes": 1851
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fedavg_n20_f0p25_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d414163772510164707d3e04b67170ec573000264aba89bff5163c3ceb6d6a35",
+      "sha256": "d414163772510164707d3e04b67170ec573000264aba89bff5163c3ceb6d6a35",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fedavg_n20_f0p5_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "48d01f88aec8294d42b3c2ae80aefcdf0c8b8b9a43dea0b322cf50b567f2fb1e",
+      "sha256": "48d01f88aec8294d42b3c2ae80aefcdf0c8b8b9a43dea0b322cf50b567f2fb1e",
+      "bytes": 1847
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fola_n20_f0p125_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "23e0f4de0b900c27149d72000023bd5ee94399aa9b2745f8996520455ffdf078",
+      "sha256": "23e0f4de0b900c27149d72000023bd5ee94399aa9b2745f8996520455ffdf078",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fola_n20_f0p25_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "9a4142f608c9807448a7c2bed8ad1553942e6145f95e8c36fdb06c84d5d07bc4",
+      "sha256": "9a4142f608c9807448a7c2bed8ad1553942e6145f95e8c36fdb06c84d5d07bc4",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_bridge_fola_n20_f0p5_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5e9209f9e5e0ee4df86901305b82006d2910e32dc0676b016a59f16ac256954e",
+      "sha256": "5e9209f9e5e0ee4df86901305b82006d2910e32dc0676b016a59f16ac256954e",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_cos400_full_seed0_e10_b32_lr002_lam0p1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "c54a5614ee85a2ed4c20f27de48d81dc32fe9fa55c63a1a2d2f359e3a8f66beb",
+      "sha256": "c54a5614ee85a2ed4c20f27de48d81dc32fe9fa55c63a1a2d2f359e3a8f66beb",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_cos400_full_seed0_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d42ad58b8c0d77f972d4966126986871e1c112eb2d30890ef49a9ea7536a75d6",
+      "sha256": "d42ad58b8c0d77f972d4966126986871e1c112eb2d30890ef49a9ea7536a75d6",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0015_lam0p05_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8cc30468872f4d4441abe1cf55e7d08bb23225c9897837c6b69fcbbd90b19350",
+      "sha256": "8cc30468872f4d4441abe1cf55e7d08bb23225c9897837c6b69fcbbd90b19350",
+      "bytes": 1851
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0015_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a2391e4c408a125d053a4873b13ffd5358484d79b1ed05b693c1be7d020be13f",
+      "sha256": "a2391e4c408a125d053a4873b13ffd5358484d79b1ed05b693c1be7d020be13f",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0015_lam0p2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "103101694581e4dd5e46665ad6a3e64391fff6e899628537ee90c1c7359daca7",
+      "sha256": "103101694581e4dd5e46665ad6a3e64391fff6e899628537ee90c1c7359daca7",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0025_lam0p05_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "00d3e81785c2d36be9f596c58af30bebfc566db889c005c9edd3ffcd5ee4a196",
+      "sha256": "00d3e81785c2d36be9f596c58af30bebfc566db889c005c9edd3ffcd5ee4a196",
+      "bytes": 1851
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0025_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6828907bbe1e92abe47b644b3fd7a205357bd76f542df4bb6bdb0b2aaa3cf8cf",
+      "sha256": "6828907bbe1e92abe47b644b3fd7a205357bd76f542df4bb6bdb0b2aaa3cf8cf",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr0025_lam0p2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "59b4ec5b3e8aa2360b9cb645ca80a177a178e1aae2b27573d017aee99a3e6299",
+      "sha256": "59b4ec5b3e8aa2360b9cb645ca80a177a178e1aae2b27573d017aee99a3e6299",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr002_lam0p05_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5b09b723cdcd70c96ea327578a6837323eabc5578f98b5d038614a8ec0d4b2e6",
+      "sha256": "5b09b723cdcd70c96ea327578a6837323eabc5578f98b5d038614a8ec0d4b2e6",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_fola_refine_n20_f1_e10_b32_lr002_lam0p2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7045823a7d1baeef45f61561e5eb32a8d319d2f88a321beda34b0b3891b545ce",
+      "sha256": "7045823a7d1baeef45f61561e5eb32a8d319d2f88a321beda34b0b3891b545ce",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fedavg_n20_f1_e10_b32_lr0005_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8200fb7a7397cf50e11482782827a0074fc1cd8563683e857a6eff848d87b2ad",
+      "sha256": "8200fb7a7397cf50e11482782827a0074fc1cd8563683e857a6eff848d87b2ad",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fedavg_n20_f1_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6c3a99a350cdf7711ed396e6418aac5978d81b9bbcb2c1497c6a854352e27b38",
+      "sha256": "6c3a99a350cdf7711ed396e6418aac5978d81b9bbcb2c1497c6a854352e27b38",
+      "bytes": 1843
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fedavg_n20_f1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a2cc05a087803c4976b4ac2e0e3b0e7d40c76f86b9e912567a29830d39c7f750",
+      "sha256": "a2cc05a087803c4976b4ac2e0e3b0e7d40c76f86b9e912567a29830d39c7f750",
+      "bytes": 1843
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr0005_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "bedbca19c35517b2084bd2da29a75249ef5e2a88b35367ddc37ebfe0ff83debb",
+      "sha256": "bedbca19c35517b2084bd2da29a75249ef5e2a88b35367ddc37ebfe0ff83debb",
+      "bytes": 1853
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr0005_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5e8592b75dcf589fb68eff8afcefb09cc6528741d33181eec8658fd37d079542",
+      "sha256": "5e8592b75dcf589fb68eff8afcefb09cc6528741d33181eec8658fd37d079542",
+      "bytes": 1851
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr0005_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7bed9f96dd3b19f7eee068e96fe14cdd103a8d657858e08733e2130c516072c3",
+      "sha256": "7bed9f96dd3b19f7eee068e96fe14cdd103a8d657858e08733e2130c516072c3",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr0005_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e678fe57374f1723cd0f63c3ec59c0a97b1444831bb62f7ec824696b218f3447",
+      "sha256": "e678fe57374f1723cd0f63c3ec59c0a97b1444831bb62f7ec824696b218f3447",
+      "bytes": 1847
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr0005_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e1b3bf0bffdae4be4bdd78b9b1b6ee0cded44cd17a5396778737bfcdf2f616a9",
+      "sha256": "e1b3bf0bffdae4be4bdd78b9b1b6ee0cded44cd17a5396778737bfcdf2f616a9",
+      "bytes": 1845
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr001_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "127f877325cd39576243d578cad129ef06dfd07a08ceb5b23ac765cad6aa7952",
+      "sha256": "127f877325cd39576243d578cad129ef06dfd07a08ceb5b23ac765cad6aa7952",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr001_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "79b79a3e019877c09f81e2deb84a0c6b1176f8df74bd998f5609d9e954140a9f",
+      "sha256": "79b79a3e019877c09f81e2deb84a0c6b1176f8df74bd998f5609d9e954140a9f",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d112eb0105dc70c11aaa4c33af85b8bb0fa9a24d29a5b1b5c8d2f3896a15054b",
+      "sha256": "d112eb0105dc70c11aaa4c33af85b8bb0fa9a24d29a5b1b5c8d2f3896a15054b",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr001_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5bcc346a7878031b5f8661278eb5d126e1ccd4426366588b4d1b5a4973cde0c6",
+      "sha256": "5bcc346a7878031b5f8661278eb5d126e1ccd4426366588b4d1b5a4973cde0c6",
+      "bytes": 1844
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr001_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c9e92cf839f992f11f0d4e8da86e4bbd18d51a8ad5a7e9a173670ea52b0b817c",
+      "sha256": "c9e92cf839f992f11f0d4e8da86e4bbd18d51a8ad5a7e9a173670ea52b0b817c",
+      "bytes": 1842
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr002_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "cd0b80c2add24cfb1367e0c6ccdfcc163028eec4c1a1f6cbe493cb3634248b93",
+      "sha256": "cd0b80c2add24cfb1367e0c6ccdfcc163028eec4c1a1f6cbe493cb3634248b93",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr002_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3888d9a4e022e501795ae208cef300489e0f3bc4464349485103017c34201128",
+      "sha256": "3888d9a4e022e501795ae208cef300489e0f3bc4464349485103017c34201128",
+      "bytes": 1848
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr002_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "71a03d6cf43d0f5408a8a0b32bbf828540329fe006c4efb4f7b3ff2e5015036e",
+      "sha256": "71a03d6cf43d0f5408a8a0b32bbf828540329fe006c4efb4f7b3ff2e5015036e",
+      "bytes": 1846
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e1594e100a9702c506727785a866d6260871b45a6ebd29c5eb0180bb073a3f44",
+      "sha256": "e1594e100a9702c506727785a866d6260871b45a6ebd29c5eb0180bb073a3f44",
+      "bytes": 1844
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lock_fola_n20_f1_e10_b32_lr002_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6d7b273d3c4c1f4afba72daadc02ceb11673a1e383ea7bd4baf53a54a5be5f94",
+      "sha256": "6d7b273d3c4c1f4afba72daadc02ceb11673a1e383ea7bd4baf53a54a5be5f94",
+      "bytes": 1842
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fedavg_n20_f1_e10_b32_lr003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4d2e401368df430f0befb75276a5f73f0e53ab7f18a5b08ebea6b601cd9b5c4f",
+      "sha256": "4d2e401368df430f0befb75276a5f73f0e53ab7f18a5b08ebea6b601cd9b5c4f",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fedavg_n20_f1_e10_b32_lr004_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c78aee98f698be0686bc31e71d23b92408ae7ee3dd3fb2d39d37d0b704f36693",
+      "sha256": "c78aee98f698be0686bc31e71d23b92408ae7ee3dd3fb2d39d37d0b704f36693",
+      "bytes": 1849
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fedavg_n20_f1_e10_b32_lr0050_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7ab14d630381020cf42526d300798696af0e9b9572c54676c862cb4afc618941",
+      "sha256": "7ab14d630381020cf42526d300798696af0e9b9572c54676c862cb4afc618941",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fedavg_n20_f1_e10_b32_lr0060_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "824a05e682fc9e11966456844a60c68bb655203eb887e260d98394f0d20b9677",
+      "sha256": "824a05e682fc9e11966456844a60c68bb655203eb887e260d98394f0d20b9677",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr003_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c6e0d1b066eb386825715e14a90a32a79ab578849c3d39a37e2bef71b0761f69",
+      "sha256": "c6e0d1b066eb386825715e14a90a32a79ab578849c3d39a37e2bef71b0761f69",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr003_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ea6eccf81665f4b792ff447fc7acd95a2577a4fe1f546bb538a90a46dd0e36b9",
+      "sha256": "ea6eccf81665f4b792ff447fc7acd95a2577a4fe1f546bb538a90a46dd0e36b9",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr003_lam0p3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "83472b18efe32a5f34a10ceb7c9b62109840e0bebc21e44005af589a1bc0b1bb",
+      "sha256": "83472b18efe32a5f34a10ceb7c9b62109840e0bebc21e44005af589a1bc0b1bb",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr004_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "62469aa9da320b185fdd25a8d3ae7612e5e2a590890b02ae9ead8127184c7e98",
+      "sha256": "62469aa9da320b185fdd25a8d3ae7612e5e2a590890b02ae9ead8127184c7e98",
+      "bytes": 1852
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr004_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1fe6f98e8c50006a80e592e5649dc5532c036f7cac92a58333deec5ecd3f4948",
+      "sha256": "1fe6f98e8c50006a80e592e5649dc5532c036f7cac92a58333deec5ecd3f4948",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_lrboundary_fola_n20_f1_e10_b32_lr004_lam0p3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8148d31a1734b78147e8e57ba7548f64db7182049a9ca771239ba15e3300607a",
+      "sha256": "8148d31a1734b78147e8e57ba7548f64db7182049a9ca771239ba15e3300607a",
+      "bytes": 1850
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s10_f0.004_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "867dafb9dae9bdf954a37c07918bb2fe02d47f303b5af3400901c956d3583204",
+      "sha256": "867dafb9dae9bdf954a37c07918bb2fe02d47f303b5af3400901c956d3583204",
+      "bytes": 1867
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s15_f0.006_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1d69e6c07103ef40a7e01559212a4d4751efcf0551605ec3ceab8b6d5e47e67b",
+      "sha256": "1d69e6c07103ef40a7e01559212a4d4751efcf0551605ec3ceab8b6d5e47e67b",
+      "bytes": 1867
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s25_f0.01_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "06ed1c735041fdf89517f543f519655299cfc4097798c5dd57b448133547ef90",
+      "sha256": "06ed1c735041fdf89517f543f519655299cfc4097798c5dd57b448133547ef90",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s50_f0.02_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f4bee37e4e16798eabf347a42faf37f764c60e3280e5f5c8ef47899c6bc98644",
+      "sha256": "f4bee37e4e16798eabf347a42faf37f764c60e3280e5f5c8ef47899c6bc98644",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fedavg_n20_s75_f0.03_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "97b08e191c41d7e8435f6da9443d0b71f7849f08e25c9c520abe8c1f9bb00181",
+      "sha256": "97b08e191c41d7e8435f6da9443d0b71f7849f08e25c9c520abe8c1f9bb00181",
+      "bytes": 1865
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fola_n20_s10_f0.004_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b000e3911939f78165dc054c23f917285ddfa153fd440a69828c665d41a9868a",
+      "sha256": "b000e3911939f78165dc054c23f917285ddfa153fd440a69828c665d41a9868a",
+      "bytes": 1868
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fola_n20_s15_f0.006_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1ed19cdb256a646ee427559070d95caa9eb338dc264e2c897ef81a8161629cad",
+      "sha256": "1ed19cdb256a646ee427559070d95caa9eb338dc264e2c897ef81a8161629cad",
+      "bytes": 1868
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fola_n20_s25_f0.01_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "24dd4a62b7d3d6e57e39656bf7cfa1e22414adf34880e20352e176e777f5c2ca",
+      "sha256": "24dd4a62b7d3d6e57e39656bf7cfa1e22414adf34880e20352e176e777f5c2ca",
+      "bytes": 1866
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fola_n20_s50_f0.02_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b6649d3cc9b9cc27273b3e32bf56f789d69aa5e18bf20f631ed2c1af05aa1645",
+      "sha256": "b6649d3cc9b9cc27273b3e32bf56f789d69aa5e18bf20f631ed2c1af05aa1645",
+      "bytes": 1866
+    },
+    {
+      "path": "scripts/configs/debug_cifar_r56_a0p1_scarcity_matchedlr_fola_n20_s75_f0.03_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7f764b32b521bd345628da912a14258a249e7e7612673a25867ad3394f01bce9",
+      "sha256": "7f764b32b521bd345628da912a14258a249e7e7612673a25867ad3394f01bce9",
+      "bytes": 1866
+    },
+    {
+      "path": "scripts/configs/debug_fedavg_cifar10_1client.yaml",
+      "status": "unchanged",
+      "original_sha256": "d7d297909ba9b038533246d88d12bd51d0a579a8be55961e14af44b97967670f",
+      "sha256": "d7d297909ba9b038533246d88d12bd51d0a579a8be55961e14af44b97967670f",
+      "bytes": 1600
+    },
+    {
+      "path": "scripts/configs/debug_fedavg_cifar10_iid20.yaml",
+      "status": "unchanged",
+      "original_sha256": "b786b8002a99740493eb20b31bd01522771bd9fc6303be93585964b11784fac4",
+      "sha256": "b786b8002a99740493eb20b31bd01522771bd9fc6303be93585964b11784fac4",
+      "bytes": 1599
+    },
+    {
+      "path": "scripts/configs/debug_fedavg_cifar10_iid20_1step.yaml",
+      "status": "unchanged",
+      "original_sha256": "6999308cd5afecc5a85080fa18912181cc802c2dfe6c1dfd2c9f98aed85a4564",
+      "sha256": "6999308cd5afecc5a85080fa18912181cc802c2dfe6c1dfd2c9f98aed85a4564",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_fedavg_cifar10_noniid20.yaml",
+      "status": "unchanged",
+      "original_sha256": "b477d1608b84c8544a06706f79d358757768005d5142eda5f373c29d69acc7f4",
+      "sha256": "b477d1608b84c8544a06706f79d358757768005d5142eda5f373c29d69acc7f4",
+      "bytes": 1600
+    },
+    {
+      "path": "scripts/configs/debug_fedavg_cifar10_single_1step.yaml",
+      "status": "unchanged",
+      "original_sha256": "6149c343d552872ac6580f97ee69b5aac70a61ad53188f8a715f74c0400b6d67",
+      "sha256": "6149c343d552872ac6580f97ee69b5aac70a61ad53188f8a715f74c0400b6d67",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_fola_cifar10_a0p01_basiccnn_lr0005_e10_lam1_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "688204cf63fa5d9ad03f084b158a2056dd45b59f1c7a908be88b93d958b72a7d",
+      "sha256": "688204cf63fa5d9ad03f084b158a2056dd45b59f1c7a908be88b93d958b72a7d",
+      "bytes": 1812
+    },
+    {
+      "path": "scripts/configs/debug_fola_cifar10_a0p01_basiccnn_lr0005_e10_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "01ea6ff78dc50a02a7ac1fe2627ee9c0701e5d70be4287d1b87214a39bce03a1",
+      "sha256": "01ea6ff78dc50a02a7ac1fe2627ee9c0701e5d70be4287d1b87214a39bce03a1",
+      "bytes": 1812
+    },
+    {
+      "path": "scripts/configs/debug_fola_cifar10_noniid20.yaml",
+      "status": "unchanged",
+      "original_sha256": "1540719888fd3d837ed881d10c9c65478f49e3a3fb8b50a30e3ae8cf4d9b1f97",
+      "sha256": "1540719888fd3d837ed881d10c9c65478f49e3a3fb8b50a30e3ae8cf4d9b1f97",
+      "bytes": 1596
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p125_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0ac42e39d48d1c8224ecd4d2cea9272f72edf9b0de72d1abb87cb17a360d5472",
+      "sha256": "0ac42e39d48d1c8224ecd4d2cea9272f72edf9b0de72d1abb87cb17a360d5472",
+      "bytes": 1587
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p125_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "518941ce8ce897c4ac3e13f70c640a18703538934d193edfb820fcefd3f34906",
+      "sha256": "518941ce8ce897c4ac3e13f70c640a18703538934d193edfb820fcefd3f34906",
+      "bytes": 1587
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p125_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8cdb5a082586a92f27892ca5f70caa10f6d6971528bc10fc344e057b78cb115e",
+      "sha256": "8cdb5a082586a92f27892ca5f70caa10f6d6971528bc10fc344e057b78cb115e",
+      "bytes": 1587
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p125_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2fb0d5e56424219ff7e51c1c29847086a1765d97c6481cc13adbe6c75b95a4b5",
+      "sha256": "2fb0d5e56424219ff7e51c1c29847086a1765d97c6481cc13adbe6c75b95a4b5",
+      "bytes": 1587
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p125_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0e187d4fc83f728c69b7bdfb1bc91efb5bba523ca795e46ff00aee3bd3fda128",
+      "sha256": "0e187d4fc83f728c69b7bdfb1bc91efb5bba523ca795e46ff00aee3bd3fda128",
+      "bytes": 1587
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p25_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ea0685b48ebee90d5f2316f4927a7624c9c4a2093837aafbf61a525823424282",
+      "sha256": "ea0685b48ebee90d5f2316f4927a7624c9c4a2093837aafbf61a525823424282",
+      "bytes": 1585
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p25_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "cd7a3d534b2f6618f168f2abb916374186c62bd54f55ac24842099b36db8e4c2",
+      "sha256": "cd7a3d534b2f6618f168f2abb916374186c62bd54f55ac24842099b36db8e4c2",
+      "bytes": 1585
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p25_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d831b4e5081888797e544c7049bbae08c1223c4c51a6313c4c3693e3767cc363",
+      "sha256": "d831b4e5081888797e544c7049bbae08c1223c4c51a6313c4c3693e3767cc363",
+      "bytes": 1585
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p25_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d58f8fe985a6037a7b59ac6feda23409f590d9a30d6cd459b77295dc258d44f0",
+      "sha256": "d58f8fe985a6037a7b59ac6feda23409f590d9a30d6cd459b77295dc258d44f0",
+      "bytes": 1585
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p25_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "07a2756dcbd1c467bd3bf07665f16164d760aed9dd9cde427216a0b86e0fbaf9",
+      "sha256": "07a2756dcbd1c467bd3bf07665f16164d760aed9dd9cde427216a0b86e0fbaf9",
+      "bytes": 1585
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p5_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "fc67b73d60b3727fb340cf020646cd5bc271f9a86c710b5a1ce6ab0bcbc05cdd",
+      "sha256": "fc67b73d60b3727fb340cf020646cd5bc271f9a86c710b5a1ce6ab0bcbc05cdd",
+      "bytes": 1583
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p5_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "86ae68319a1dcc9a9affaa9575fecdf955f6a7a44e77a507185f45ecf455e4b6",
+      "sha256": "86ae68319a1dcc9a9affaa9575fecdf955f6a7a44e77a507185f45ecf455e4b6",
+      "bytes": 1583
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p5_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "725b3d42be0624d4b32d6c0ddf6f46288d3e5cd0e5b5e7cf99cb5a0e8172f8b3",
+      "sha256": "725b3d42be0624d4b32d6c0ddf6f46288d3e5cd0e5b5e7cf99cb5a0e8172f8b3",
+      "bytes": 1583
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p5_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5695bcc157e02a4a0fa7f75feee59c6f84986a7b54e42377423e8cdc10a0185f",
+      "sha256": "5695bcc157e02a4a0fa7f75feee59c6f84986a7b54e42377423e8cdc10a0185f",
+      "bytes": 1583
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f0p5_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4bbeec8054275aaf874031ec6edc63d6504005addce7a8007ce92b9cd34fb62b",
+      "sha256": "4bbeec8054275aaf874031ec6edc63d6504005addce7a8007ce92b9cd34fb62b",
+      "bytes": 1583
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f1_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7e16466e3d830517206375edbcd7bf107087c6ba3def289b768828e20f5f28fd",
+      "sha256": "7e16466e3d830517206375edbcd7bf107087c6ba3def289b768828e20f5f28fd",
+      "bytes": 1581
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f1_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c4f1a109a8090d0faf02030ec0ae39a7a9fb7cd773a1467ee600f0757ccf5b6f",
+      "sha256": "c4f1a109a8090d0faf02030ec0ae39a7a9fb7cd773a1467ee600f0757ccf5b6f",
+      "bytes": 1581
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f1_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3f3fe7d2c81d86ebf565c58798aec215b5eaf89640a0dc28c274b9007c8924d4",
+      "sha256": "3f3fe7d2c81d86ebf565c58798aec215b5eaf89640a0dc28c274b9007c8924d4",
+      "bytes": 1581
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fedavg_n100_f1_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "563fe7de28d68489e7c0f23c40289df28615cd5e2a1fd0220d8ac016bd57ced1",
+      "sha256": "563fe7de28d68489e7c0f23c40289df28615cd5e2a1fd0220d8ac016bd57ced1",
+      "bytes": 1581
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p125_lam0p0001_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a98e1b9a20b5f72129ff19f0a513da0d436b9796232dce567a972ecdfe9ff899",
+      "sha256": "a98e1b9a20b5f72129ff19f0a513da0d436b9796232dce567a972ecdfe9ff899",
+      "bytes": 1652
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p125_lam0p0001_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f37f49d9b2e8eaaad6ba323c2180027d7042a4ab8574bf012b471dac587baf2e",
+      "sha256": "f37f49d9b2e8eaaad6ba323c2180027d7042a4ab8574bf012b471dac587baf2e",
+      "bytes": 1652
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p125_lam0p0001_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "acbc6ccaaf89de66423aa03d434f2e5844fcf027bf49d289cf8669cd31351d1c",
+      "sha256": "acbc6ccaaf89de66423aa03d434f2e5844fcf027bf49d289cf8669cd31351d1c",
+      "bytes": 1652
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p125_lam0p0001_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a1c291b46ecf0c0135dd5edce01060b06200e8d3b9a405f12adc4425a275ac42",
+      "sha256": "a1c291b46ecf0c0135dd5edce01060b06200e8d3b9a405f12adc4425a275ac42",
+      "bytes": 1652
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p125_lam0p0001_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c63c35066f2bd7fea094b2b866249592e89bf1b3173e142af57e87a8f2f3d2cd",
+      "sha256": "c63c35066f2bd7fea094b2b866249592e89bf1b3173e142af57e87a8f2f3d2cd",
+      "bytes": 1652
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p25_lam0p0001_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1a0e58442a8871fbe4719158862587830498a0d51435b71cff2460743a780fd0",
+      "sha256": "1a0e58442a8871fbe4719158862587830498a0d51435b71cff2460743a780fd0",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p25_lam0p0001_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b5208c454e6506243fc67eb2b2e71b1b6b893cbdb93ffb90eace94d96777febf",
+      "sha256": "b5208c454e6506243fc67eb2b2e71b1b6b893cbdb93ffb90eace94d96777febf",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p25_lam0p0001_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8b34658e0539718067393f4c4c839eb67bba658bef5ec1e03eee49a023a0ee79",
+      "sha256": "8b34658e0539718067393f4c4c839eb67bba658bef5ec1e03eee49a023a0ee79",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p25_lam0p0001_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f256d8eb295529e1acf2c43773e8f9237ab548174d9dfd471a402182cd1089d8",
+      "sha256": "f256d8eb295529e1acf2c43773e8f9237ab548174d9dfd471a402182cd1089d8",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p25_lam0p0001_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "be83412a50ea6051dde0a97fa23ca5bc4ef3ee4a35bb66afa5ea2f5b29a81ba2",
+      "sha256": "be83412a50ea6051dde0a97fa23ca5bc4ef3ee4a35bb66afa5ea2f5b29a81ba2",
+      "bytes": 1650
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p5_lam0p0001_seed0_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f8d55ee6f6be17f963d77eefea62d8242d581bc7b32f1fa2b40dafa2637c7c0b",
+      "sha256": "f8d55ee6f6be17f963d77eefea62d8242d581bc7b32f1fa2b40dafa2637c7c0b",
+      "bytes": 1648
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p5_lam0p0001_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "06e1b581f0f9b7fa8d10e2e4154a1b15b531ea000059292b83faf064f0821ba5",
+      "sha256": "06e1b581f0f9b7fa8d10e2e4154a1b15b531ea000059292b83faf064f0821ba5",
+      "bytes": 1648
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p5_lam0p0001_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "412b219a181946ccfc7363d4120df43fe9c7bc7a97a590ae7e6ec44fd5c2befa",
+      "sha256": "412b219a181946ccfc7363d4120df43fe9c7bc7a97a590ae7e6ec44fd5c2befa",
+      "bytes": 1648
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p5_lam0p0001_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b850c6235428145e4175fe1d1c4f85ec2a19f802a4186250ab69a48d6d5d4310",
+      "sha256": "b850c6235428145e4175fe1d1c4f85ec2a19f802a4186250ab69a48d6d5d4310",
+      "bytes": 1648
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f0p5_lam0p0001_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "40a894f0bcb11f280bd350bb375b32578623d87f27b473eaa48d3ba876ce097f",
+      "sha256": "40a894f0bcb11f280bd350bb375b32578623d87f27b473eaa48d3ba876ce097f",
+      "bytes": 1648
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f1_lam0p0001_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1c7fe657308ec58906b6b7c5a75bd8adf23c53b326f927a81fccb85b1a190e6d",
+      "sha256": "1c7fe657308ec58906b6b7c5a75bd8adf23c53b326f927a81fccb85b1a190e6d",
+      "bytes": 1646
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f1_lam0p0001_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "15b9c0ee1b456b7dcf1b9eb8c54a3a1bda7aa01613f127711ae919e3dff1a321",
+      "sha256": "15b9c0ee1b456b7dcf1b9eb8c54a3a1bda7aa01613f127711ae919e3dff1a321",
+      "bytes": 1646
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f1_lam0p0001_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ff844de49d56e1534e06f109c68ba4d63367d34ecce9fd2e993e6a1164a3f463",
+      "sha256": "ff844de49d56e1534e06f109c68ba4d63367d34ecce9fd2e993e6a1164a3f463",
+      "bytes": 1646
+    },
+    {
+      "path": "scripts/configs/debug_mnist_a0p1_E10_fola_n100_f1_lam0p0001_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b7d690ad8884a5d37e941f30dd870f2438e50641082a7c60ff112b339546208c",
+      "sha256": "b7d690ad8884a5d37e941f30dd870f2438e50641082a7c60ff112b339546208c",
+      "bytes": 1646
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p01_n100_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "60b829ca0616d913801b6155a336e76c3a7916a98b105c4696e1b72fa661df0c",
+      "sha256": "60b829ca0616d913801b6155a336e76c3a7916a98b105c4696e1b72fa661df0c",
+      "bytes": 1554
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p01_n100_lr001_b32_e20_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "033dcae1e8e1acb990f81855d006b84e4f0988cfc0b2cf01a3f2875c5bac585d",
+      "sha256": "033dcae1e8e1acb990f81855d006b84e4f0988cfc0b2cf01a3f2875c5bac585d",
+      "bytes": 1554
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p01_n100_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c5e7b299c37781bd5f7764a8a14809eaf35147f7235d76b268dacd38df630f7f",
+      "sha256": "c5e7b299c37781bd5f7764a8a14809eaf35147f7235d76b268dacd38df630f7f",
+      "bytes": 1552
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p01_n20_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b0ab025ba6b5280a8c3a67ce03e75b7c6aeb0f53410fef2fb3973d3785eb8de5",
+      "sha256": "b0ab025ba6b5280a8c3a67ce03e75b7c6aeb0f53410fef2fb3973d3785eb8de5",
+      "bytes": 1549
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p01_n50_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ce77b449fef55cb77819473f31fce1ca7c7f5978928b777c23c6a36fbbe53b0b",
+      "sha256": "ce77b449fef55cb77819473f31fce1ca7c7f5978928b777c23c6a36fbbe53b0b",
+      "bytes": 1549
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p1_n100_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "da1f5cb6876bb42197961841a5f0372291b856792a63cc540226914f732333bc",
+      "sha256": "da1f5cb6876bb42197961841a5f0372291b856792a63cc540226914f732333bc",
+      "bytes": 1552
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p1_n100_lr001_b32_e20_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a4490649c09832b04f845a17606e58d99dc414938d32d1b92db32bbf6a7c1c1e",
+      "sha256": "a4490649c09832b04f845a17606e58d99dc414938d32d1b92db32bbf6a7c1c1e",
+      "bytes": 1552
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p1_n100_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0057b496c8b092dbbfbef814661f29d06fab65a5ace413512212ee7d6a260cce",
+      "sha256": "0057b496c8b092dbbfbef814661f29d06fab65a5ace413512212ee7d6a260cce",
+      "bytes": 1550
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p1_n20_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "89379c57f397efffdc9550c10153aba546490a7aed714bedb5192b8240ace366",
+      "sha256": "89379c57f397efffdc9550c10153aba546490a7aed714bedb5192b8240ace366",
+      "bytes": 1547
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fedavg_a0p1_n50_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ff602a062be3ad30e4fb78208c917421e5e66d20effd32081daac45c7f3f7433",
+      "sha256": "ff602a062be3ad30e4fb78208c917421e5e66d20effd32081daac45c7f3f7433",
+      "bytes": 1547
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e10_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "59e550fd5409703b3ffda2bdf871b75529de8197794064c564d497f3f2922ca3",
+      "sha256": "59e550fd5409703b3ffda2bdf871b75529de8197794064c564d497f3f2922ca3",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e10_lam0p3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "51da6f2d84ccafed3abcb50f1f1c1986e9dbc620aec61b3c54f5b711f404d909",
+      "sha256": "51da6f2d84ccafed3abcb50f1f1c1986e9dbc620aec61b3c54f5b711f404d909",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e10_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c3b2fe9ca88d79033cf0d560e2a6e382f8ddba7310bf7b6a6801fb42c5a3ed56",
+      "sha256": "c3b2fe9ca88d79033cf0d560e2a6e382f8ddba7310bf7b6a6801fb42c5a3ed56",
+      "bytes": 1611
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e20_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "dab1c3e597bf1fdc8ad590ce56ca3bb964e53f02d6006ebe5799b3070036b408",
+      "sha256": "dab1c3e597bf1fdc8ad590ce56ca3bb964e53f02d6006ebe5799b3070036b408",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e20_lam0p3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "16d3e1232a438241773903fa70522e734ccdab537d8c75f1f576ad2e1571669f",
+      "sha256": "16d3e1232a438241773903fa70522e734ccdab537d8c75f1f576ad2e1571669f",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e20_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7b7acaaa6a5f1615d5a5758288bba54a636160caeed33eceafa5faeacbc25888",
+      "sha256": "7b7acaaa6a5f1615d5a5758288bba54a636160caeed33eceafa5faeacbc25888",
+      "bytes": 1611
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e5_lam100_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "834c835395f55b505859a925c99f97be3c77000b8c8ccef998d171036e0f84dc",
+      "sha256": "834c835395f55b505859a925c99f97be3c77000b8c8ccef998d171036e0f84dc",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "49f6b5e0c7fc84a3f8b47facf8caa8edd456a3ce00800783c1f1ed0462c884de",
+      "sha256": "49f6b5e0c7fc84a3f8b47facf8caa8edd456a3ce00800783c1f1ed0462c884de",
+      "bytes": 1611
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n100_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "20751a2304b7b125aeb679551fc02c5ba89fbade71617efa3f6f008a68549f01",
+      "sha256": "20751a2304b7b125aeb679551fc02c5ba89fbade71617efa3f6f008a68549f01",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n20_lr001_b32_e5_lam100_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "069c3622ff35168e353562ad21a503e905fbd3d189e1f86948dcb5c2bf0bfef6",
+      "sha256": "069c3622ff35168e353562ad21a503e905fbd3d189e1f86948dcb5c2bf0bfef6",
+      "bytes": 1610
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n20_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "efda545f4037cfcbafd18b0689875aa3152c29e3446ee0490e8cd25b3baaf77c",
+      "sha256": "efda545f4037cfcbafd18b0689875aa3152c29e3446ee0490e8cd25b3baaf77c",
+      "bytes": 1608
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n20_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a62ce80d25625eb18634e08a738024c2b17f5222986a1b10484b7e6555be2a76",
+      "sha256": "a62ce80d25625eb18634e08a738024c2b17f5222986a1b10484b7e6555be2a76",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n50_lr001_b32_e5_lam100_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "abf15642406943d203d6049580c13983e30dc25431a917c67b9172af7ea894e8",
+      "sha256": "abf15642406943d203d6049580c13983e30dc25431a917c67b9172af7ea894e8",
+      "bytes": 1610
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n50_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2ac01640bfe163dbf1fb68debadec9ba576f5ebff411219c9feda4b14cc43022",
+      "sha256": "2ac01640bfe163dbf1fb68debadec9ba576f5ebff411219c9feda4b14cc43022",
+      "bytes": 1608
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p01_n50_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "389d6e613c15eabfb8fbad91613517550e81f8a18f2a6f6f2acb43b69fb66bf8",
+      "sha256": "389d6e613c15eabfb8fbad91613517550e81f8a18f2a6f6f2acb43b69fb66bf8",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0a149da50e6da1844f4d9342f66158dbca7c25c96cde540e547242d8f329f5a6",
+      "sha256": "0a149da50e6da1844f4d9342f66158dbca7c25c96cde540e547242d8f329f5a6",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e10_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4ec1e7597bf3050c5e01a6e545031c66aa508e290a8756a01543730590281830",
+      "sha256": "4ec1e7597bf3050c5e01a6e545031c66aa508e290a8756a01543730590281830",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e10_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "08eaf5e8722ca89c5e9413a6aa2f70180a7ec6e874681dca3a84e2e63b05e00e",
+      "sha256": "08eaf5e8722ca89c5e9413a6aa2f70180a7ec6e874681dca3a84e2e63b05e00e",
+      "bytes": 1611
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e20_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e00460baeb0f54fe160fd1c59bb34bf0567977b35407cd69f5eb97e3d221ab38",
+      "sha256": "e00460baeb0f54fe160fd1c59bb34bf0567977b35407cd69f5eb97e3d221ab38",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e20_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "012bfbf03a500e4c7975975271fcd6ed25cdaa67172a2623256bceb2ad2d01a9",
+      "sha256": "012bfbf03a500e4c7975975271fcd6ed25cdaa67172a2623256bceb2ad2d01a9",
+      "bytes": 1613
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e20_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8008098e0221f8f13396ba307ac3419a5fecf5afd04c216aa21968f71187d7c6",
+      "sha256": "8008098e0221f8f13396ba307ac3419a5fecf5afd04c216aa21968f71187d7c6",
+      "bytes": 1611
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e5_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e04cba7990c09848860f0f8a4e4d1f90f8dbac43cb0c22ed6250e49985bc5576",
+      "sha256": "e04cba7990c09848860f0f8a4e4d1f90f8dbac43cb0c22ed6250e49985bc5576",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8a0667e36ae5d46da345fe25f7817bf167ddaba1c8ae8b9bb7fd754b681c84a3",
+      "sha256": "8a0667e36ae5d46da345fe25f7817bf167ddaba1c8ae8b9bb7fd754b681c84a3",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n100_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6ff34de42aaf1f2ead0e61489d25cb6225d2f373144c0d2de34185ddccfd940f",
+      "sha256": "6ff34de42aaf1f2ead0e61489d25cb6225d2f373144c0d2de34185ddccfd940f",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n20_lr001_b32_e5_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0cb789fc32c64e054fd61e08cf16285d62c6fddbbefa2fe7a8636eb0a2640e74",
+      "sha256": "0cb789fc32c64e054fd61e08cf16285d62c6fddbbefa2fe7a8636eb0a2640e74",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n20_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "65bcd9f395261ddbfd63f3a8f08bca96983abe47146dbf88f0684ffa27b54550",
+      "sha256": "65bcd9f395261ddbfd63f3a8f08bca96983abe47146dbf88f0684ffa27b54550",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n20_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f54e42e28a974118904b4f3aee549760c37ef2958a9f389a724f26b987699849",
+      "sha256": "f54e42e28a974118904b4f3aee549760c37ef2958a9f389a724f26b987699849",
+      "bytes": 1604
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n50_lr001_b32_e5_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "28b467e39e29c1b2f5d2fdff88a6ad31354b43ede669c7d6678f3dd768f37b62",
+      "sha256": "28b467e39e29c1b2f5d2fdff88a6ad31354b43ede669c7d6678f3dd768f37b62",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n50_lr001_b32_e5_lam10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "84e8afaaffc72a962d3d2188e7c3d6d64de1e6731a2d00229e5b9b01d6cd53de",
+      "sha256": "84e8afaaffc72a962d3d2188e7c3d6d64de1e6731a2d00229e5b9b01d6cd53de",
+      "bytes": 1606
+    },
+    {
+      "path": "scripts/configs/debug_mnist_fola_a0p1_n50_lr001_b32_e5_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "abefcb4e2a85bd7be1e5eaa21034edbabb51827ae9cae55d104118c5e561f203",
+      "sha256": "abefcb4e2a85bd7be1e5eaa21034edbabb51827ae9cae55d104118c5e561f203",
+      "bytes": 1604
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fedavg_n100_f1_lr001_b32_e20_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5ef098e952272e768c003deb096bdcddc02a6df01737f159f0ad7d45bf2c107e",
+      "sha256": "5ef098e952272e768c003deb096bdcddc02a6df01737f159f0ad7d45bf2c107e",
+      "bytes": 1590
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fedavg_n100_f1_lr001_b32_e40_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c68843bacbb9f426230198d86f81072baa99edf2c35217e91d4083acab2093a6",
+      "sha256": "c68843bacbb9f426230198d86f81072baa99edf2c35217e91d4083acab2093a6",
+      "bytes": 1590
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fedavg_n100_f1_lr001_b32_e5_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d521a6f44cc5d0a99007059e57ecc65db0cbb47981be25b762114c66c81c72fc",
+      "sha256": "d521a6f44cc5d0a99007059e57ecc65db0cbb47981be25b762114c66c81c72fc",
+      "bytes": 1588
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e10_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "586a0bcad17357fa8e8ccb01198189e8dc1f739fd2655a1bfd0aaba4173fa184",
+      "sha256": "586a0bcad17357fa8e8ccb01198189e8dc1f739fd2655a1bfd0aaba4173fa184",
+      "bytes": 1655
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e10_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "270b479f5d0aa0678bc2afb65d80a1e799efbdca93464925e065ca15323a8b8d",
+      "sha256": "270b479f5d0aa0678bc2afb65d80a1e799efbdca93464925e065ca15323a8b8d",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e20_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "80b8b0bbd5b04443f28910f878c65aa0a04bc0f0972432ab3643c1e9aa875cd7",
+      "sha256": "80b8b0bbd5b04443f28910f878c65aa0a04bc0f0972432ab3643c1e9aa875cd7",
+      "bytes": 1655
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e20_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "31ba70765d599beceec250a6ba6cfebbecbd07ad8f7ac10ab02db561d3366d66",
+      "sha256": "31ba70765d599beceec250a6ba6cfebbecbd07ad8f7ac10ab02db561d3366d66",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e20_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "34d0ed72f00406ee1c4227d9a33bd4d81a1b4b569e6469bb1a5d0c775bd78550",
+      "sha256": "34d0ed72f00406ee1c4227d9a33bd4d81a1b4b569e6469bb1a5d0c775bd78550",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e20_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c8ca63c9d015e4e2e20cec2995ae1051971cc3b7ac32160602fa021d4fb2c5a1",
+      "sha256": "c8ca63c9d015e4e2e20cec2995ae1051971cc3b7ac32160602fa021d4fb2c5a1",
+      "bytes": 1651
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e40_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2c01f3a8d9cea1b7ab037935a772d67f63377500777f68a54332f20762a0a18f",
+      "sha256": "2c01f3a8d9cea1b7ab037935a772d67f63377500777f68a54332f20762a0a18f",
+      "bytes": 1655
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e40_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ee6f1ecbee2e44321879b22f04de4948b3770bed8942f74021b6c343e466e19d",
+      "sha256": "ee6f1ecbee2e44321879b22f04de4948b3770bed8942f74021b6c343e466e19d",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e40_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "116a98109cc5d482d699c20b666b2232b846e5924eaa9cc7b799d942d0138bae",
+      "sha256": "116a98109cc5d482d699c20b666b2232b846e5924eaa9cc7b799d942d0138bae",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e40_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d2522d553b4128ee05a10a6f15c032646249ba03f73da37d19bde7a5f8242e92",
+      "sha256": "d2522d553b4128ee05a10a6f15c032646249ba03f73da37d19bde7a5f8242e92",
+      "bytes": 1651
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e5_lam0p0001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "93b16d42e4757e48f77da3ad9d0ce6dc02b4394f433d58ae1b2b77b34ced14a0",
+      "sha256": "93b16d42e4757e48f77da3ad9d0ce6dc02b4394f433d58ae1b2b77b34ced14a0",
+      "bytes": 1653
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e5_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d9ff51fee03d5867ec210eae5676a73b51326b7231c6dc1a3ca994b9d04f3926",
+      "sha256": "d9ff51fee03d5867ec210eae5676a73b51326b7231c6dc1a3ca994b9d04f3926",
+      "bytes": 1651
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e5_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "724a62969e1f154be3ab60b34f255a40a82cedc7e95d1cd7946a467bde9c2ab1",
+      "sha256": "724a62969e1f154be3ab60b34f255a40a82cedc7e95d1cd7946a467bde9c2ab1",
+      "bytes": 1651
+    },
+    {
+      "path": "scripts/configs/debug_mnist_lock_a0p1_fola_n100_f1_lr001_b32_e5_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f6195d704740f9c60e8e91380fd68a924bf31b3b909a78a79962980027bce29e",
+      "sha256": "f6195d704740f9c60e8e91380fd68a924bf31b3b909a78a79962980027bce29e",
+      "bytes": 1649
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p125_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a8f6bc7fa3598e6204a10f26ad1209f3ba1f02b7c911abc0989688d8786416d1",
+      "sha256": "a8f6bc7fa3598e6204a10f26ad1209f3ba1f02b7c911abc0989688d8786416d1",
+      "bytes": 1603
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p125_lr001_b32_e10_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "9385fb47bbb393d3ff236d3bfdd990aa94bb145360cb010c794fd31ea5da0e61",
+      "sha256": "9385fb47bbb393d3ff236d3bfdd990aa94bb145360cb010c794fd31ea5da0e61",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p125_lr001_b32_e10_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5fdfa507655cbce04c4eaaf56384a6fcbb114e0dfa26a5fa567c49ba61f19bbc",
+      "sha256": "5fdfa507655cbce04c4eaaf56384a6fcbb114e0dfa26a5fa567c49ba61f19bbc",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p125_lr001_b32_e10_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1ce2e519a711329d8f9e2849cc0df5ab4329505f64a175016a6baee36c045f60",
+      "sha256": "1ce2e519a711329d8f9e2849cc0df5ab4329505f64a175016a6baee36c045f60",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p125_lr001_b32_e10_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "65e48f0f064b65c5275c09f804543e77417b58f0847bbfecbc7bcdf296046e22",
+      "sha256": "65e48f0f064b65c5275c09f804543e77417b58f0847bbfecbc7bcdf296046e22",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p25_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0013376d8dd782c742eb46261e9b69d2b64669664a52a4b7f6ed2978524af7e2",
+      "sha256": "0013376d8dd782c742eb46261e9b69d2b64669664a52a4b7f6ed2978524af7e2",
+      "bytes": 1601
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p25_lr001_b32_e10_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "cc7374d03f9978c0b1d59d75e496812c6bb2b229a015abbd60b6b93febb78148",
+      "sha256": "cc7374d03f9978c0b1d59d75e496812c6bb2b229a015abbd60b6b93febb78148",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p25_lr001_b32_e10_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d52697897cce4c6d44ebf377d53cde708a698670e4807b51c063783947480258",
+      "sha256": "d52697897cce4c6d44ebf377d53cde708a698670e4807b51c063783947480258",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p25_lr001_b32_e10_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "876290a8d9932e1a55d8d72a19846e54147ec2ff998271c04981cea5fae5602f",
+      "sha256": "876290a8d9932e1a55d8d72a19846e54147ec2ff998271c04981cea5fae5602f",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p25_lr001_b32_e10_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e70f8b1a7435c043d319d96683e3892ec107da292696d6acc76ef96a4fd5bfbc",
+      "sha256": "e70f8b1a7435c043d319d96683e3892ec107da292696d6acc76ef96a4fd5bfbc",
+      "bytes": 1607
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p5_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7c19c7efc620fc75d95e6d61901267f33227dd6b08d19d52fd9d0c620fb6203a",
+      "sha256": "7c19c7efc620fc75d95e6d61901267f33227dd6b08d19d52fd9d0c620fb6203a",
+      "bytes": 1599
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p5_lr001_b32_e10_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a1d4d0d7e01a4d2b6dcfb0e8e6d23849c35fcce4239fc32812017c4c803ef946",
+      "sha256": "a1d4d0d7e01a4d2b6dcfb0e8e6d23849c35fcce4239fc32812017c4c803ef946",
+      "bytes": 1605
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p5_lr001_b32_e10_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b4dcb042c93da17b678a7f2c1827f0ef1dca65521475c9221219abe89a9dbfda",
+      "sha256": "b4dcb042c93da17b678a7f2c1827f0ef1dca65521475c9221219abe89a9dbfda",
+      "bytes": 1605
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p5_lr001_b32_e10_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "33dddf0690d74523f54722ee394317ab1b0152bc6573b09681ca74ed59f4b8c7",
+      "sha256": "33dddf0690d74523f54722ee394317ab1b0152bc6573b09681ca74ed59f4b8c7",
+      "bytes": 1605
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f0p5_lr001_b32_e10_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "8501073e2a365ffb5ddfa40c57d18cde73850932cd4c1946222e40cfd2ae5386",
+      "sha256": "8501073e2a365ffb5ddfa40c57d18cde73850932cd4c1946222e40cfd2ae5386",
+      "bytes": 1605
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_f1_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "f85dca00f58c8ecb7f2251875ca6f3dd3fd1aff79741bef5da5001f347e58d6f",
+      "sha256": "f85dca00f58c8ecb7f2251875ca6f3dd3fd1aff79741bef5da5001f347e58d6f",
+      "bytes": 1597
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "83c2dd1137388d89e837e2bb7c36f006294979066742344956a35cfb76f78228",
+      "sha256": "83c2dd1137388d89e837e2bb7c36f006294979066742344956a35cfb76f78228",
+      "bytes": 1564
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e10_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "bda3ff4e2c58725c57e8c26872e6267f538bc89f4cd9e64101796fc2ed78e10e",
+      "sha256": "bda3ff4e2c58725c57e8c26872e6267f538bc89f4cd9e64101796fc2ed78e10e",
+      "bytes": 1570
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e10_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c8e3967f93c26f53a64ed3e38d55a5bad3c9684e8d9eb6dc70d54775f422bab6",
+      "sha256": "c8e3967f93c26f53a64ed3e38d55a5bad3c9684e8d9eb6dc70d54775f422bab6",
+      "bytes": 1570
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e10_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0f8c7968de7c223411bd2d3845297e37b97a93e58dd84aaf4013ab8f530f3323",
+      "sha256": "0f8c7968de7c223411bd2d3845297e37b97a93e58dd84aaf4013ab8f530f3323",
+      "bytes": 1570
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e10_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ab429d3eb20992eaa79fb3aa7158c4de1af38c600e0221145cc019c883b5b7d2",
+      "sha256": "ab429d3eb20992eaa79fb3aa7158c4de1af38c600e0221145cc019c883b5b7d2",
+      "bytes": 1570
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e20_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3d98f6912fc0010b749df5200907897c0d5fe881fb94a0251490b108f95d7142",
+      "sha256": "3d98f6912fc0010b749df5200907897c0d5fe881fb94a0251490b108f95d7142",
+      "bytes": 1564
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p01_n100_lr001_b32_e40_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1bc3b02ee47d914bca45e1a5239c44b4bd44a2e2e87d2a45ac8af576fa90c4e8",
+      "sha256": "1bc3b02ee47d914bca45e1a5239c44b4bd44a2e2e87d2a45ac8af576fa90c4e8",
+      "bytes": 1564
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fedavg_a0p1_n100_lr001_b32_e10_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "9dd9e69151663bb06587e909fa9370276500d18b61b5865fcdd078c9ddbb82e4",
+      "sha256": "9dd9e69151663bb06587e909fa9370276500d18b61b5865fcdd078c9ddbb82e4",
+      "bytes": 1562
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p125_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "38d8b9916e1dbd3bd965a9c4e77fd69d28932535dcedc2cff45d7b700be481d5",
+      "sha256": "38d8b9916e1dbd3bd965a9c4e77fd69d28932535dcedc2cff45d7b700be481d5",
+      "bytes": 1664
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p125_lr001_b32_e10_lam0p01_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7a3768154088968c63f0556d5af6b4bca7adbdc867d7bd369e91434a40358124",
+      "sha256": "7a3768154088968c63f0556d5af6b4bca7adbdc867d7bd369e91434a40358124",
+      "bytes": 1670
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p125_lr001_b32_e10_lam0p01_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "95f2cb3a61ffa3b1fabc0b4a06b89383d4544a478ed55eefe2156af0c560f21e",
+      "sha256": "95f2cb3a61ffa3b1fabc0b4a06b89383d4544a478ed55eefe2156af0c560f21e",
+      "bytes": 1670
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p125_lr001_b32_e10_lam0p01_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6536649eacfb59332712e34c25645ca70aa1b4646ff766dcafd6bcbf724f4cdf",
+      "sha256": "6536649eacfb59332712e34c25645ca70aa1b4646ff766dcafd6bcbf724f4cdf",
+      "bytes": 1670
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p125_lr001_b32_e10_lam0p01_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d1585e4c23701a8966657b9aafb50a7aedca5f312f4a307058ea46ecfa7c0ecc",
+      "sha256": "d1585e4c23701a8966657b9aafb50a7aedca5f312f4a307058ea46ecfa7c0ecc",
+      "bytes": 1670
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p25_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "25c6e8b7b08c80c6db01ffca914aebd329f123adb8b296db26757809373b5b09",
+      "sha256": "25c6e8b7b08c80c6db01ffca914aebd329f123adb8b296db26757809373b5b09",
+      "bytes": 1662
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p25_lr001_b32_e10_lam0p01_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2f05351ac544e63b8e1777239b533d6e851d02651e3f6f1785662b7bf51a5e82",
+      "sha256": "2f05351ac544e63b8e1777239b533d6e851d02651e3f6f1785662b7bf51a5e82",
+      "bytes": 1668
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p25_lr001_b32_e10_lam0p01_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "923fa60dae2a089b540523c6f781abe54fc184f7357e2f94b5e5b39b7f6e110a",
+      "sha256": "923fa60dae2a089b540523c6f781abe54fc184f7357e2f94b5e5b39b7f6e110a",
+      "bytes": 1668
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p25_lr001_b32_e10_lam0p01_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3d724d4feb25421f433cec9e46ffcd9acc13585db7117bb50caffd7c3454461b",
+      "sha256": "3d724d4feb25421f433cec9e46ffcd9acc13585db7117bb50caffd7c3454461b",
+      "bytes": 1668
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p25_lr001_b32_e10_lam0p01_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b7f6641ca2d1317514fa4be4b1841d0e347280e6a60127037e7fb5111a1dc70a",
+      "sha256": "b7f6641ca2d1317514fa4be4b1841d0e347280e6a60127037e7fb5111a1dc70a",
+      "bytes": 1668
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p5_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "30c903fef44264c983a828d2022b99eac5f3bcd4d3192a2e4e4d976066d1619c",
+      "sha256": "30c903fef44264c983a828d2022b99eac5f3bcd4d3192a2e4e4d976066d1619c",
+      "bytes": 1660
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p5_lr001_b32_e10_lam0p01_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4de168fe3f6a195593f1dac34269683e19ce54fe3c1266bc7f95aed3abbbe0f1",
+      "sha256": "4de168fe3f6a195593f1dac34269683e19ce54fe3c1266bc7f95aed3abbbe0f1",
+      "bytes": 1666
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p5_lr001_b32_e10_lam0p01_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6312c1c18d84af0d64004e4233405aa9c9e73075c02715d436ba2dc356cfbfd5",
+      "sha256": "6312c1c18d84af0d64004e4233405aa9c9e73075c02715d436ba2dc356cfbfd5",
+      "bytes": 1666
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p5_lr001_b32_e10_lam0p01_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "716dde076a540c40425724fba5f6d3cbcd457bd28f26440dcd0d4ef2c1d24b60",
+      "sha256": "716dde076a540c40425724fba5f6d3cbcd457bd28f26440dcd0d4ef2c1d24b60",
+      "bytes": 1666
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f0p5_lr001_b32_e10_lam0p01_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3e46be6761ee2dc9769828d177224a121123f6faed416c7ca38f408ef5b4df40",
+      "sha256": "3e46be6761ee2dc9769828d177224a121123f6faed416c7ca38f408ef5b4df40",
+      "bytes": 1666
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_f1_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ee93356df04251052283ffeff1ddd43c5842c3b598f58af8d994097f9d11d291",
+      "sha256": "ee93356df04251052283ffeff1ddd43c5842c3b598f58af8d994097f9d11d291",
+      "bytes": 1658
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0923d1538b1c97922d298b5397ead9c8ea546cb87f89fe21c3d7606b248fbaae",
+      "sha256": "0923d1538b1c97922d298b5397ead9c8ea546cb87f89fe21c3d7606b248fbaae",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p01_seed1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "3504259c8b05a6633128864bba30b96f44a212afbf1263ad871c5a2491c231f8",
+      "sha256": "3504259c8b05a6633128864bba30b96f44a212afbf1263ad871c5a2491c231f8",
+      "bytes": 1631
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p01_seed2_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6f0b573e0e0947a9ba4a9989a11b1d8ce8c5f3ecb6352b15c662739743a72327",
+      "sha256": "6f0b573e0e0947a9ba4a9989a11b1d8ce8c5f3ecb6352b15c662739743a72327",
+      "bytes": 1631
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p01_seed3_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "253147715b4867093e9440490aebad70114d36411636570bb925215da871283d",
+      "sha256": "253147715b4867093e9440490aebad70114d36411636570bb925215da871283d",
+      "bytes": 1631
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p01_seed4_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2d70a7c78588962f4fac2dd0a6b051ea158ebae7190fb0428f285a21152b9b0d",
+      "sha256": "2d70a7c78588962f4fac2dd0a6b051ea158ebae7190fb0428f285a21152b9b0d",
+      "bytes": 1631
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2e330abd31d2092f62a501b36c5cc0224faf077e268dabc932ddd091094b7c81",
+      "sha256": "2e330abd31d2092f62a501b36c5cc0224faf077e268dabc932ddd091094b7c81",
+      "bytes": 1623
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e10_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d9698741e285b70cdd0bf5b8f7a2f5a01a493c1a23279efff442d00db0b7e74f",
+      "sha256": "d9698741e285b70cdd0bf5b8f7a2f5a01a493c1a23279efff442d00db0b7e74f",
+      "bytes": 1621
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e20_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "84b8e5c334b45382bea54d0adffb624bc2eab4d06f754bc74955bb1ac099353b",
+      "sha256": "84b8e5c334b45382bea54d0adffb624bc2eab4d06f754bc74955bb1ac099353b",
+      "bytes": 1627
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e20_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6b493efcba0d8e26eb54c794f39d1558e2a0e7e0817419ba9147236bc457ac26",
+      "sha256": "6b493efcba0d8e26eb54c794f39d1558e2a0e7e0817419ba9147236bc457ac26",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e20_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "41afec19115c0e2932b6863c79304d352d7ce746efce11ab30a4128d1614921f",
+      "sha256": "41afec19115c0e2932b6863c79304d352d7ce746efce11ab30a4128d1614921f",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e40_lam0p003_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "da8f46973c15db1ddf7f295fe1aa824191e8bad721525a3ca662c01803b63ae2",
+      "sha256": "da8f46973c15db1ddf7f295fe1aa824191e8bad721525a3ca662c01803b63ae2",
+      "bytes": 1627
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e40_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "b710d0d9625fbb2d61a1465ff59c8319bcbdcd666b474ca23b582d1b2e37338c",
+      "sha256": "b710d0d9625fbb2d61a1465ff59c8319bcbdcd666b474ca23b582d1b2e37338c",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p01_n100_lr001_b32_e40_lam0p03_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d49b3c87a0d20824881e8bccb9f7c71c2087c7663034a9afc6b2a8b0491f5732",
+      "sha256": "d49b3c87a0d20824881e8bccb9f7c71c2087c7663034a9afc6b2a8b0491f5732",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p1_n100_lr001_b32_e10_lam0p001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "900b08767b8002f2e27d501b61d8459fd5497c896976d806df1bbacfc95ab466",
+      "sha256": "900b08767b8002f2e27d501b61d8459fd5497c896976d806df1bbacfc95ab466",
+      "bytes": 1625
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p1_n100_lr001_b32_e10_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "dfad6c8262a118ae09d7fe1276e9590bbfe062408f1c71dc22f0dd01e65d4584",
+      "sha256": "dfad6c8262a118ae09d7fe1276e9590bbfe062408f1c71dc22f0dd01e65d4584",
+      "bytes": 1623
+    },
+    {
+      "path": "scripts/configs/debug_mnist_paperpart_fola_a0p1_n100_lr001_b32_e10_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "45eeaa7feb33aaaf7e49036c5d1495cd83d480a976dd416e13d9568b3d3f2918",
+      "sha256": "45eeaa7feb33aaaf7e49036c5d1495cd83d480a976dd416e13d9568b3d3f2918",
+      "bytes": 1621
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fedavg_cifar10_lr001_e10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "a0a5af8cdbb34e9deeb700620a0c4f7b7c3deac92327336c692afe085db4c569",
+      "sha256": "a0a5af8cdbb34e9deeb700620a0c4f7b7c3deac92327336c692afe085db4c569",
+      "bytes": 1803
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fedavg_cifar10_lr001_e3_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "1081a2828aecf9e0d33dcccfe3bb0085eb813bf131e7f37b911fb2fbb94775f7",
+      "sha256": "1081a2828aecf9e0d33dcccfe3bb0085eb813bf131e7f37b911fb2fbb94775f7",
+      "bytes": 1801
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fedavg_cifar10_lr005_e3_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "f01b4b6028c38e334eb7d13f0b07c8625debda4599bd32a15fbd8e26b2f72f0c",
+      "sha256": "f01b4b6028c38e334eb7d13f0b07c8625debda4599bd32a15fbd8e26b2f72f0c",
+      "bytes": 1801
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_a0p1_lr001_e10_lam100_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "7ffdc009aab5bf32c672e8f525be5a672f0c4ca6eec3f58a998b6b8f27ab3cc8",
+      "sha256": "7ffdc009aab5bf32c672e8f525be5a672f0c4ca6eec3f58a998b6b8f27ab3cc8",
+      "bytes": 1810
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_a0p1_lr001_e10_lam10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "18f06cc8b66c2e31be83d301f514535fce96681920d67e58db6a2a3b50560c08",
+      "sha256": "18f06cc8b66c2e31be83d301f514535fce96681920d67e58db6a2a3b50560c08",
+      "bytes": 1808
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_a0p1_lr001_e10_lam1_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "34ff91e7f78964ae770514871335c42b4f3fb04ea7706b76da7a3f4ea5fb1219",
+      "sha256": "34ff91e7f78964ae770514871335c42b4f3fb04ea7706b76da7a3f4ea5fb1219",
+      "bytes": 1806
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_a0p1_lr001_e10_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6d6fa5d2a91810cdf1aaa32c97a69108fd8e1d2b8b4f6e54c04c66a562b98bcc",
+      "sha256": "6d6fa5d2a91810cdf1aaa32c97a69108fd8e1d2b8b4f6e54c04c66a562b98bcc",
+      "bytes": 1806
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_lam0_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "2b49ed118d5101e5371c1178316e63aaa4abce45c3d198c91ae0dc6a1429beaa",
+      "sha256": "2b49ed118d5101e5371c1178316e63aaa4abce45c3d198c91ae0dc6a1429beaa",
+      "bytes": 1802
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_lam1000_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "7a8816303c579da8203f884cc60967e8f44cc030d1f181c73e0823794f1ec928",
+      "sha256": "7a8816303c579da8203f884cc60967e8f44cc030d1f181c73e0823794f1ec928",
+      "bytes": 1808
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_lam10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "05f860c74a62eedba6a0a910118a02876c0f0d13f25217ac701cd7c83e1148f5",
+      "sha256": "05f860c74a62eedba6a0a910118a02876c0f0d13f25217ac701cd7c83e1148f5",
+      "bytes": 1804
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_lam1_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "c3e3448fbb538397ea430480b1688df966bf4c43d92f1b7d7cd27eada9740f98",
+      "sha256": "c3e3448fbb538397ea430480b1688df966bf4c43d92f1b7d7cd27eada9740f98",
+      "bytes": 1802
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_lam1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2175b8d420038eea8bede2b78ca14fa69784a229d3f5010de481deaac868083e",
+      "sha256": "2175b8d420038eea8bede2b78ca14fa69784a229d3f5010de481deaac868083e",
+      "bytes": 1802
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "d7a07418d3928ce9518a4da8c1441f289e156656105714710de20c32d4631513",
+      "sha256": "d7a07418d3928ce9518a4da8c1441f289e156656105714710de20c32d4631513",
+      "bytes": 1799
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr001_e20_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "57f8c532465729d5c0ff764230da03577aca6702d62a90f3e427d5a80e0cf638",
+      "sha256": "57f8c532465729d5c0ff764230da03577aca6702d62a90f3e427d5a80e0cf638",
+      "bytes": 1799
+    },
+    {
+      "path": "scripts/configs/debug_paperenv_fola_cifar10_lr005_e10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "c330e92211471f706c7800506d78f0af4d983a5e01be78acef6d263f354a8139",
+      "sha256": "c330e92211471f706c7800506d78f0af4d983a5e01be78acef6d263f354a8139",
+      "bytes": 1799
+    },
+    {
+      "path": "scripts/configs/fedavg_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "146a2578ef7b870c06294540ce4070faa32dfca14e4d4df79fb9ed8830e2620c",
+      "sha256": "146a2578ef7b870c06294540ce4070faa32dfca14e4d4df79fb9ed8830e2620c",
+      "bytes": 1795
+    },
+    {
+      "path": "scripts/configs/fedavg_cifar10_full300.yaml",
+      "status": "unchanged",
+      "original_sha256": "3c2f0046cae12aeede76f3cb9fc62b5de1416ef4c0cf099552193aba6870a079",
+      "sha256": "3c2f0046cae12aeede76f3cb9fc62b5de1416ef4c0cf099552193aba6870a079",
+      "bytes": 1711
+    },
+    {
+      "path": "scripts/configs/fedavg_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "dca2db5e266add2c9e42fa909286693a2994f3b042067fc50a9d26e2798ce35c",
+      "sha256": "dca2db5e266add2c9e42fa909286693a2994f3b042067fc50a9d26e2798ce35c",
+      "bytes": 1500
+    },
+    {
+      "path": "scripts/configs/final100_bbb_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "40a060a28bd5f80d3df4380d0569c1cc2b577e41c979da0bbb8c7df2b8fcd0d3",
+      "sha256": "40a060a28bd5f80d3df4380d0569c1cc2b577e41c979da0bbb8c7df2b8fcd0d3",
+      "bytes": 1626
+    },
+    {
+      "path": "scripts/configs/final100_fedavg_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "c929e84c53f28768bf71593f77771e776e0f25e8bf0a3cc30c7bb7b28d39b130",
+      "sha256": "c929e84c53f28768bf71593f77771e776e0f25e8bf0a3cc30c7bb7b28d39b130",
+      "bytes": 1598
+    },
+    {
+      "path": "scripts/configs/final100_fola_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "1d4cbcebfa031d436fdb847f68592adc481504d3c2ea2e6bed6f60c17fad879b",
+      "sha256": "1d4cbcebfa031d436fdb847f68592adc481504d3c2ea2e6bed6f60c17fad879b",
+      "bytes": 1594
+    },
+    {
+      "path": "scripts/configs/fola_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "70614b1893978ad3a12b5249f32e9f497191f3a63fd17ac23da6e46e91830ded",
+      "sha256": "70614b1893978ad3a12b5249f32e9f497191f3a63fd17ac23da6e46e91830ded",
+      "bytes": 1791
+    },
+    {
+      "path": "scripts/configs/fola_cifar10_full300.yaml",
+      "status": "unchanged",
+      "original_sha256": "181127ca3d8ef027156ec3f6ef3bcdeb518cb3ecc58fdd6a865ba82962095c6b",
+      "sha256": "181127ca3d8ef027156ec3f6ef3bcdeb518cb3ecc58fdd6a865ba82962095c6b",
+      "bytes": 1707
+    },
+    {
+      "path": "scripts/configs/fola_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "1bbfebfd36444e083f7e2e832eee1e1bfbeb617de17018f49c13277a99f14c1d",
+      "sha256": "1bbfebfd36444e083f7e2e832eee1e1bfbeb617de17018f49c13277a99f14c1d",
+      "bytes": 1496
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda0_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "195799f46181a9b49712a1f9685eed219c2ed914f605c7ec2a476aeb81020cb7",
+      "sha256": "195799f46181a9b49712a1f9685eed219c2ed914f605c7ec2a476aeb81020cb7",
+      "bytes": 1711
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda10000_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "51047e13d14e7fde163691f889e25c0d897f166e34fc3851ad04c84d7ae38a21",
+      "sha256": "51047e13d14e7fde163691f889e25c0d897f166e34fc3851ad04c84d7ae38a21",
+      "bytes": 1719
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda1000_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "6ab8c0562c9e3e31093bf69c1b7a2290c9cfb3ca7bc2c40ef6a794174d6b917e",
+      "sha256": "6ab8c0562c9e3e31093bf69c1b7a2290c9cfb3ca7bc2c40ef6a794174d6b917e",
+      "bytes": 1717
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda100_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "170b5af20e2a7a61028f5e3ec6fc7511a03c487131bf3f93e5a5e51136db5bb8",
+      "sha256": "170b5af20e2a7a61028f5e3ec6fc7511a03c487131bf3f93e5a5e51136db5bb8",
+      "bytes": 1715
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "08813183b3e945621d1d59211a79fae7b2a4a0a51a868591e9555de5b9ba1fcd",
+      "sha256": "08813183b3e945621d1d59211a79fae7b2a4a0a51a868591e9555de5b9ba1fcd",
+      "bytes": 1713
+    },
+    {
+      "path": "scripts/configs/paper_sweep/fola_cifar10_E10_lambda1_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "fbf9551f6ee37c732f4c7ceed50b57f4aefad36f82b50a8305de19e336ee2a16",
+      "sha256": "fbf9551f6ee37c732f4c7ceed50b57f4aefad36f82b50a8305de19e336ee2a16",
+      "bytes": 1711
+    },
+    {
+      "path": "scripts/configs/preflight_bbb_cifar10_100clients.yaml",
+      "status": "unchanged",
+      "original_sha256": "5050182e5b2a96dea8232b000286dd0b69543405c50796e7ddc840f05e6a274a",
+      "sha256": "5050182e5b2a96dea8232b000286dd0b69543405c50796e7ddc840f05e6a274a",
+      "bytes": 1603
+    },
+    {
+      "path": "scripts/configs/preflight_fedavg_cifar10_100clients.yaml",
+      "status": "unchanged",
+      "original_sha256": "bc1a23738faf55d96bab478ea3b1819d4868bbeddc64f82ed84301fbda787024",
+      "sha256": "bc1a23738faf55d96bab478ea3b1819d4868bbeddc64f82ed84301fbda787024",
+      "bytes": 1609
+    },
+    {
+      "path": "scripts/configs/preflight_fola_cifar10_100clients.yaml",
+      "status": "unchanged",
+      "original_sha256": "f066ba9062333881f7dd15239c30e5c14b341e8a36467b928542723acee08adb",
+      "sha256": "f066ba9062333881f7dd15239c30e5c14b341e8a36467b928542723acee08adb",
+      "bytes": 1605
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f0p5_seed0_e10_b32_lr001_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "02fea7d11ac7d16fdcb5a4c89cadcaca8fdf08b40b6bd56a7c6f2c3be9668afb",
+      "sha256": "02fea7d11ac7d16fdcb5a4c89cadcaca8fdf08b40b6bd56a7c6f2c3be9668afb",
+      "bytes": 1866
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f1_seed0_e10_b32_lr001_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "cf9d587fe353d03b955e909b389c40aaa303345fa2a267d60e022c4d7fc4bb6c",
+      "sha256": "cf9d587fe353d03b955e909b389c40aaa303345fa2a267d60e022c4d7fc4bb6c",
+      "bytes": 1864
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p01_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "d31b2d46734740c812c090d8c2cd8421eedd997ab460f930a0fd3f0c64212c11",
+      "sha256": "d31b2d46734740c812c090d8c2cd8421eedd997ab460f930a0fd3f0c64212c11",
+      "bytes": 1876
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "58243d973e003d418ce52ce42976802d1c3478431ae1a2df5bd85a8924f9f786",
+      "sha256": "58243d973e003d418ce52ce42976802d1c3478431ae1a2df5bd85a8924f9f786",
+      "bytes": 1874
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f0p5_seed0_e10_b32_lr002_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "af6fa2314f1665d9c2f6486703e596450418731b431b49befa9b1d89581de693",
+      "sha256": "af6fa2314f1665d9c2f6486703e596450418731b431b49befa9b1d89581de693",
+      "bytes": 1864
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f1_seed0_e10_b32_lr002_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "53272990e273178732f40c295a862d602247e274dec71acaf30b35d8203f6de4",
+      "sha256": "53272990e273178732f40c295a862d602247e274dec71acaf30b35d8203f6de4",
+      "bytes": 1862
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p1_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "775f907eef7c3cfd460a44ceb9ea27454e90af078e6bdb53c906e324d9e8726f",
+      "sha256": "775f907eef7c3cfd460a44ceb9ea27454e90af078e6bdb53c906e324d9e8726f",
+      "bytes": 1872
+    },
+    {
+      "path": "scripts/configs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p1_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "f8d03456ca45e1eb5d587f75d7a82752a5170644af756f83fdbe1b66c1a8432b",
+      "sha256": "f8d03456ca45e1eb5d587f75d7a82752a5170644af756f83fdbe1b66c1a8432b",
+      "bytes": 1870
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_f0p5_seed1_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a2bcdb32c296003a015d7df862ecbac4ce55d9c77b5b2f078ecd5119df8deb87",
+      "sha256": "a2bcdb32c296003a015d7df862ecbac4ce55d9c77b5b2f078ecd5119df8deb87",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_f0p5_seed2_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "61befd2c217d1b86aea559907f57db2e0fcbad88dc458e8968fd56e1777a2ca1",
+      "sha256": "61befd2c217d1b86aea559907f57db2e0fcbad88dc458e8968fd56e1777a2ca1",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_f0p5_seed3_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e745a18c3607844b5fac0ab74c1615e5dd36eaedbbd47a27879cf9e079b83bc4",
+      "sha256": "e745a18c3607844b5fac0ab74c1615e5dd36eaedbbd47a27879cf9e079b83bc4",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_f0p5_seed4_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "cc1b60c9b2707b8175b92baa111ccf5170590e844ccdb1ed39931ee1d59f032f",
+      "sha256": "cc1b60c9b2707b8175b92baa111ccf5170590e844ccdb1ed39931ee1d59f032f",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_full_seed1_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "331a6aafb530638b87b8c0863bd4a60136fb181952a1f1e260c26a516654967a",
+      "sha256": "331a6aafb530638b87b8c0863bd4a60136fb181952a1f1e260c26a516654967a",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_full_seed2_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4293910fea0426b3414cd29045be42302cfbdcd442b2d3199e38d539ee77fcb3",
+      "sha256": "4293910fea0426b3414cd29045be42302cfbdcd442b2d3199e38d539ee77fcb3",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_full_seed3_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e7de8712cf3a26fc5e70d8ca9fb393e7e9efebc01abb78af62b55163485c8318",
+      "sha256": "e7de8712cf3a26fc5e70d8ca9fb393e7e9efebc01abb78af62b55163485c8318",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fedavg_n20_full_seed4_e10_b32_lr001_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "bb501185448fa559b788cc2b93a68113a2fa7b2c60af97ebcbff9a599f7a722c",
+      "sha256": "bb501185448fa559b788cc2b93a68113a2fa7b2c60af97ebcbff9a599f7a722c",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_f0p5_seed1_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "fa67b7a59d2cf8a2740320a80d58543c71c4160a32b9db7e78d267b5065e6e9a",
+      "sha256": "fa67b7a59d2cf8a2740320a80d58543c71c4160a32b9db7e78d267b5065e6e9a",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_f0p5_seed2_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1fe17bd82477b251eef65a49a6558d84b3271a4f1cd5926bfa618357e4c400a1",
+      "sha256": "1fe17bd82477b251eef65a49a6558d84b3271a4f1cd5926bfa618357e4c400a1",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_f0p5_seed3_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "17c977606b3076f89df8a3a1629772b356970d665578c84bcae4f4b6f3575ec5",
+      "sha256": "17c977606b3076f89df8a3a1629772b356970d665578c84bcae4f4b6f3575ec5",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_f0p5_seed4_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "eac3e3d601e587b36d9a4eb92335488c81b5424db1c8e921fd8928fe1f57eacd",
+      "sha256": "eac3e3d601e587b36d9a4eb92335488c81b5424db1c8e921fd8928fe1f57eacd",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_full_seed1_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "14240126f724530a403ee389f87425b3b22e5c94e1c0f36a91d56868e879ea3b",
+      "sha256": "14240126f724530a403ee389f87425b3b22e5c94e1c0f36a91d56868e879ea3b",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_full_seed2_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "41b711d9ff53af6c5c11e1cb4d8121ddf301186466d6c97785d26e8d29080e4f",
+      "sha256": "41b711d9ff53af6c5c11e1cb4d8121ddf301186466d6c97785d26e8d29080e4f",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_full_seed3_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a9532a677004f014a1d31e48247c4b6ce982c30dce366696261748ead9c3d917",
+      "sha256": "a9532a677004f014a1d31e48247c4b6ce982c30dce366696261748ead9c3d917",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p01_multiseed_fola_n20_full_seed4_e10_b32_lr001_lam0p01_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "36ef22cc34e4c26463378d5acef8f20184fa6431e206c84b67103c1e02fc3adb",
+      "sha256": "36ef22cc34e4c26463378d5acef8f20184fa6431e206c84b67103c1e02fc3adb",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p03_seed1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d4a578ea26600e1c86a36c0f3b6d96cc7b0f62f8e12320ec988f18a90eb03445",
+      "sha256": "d4a578ea26600e1c86a36c0f3b6d96cc7b0f62f8e12320ec988f18a90eb03445",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p03_seed2_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "dda8ebea46c3f4aab8821a2ace6bb02d6465318257d984e80b0d41f06dd0da6d",
+      "sha256": "dda8ebea46c3f4aab8821a2ace6bb02d6465318257d984e80b0d41f06dd0da6d",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p03_seed3_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1133d3461fc0c498df69e7a585fd17974f56bd4619b9bab185b53cb4ddd0b9b5",
+      "sha256": "1133d3461fc0c498df69e7a585fd17974f56bd4619b9bab185b53cb4ddd0b9b5",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p03_seed4_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "dc11e548c33dd085303bb1c5ff886364ca854b31b95f177a5bf5babc4b70ac8e",
+      "sha256": "dc11e548c33dd085303bb1c5ff886364ca854b31b95f177a5bf5babc4b70ac8e",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p125_seed1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "071e423f38420bd8ab457bb1372ecf3767a7513ad81f6f3db87d33c5c050273b",
+      "sha256": "071e423f38420bd8ab457bb1372ecf3767a7513ad81f6f3db87d33c5c050273b",
+      "bytes": 1858
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p125_seed2_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "47fc0c78e3e36b9af382accad81b148ed873ce0a72d76b7be9ad0081a0e1a968",
+      "sha256": "47fc0c78e3e36b9af382accad81b148ed873ce0a72d76b7be9ad0081a0e1a968",
+      "bytes": 1858
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p125_seed3_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d374a0796e66f110fdbd9d8458cb650427ba05352ddc5e48ccd7a8eeaa82d5ba",
+      "sha256": "d374a0796e66f110fdbd9d8458cb650427ba05352ddc5e48ccd7a8eeaa82d5ba",
+      "bytes": 1858
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p125_seed4_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c8b27b434f68b3dba6892608436bed7115b659eab5cceb44b08298ac0b4f2409",
+      "sha256": "c8b27b434f68b3dba6892608436bed7115b659eab5cceb44b08298ac0b4f2409",
+      "bytes": 1858
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p25_seed1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5580e335995a8cf872dac2ac755dbcdcbd0272425f55b5676fc84bacc76fd1db",
+      "sha256": "5580e335995a8cf872dac2ac755dbcdcbd0272425f55b5676fc84bacc76fd1db",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p25_seed2_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "16d5dfa70275c40e0a0ec1474b3bf5a6d73de479fd7b8cd255f66cb81871e684",
+      "sha256": "16d5dfa70275c40e0a0ec1474b3bf5a6d73de479fd7b8cd255f66cb81871e684",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p25_seed3_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ed4cfab5446bc580819e4350aacc4dccd94e0ea51a97735e7039b368e45e44fc",
+      "sha256": "ed4cfab5446bc580819e4350aacc4dccd94e0ea51a97735e7039b368e45e44fc",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p25_seed4_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "7cd9d79e21c4600c5c813e9920c997fb4060baeff56e884e34f44cc44d3cdb0e",
+      "sha256": "7cd9d79e21c4600c5c813e9920c997fb4060baeff56e884e34f44cc44d3cdb0e",
+      "bytes": 1856
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p5_seed1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "4491cb2ee59cceb62c3129ef6efe075f55432be8e7679e6927ff9146fd10d312",
+      "sha256": "4491cb2ee59cceb62c3129ef6efe075f55432be8e7679e6927ff9146fd10d312",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p5_seed2_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "0699936d61f5d17bb6aeb4d449b2e742a6e926a2b687e6506c16f1d1ed10f1d7",
+      "sha256": "0699936d61f5d17bb6aeb4d449b2e742a6e926a2b687e6506c16f1d1ed10f1d7",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p5_seed3_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "13e7e2b45e7ef5adf87a343404968a0c77de176b9a1da715f8cd328195e71a33",
+      "sha256": "13e7e2b45e7ef5adf87a343404968a0c77de176b9a1da715f8cd328195e71a33",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_f0p5_seed4_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e4d76a07df4d9be0f2896fa1e5c21c92e603871220022ace3db3c47808a47e95",
+      "sha256": "e4d76a07df4d9be0f2896fa1e5c21c92e603871220022ace3db3c47808a47e95",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_full_seed1_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "db06f5c379d134930afabd26fd36772dfbe95ef0950fb93abf867d246c3e8e41",
+      "sha256": "db06f5c379d134930afabd26fd36772dfbe95ef0950fb93abf867d246c3e8e41",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_full_seed2_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "448b06272316d396ba9faa2af37d28cd9ea1f4ab5a16f857ced94086844da7ab",
+      "sha256": "448b06272316d396ba9faa2af37d28cd9ea1f4ab5a16f857ced94086844da7ab",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_full_seed3_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1a7ef6689d37cb912fc33cf01b52051130d8f8d3753fb7de2214fd12d3c6d23b",
+      "sha256": "1a7ef6689d37cb912fc33cf01b52051130d8f8d3753fb7de2214fd12d3c6d23b",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fedavg_n20_full_seed4_e10_b32_lr002_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "c1a4c372708b90524abee2d4f6b689ffee04e27eb84c91b6b74c81803788296b",
+      "sha256": "c1a4c372708b90524abee2d4f6b689ffee04e27eb84c91b6b74c81803788296b",
+      "bytes": 1854
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p03_seed1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "54a9629e36e936d229bb94494ae5a72a1e170288cce01240a93a34dabdfeddf0",
+      "sha256": "54a9629e36e936d229bb94494ae5a72a1e170288cce01240a93a34dabdfeddf0",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p03_seed2_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "5f5cd7a44aa8f7e9ed979c9797dfe83b80389dad088450b14d23552adafe892f",
+      "sha256": "5f5cd7a44aa8f7e9ed979c9797dfe83b80389dad088450b14d23552adafe892f",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p03_seed3_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ea840ac947caa1a9630e5e445566c79286a9a9f585b0ba0e74ced4bd27b6e07b",
+      "sha256": "ea840ac947caa1a9630e5e445566c79286a9a9f585b0ba0e74ced4bd27b6e07b",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p03_seed4_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "21ac941c26b6f478b704abfb882eea1ebe0844c4c718c5a6e2ca35d8f841a7ee",
+      "sha256": "21ac941c26b6f478b704abfb882eea1ebe0844c4c718c5a6e2ca35d8f841a7ee",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p125_seed1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2546d6c04a14d04bcf66aa451500665d76e47add955ca18528e1a627bcdf87f6",
+      "sha256": "2546d6c04a14d04bcf66aa451500665d76e47add955ca18528e1a627bcdf87f6",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p125_seed2_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "e2270c69d93654fc53b244ef5f2920b83caf493aae10a7591b9f5551e368ff25",
+      "sha256": "e2270c69d93654fc53b244ef5f2920b83caf493aae10a7591b9f5551e368ff25",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p125_seed3_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "78713d89b27fa7e88252e811a90f35c9dc21eb3b278394b6a852354b8be4de53",
+      "sha256": "78713d89b27fa7e88252e811a90f35c9dc21eb3b278394b6a852354b8be4de53",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p125_seed4_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "6d1ecd62c6ad117b25cdda34945a937efd0a7566471abbd6a3fdc28e61e6c4a1",
+      "sha256": "6d1ecd62c6ad117b25cdda34945a937efd0a7566471abbd6a3fdc28e61e6c4a1",
+      "bytes": 1859
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p25_seed1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "75c346fa753d86a802669640654c8d8dd9f46928d75bf863bf850296eac5debe",
+      "sha256": "75c346fa753d86a802669640654c8d8dd9f46928d75bf863bf850296eac5debe",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p25_seed2_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "2f26ce2c64c6019d6570bfee324a1860241c69948d01e9e28582ee91c15870e1",
+      "sha256": "2f26ce2c64c6019d6570bfee324a1860241c69948d01e9e28582ee91c15870e1",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p25_seed3_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "afb2bbbae640aef4ce8e77d3a6fc31a2a73741d052db44cc04cb8a7bd0303e0a",
+      "sha256": "afb2bbbae640aef4ce8e77d3a6fc31a2a73741d052db44cc04cb8a7bd0303e0a",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p25_seed4_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "d0c6dfac91569a771ef9fc60949a5852d0875bc835862fdf455fd6619767e96b",
+      "sha256": "d0c6dfac91569a771ef9fc60949a5852d0875bc835862fdf455fd6619767e96b",
+      "bytes": 1857
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p5_seed1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "a43f6b98556b770649532883e91627ee7923513f380ce5e49e4d32af7a1a394b",
+      "sha256": "a43f6b98556b770649532883e91627ee7923513f380ce5e49e4d32af7a1a394b",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p5_seed2_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "1acdae904bb9c0b0388a002bfa9cba909adc481fd840e32a449fbdf35433cb93",
+      "sha256": "1acdae904bb9c0b0388a002bfa9cba909adc481fd840e32a449fbdf35433cb93",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p5_seed3_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "ef8a5b45bfaffff7dac4e313eff10b652589c3794166db08e983ba1de4bb7c2a",
+      "sha256": "ef8a5b45bfaffff7dac4e313eff10b652589c3794166db08e983ba1de4bb7c2a",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_f0p5_seed4_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "249ba32ff1b75b6fe312c743e933b3c4b18e24c3646113dfe1c6101af70b18b6",
+      "sha256": "249ba32ff1b75b6fe312c743e933b3c4b18e24c3646113dfe1c6101af70b18b6",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_full_seed1_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "13ab67b5b6b4545f99f54e21c915375848b9cc310d447fbc4e9c461faf96da79",
+      "sha256": "13ab67b5b6b4545f99f54e21c915375848b9cc310d447fbc4e9c461faf96da79",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_full_seed2_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "149c72cbd47b7bd8df56ebb68018dd4f5040fcd87ce75462f9a89609e635bc1d",
+      "sha256": "149c72cbd47b7bd8df56ebb68018dd4f5040fcd87ce75462f9a89609e635bc1d",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_full_seed3_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "28820e9511289c9ddf8f8387e20320652f30f5735594835697bee5d4842ec58d",
+      "sha256": "28820e9511289c9ddf8f8387e20320652f30f5735594835697bee5d4842ec58d",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_cifar_r56_a0p1_multiseed_fola_n20_full_seed4_e10_b32_lr002_lam0p1_r50.yaml",
+      "status": "unchanged",
+      "original_sha256": "87cc9ed0d8c55bed168dfabc14cbc191569e38716c2a6a305a97b04c3d74cb1c",
+      "sha256": "87cc9ed0d8c55bed168dfabc14cbc191569e38716c2a6a305a97b04c3d74cb1c",
+      "bytes": 1855
+    },
+    {
+      "path": "scripts/configs/run_mnist_a0p01_official_fedavg_n100_s10_f0p016667_seed0_e10_b32_lr001_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "8962a20b63b50d7fdbbd234c134586ff7ab71d8a2ffb9409268299455df6db5b",
+      "sha256": "8962a20b63b50d7fdbbd234c134586ff7ab71d8a2ffb9409268299455df6db5b",
+      "bytes": 1632
+    },
+    {
+      "path": "scripts/configs/run_mnist_a0p01_official_fedavg_n100_s75_f0p125_seed0_e10_b32_lr001_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "b2bdd01bc2bdb4ac294038e5fa9c9e133cd317c1a53e99ba72baaf1525761348",
+      "sha256": "b2bdd01bc2bdb4ac294038e5fa9c9e133cd317c1a53e99ba72baaf1525761348",
+      "bytes": 1614
+    },
+    {
+      "path": "scripts/configs/run_mnist_a0p01_official_fola_n100_s10_f0p016667_seed0_e10_b32_lr001_lam0p01_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "d84e7687c7e61e68a77ef5dc724f6a9c636473f76ecbe52c4fb05d0d12798f08",
+      "sha256": "d84e7687c7e61e68a77ef5dc724f6a9c636473f76ecbe52c4fb05d0d12798f08",
+      "bytes": 1693
+    },
+    {
+      "path": "scripts/configs/run_mnist_a0p01_official_fola_n100_s75_f0p125_seed0_e10_b32_lr001_lam0p01_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "4df05d77862c6e5ec63a8f2a6715f82e60acd08265633cb7133b57e58aa7857f",
+      "sha256": "4df05d77862c6e5ec63a8f2a6715f82e60acd08265633cb7133b57e58aa7857f",
+      "bytes": 1675
+    },
+    {
+      "path": "scripts/configs/run_mnist_fixed1c_s10_official_fedavg_n100_seed0_e10_b32_lr001_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "f98ac9ef0a34483f4ae37992b4b4b97bd8a409e0e2f28259b6580aa9dd2c89a5",
+      "sha256": "f98ac9ef0a34483f4ae37992b4b4b97bd8a409e0e2f28259b6580aa9dd2c89a5",
+      "bytes": 1542
+    },
+    {
+      "path": "scripts/configs/run_mnist_fixed1c_s10_official_fola_n100_seed0_e10_b32_lr001_lam0p01_r150.yaml",
+      "status": "unchanged",
+      "original_sha256": "e1f2782062fa8dcd38532c194cfc643c01e12b4dd8e80aaa46c85a83b841cdd4",
+      "sha256": "e1f2782062fa8dcd38532c194cfc643c01e12b4dd8e80aaa46c85a83b841cdd4",
+      "bytes": 1603
+    },
+    {
+      "path": "scripts/configs/run_paperenv_bbb_cifar10_a0p1_basiccnn_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "c96d10168d241809dbc13de63fc96d9163a73d52f3982ce3ccc4fb5c6a086232",
+      "sha256": "c96d10168d241809dbc13de63fc96d9163a73d52f3982ce3ccc4fb5c6a086232",
+      "bytes": 1812
+    },
+    {
+      "path": "scripts/configs/run_paperenv_bbb_cifar10_a0p1_resnet56_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "8c7a3569f0d846d8f807c39777f22caf9eba4057990b249634d0ba684bf2d0b3",
+      "sha256": "8c7a3569f0d846d8f807c39777f22caf9eba4057990b249634d0ba684bf2d0b3",
+      "bytes": 1810
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fedavg_cifar10_a0p01_basiccnn_lr0005_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "33b118c18b4f62f7cf9955575bfa6ae193766ad0315264ed33b93a9934ad3613",
+      "sha256": "33b118c18b4f62f7cf9955575bfa6ae193766ad0315264ed33b93a9934ad3613",
+      "bytes": 1822
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fedavg_cifar10_a0p01_basiccnn_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "2e42e6c5032833a6009c973439c58de7a7e2e1a54695c2b7cb14b81b3a2e6c20",
+      "sha256": "2e42e6c5032833a6009c973439c58de7a7e2e1a54695c2b7cb14b81b3a2e6c20",
+      "bytes": 1820
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fedavg_cifar10_a0p01_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "0d662d1c881622efeb0c4ab8753602e27e4383296d34ec5577c730782d27a462",
+      "sha256": "0d662d1c881622efeb0c4ab8753602e27e4383296d34ec5577c730782d27a462",
+      "bytes": 1809
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fedavg_cifar10_a0p1_basiccnn_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "043549cd5af720243c28c79e34004442424652620f665adc649c260ce464376a",
+      "sha256": "043549cd5af720243c28c79e34004442424652620f665adc649c260ce464376a",
+      "bytes": 1818
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fedavg_cifar10_a0p1_lr001_e10_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "2b2e4f735e00ed4318bbfbdba2fa2a7b33b58702f16ea79683dd71ccafaf182c",
+      "sha256": "2b2e4f735e00ed4318bbfbdba2fa2a7b33b58702f16ea79683dd71ccafaf182c",
+      "bytes": 1807
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fola_cifar10_a0p01_basiccnn_lr0005_e10_lam1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "b6878adcef78f402b0e201376542d39c8a02dae32615901536da87805fd6d52b",
+      "sha256": "b6878adcef78f402b0e201376542d39c8a02dae32615901536da87805fd6d52b",
+      "bytes": 1821
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fola_cifar10_a0p01_basiccnn_lr001_e10_lam1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "ba370c8028f3096c167aeaf7d1887f322a6b98ff930571af7564d738e7d59c47",
+      "sha256": "ba370c8028f3096c167aeaf7d1887f322a6b98ff930571af7564d738e7d59c47",
+      "bytes": 1819
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fola_cifar10_a0p01_lr001_e10_lam1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "4ff1b20d92839fb5a87b6b74597e4dafa55a2e2a66a2ddd646c73489f24c3939",
+      "sha256": "4ff1b20d92839fb5a87b6b74597e4dafa55a2e2a66a2ddd646c73489f24c3939",
+      "bytes": 1808
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fola_cifar10_a0p1_basiccnn_lr001_e10_lam1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "99b7c675ec4ec36ba6a7c55abb08215b0390094f281c9680acdb974a64979935",
+      "sha256": "99b7c675ec4ec36ba6a7c55abb08215b0390094f281c9680acdb974a64979935",
+      "bytes": 1817
+    },
+    {
+      "path": "scripts/configs/run_paperenv_fola_cifar10_a0p1_lr001_e10_lam1_r300.yaml",
+      "status": "unchanged",
+      "original_sha256": "135720332d6e02636f2b8191f84ea05fa1791d0342993571b45f3812322311e3",
+      "sha256": "135720332d6e02636f2b8191f84ea05fa1791d0342993571b45f3812322311e3",
+      "bytes": 1806
+    },
+    {
+      "path": "scripts/configs/smoke_bbb_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "2f74b91a5362ccf7bf7758196996a26c29be492d48fd3f7fdb1b5a13d7995be9",
+      "sha256": "2f74b91a5362ccf7bf7758196996a26c29be492d48fd3f7fdb1b5a13d7995be9",
+      "bytes": 1698
+    },
+    {
+      "path": "scripts/configs/smoke_bbb_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "837a28edcd621d5e9df94e9a013fd82614c849572433f0d243b13944b41e4c21",
+      "sha256": "837a28edcd621d5e9df94e9a013fd82614c849572433f0d243b13944b41e4c21",
+      "bytes": 1494
+    },
+    {
+      "path": "scripts/configs/smoke_fedavg_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "a83a7840dcb4b7c991c218d8b8d30e0675eb9414719f346a74cecea2577947d3",
+      "sha256": "a83a7840dcb4b7c991c218d8b8d30e0675eb9414719f346a74cecea2577947d3",
+      "bytes": 1704
+    },
+    {
+      "path": "scripts/configs/smoke_fedavg_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "c71256a71987caf49fda5fa96ecfaaf78d57898d83b4ff78b6d634daf5bc9b2c",
+      "sha256": "c71256a71987caf49fda5fa96ecfaaf78d57898d83b4ff78b6d634daf5bc9b2c",
+      "bytes": 1499
+    },
+    {
+      "path": "scripts/configs/smoke_fola_cifar10.yaml",
+      "status": "unchanged",
+      "original_sha256": "831e95f75e7512724822e82a3e48a563c0a5c8d9279aa787daab1b2cc5fa19ab",
+      "sha256": "831e95f75e7512724822e82a3e48a563c0a5c8d9279aa787daab1b2cc5fa19ab",
+      "bytes": 1700
+    },
+    {
+      "path": "scripts/configs/smoke_fola_mnist.yaml",
+      "status": "unchanged",
+      "original_sha256": "da6f5e0d5b2fa180aabeacfe24d86a6d061e3dfe6ce00abf0ca04eac51284e45",
+      "sha256": "da6f5e0d5b2fa180aabeacfe24d86a6d061e3dfe6ce00abf0ca04eac51284e45",
+      "bytes": 1495
+    },
+    {
+      "path": "scripts/configs/smoke_paperenv_bbb_cifar10_r5.yaml",
+      "status": "unchanged",
+      "original_sha256": "7c33817624cba0f77aed60fc6d358137a7cb1838f55c271547712706b8ee66c8",
+      "sha256": "7c33817624cba0f77aed60fc6d358137a7cb1838f55c271547712706b8ee66c8",
+      "bytes": 1785
+    },
+    {
+      "path": "scripts/configs/smoke_paperenv_fedavg_cifar10_r20.yaml",
+      "status": "unchanged",
+      "original_sha256": "c42f4cb01fbb1f40609a92d02c54156e18b554d1b18bc832f6090db451482513",
+      "sha256": "c42f4cb01fbb1f40609a92d02c54156e18b554d1b18bc832f6090db451482513",
+      "bytes": 1793
+    },
+    {
+      "path": "scripts/configs/smoke_paperenv_fedavg_cifar10_r5.yaml",
+      "status": "unchanged",
+      "original_sha256": "85908fb85a57d990b0457791c6cd8ce09ccdc712c1e6caa7d0f6ece167274022",
+      "sha256": "85908fb85a57d990b0457791c6cd8ce09ccdc712c1e6caa7d0f6ece167274022",
+      "bytes": 1791
+    },
+    {
+      "path": "scripts/configs/smoke_paperenv_fola_cifar10_r5.yaml",
+      "status": "unchanged",
+      "original_sha256": "0bea1940633e039646911a6acd6f7d3f604854998de6e32018b7d0edfeef3297",
+      "sha256": "0bea1940633e039646911a6acd6f7d3f604854998de6e32018b7d0edfeef3297",
+      "bytes": 1787
+    },
+    {
+      "path": "scripts/generate_plots.sh",
+      "status": "unchanged",
+      "original_sha256": "9d32fce3f6bdced996d71697ab414cc5531705d9c57f4e0f421bc81c6353049f",
+      "sha256": "9d32fce3f6bdced996d71697ab414cc5531705d9c57f4e0f421bc81c6353049f",
+      "bytes": 167
+    },
+    {
+      "path": "scripts/generate_sparse_configs.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2e12f638312479d1ec4bd18f64acea216b01d9f2174abd6c9037218a2a2f9cc6",
+      "bytes": 7489
+    },
+    {
+      "path": "scripts/plot_accuracy_rounds.py",
+      "status": "unchanged",
+      "original_sha256": "c84dd960db5dcc44c2982f33ee5ae4dcc7269a4704e9b4cd8aaba818b82f3da4",
+      "sha256": "c84dd960db5dcc44c2982f33ee5ae4dcc7269a4704e9b4cd8aaba818b82f3da4",
+      "bytes": 22686
+    },
+    {
+      "path": "scripts/plot_basiccnn_lr_schedule_compare.py",
+      "status": "unchanged",
+      "original_sha256": "3730a819ff92b1e52be9e87e98d947f83f4a1760fd12a47242f2dc33ec4d5f27",
+      "sha256": "3730a819ff92b1e52be9e87e98d947f83f4a1760fd12a47242f2dc33ec4d5f27",
+      "bytes": 6779
+    },
+    {
+      "path": "scripts/plot_official_accuracy_curves.py",
+      "status": "unchanged",
+      "original_sha256": "2618ca101ad1d8b1faa89d72748b0c032719e9616e2d412d26b89223e6de4e82",
+      "sha256": "2618ca101ad1d8b1faa89d72748b0c032719e9616e2d412d26b89223e6de4e82",
+      "bytes": 15065
+    },
+    {
+      "path": "scripts/queues/cifar_archsched_r50_seed0_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "c5bbcaa4e5cf1b4a746098f046fb6a209b63070ef9d956a4a0423946c25f6c62",
+      "sha256": "c5bbcaa4e5cf1b4a746098f046fb6a209b63070ef9d956a4a0423946c25f6c62",
+      "bytes": 385
+    },
+    {
+      "path": "scripts/queues/cifar_archsched_r50_seed0_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "17fb29a960bd61b04c1c94f23c3f86b8a73356bc2463031cd6b9405a4fde00ea",
+      "sha256": "17fb29a960bd61b04c1c94f23c3f86b8a73356bc2463031cd6b9405a4fde00ea",
+      "bytes": 378
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p01_localfrac_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "4ed6fe7da108ca31591deb46c2b5da489fd9524052ab3c3b0ce42fcfd869a30a",
+      "sha256": "4ed6fe7da108ca31591deb46c2b5da489fd9524052ab3c3b0ce42fcfd869a30a",
+      "bytes": 182
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p01_localfrac_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "bd6828a104f5f722d0824a9530bd81e01f710592bd18cd67ad5dc7cb1dfc7419",
+      "sha256": "bd6828a104f5f722d0824a9530bd81e01f710592bd18cd67ad5dc7cb1dfc7419",
+      "bytes": 370
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p01_lock_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "20b312d6f594af4e3a4803051fa4fab60b19880b7bf308e6560e5371c02d101c",
+      "sha256": "20b312d6f594af4e3a4803051fa4fab60b19880b7bf308e6560e5371c02d101c",
+      "bytes": 687
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p01_lock_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "af8a95f78c46cc24269e54af248f0bf72ef10c520ffcb95017f98f64c95977c1",
+      "sha256": "af8a95f78c46cc24269e54af248f0bf72ef10c520ffcb95017f98f64c95977c1",
+      "bytes": 611
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_bridge_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "f4b178faa7e656b3dc4b0cfdf615f383f3dd24a4f49c346aeb92b75d776f40af",
+      "sha256": "f4b178faa7e656b3dc4b0cfdf615f383f3dd24a4f49c346aeb92b75d776f40af",
+      "bytes": 173
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_bridge_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "2dee6ec21f5d342d503075c240a46c2a4342ed9d7530e428e035f1d92781684d",
+      "sha256": "2dee6ec21f5d342d503075c240a46c2a4342ed9d7530e428e035f1d92781684d",
+      "bytes": 352
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_fedavg_lr0050_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "bd6aa2c343708863606730614c2ad808c0d96e4ff46cec1e39520caa246a3130",
+      "sha256": "bd6aa2c343708863606730614c2ad808c0d96e4ff46cec1e39520caa246a3130",
+      "bytes": 87
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_fedavg_lr0060_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "a692c445edbb140f9099d2a95238d5fe88c0250db58abca59f1645400c8c374d",
+      "sha256": "a692c445edbb140f9099d2a95238d5fe88c0250db58abca59f1645400c8c374d",
+      "bytes": 87
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_fola_refine_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "cc0cb20494d196dab7c2567f9f06f5fff1c577355eb7a6b465683a3b3d7b266f",
+      "sha256": "cc0cb20494d196dab7c2567f9f06f5fff1c577355eb7a6b465683a3b3d7b266f",
+      "bytes": 353
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_fola_refine_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "96d1febc9b7846db7735fe7c394aadd1cb8aa602cd95d7d1063c6cec73ef35ea",
+      "sha256": "96d1febc9b7846db7735fe7c394aadd1cb8aa602cd95d7d1063c6cec73ef35ea",
+      "bytes": 352
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_lock_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "8529b1e612a71f8e82aa3b34d964a7df09483f0af403c3bf029f975df6d7a295",
+      "sha256": "8529b1e612a71f8e82aa3b34d964a7df09483f0af403c3bf029f975df6d7a295",
+      "bytes": 769
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_lock_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "e9513f733dba356878f267209c010b7d7ca236dd1335fef9d968440f0c526527",
+      "sha256": "e9513f733dba356878f267209c010b7d7ca236dd1335fef9d968440f0c526527",
+      "bytes": 764
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_lrboundary_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "803df6874d6ea62c7b9c412359a7b7a47cf8e3f5ae75c7208d419bd853e764ba",
+      "sha256": "803df6874d6ea62c7b9c412359a7b7a47cf8e3f5ae75c7208d419bd853e764ba",
+      "bytes": 360
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_lrboundary_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "d0b529d3a1d7860c18ac2fa565ff7e16313c369d5ca21a339abac6443bb22cee",
+      "sha256": "d0b529d3a1d7860c18ac2fa565ff7e16313c369d5ca21a339abac6443bb22cee",
+      "bytes": 360
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_s15_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "ff1ba4fbb4c46987682ba680178b6a754ccbf4f690bebd9fa8bb01f35ddbcb91",
+      "sha256": "ff1ba4fbb4c46987682ba680178b6a754ccbf4f690bebd9fa8bb01f35ddbcb91",
+      "bytes": 102
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_s15_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "ac4a16d8e82497e857bc53d8318e49c506023ab11873a0b2104925bebcab1c8e",
+      "sha256": "ac4a16d8e82497e857bc53d8318e49c506023ab11873a0b2104925bebcab1c8e",
+      "bytes": 107
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_scarcity_matchedlr_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "d66c63a181e47004b911185abd746944abaf5eec90f547e59cfffeacc78c9006",
+      "sha256": "d66c63a181e47004b911185abd746944abaf5eec90f547e59cfffeacc78c9006",
+      "bytes": 416
+    },
+    {
+      "path": "scripts/queues/cifar_r56_a0p1_scarcity_matchedlr_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "c56d3ab8e54069f0622cac074fe2e3621b1f00dccaf6ca4d399a056c1efbf592",
+      "sha256": "c56d3ab8e54069f0622cac074fe2e3621b1f00dccaf6ca4d399a056c1efbf592",
+      "bytes": 414
+    },
+    {
+      "path": "scripts/queues/cifar_r56_multiseed_final_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "fa3ea7bc9d40060af3950be53ced7705feb4dff8d0038924c5418016efd008c6",
+      "sha256": "fa3ea7bc9d40060af3950be53ced7705feb4dff8d0038924c5418016efd008c6",
+      "bytes": 2646
+    },
+    {
+      "path": "scripts/queues/cifar_r56_multiseed_final_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "5374814bc1186a750f836a282bb6da76ca15924f952e9972ca375d21645f4374",
+      "sha256": "5374814bc1186a750f836a282bb6da76ca15924f952e9972ca375d21645f4374",
+      "bytes": 2646
+    },
+    {
+      "path": "scripts/queues/mnist_a0p01.txt",
+      "status": "unchanged",
+      "original_sha256": "f19cccb8762c0a668c83ff441e919a16983c18c9bb5fe1dcefc5554d96bce306",
+      "sha256": "f19cccb8762c0a668c83ff441e919a16983c18c9bb5fe1dcefc5554d96bce306",
+      "bytes": 856
+    },
+    {
+      "path": "scripts/queues/mnist_a0p1.txt",
+      "status": "unchanged",
+      "original_sha256": "7527a6afa804011b5614cf48dd8514f92bb94b2f22b3e5c41f697123c4521aff",
+      "sha256": "7527a6afa804011b5614cf48dd8514f92bb94b2f22b3e5c41f697123c4521aff",
+      "bytes": 844
+    },
+    {
+      "path": "scripts/queues/mnist_a0p1_E10_localfrac_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "3229f94aaa452636582b74f231172c0c1ad80abfdee10ceb32edd3537fa3279a",
+      "sha256": "3229f94aaa452636582b74f231172c0c1ad80abfdee10ceb32edd3537fa3279a",
+      "bytes": 1336
+    },
+    {
+      "path": "scripts/queues/mnist_a0p1_E10_localfrac_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "8b8fea4902fd878036cca9ae722b52d31b5e18a7004cc5b7b1f8842e50d86e88",
+      "sha256": "8b8fea4902fd878036cca9ae722b52d31b5e18a7004cc5b7b1f8842e50d86e88",
+      "bytes": 1490
+    },
+    {
+      "path": "scripts/queues/mnist_a0p1_lock_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "baebb0eee062df29d77299f0c8c6efb79a5a013fe1e57449a33eb73ddcf73b1d",
+      "sha256": "baebb0eee062df29d77299f0c8c6efb79a5a013fe1e57449a33eb73ddcf73b1d",
+      "bytes": 490
+    },
+    {
+      "path": "scripts/queues/mnist_a0p1_lock_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "7ae3e87c7335aef719453614e9ef5a2f9c88f0d4ad953e7cdae0c340bcb2e541",
+      "sha256": "7ae3e87c7335aef719453614e9ef5a2f9c88f0d4ad953e7cdae0c340bcb2e541",
+      "bytes": 913
+    },
+    {
+      "path": "scripts/queues/mnist_fixed1c_s10_official_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "cd468177a10c8a86ea78879262d69d410409e8946a864728f2049e3b0b0bff88",
+      "sha256": "cd468177a10c8a86ea78879262d69d410409e8946a864728f2049e3b0b0bff88",
+      "bytes": 90
+    },
+    {
+      "path": "scripts/queues/mnist_fixed1c_s10_official_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "bc5245e44154d2948672d137649ebf8bed64710ffd4ec2586c17e668cf44c8ce",
+      "sha256": "bc5245e44154d2948672d137649ebf8bed64710ffd4ec2586c17e668cf44c8ce",
+      "bytes": 96
+    },
+    {
+      "path": "scripts/queues/mnist_localfrac_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "9cde0f242798e0d544de122a5c149c9f8d52212fd898bd27f9e55f00e188bfcd",
+      "sha256": "9cde0f242798e0d544de122a5c149c9f8d52212fd898bd27f9e55f00e188bfcd",
+      "bytes": 172
+    },
+    {
+      "path": "scripts/queues/mnist_localfrac_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "8ac832e6e79f945131c67ea3d77269caa13388902742788b54bae0c2648e4dad",
+      "sha256": "8ac832e6e79f945131c67ea3d77269caa13388902742788b54bae0c2648e4dad",
+      "bytes": 534
+    },
+    {
+      "path": "scripts/queues/mnist_localfrac_multiseed_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "b6c1a01d28f6a4138d398b298f844e217f240cc77e56997fec5acedd064c9551",
+      "sha256": "b6c1a01d28f6a4138d398b298f844e217f240cc77e56997fec5acedd064c9551",
+      "bytes": 1142
+    },
+    {
+      "path": "scripts/queues/mnist_localfrac_multiseed_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "a05d0d08b2f4d83344e865933066378942a27e9e57547ae06b88a924404c665d",
+      "sha256": "a05d0d08b2f4d83344e865933066378942a27e9e57547ae06b88a924404c665d",
+      "bytes": 1142
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_a0p01_e20.txt",
+      "status": "unchanged",
+      "original_sha256": "d15aa20ed4f82b2acd42dc295c8782afd4bd059dfd678bebc73087602613b891",
+      "sha256": "d15aa20ed4f82b2acd42dc295c8782afd4bd059dfd678bebc73087602613b891",
+      "bytes": 339
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_a0p01_e40.txt",
+      "status": "unchanged",
+      "original_sha256": "e7cd9f27151e5b4a538d28b39ff4b59eefc69c4b09f181ce0e0646ca195642a9",
+      "sha256": "e7cd9f27151e5b4a538d28b39ff4b59eefc69c4b09f181ce0e0646ca195642a9",
+      "bytes": 339
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_a0p01_n100.txt",
+      "status": "unchanged",
+      "original_sha256": "6a4ebe590e06d7b7d5cf8350af4bff8be69181100ab4c0a6eb74f718a80873bf",
+      "sha256": "6a4ebe590e06d7b7d5cf8350af4bff8be69181100ab4c0a6eb74f718a80873bf",
+      "bytes": 334
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_a0p1_n100.txt",
+      "status": "unchanged",
+      "original_sha256": "4b6eff860d760a9ce6970bed7d4d688b5a8b5b459295b04b10ebdb12b6e59530",
+      "sha256": "4b6eff860d760a9ce6970bed7d4d688b5a8b5b459295b04b10ebdb12b6e59530",
+      "bytes": 334
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_seed_validation_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "1c1c630b9a69478f925a8b35bcdc4a32f8cd98a4811811bbf9c3e543276246e9",
+      "sha256": "1c1c630b9a69478f925a8b35bcdc4a32f8cd98a4811811bbf9c3e543276246e9",
+      "bytes": 356
+    },
+    {
+      "path": "scripts/queues/mnist_paperpart_seed_validation_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "ea1ec3474c72be615b83f4cc4b0d3d53b564c8a82d4612a342a60fca1d763919",
+      "sha256": "ea1ec3474c72be615b83f4cc4b0d3d53b564c8a82d4612a342a60fca1d763919",
+      "bytes": 356
+    },
+    {
+      "path": "scripts/queues/mnist_tune_a0p01_n100.txt",
+      "status": "unchanged",
+      "original_sha256": "f384bce91ff000a85c3c296e6825dcce91cdd0b31a6777cf67a8e3318ddd78ef",
+      "sha256": "f384bce91ff000a85c3c296e6825dcce91cdd0b31a6777cf67a8e3318ddd78ef",
+      "bytes": 586
+    },
+    {
+      "path": "scripts/queues/mnist_tune_a0p1_n100.txt",
+      "status": "unchanged",
+      "original_sha256": "bf8dd90ebb7c02d802fdd376dfb8833fd6cec822c985b9eb9b943322dcb573df",
+      "sha256": "bf8dd90ebb7c02d802fdd376dfb8833fd6cec822c985b9eb9b943322dcb573df",
+      "bytes": 586
+    },
+    {
+      "path": "scripts/queues/official_seed0_gpu0.txt",
+      "status": "unchanged",
+      "original_sha256": "601da014c3b5bd6c781e22aa94377bf0bed3060afd61fcd7fcd21445c298dd73",
+      "sha256": "601da014c3b5bd6c781e22aa94377bf0bed3060afd61fcd7fcd21445c298dd73",
+      "bytes": 798
+    },
+    {
+      "path": "scripts/queues/official_seed0_gpu1.txt",
+      "status": "unchanged",
+      "original_sha256": "77655234290ed48421e49f594872cb326c81860ca8ce667793c6894eb87b590a",
+      "sha256": "77655234290ed48421e49f594872cb326c81860ca8ce667793c6894eb87b590a",
+      "bytes": 808
+    },
+    {
+      "path": "scripts/run_bbb_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "0cd97890c46d2b580a361e07f100d2aafc4baaf5c373a7cba26fb2fbe940d4dc",
+      "sha256": "0cd97890c46d2b580a361e07f100d2aafc4baaf5c373a7cba26fb2fbe940d4dc",
+      "bytes": 179
+    },
+    {
+      "path": "scripts/run_bbb_cifar10_full300.sh",
+      "status": "unchanged",
+      "original_sha256": "3abc10db0fa92b9130b8f44d22f7b0b59965ae7afa16119d3fa2450db2eff677",
+      "sha256": "3abc10db0fa92b9130b8f44d22f7b0b59965ae7afa16119d3fa2450db2eff677",
+      "bytes": 187
+    },
+    {
+      "path": "scripts/run_bbb_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "28f771ab3fb0792e4fae18a6932fc3a6687059ffd9e80996f6dfe2db4f9361ac",
+      "sha256": "28f771ab3fb0792e4fae18a6932fc3a6687059ffd9e80996f6dfe2db4f9361ac",
+      "bytes": 177
+    },
+    {
+      "path": "scripts/run_fedavg_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "206244d126cebf85a0e04b5308b6d906510d742f9a21ed02da7a43aaae3ad349",
+      "sha256": "206244d126cebf85a0e04b5308b6d906510d742f9a21ed02da7a43aaae3ad349",
+      "bytes": 182
+    },
+    {
+      "path": "scripts/run_fedavg_cifar10_full300.sh",
+      "status": "unchanged",
+      "original_sha256": "6c952ef9259cc5b5a7916b15eab689d7d3f45b5f865d18b30a08975d21388336",
+      "sha256": "6c952ef9259cc5b5a7916b15eab689d7d3f45b5f865d18b30a08975d21388336",
+      "bytes": 190
+    },
+    {
+      "path": "scripts/run_fedavg_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "7d653f3656d086473e66789b2558e7ce4da16d7e2a64586020ac0ab8712ba66d",
+      "sha256": "7d653f3656d086473e66789b2558e7ce4da16d7e2a64586020ac0ab8712ba66d",
+      "bytes": 180
+    },
+    {
+      "path": "scripts/run_fola_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "84848db78ae7f2012060fde0909e368d399a002548a6519c50748c89f3191638",
+      "sha256": "84848db78ae7f2012060fde0909e368d399a002548a6519c50748c89f3191638",
+      "bytes": 512
+    },
+    {
+      "path": "scripts/run_fola_cifar10_full300.sh",
+      "status": "unchanged",
+      "original_sha256": "ef027ccf2a0ac1df98be715a094593d71f32ad272a3509405cd5dc6074e7db3b",
+      "sha256": "ef027ccf2a0ac1df98be715a094593d71f32ad272a3509405cd5dc6074e7db3b",
+      "bytes": 188
+    },
+    {
+      "path": "scripts/run_fola_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "65c0a2bb388b50ee9a34a24b141c2b7aa7cb8d720045c7322ea810f23910baf0",
+      "sha256": "65c0a2bb388b50ee9a34a24b141c2b7aa7cb8d720045c7322ea810f23910baf0",
+      "bytes": 178
+    },
+    {
+      "path": "scripts/run_paper_fola_lambda_sweep.sh",
+      "status": "unchanged",
+      "original_sha256": "5d32a3bbe697c7765893fbc9ce33bb2521d4c021850f2b683353fea289599d9f",
+      "sha256": "5d32a3bbe697c7765893fbc9ce33bb2521d4c021850f2b683353fea289599d9f",
+      "bytes": 743
+    },
+    {
+      "path": "scripts/run_smoke_all.sh",
+      "status": "unchanged",
+      "original_sha256": "acfbb98015b64963fb176e6388f72d8faacca454b3f4840c15038aedc0c76c95",
+      "sha256": "acfbb98015b64963fb176e6388f72d8faacca454b3f4840c15038aedc0c76c95",
+      "bytes": 534
+    },
+    {
+      "path": "scripts/run_smoke_bbb_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "a0d734859d0f0c3bd2ad44636316d1ecffeb3960a638987852e59ca7402b2a05",
+      "sha256": "a0d734859d0f0c3bd2ad44636316d1ecffeb3960a638987852e59ca7402b2a05",
+      "bytes": 185
+    },
+    {
+      "path": "scripts/run_smoke_bbb_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "37457d594e54b3bf89b62190482dce6587d4d890b4bad2840a15f2655bd1db01",
+      "sha256": "37457d594e54b3bf89b62190482dce6587d4d890b4bad2840a15f2655bd1db01",
+      "bytes": 183
+    },
+    {
+      "path": "scripts/run_smoke_fedavg_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "7ece0d16a3d74a0fbb72561ca25df6cdd70183652d1b3fd46d36b7be9c49f2c2",
+      "sha256": "7ece0d16a3d74a0fbb72561ca25df6cdd70183652d1b3fd46d36b7be9c49f2c2",
+      "bytes": 188
+    },
+    {
+      "path": "scripts/run_smoke_fedavg_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "87debe2c35f904e1b45b00f5cf3a3678c01af243730513ac80db2319fb59bf45",
+      "sha256": "87debe2c35f904e1b45b00f5cf3a3678c01af243730513ac80db2319fb59bf45",
+      "bytes": 186
+    },
+    {
+      "path": "scripts/run_smoke_fola_cifar10.sh",
+      "status": "unchanged",
+      "original_sha256": "6d23637f36ac4db6e53370d3b3c969a10b33ec9bc1f7cb1fa4b433a9e0b4f5da",
+      "sha256": "6d23637f36ac4db6e53370d3b3c969a10b33ec9bc1f7cb1fa4b433a9e0b4f5da",
+      "bytes": 186
+    },
+    {
+      "path": "scripts/run_smoke_fola_mnist.sh",
+      "status": "unchanged",
+      "original_sha256": "224a847bf0ae46cd458c41739a3a744be7c34171c79ed6b6c1555be6c6ac7e56",
+      "sha256": "224a847bf0ae46cd458c41739a3a744be7c34171c79ed6b6c1555be6c6ac7e56",
+      "bytes": 184
+    },
+    {
+      "path": "scripts/select_paper_fola_lambda.py",
+      "status": "unchanged",
+      "original_sha256": "4fc192bf0fe7699ce98feb1e3054df270826ecc41f46c719e9b2da400cabbb7b",
+      "sha256": "4fc192bf0fe7699ce98feb1e3054df270826ecc41f46c719e9b2da400cabbb7b",
+      "bytes": 2144
+    },
+    {
+      "path": "scripts/smoke_sparse_offline.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1501f2bebf0f804d867d12bd5f101e98d93a8fcf01172c804b4aaf133adbf088",
+      "bytes": 163
+    },
+    {
+      "path": "scripts/summarize_sparse_study.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1784a01f6f8117e00bf8a0f1da88c77ad07b2f3610756064e82b73b3029c5319",
+      "bytes": 2853
+    },
+    {
+      "path": "scripts/validate_install.sh",
+      "status": "unchanged",
+      "original_sha256": "6e9232482db94bf810070a055f64715e28ae4fc93118aa9177754249557b4b85",
+      "sha256": "6e9232482db94bf810070a055f64715e28ae4fc93118aa9177754249557b4b85",
+      "bytes": 987
+    },
+    {
+      "path": "src/bayesfl/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "db62ee1363b6b31c122f1aa6e5ef4ddb7ea6217359dbf036cdb3e1cbd6e9df34",
+      "sha256": "db62ee1363b6b31c122f1aa6e5ef4ddb7ea6217359dbf036cdb3e1cbd6e9df34",
+      "bytes": 79
+    },
+    {
+      "path": "src/bayesfl/budget_server.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "eb0b9ceb53d23decfec2be113a7b2add8f1ddb4552915917af34a3a41a1131d4",
+      "bytes": 2425
+    },
+    {
+      "path": "src/bayesfl/client.py",
+      "status": "modified",
+      "original_sha256": "d55f8b5d2180841629599200e253ee7c41c6245c521472ac42e7441ec5261d09",
+      "sha256": "657da849277c8f0d257ad386e023c695e8aa9b10987833e92b0eb45b09e325b4",
+      "bytes": 5802
+    },
+    {
+      "path": "src/bayesfl/communication.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2d11b24c025a9f8b6a865262bc80cdd53aff73758af434151a939f52c7b7e009",
+      "bytes": 8804
+    },
+    {
+      "path": "src/bayesfl/communication_plots.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d0e17fdb7f8e7cd90a92f9abfdd20e616601c740e08ba270234fd2ee7b6e1592",
+      "bytes": 10815
+    },
+    {
+      "path": "src/bayesfl/config.py",
+      "status": "modified",
+      "original_sha256": "942d47f3f5122f4f5d803cfaea82f119b11bbac25aaf90963cb7a8fb2e1c5cf4",
+      "sha256": "119ca3ff57e2f49189b5fe5d8b48a7e2dc813f25c41d7ee066d6aa27ccf89947",
+      "bytes": 16194
+    },
+    {
+      "path": "src/bayesfl/config.py.before_matched_init",
+      "status": "unchanged",
+      "original_sha256": "ccdd5376793e683e00e9643c5c0a6e4f713997fb0a26f7f916df67c84691f48f",
+      "sha256": "ccdd5376793e683e00e9643c5c0a6e4f713997fb0a26f7f916df67c84691f48f",
+      "bytes": 7568
+    },
+    {
+      "path": "src/bayesfl/data/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "7e97b2a3ac42c4e6d8a596e7f0b5f8fd0f63f5769dd08f8fbca4fbf581ce3e60",
+      "sha256": "7e97b2a3ac42c4e6d8a596e7f0b5f8fd0f63f5769dd08f8fbca4fbf581ce3e60",
+      "bytes": 38
+    },
+    {
+      "path": "src/bayesfl/data/datasets.py",
+      "status": "unchanged",
+      "original_sha256": "6756e87a54616078bc4d603f97a32bdb46fa0e7c29322f9e7ac9fb3abb2417de",
+      "sha256": "6756e87a54616078bc4d603f97a32bdb46fa0e7c29322f9e7ac9fb3abb2417de",
+      "bytes": 10071
+    },
+    {
+      "path": "src/bayesfl/data/partition.py",
+      "status": "unchanged",
+      "original_sha256": "63b9c043799017bc2a0be4f4bdd9d6f2f554dd0d31a4522595b70a531becf2cd",
+      "sha256": "63b9c043799017bc2a0be4f4bdd9d6f2f554dd0d31a4522595b70a531becf2cd",
+      "bytes": 22050
+    },
+    {
+      "path": "src/bayesfl/data/transforms.py",
+      "status": "unchanged",
+      "original_sha256": "315971b7b67f4c6eeee52002e66e59b236d92e27fec3500e1551b085b89851a1",
+      "sha256": "315971b7b67f4c6eeee52002e66e59b236d92e27fec3500e1551b085b89851a1",
+      "bytes": 2143
+    },
+    {
+      "path": "src/bayesfl/evaluation.py",
+      "status": "modified",
+      "original_sha256": "dc0c8bd70d2f4a5b9d7dd7031be2443edd54cdadf13b3c72dbd44a9bfd4a77ad",
+      "sha256": "ef678673989a46261384644784a21ea1541cc8df80f5345e85d93a5ffe87e316",
+      "bytes": 12454
+    },
+    {
+      "path": "src/bayesfl/experiment_state.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "acc24c8b0e69cb48753247a3990460a0c73363531285dc634dda9df09f55c9be",
+      "bytes": 20127
+    },
+    {
+      "path": "src/bayesfl/logging_utils.py",
+      "status": "modified",
+      "original_sha256": "8fd96e8b599e25c254ba8d02a6fe587d517bf9f7f678bd2a8697a0418f26c58d",
+      "sha256": "59a95773ad0c0b1b6ed3bb996b5a83f8498611fc6d63b8e306f00d4519c85039",
+      "bytes": 4019
+    },
+    {
+      "path": "src/bayesfl/main.py",
+      "status": "modified",
+      "original_sha256": "4d6521f2d63a3c5230f367985e814ee39e75d105b2b2cef27a2cdde0841dc6b1",
+      "sha256": "e7d14b91a5ed2ce249431d77ed747712e17823bec2c27eda790bb7079b6e110e",
+      "bytes": 6025
+    },
+    {
+      "path": "src/bayesfl/metrics.py",
+      "status": "unchanged",
+      "original_sha256": "4c75e1ab9ec153962a19b35776a7f6bffe59e7882914d86a6cfedcadf56203da",
+      "sha256": "4c75e1ab9ec153962a19b35776a7f6bffe59e7882914d86a6cfedcadf56203da",
+      "bytes": 3629
+    },
+    {
+      "path": "src/bayesfl/models/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "3521668cf59331683283060da418993df6c3784a70db04a9cc9d8dcd252ba84a",
+      "sha256": "3521668cf59331683283060da418993df6c3784a70db04a9cc9d8dcd252ba84a",
+      "bytes": 159
+    },
+    {
+      "path": "src/bayesfl/models/bayesian_layers.py",
+      "status": "unchanged",
+      "original_sha256": "86148dc18ad1bcc1993f6dff295667960e421413ad73f2e5d3d35864996f8415",
+      "sha256": "86148dc18ad1bcc1993f6dff295667960e421413ad73f2e5d3d35864996f8415",
+      "bytes": 1929
+    },
+    {
+      "path": "src/bayesfl/models/cifar_resnet.py",
+      "status": "unchanged",
+      "original_sha256": "39fe226ebffed46722311e678cf11220a698ac6294aa26e96e399d5db6b95815",
+      "sha256": "39fe226ebffed46722311e678cf11220a698ac6294aa26e96e399d5db6b95815",
+      "bytes": 4188
+    },
+    {
+      "path": "src/bayesfl/models/factory.py",
+      "status": "unchanged",
+      "original_sha256": "b1d60782149c49a6f459c402c909251353b50a68b4f7ba5f84ebde171063e42e",
+      "sha256": "b1d60782149c49a6f459c402c909251353b50a68b4f7ba5f84ebde171063e42e",
+      "bytes": 3938
+    },
+    {
+      "path": "src/bayesfl/models/factory.py.before_matched_init",
+      "status": "unchanged",
+      "original_sha256": "e3b204157c990c1053adfd6cb39a4ec815b4ee1870c129a49721142ff24e0a64",
+      "sha256": "e3b204157c990c1053adfd6cb39a4ec815b4ee1870c129a49721142ff24e0a64",
+      "bytes": 1394
+    },
+    {
+      "path": "src/bayesfl/models/mnist_mlp.py",
+      "status": "unchanged",
+      "original_sha256": "9237dcf6832f8a19c91fdbcb9b5cbc74bc9998c5cd9d0b0584269e1a50cd461a",
+      "sha256": "9237dcf6832f8a19c91fdbcb9b5cbc74bc9998c5cd9d0b0584269e1a50cd461a",
+      "bytes": 1115
+    },
+    {
+      "path": "src/bayesfl/models/paper_cnn.py",
+      "status": "unchanged",
+      "original_sha256": "630861135f2dfc88266ed126013f105abd1acff35c2f2fb2c87e4741db85cac1",
+      "sha256": "630861135f2dfc88266ed126013f105abd1acff35c2f2fb2c87e4741db85cac1",
+      "bytes": 2932
+    },
+    {
+      "path": "src/bayesfl/offline_smoke.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4177c33729b641e2836438e7d4d0ff0b1c6bf98b6501b5f4a5db78168add1215",
+      "bytes": 8265
+    },
+    {
+      "path": "src/bayesfl/posterior/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "f59777848cf478b77d7fa76119d4d1a9eba7bc7a147e19ee8d883dbd431d685b",
+      "sha256": "f59777848cf478b77d7fa76119d4d1a9eba7bc7a147e19ee8d883dbd431d685b",
+      "bytes": 49
+    },
+    {
+      "path": "src/bayesfl/posterior/aggregation.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ef5c8af63e7d4b7c953e5ab9786787dd74a0923a7f8c46392e8b762a0fb5a628",
+      "bytes": 2191
+    },
+    {
+      "path": "src/bayesfl/posterior/diagnostics.py",
+      "status": "unchanged",
+      "original_sha256": "d602f8a64a6e376c37c0a045909be847c1716bea9b4486f8a072c976a6eb699e",
+      "sha256": "d602f8a64a6e376c37c0a045909be847c1716bea9b4486f8a072c976a6eb699e",
+      "bytes": 3812
+    },
+    {
+      "path": "src/bayesfl/posterior/gaussian.py",
+      "status": "unchanged",
+      "original_sha256": "f6ad695dd78a52d495cea2d5e82d43c2670c2027f38e98bee32b3919ed5c777e",
+      "sha256": "f6ad695dd78a52d495cea2d5e82d43c2670c2027f38e98bee32b3919ed5c777e",
+      "bytes": 4621
+    },
+    {
+      "path": "src/bayesfl/posterior/packing.py",
+      "status": "unchanged",
+      "original_sha256": "36d3c1b68a8504c9c6e55a2c5ae6532b09257876e1ef64b217075d15ca5ef041",
+      "sha256": "36d3c1b68a8504c9c6e55a2c5ae6532b09257876e1ef64b217075d15ca5ef041",
+      "bytes": 2765
+    },
+    {
+      "path": "src/bayesfl/posterior/scale_mixture.py",
+      "status": "unchanged",
+      "original_sha256": "eb5c252ed213b371221caaf4ecdfe070824341333dab8c46115a800db1ef9ed0",
+      "sha256": "eb5c252ed213b371221caaf4ecdfe070824341333dab8c46115a800db1ef9ed0",
+      "bytes": 3653
+    },
+    {
+      "path": "src/bayesfl/posterior/sparse.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4a1035d9f9abb592d9d729b1b658eb36520986e5db6d24ca1c98791ad3e1e1e9",
+      "bytes": 12552
+    },
+    {
+      "path": "src/bayesfl/runtime_utils.py",
+      "status": "unchanged",
+      "original_sha256": "51a2cd467bf74aebe4bc4bb699c87ab3ec5dcf30ce0595ab6a2d2c097f1ab2f3",
+      "sha256": "51a2cd467bf74aebe4bc4bb699c87ab3ec5dcf30ce0595ab6a2d2c097f1ab2f3",
+      "bytes": 875
+    },
+    {
+      "path": "src/bayesfl/server.py",
+      "status": "modified",
+      "original_sha256": "9f6233cdf683f7643a49a7041aefba13cc0acc53f3ecd89fa2d909166a828502",
+      "sha256": "bfabb9d3c4e11813e60bd67d699fa056e6253fe1c29bf598cc55cdf2a3f1d35c",
+      "bytes": 5108
+    },
+    {
+      "path": "src/bayesfl/server.py.before_matched_init",
+      "status": "unchanged",
+      "original_sha256": "5fc030a865afbb8747b158dde0d79264349b608f0fc8c203b41a991a094958a7",
+      "sha256": "5fc030a865afbb8747b158dde0d79264349b608f0fc8c203b41a991a094958a7",
+      "bytes": 3700
+    },
+    {
+      "path": "src/bayesfl/strategies/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "0e26dfcf917ebf20884d0092489437ded91237cd1a2397b97e07f6a493a49cdb",
+      "sha256": "0e26dfcf917ebf20884d0092489437ded91237cd1a2397b97e07f6a493a49cdb",
+      "bytes": 33
+    },
+    {
+      "path": "src/bayesfl/strategies/common.py",
+      "status": "unchanged",
+      "original_sha256": "467afeba08bbc0ba569949f63b6279a2e820d161f740193ba8300793341966b4",
+      "sha256": "467afeba08bbc0ba569949f63b6279a2e820d161f740193ba8300793341966b4",
+      "bytes": 1981
+    },
+    {
+      "path": "src/bayesfl/strategies/research_strategy.py",
+      "status": "modified",
+      "original_sha256": "b953210c56a77c222b013fa81537bf1166066511c9486c1e9f9c37477c29f8d6",
+      "sha256": "c7572b4be852789b26085a00bdfa63ea1a975671d978673c8014ac0df19849e3",
+      "bytes": 19156
+    },
+    {
+      "path": "src/bayesfl/training/__init__.py",
+      "status": "unchanged",
+      "original_sha256": "35f07ddfad5de64c32fbedd913976657bdc3604c8a12aa753c969554975a3340",
+      "sha256": "35f07ddfad5de64c32fbedd913976657bdc3604c8a12aa753c969554975a3340",
+      "bytes": 34
+    },
+    {
+      "path": "src/bayesfl/training/bbb.py",
+      "status": "unchanged",
+      "original_sha256": "fe3e777cc1a9ff97e5091d62883f0ea5512b0f3d6bd17471fded4912b7e424da",
+      "sha256": "fe3e777cc1a9ff97e5091d62883f0ea5512b0f3d6bd17471fded4912b7e424da",
+      "bytes": 7563
+    },
+    {
+      "path": "src/bayesfl/training/deterministic.py",
+      "status": "unchanged",
+      "original_sha256": "704a1dbe9063fbcdf4bf9f5281bb13d8855ac81fc19d78ac2ac9f99d3cb1c5a6",
+      "sha256": "704a1dbe9063fbcdf4bf9f5281bb13d8855ac81fc19d78ac2ac9f99d3cb1c5a6",
+      "bytes": 1625
+    },
+    {
+      "path": "src/bayesfl/training/fola.py",
+      "status": "unchanged",
+      "original_sha256": "98ce75968db0297bf49c6d749f63d1a2fbb0642fbc83489cab9b801c272116e7",
+      "sha256": "98ce75968db0297bf49c6d749f63d1a2fbb0642fbc83489cab9b801c272116e7",
+      "bytes": 10061
+    },
+    {
+      "path": "src/bayesfl/utils.py",
+      "status": "unchanged",
+      "original_sha256": "17487952d3bfe04440d1f937613d09cf07867dab020291cf7699e3313e0f3df7",
+      "sha256": "17487952d3bfe04440d1f937613d09cf07867dab020291cf7699e3313e0f3df7",
+      "bytes": 14631
+    },
+    {
+      "path": "tests/fixtures/uploaded_fola_golden.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "333892b7c65e46cc6544a49afd83add8b708ea39c63d90fdac4af5db89b9d5d9",
+      "bytes": 478
+    },
+    {
+      "path": "tests/fixtures/uploaded_fola_golden.npz",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2488562f7e818bbcb90fb32e98777e5aed40bfb154ec6df9b7a2e6708c90498d",
+      "bytes": 4341
+    },
+    {
+      "path": "tests/test_bbb_matched_initialization.py",
+      "status": "unchanged",
+      "original_sha256": "e3c2c90d79a0b0bf49373f5600e89727b0d351d5acc024556b4a72f07875d4b5",
+      "sha256": "e3c2c90d79a0b0bf49373f5600e89727b0d351d5acc024556b4a72f07875d4b5",
+      "bytes": 1525
+    },
+    {
+      "path": "tests/test_bbb_rho_update.py",
+      "status": "unchanged",
+      "original_sha256": "b5e1902e607bbdffc6d15be448bb31b2ffa498e44d22786449c09da49bb432ba",
+      "sha256": "b5e1902e607bbdffc6d15be448bb31b2ffa498e44d22786449c09da49bb432ba",
+      "bytes": 1583
+    },
+    {
+      "path": "tests/test_communication_accounting.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "69623fab0e2097ad47efbcc0be94cfb2b55f9d0c08811b428ec81c356c884b5a",
+      "bytes": 3161
+    },
+    {
+      "path": "tests/test_communication_plots.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "56ab4b2fe560f1c1e9a6256b168898d5e1e790fc843bc75544ee713cf008b9fb",
+      "bytes": 3247
+    },
+    {
+      "path": "tests/test_config.py",
+      "status": "unchanged",
+      "original_sha256": "9c1892877cc5a7d05feb2cce3470fefc038fe4a7f96846888075ec4020e4726f",
+      "sha256": "9c1892877cc5a7d05feb2cce3470fefc038fe4a7f96846888075ec4020e4726f",
+      "bytes": 363
+    },
+    {
+      "path": "tests/test_ece.py",
+      "status": "unchanged",
+      "original_sha256": "fa6052e7effae1e81be3d4d1dea78bed55153638a12b82b452b03c06bc4c260b",
+      "sha256": "fa6052e7effae1e81be3d4d1dea78bed55153638a12b82b452b03c06bc4c260b",
+      "bytes": 471
+    },
+    {
+      "path": "tests/test_flower_smoke.py",
+      "status": "unchanged",
+      "original_sha256": "e13a70e1f46e2f6cccbd7c98be041bbbac95cd59a25aed75db7aa847ad114bd0",
+      "sha256": "e13a70e1f46e2f6cccbd7c98be041bbbac95cd59a25aed75db7aa847ad114bd0",
+      "bytes": 324
+    },
+    {
+      "path": "tests/test_fola_precision_recurrence.py",
+      "status": "unchanged",
+      "original_sha256": "102c615acfdcb41e34ffb88bfa4e7c72d3b93044e1c87737bab6399e73d71dbb",
+      "sha256": "102c615acfdcb41e34ffb88bfa4e7c72d3b93044e1c87737bab6399e73d71dbb",
+      "bytes": 1027
+    },
+    {
+      "path": "tests/test_gaussian_product.py",
+      "status": "unchanged",
+      "original_sha256": "b593bd82c1e83018a83d60bc935ffc787d634249670e7ac9cf8a5fc6a7d3b797",
+      "sha256": "b593bd82c1e83018a83d60bc935ffc787d634249670e7ac9cf8a5fc6a7d3b797",
+      "bytes": 772
+    },
+    {
+      "path": "tests/test_lr_schedule.py",
+      "status": "unchanged",
+      "original_sha256": "e475950bda9c288b788384b55d32d7a3b3b23c71ceb8794bbb3dfd13529f5d00",
+      "sha256": "e475950bda9c288b788384b55d32d7a3b3b23c71ceb8794bbb3dfd13529f5d00",
+      "bytes": 557
+    },
+    {
+      "path": "tests/test_models.py",
+      "status": "unchanged",
+      "original_sha256": "6944ce0b9d85cf82992a765bbfad3db5155697b73bf43da765839b69144ab7fb",
+      "sha256": "6944ce0b9d85cf82992a765bbfad3db5155697b73bf43da765839b69144ab7fb",
+      "bytes": 620
+    },
+    {
+      "path": "tests/test_packing.py",
+      "status": "unchanged",
+      "original_sha256": "8ec2e2ae5dbaf58c6fb032ed77e6b235cfedaa68956b434f4ae69be9d5953eba",
+      "sha256": "8ec2e2ae5dbaf58c6fb032ed77e6b235cfedaa68956b434f4ae69be9d5953eba",
+      "bytes": 898
+    },
+    {
+      "path": "tests/test_paper_cifar_profile.py",
+      "status": "unchanged",
+      "original_sha256": "808eca74a01ce715a07b8100cd583042fadd99be4b4944e4406ac2f03fe42e89",
+      "sha256": "808eca74a01ce715a07b8100cd583042fadd99be4b4944e4406ac2f03fe42e89",
+      "bytes": 4811
+    },
+    {
+      "path": "tests/test_parameter_count.py",
+      "status": "unchanged",
+      "original_sha256": "9fb3c0486a8f8ed182862e2eff68ac8e44e822da994ac6b5e526360a66becf80",
+      "sha256": "9fb3c0486a8f8ed182862e2eff68ac8e44e822da994ac6b5e526360a66becf80",
+      "bytes": 1081
+    },
+    {
+      "path": "tests/test_partition.py",
+      "status": "unchanged",
+      "original_sha256": "f53dc423d4a4c9d5a8dd2748d71a9ffccb363b8789dc0e5002c78556207780d9",
+      "sha256": "f53dc423d4a4c9d5a8dd2748d71a9ffccb363b8789dc0e5002c78556207780d9",
+      "bytes": 2398
+    },
+    {
+      "path": "tests/test_scale_mixture.py",
+      "status": "unchanged",
+      "original_sha256": "724dd52bfb6176cda451ceb2ad1b66f66e4ee5a134faa6e86271bf2abd393eb4",
+      "sha256": "724dd52bfb6176cda451ceb2ad1b66f66e4ee5a134faa6e86271bf2abd393eb4",
+      "bytes": 1021
+    },
+    {
+      "path": "tests/test_sparse_aggregation.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "5434f4aa3e44698a1af1ad62e635a7b70582940bcd444cc69680650cb52d3c09",
+      "bytes": 2786
+    },
+    {
+      "path": "tests/test_sparse_central_evaluator.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "831b1513905ea827316ed1a112895a6af567e1cae575a8d245f170b6bd214980",
+      "bytes": 1707
+    },
+    {
+      "path": "tests/test_sparse_config_generation.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "462482c91966b799c42e915c1d0f5fbce8830866dc79b306d1001b7f33f6884a",
+      "bytes": 2991
+    },
+    {
+      "path": "tests/test_sparse_flower_integration.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "c2caae2fff93d136a6f73191da4ff404f46307d25c46beacbcd5c7b802ef2786",
+      "bytes": 5532
+    },
+    {
+      "path": "tests/test_sparse_packet.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "80b1253491191728e035ee47f1411beca97a4e17472f731fbc5652859ab2992e",
+      "bytes": 4258
+    },
+    {
+      "path": "tests/test_sparse_resume_training.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "70233a0b3bb1f3bfa5a9fdbc6519a57a3c16be373987ead0bed494364ff58d6b",
+      "bytes": 2857
+    },
+    {
+      "path": "tests/test_sparse_scores.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "fed01b8e523285cc9cc68a51afa908389a6ffba3f1d1225d378097558185011a",
+      "bytes": 2650
+    },
+    {
+      "path": "tests/test_sparse_study_summary.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "e80cf15f453f532781eaf20f30cee4d83fe12ec434046abb7d7db0e3400dce22",
+      "bytes": 519
+    },
+    {
+      "path": "tests/test_utils_accuracy_comparison.py",
+      "status": "unchanged",
+      "original_sha256": "068ef7cfda32d73201852223363b4110993337338bcbd47d2ed6698f3a7ffd0c",
+      "sha256": "068ef7cfda32d73201852223363b4110993337338bcbd47d2ed6698f3a7ffd0c",
+      "bytes": 2631
+    },
+    {
+      "path": "tests/test_variance_floor.py",
+      "status": "unchanged",
+      "original_sha256": "16673fca2a3158a7e3eb065895c4d6255411155d6e4572559dfe1c6f5b917e42",
+      "sha256": "16673fca2a3158a7e3eb065895c4d6255411155d6e4572559dfe1c6f5b917e42",
+      "bytes": 437
+    },
+    {
+      "path": "validation/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "be4b2f848688f6d349738ba1d039d4b7b51553147b664518f4052be13957c12b",
+      "bytes": 510
+    },
+    {
+      "path": "validation/baseline_pytest.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "34f7b3a55c08daa25b2fea53ec67904809d2888a2d4fdb9dd92b5b8006aefd83",
+      "bytes": 634
+    },
+    {
+      "path": "validation/cli_help.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "77e604406aa93610ad5755022f89ab9801dd5e33e8a716686cc575cd320c0a15",
+      "bytes": 1213
+    },
+    {
+      "path": "validation/environment_checks.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "93ca4301a48d1ad53ebca486011fa7beed8575f6d213727aa0d63a3d8caeacca",
+      "bytes": 478
+    },
+    {
+      "path": "validation/modified_pytest.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1c82b393e29281899d92d165c71d77f2334a49be46a517a1ce03e92d63a2641c",
+      "bytes": 845
+    },
+    {
+      "path": "validation/synthetic_smoke.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "b8679788f86aaea0f03102a4e9a1d7917224387167d297b4d058b77252690eb0",
+      "bytes": 676
+    }
+  ]
+}

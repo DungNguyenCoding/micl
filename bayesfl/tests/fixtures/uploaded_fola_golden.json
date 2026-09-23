@@ -1,0 +1,25 @@
+{
+  "source": "Uploaded bayesfl.zip; original ResearchStrategy._aggregate_fola extracted with ast",
+  "original_strategy_sha256": "520bf433d92376de8e52daa1ff1c6c77d531fe01053543aa8a36232fda4a12cc",
+  "layout": {
+    "names": [
+      "a",
+      "b"
+    ],
+    "shapes": [
+      [
+        2,
+        3
+      ],
+      [
+        2
+      ]
+    ]
+  },
+  "weights": [
+    0.1,
+    0.3,
+    0.6
+  ],
+  "fixture_purpose": "Numerical reducer regression, not benchmark or Flower runtime"
+}

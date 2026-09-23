@@ -1,0 +1,33 @@
+SYNTHETIC CPU PROTOCOL CHECK — not MNIST/CIFAR accuracy, not Flower/Ray
+[
+  {
+    "method": "fedavg_dense",
+    "rounds": 3,
+    "array_bytes": 1776,
+    "stop_reason": "max_rounds"
+  },
+  {
+    "method": "fola_dense",
+    "rounds": 3,
+    "array_bytes": 3552,
+    "stop_reason": "max_rounds"
+  },
+  {
+    "method": "fola_sparse_kl_global_local",
+    "rounds": 3,
+    "array_bytes": 2718,
+    "stop_reason": "max_rounds"
+  },
+  {
+    "method": "fola_sparse_kl_local_global",
+    "rounds": 3,
+    "array_bytes": 2718,
+    "stop_reason": "max_rounds"
+  },
+  {
+    "method": "fola_sparse_random",
+    "rounds": 3,
+    "array_bytes": 2718,
+    "stop_reason": "max_rounds"
+  }
+]
