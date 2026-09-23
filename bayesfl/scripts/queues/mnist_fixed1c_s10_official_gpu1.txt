@@ -1,0 +1,1 @@
+scripts/configs/run_mnist_fixed1c_s10_official_fola_n100_seed0_e10_b32_lr001_lam0p01_r150.yaml

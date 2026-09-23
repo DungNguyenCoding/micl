@@ -1,0 +1,1 @@
+scripts/configs/run_mnist_fixed1c_s10_official_fedavg_n100_seed0_e10_b32_lr001_r150.yaml

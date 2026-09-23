@@ -28,3 +28,76 @@ def test_cifar_requested_realized_size_statistics():
 
     flat = np.concatenate(result.indices)
     assert len(flat) == len(np.unique(flat))
+
+
+
+def test_fixed_labels_exact_samples_and_single_class():
+    from bayesfl.data.partition import (
+        build_fixed_labels_indices,
+    )
+
+    labels = np.repeat(
+        np.arange(10),
+        1000,
+    )
+
+    result = build_fixed_labels_indices(
+        labels,
+        num_clients=100,
+        num_classes=10,
+        samples_per_client=10,
+        labels_per_client=1,
+        seed=0,
+    )
+
+    assert len(result.indices) == 100
+
+    sizes = np.asarray(
+        [
+            len(idx)
+            for idx in result.indices
+        ]
+    )
+
+    classes = [
+        np.unique(labels[idx])
+        for idx in result.indices
+    ]
+
+    assert np.all(sizes == 10)
+
+    assert all(
+        len(c) == 1
+        for c in classes
+    )
+
+    flat = np.concatenate(
+        result.indices
+    )
+
+    assert len(flat) == 1000
+    assert len(np.unique(flat)) == 1000
+
+    client_labels = np.asarray(
+        [
+            int(c[0])
+            for c in classes
+        ]
+    )
+
+    class_client_counts = np.bincount(
+        client_labels,
+        minlength=10,
+    )
+
+    assert np.all(
+        class_client_counts == 10
+    )
+
+    md = result.metadata
+
+    assert md["mean_size"] == 10.0
+    assert md["min_size"] == 10
+    assert md["max_size"] == 10
+    assert md["mean_classes_per_client"] == 1.0
+    assert md["total_samples_used"] == 1000

@@ -13,6 +13,7 @@ from torchvision import datasets
 
 from bayesfl.config import ExperimentConfig
 from .partition import (
+    build_fixed_labels_indices,
     apply_local_data_fraction,
     build_mnist_dirichlet_lognormal_indices,
     build_paper_dirichlet_indices,
@@ -45,6 +46,25 @@ def _labels_from_dataset(dataset) -> np.ndarray:
 
 def partition_stem(cfg: ExperimentConfig) -> str:
     p = cfg.data.partition
+    kind = str(
+        p.get("type", "")
+    ).lower()
+
+    if kind == "fixed_labels":
+        samples = int(
+            p.get("samples_per_client", 10)
+        )
+        labels_per_client = int(
+            p.get("labels_per_client", 1)
+        )
+
+        return (
+            f"{cfg.data.dataset}_fixed_labels_"
+            f"s{samples}_c{labels_per_client}_"
+            f"n{cfg.federation.num_clients}_"
+            f"seed{cfg.runtime.seed}"
+        )
+
 
     local_fraction = float(
         p.get("local_data_fraction", 1.0)
@@ -104,6 +124,42 @@ def prepare_partition(cfg: ExperimentConfig) -> tuple[Path, dict]:
     raw = _raw_training_dataset(cfg, download=True)
     labels = _labels_from_dataset(raw)
     part = cfg.data.partition
+    kind = str(
+        part.get("type", "")
+    ).lower()
+
+    if kind == "fixed_labels":
+
+        if cfg.data.dataset != "mnist":
+            raise ValueError(
+                "fixed_labels is currently enabled "
+                "for MNIST only"
+            )
+
+        result = build_fixed_labels_indices(
+            labels,
+            num_clients=cfg.federation.num_clients,
+            num_classes=cfg.data.num_classes,
+            samples_per_client=int(
+                part.get("samples_per_client", 10)
+            ),
+            labels_per_client=int(
+                part.get("labels_per_client", 1)
+            ),
+            seed=cfg.runtime.seed,
+        )
+
+        save_partition(
+            result,
+            npz_path,
+            metadata_path,
+        )
+
+        return (
+            npz_path,
+            result.metadata,
+        )
+
     if cfg.data.dataset == "cifar10":
         kind = str(part.get("type", "sparse_dirichlet")).lower()
         if kind == "paper_dirichlet":

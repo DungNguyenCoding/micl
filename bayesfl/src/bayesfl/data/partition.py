@@ -488,3 +488,185 @@ def build_paper_dirichlet_indices(
     }
     metadata["sha256"] = _hash_partitions(partitions)
     return PartitionResult(partitions, metadata)
+
+
+
+def build_fixed_labels_indices(
+    labels: np.ndarray,
+    *,
+    num_clients: int,
+    num_classes: int,
+    samples_per_client: int,
+    labels_per_client: int,
+    seed: int,
+) -> PartitionResult:
+    """Build a deterministic balanced fixed-label partition.
+
+    Current controlled mode requires exactly one label per client.
+    Client labels are balanced across classes when num_clients is
+    divisible by num_classes. Samples are unique across clients.
+    """
+    if num_clients < 1:
+        raise ValueError("num_clients must be positive")
+
+    if num_classes < 1:
+        raise ValueError("num_classes must be positive")
+
+    if samples_per_client < 1:
+        raise ValueError("samples_per_client must be positive")
+
+    if labels_per_client != 1:
+        raise ValueError(
+            "fixed_labels currently requires labels_per_client=1"
+        )
+
+    if num_clients % num_classes != 0:
+        raise ValueError(
+            "For balanced fixed_labels partition, "
+            "num_clients must be divisible by num_classes"
+        )
+
+    rng = np.random.RandomState(seed)
+
+    # Exactly equal number of clients assigned to every class.
+    clients_per_class = num_clients // num_classes
+
+    client_labels = np.repeat(
+        np.arange(num_classes, dtype=np.int64),
+        clients_per_class,
+    )
+
+    # Randomize which client ID receives which label,
+    # while retaining exact global balance.
+    rng.shuffle(client_labels)
+
+    pools: dict[int, np.ndarray] = {}
+
+    for c in range(num_classes):
+        idx = np.flatnonzero(
+            labels == c
+        ).astype(np.int64)
+
+        rng.shuffle(idx)
+        pools[c] = idx
+
+        required = (
+            clients_per_class
+            * samples_per_client
+        )
+
+        if len(idx) < required:
+            raise RuntimeError(
+                f"Class {c} has only {len(idx)} samples, "
+                f"but {required} are required"
+            )
+
+    cursor = {
+        c: 0
+        for c in range(num_classes)
+    }
+
+    partitions: list[np.ndarray] = []
+
+    for cid in range(num_clients):
+        c = int(client_labels[cid])
+
+        start = cursor[c]
+        end = start + samples_per_client
+
+        arr = pools[c][start:end].copy()
+
+        if len(arr) != samples_per_client:
+            raise RuntimeError(
+                f"Unexpected class-pool exhaustion for class {c}"
+            )
+
+        cursor[c] = end
+
+        # Order does not affect membership, but shuffle deterministically
+        # so clients do not receive a simple contiguous class-pool slice.
+        rng.shuffle(arr)
+
+        partitions.append(
+            arr.astype(np.int64)
+        )
+
+    realized_sizes = np.asarray(
+        [
+            len(idx)
+            for idx in partitions
+        ],
+        dtype=np.int64,
+    )
+
+    realized_classes = np.asarray(
+        [
+            len(np.unique(labels[idx]))
+            for idx in partitions
+        ],
+        dtype=np.int64,
+    )
+
+    flat = np.concatenate(partitions)
+
+    if len(flat) != len(np.unique(flat)):
+        raise RuntimeError(
+            "fixed_labels partition contains duplicated samples"
+        )
+
+    class_client_counts = {
+        str(c): int(
+            np.sum(client_labels == c)
+        )
+        for c in range(num_classes)
+    }
+
+    metadata = {
+        "type": "fixed_labels",
+        "seed": int(seed),
+        "num_clients": int(num_clients),
+        "num_classes": int(num_classes),
+        "samples_per_client_config": int(
+            samples_per_client
+        ),
+        "labels_per_client_config": int(
+            labels_per_client
+        ),
+        "total_samples_used": int(
+            realized_sizes.sum()
+        ),
+        "mean_size": float(
+            realized_sizes.mean()
+        ),
+        "median_size": float(
+            np.median(realized_sizes)
+        ),
+        "min_size": int(
+            realized_sizes.min()
+        ),
+        "max_size": int(
+            realized_sizes.max()
+        ),
+        "mean_classes_per_client": float(
+            realized_classes.mean()
+        ),
+        "min_classes_per_client": int(
+            realized_classes.min()
+        ),
+        "max_classes_per_client": int(
+            realized_classes.max()
+        ),
+        "class_client_counts": class_client_counts,
+        "num_empty_clients_after_backfill": 0,
+        "empty_client_backfills": 0,
+        "class_draws_exhausted": 0,
+    }
+
+    metadata["sha256"] = _hash_partitions(
+        partitions
+    )
+
+    return PartitionResult(
+        partitions,
+        metadata,
+    )
