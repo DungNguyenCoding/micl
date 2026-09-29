@@ -43,6 +43,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--keep-ratio", type=float)
     parser.add_argument("--precision-policy", choices=["strict", "floor_for_score"])
     parser.add_argument("--max-communication-bytes", type=int)
+    parser.add_argument("--downlink-mode", choices=["unicast", "multicast"])
     parser.add_argument("--resume", type=Path, help="Resume an existing run directory at its latest completed evaluated round")
     return parser.parse_args()
 
@@ -68,6 +69,7 @@ def main() -> None:
         keep_ratio=args.keep_ratio,
         precision_policy=args.precision_policy,
         max_communication_bytes=args.max_communication_bytes,
+        downlink_mode=args.downlink_mode,
     )
 
     if args.resume is None:
@@ -81,7 +83,11 @@ def main() -> None:
         run_dir = args.resume.resolve()
         saved, _ = load_resume_bundle(run_dir)
         if saved["config_fingerprint"] != config_fingerprint(cfg):
-            raise ValueError("Resume may extend only training.rounds and communication.max_communication_bytes")
+            raise ValueError(
+                "Resume changed optimization/protocol settings. Only training.rounds, "
+                "communication.max_communication_bytes, and accounting-only "
+                "communication.downlink_mode may change."
+            )
         if not cfg.communication.deterministic_client_schedule:
             raise ValueError("Resume requires a deterministic client schedule configured from the start")
         if cfg.training.rounds < saved["round_id"]:

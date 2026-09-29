@@ -151,6 +151,9 @@ class CompressionConfig:
 class CommunicationConfig:
     max_communication_bytes: Optional[int] = None
     budget_metric: str = "cumulative_all_array_bytes"
+    # unicast preserves the historical logical accounting.  multicast models
+    # one shared server broadcast per round while keeping all client uplinks.
+    downlink_mode: str = "unicast"  # unicast | multicast
     # False preserves legacy sampling for existing YAMLs. Matched new configs
     # select True; client IDs are resolved by a scalar-only get_properties call.
     deterministic_client_schedule: bool = False
@@ -207,6 +210,7 @@ class ExperimentConfig:
         self.fola.mode = self.fola.mode.lower()
 
         c, comm = self.compression, self.communication
+        comm.downlink_mode = comm.downlink_mode.lower()
         if c.selection_rule not in {"dense", "kl_global_local", "kl_local_global", "random"}:
             raise ValueError("Invalid compression.selection_rule")
         if c.selection_rule != "dense" and self.method != "fola":
@@ -228,6 +232,8 @@ class ExperimentConfig:
             raise ValueError("Dense server-side client snapshots would defeat sparse transport; disable them")
         if comm.budget_metric not in {"cumulative_all_array_bytes", "cumulative_train_total_array_bytes"}:
             raise ValueError("Only strict all-array or training-array budgets are supported")
+        if comm.downlink_mode not in {"unicast", "multicast"}:
+            raise ValueError("communication.downlink_mode must be unicast or multicast")
         if comm.max_communication_bytes is not None:
             b = comm.max_communication_bytes
             if isinstance(b, bool) or not isinstance(b, int) or b < 0:
@@ -285,8 +291,13 @@ class ExperimentConfig:
             raise ValueError(
                 "CIFAR-10 model.name must be resnet56_gn8 or paper_basiccnn"
             )
-        if self.data.dataset == "mnist" and self.model.name != "mlp_784_500_300_10":
-            raise ValueError("MNIST baseline expects model.name=mlp_784_500_300_10")
+        if self.data.dataset == "mnist" and self.model.name not in {
+            "mlp_784_500_300_10",
+            "mlp_784_256x5_10",
+        }:
+            raise ValueError(
+                "MNIST model.name must be mlp_784_500_300_10 or mlp_784_256x5_10"
+            )
 
     def resolved_kl_weight(self, bayesian_dimension: int) -> float:
         if self.bbb.kl_weight is not None:
@@ -341,6 +352,7 @@ def apply_overrides(
     keep_ratio: float | None = None,
     precision_policy: str | None = None,
     max_communication_bytes: int | None = None,
+    downlink_mode: str | None = None,
 ) -> ExperimentConfig:
     out = copy.deepcopy(cfg)
     if dataset is not None:
@@ -359,6 +371,8 @@ def apply_overrides(
         out.compression.precision_policy = precision_policy
     if max_communication_bytes is not None:
         out.communication.max_communication_bytes = max_communication_bytes
+    if downlink_mode is not None:
+        out.communication.downlink_mode = downlink_mode.lower()
     out.validate()
     return out
 

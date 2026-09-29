@@ -31,16 +31,45 @@ def array_bytes(arrays: Sequence[np.ndarray]) -> int:
     return sum(int(a.nbytes) for a in arrays)
 
 
-def core_round_bytes(d: int, k: int, *, sparse: bool = False, m: int | None = None) -> dict:
+def core_round_bytes(
+    d: int,
+    k: int,
+    *,
+    sparse: bool = False,
+    m: int | None = None,
+    method: str = "fola",
+    downlink_mode: str = "unicast",
+) -> dict:
+    """Return modeled per-round logical array bytes.
+
+    Defaults reproduce the historical dense/sparse FOLA repeated-unicast
+    accounting.  In ``multicast`` mode the common server broadcast is charged
+    exactly once, while every client-specific upload is still charged.
+
+    FOLA communicates mean+precision (8 bytes/coordinate, float32+float32).
+    FedAvg communicates one float32 model vector (4 bytes/coordinate).
+    """
     if any(isinstance(x, bool) or not isinstance(x, Integral) for x in (d, k)) or d <= 0 or k < 0:
         raise ValueError("Require integer d>0 and k>=0")
-    down = int(k) * 8 * int(d)
+    method = str(method).lower()
+    downlink_mode = str(downlink_mode).lower()
+    if method not in {"fola", "fedavg"}:
+        raise ValueError("core_round_bytes supports method=fola or fedavg")
+    if downlink_mode not in {"unicast", "multicast"}:
+        raise ValueError("downlink_mode must be unicast or multicast")
+    if sparse and method != "fola":
+        raise ValueError("Sparse coordinate transport is implemented only for FOLA")
+
+    per_dense_message = (8 if method == "fola" else 4) * int(d)
+    down = per_dense_message * (1 if downlink_mode == "multicast" else int(k))
+
     if sparse:
         if isinstance(m, bool) or not isinstance(m, Integral) or not 0 <= m <= d:
             raise ValueError("Sparse cost requires an integer 0<=m<=d")
-        up = int(k) * (8 * int(m) + (int(d) + 7) // 8)
+        per_upload = 8 * int(m) + (int(d) + 7) // 8
     else:
-        up = down
+        per_upload = per_dense_message
+    up = int(k) * per_upload
     return dict(down_bytes=down, up_bytes=up, total_bytes=down + up)
 
 
@@ -134,18 +163,19 @@ class CommunicationLedger:
 
     def record(self, *, round_id: int, client_id, direction: str, phase: str,
                components: dict, serialized_tensor_bytes: int | None = None,
-               attempt_id: int = 0, status: str | None = None, **metadata) -> str:
+               attempt_id: int = 0, status: str | None = None,
+               accounting_kind: str = "logical_payload", **metadata) -> str:
         mid = f"{phase}:{int(round_id)}:{client_id}:{direction}:{int(attempt_id)}"
         self._append(dict(event_type="transfer", round_id=int(round_id), model_version=int(round_id),
                           client_id=str(client_id), message_id=mid, attempt_id=int(attempt_id),
                           direction=direction, phase=phase,
                           status=status or ("dispatched" if direction == "downlink" else "received"),
-                          accounting_kind="logical_payload", serialized_tensor_bytes=serialized_tensor_bytes,
+                          accounting_kind=str(accounting_kind), serialized_tensor_bytes=serialized_tensor_bytes,
                           serialized_message_bytes=None, **components, **metadata))
         return mid
 
     def record_undecodable(self, *, round_id: int, client_id, serialized_tensor_bytes: int,
-                           reason: str) -> str:
+                           reason: str, accounting_kind: str = "logical_payload") -> str:
         """Store what was observed; do not invent ndarray sizes for corrupt bytes.
 
         Integer array counters become a known lower bound for this failed run.
@@ -154,6 +184,7 @@ class CommunicationLedger:
         return self.record(round_id=round_id, client_id=client_id, direction="uplink", phase="fit",
                            status="rejected", components=payload_components([], method="unknown"),
                            serialized_tensor_bytes=serialized_tensor_bytes,
+                           accounting_kind=accounting_kind,
                            array_payload_observed=False, array_payload_count_is_lower_bound=True,
                            reason=str(reason))
 

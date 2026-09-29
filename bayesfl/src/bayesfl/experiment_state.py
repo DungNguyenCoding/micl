@@ -25,9 +25,14 @@ from bayesfl.posterior.sparse import (
 
 def config_fingerprint(cfg: ExperimentConfig) -> str:
     data = cfg.to_dict()
-    # These two limits may be extended on a clean completed-round resume.
+    # Round cap and byte budget may be extended on a clean completed-round
+    # resume.  downlink_mode is accounting-only: switching an existing CIFAR
+    # trajectory from repeated-unicast accounting to modeled multicast must not
+    # invalidate its optimization-state fingerprint.  The ledger itself is
+    # still checked separately and must be migrated consistently.
     data["training"].pop("rounds")
     data["communication"].pop("max_communication_bytes")
+    data["communication"].pop("downlink_mode", None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
 
 
@@ -65,7 +70,23 @@ class RunState:
                 raise ValueError("Resume requires communication.deterministic_client_schedule: true")
             saved, self.current = load_resume_bundle(self.run_dir)
             if saved["config_fingerprint"] != config_fingerprint(cfg):
-                raise ValueError("Resume changed training/protocol settings; only rounds and byte limit may change")
+                raise ValueError(
+                    "Resume changed optimization/protocol settings; only rounds, byte limit, "
+                    "and a separately migrated accounting mode may change"
+                )
+            saved_downlink_mode = saved.get("downlink_mode")
+            if saved_downlink_mode is None:
+                # Legacy checkpoints predate the explicit field.  They are valid
+                # unicast checkpoints, but may not be switched to multicast by
+                # a config override alone: the ledger/metrics must first be
+                # migrated with the supplied migration utility.
+                if cfg.communication.downlink_mode != "unicast":
+                    raise ValueError(
+                        "Legacy checkpoint has unicast accounting. Migrate the run's "
+                        "communication ledger/checkpoint state before resuming in multicast mode."
+                    )
+            elif str(saved_downlink_mode) != cfg.communication.downlink_mode:
+                raise ValueError("Resume accounting mode differs from the committed checkpoint")
             if saved["layout_id"] != self.layout_id or saved["partition_sha256"] != self.partition_sha256:
                 raise ValueError("Resume layout or partition hash does not match")
             self.round_id = int(saved["round_id"])
@@ -110,8 +131,10 @@ class RunState:
             payload_dtype="float32" if cfg.method == "fola" else "actual_array_dtypes",
             sparse_enabled=cfg.sparse_enabled, bitmap_policy="always", bitorder="little",
             missing_coordinate_policy="broadcast_posterior", sparse_downlink=False,
+            downlink_mode=cfg.communication.downlink_mode,
+            downlink_transmissions_per_round=(1 if cfg.communication.downlink_mode == "multicast" else cfg.federation.clients_per_round),
             aggregation="uploaded_baseline_with_all_omitted_coordinate_restoration" if cfg.sparse_enabled else "uploaded_baseline",
-            accounting_kind="logical_payload", budget_metric=cfg.communication.budget_metric,
+            accounting_kind=self.accounting_kind, budget_metric=cfg.communication.budget_metric,
             control_metadata_and_transport_headers_included=False,
             initialization="server_local; identity queries have no model arrays",
             evaluation="central_only; no additional model communication",
@@ -121,15 +144,32 @@ class RunState:
         ))
 
     @property
+    def accounting_kind(self) -> str:
+        return (
+            "modeled_multicast_payload"
+            if self.cfg.communication.downlink_mode == "multicast"
+            else "logical_payload"
+        )
+
+    @property
     def budget_used(self) -> int:
         return self.ledger.cumulative()[self.cfg.communication.budget_metric]
 
     def next_round_cost(self) -> int:
-        k = self.cfg.federation.clients_per_round
-        down = array_bytes(self.current)
-        up = (8 * keep_count(self.d, self.cfg.compression.keep_ratio) + (self.d + 7) // 8
-              if self.cfg.sparse_enabled else down)
-        return int(k) * (down + up)
+        k = int(self.cfg.federation.clients_per_round)
+        dense_message = array_bytes(self.current)
+        per_upload = (
+            8 * keep_count(self.d, self.cfg.compression.keep_ratio)
+            + (self.d + 7) // 8
+            if self.cfg.sparse_enabled
+            else dense_message
+        )
+        down_total = (
+            dense_message
+            if self.cfg.communication.downlink_mode == "multicast"
+            else k * dense_message
+        )
+        return int(down_total + k * per_upload)
 
     def stop_reason(self) -> str:
         if self.round_id >= self.cfg.training.rounds:
@@ -161,11 +201,39 @@ class RunState:
         self._cost_before = self.budget_used
         self._predicted_cost = self.next_round_cost()
         components = payload_components(arrays, method=self.cfg.method, tensor_count=self.layout.size)
-        for cid in recipients:
-            self.ledger.record(round_id=round_id, client_id=cid, direction="downlink", phase="fit",
-                               components=components, serialized_tensor_bytes=serialized_tensor_bytes,
-                               layout_id=self.layout_id, d=self.d, m=self.d,
-                               base_snapshot_id=self.base_snapshot_id)
+        if self.cfg.communication.downlink_mode == "multicast":
+            # Flower still delivers the model to every simulated client.  This
+            # single ledger event is the *modeled* single-cell multicast cost:
+            # one common payload shared by all recipients.
+            self.ledger.record(
+                round_id=round_id,
+                client_id="__multicast__",
+                direction="downlink",
+                phase="fit",
+                components=components,
+                serialized_tensor_bytes=serialized_tensor_bytes,
+                accounting_kind=self.accounting_kind,
+                layout_id=self.layout_id,
+                d=self.d,
+                m=self.d,
+                base_snapshot_id=self.base_snapshot_id,
+                recipient_count=len(recipients),
+            )
+        else:
+            for cid in recipients:
+                self.ledger.record(
+                    round_id=round_id,
+                    client_id=cid,
+                    direction="downlink",
+                    phase="fit",
+                    components=components,
+                    serialized_tensor_bytes=serialized_tensor_bytes,
+                    accounting_kind=self.accounting_kind,
+                    layout_id=self.layout_id,
+                    d=self.d,
+                    m=self.d,
+                    base_snapshot_id=self.base_snapshot_id,
+                )
         return dict(server_round=round_id, round_id=round_id, base_snapshot_id=self.base_snapshot_id,
                     layout_id=self.layout_id, covariance_representation="precision" if self.cfg.method == "fola" else "not_applicable", d=self.d)
 
@@ -178,6 +246,7 @@ class RunState:
                                         tensor_count=self.layout.size)
         mid = self.ledger.record(round_id=round_id, client_id=recipient_id, direction="uplink", phase="fit",
                                  components=components, serialized_tensor_bytes=serialized_tensor_bytes,
+                                 accounting_kind=self.accounting_kind,
                                  layout_id=self.layout_id, d=self.d,
                                  m=keep_count(self.d, self.cfg.compression.keep_ratio) if self.cfg.sparse_enabled else self.d)
         try:
@@ -243,7 +312,9 @@ class RunState:
         seen = sum(int(n) * self.cfg.training.local_epochs for n in counts)
         self.cumulative_local_steps += steps
         self.cumulative_examples_seen += seen
-        self.last_round_stats = dict(num_download_recipients=len(self._recipients),
+        self.last_round_stats = dict(
+                                     num_download_recipients=len(self._recipients),
+                                     num_downlink_transmissions=(1 if self.cfg.communication.downlink_mode == "multicast" else len(self._recipients)),
                                      num_upload_replies=len(self._received), num_aggregated_clients=len(counts),
                                      local_training_steps=steps, local_examples_seen=seen,
                                      selection_time_seconds=sum(float(m.get("selection_time_seconds", 0)) for m in client_metrics),
@@ -255,7 +326,8 @@ class RunState:
     def evaluation_fields(self) -> dict:
         sparse = self.cfg.sparse_enabled
         m = keep_count(self.d, self.cfg.compression.keep_ratio) if sparse else self.d
-        defaults = dict(num_download_recipients=0, num_upload_replies=0, num_aggregated_clients=0,
+        defaults = dict(num_download_recipients=0, num_downlink_transmissions=0,
+                        num_upload_replies=0, num_aggregated_clients=0,
                         local_training_steps=0, local_examples_seen=0, selection_time_seconds=0.0,
                         round_wall_time_seconds=0.0)
         return dict(run_id=self.run_dir.name, method=self.cfg.method_id,
@@ -277,7 +349,9 @@ class RunState:
                     array_accounting_complete=self.ledger.unmeasured_array_messages == 0,
                     budget_metric=self.cfg.communication.budget_metric,
                     budget_bytes=self.cfg.communication.max_communication_bytes,
-                    stop_reason=self.stop_reason(), accounting_kind="logical_payload")
+                    stop_reason=self.stop_reason(),
+                    downlink_mode=self.cfg.communication.downlink_mode,
+                    accounting_kind=self.accounting_kind)
 
     def save_resume(self, evaluation: dict | None = None) -> None:
         if self.pending_round is not None:
@@ -302,7 +376,9 @@ class RunState:
                      rng_policy="baseline per-client/per-round reseed; separate SHA256 mask/schedule streams",
                      experiment_seed=self.cfg.runtime.seed,
                      optimizer_state_policy="fresh local optimizer each fit, as in supplied baseline",
-                     deterministic_client_schedule=self.cfg.communication.deterministic_client_schedule)
+                     deterministic_client_schedule=self.cfg.communication.deterministic_client_schedule,
+                     downlink_mode=self.cfg.communication.downlink_mode,
+                     accounting_kind=self.accounting_kind)
         atomic_json(root / (stem + ".json"), state)
         atomic_json(root / "latest.json", dict(state_file=stem + ".json", arrays_file=stem + ".npz"))
         # Retain latest and previous committed generations, not a second full

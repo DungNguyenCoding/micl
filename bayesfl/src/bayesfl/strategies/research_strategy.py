@@ -97,11 +97,13 @@ class ResearchStrategy(FedAvg):
             zero = payload_components([], method="control")
             self.state.ledger.record(round_id=0, client_id="identity_" + str(proxy_id),
                                      phase="initialize", direction="downlink", components=zero,
-                                     attempt_id=attempt, serialized_tensor_bytes=0)
+                                     attempt_id=attempt, serialized_tensor_bytes=0,
+                                     accounting_kind=self.state.accounting_kind)
             res = proxy.get_properties(GetPropertiesIns(config={}), timeout=60.0, group_id=0)
             self.state.ledger.record(round_id=0, client_id="identity_" + str(proxy_id),
                                      phase="initialize", direction="uplink", components=zero,
-                                     attempt_id=attempt, serialized_tensor_bytes=0)
+                                     attempt_id=attempt, serialized_tensor_bytes=0,
+                                     accounting_kind=self.state.accounting_kind)
             cid = res.properties.get("client_id")
             if res.status.code != Code.OK or isinstance(cid, bool) or not isinstance(cid, int):
                 raise RuntimeError("Client get_properties must return an integer client_id")
@@ -143,6 +145,7 @@ class ResearchStrategy(FedAvg):
                 client_id=self._recipient_by_proxy.get(proxy.cid, proxy.cid),
                 serialized_tensor_bytes=sum(len(t) for t in fit_res.parameters.tensors),
                 reason=f"Tensor deserialization failed: {exc}",
+                accounting_kind=self.state.accounting_kind,
             )
             raise
 
@@ -165,6 +168,7 @@ class ResearchStrategy(FedAvg):
                     components=payload_components(arrays, method=self.cfg.method,
                                                   sparse_upload=self.cfg.sparse_enabled, tensor_count=self.layout.size),
                     serialized_tensor_bytes=sum(len(t) for t in res.parameters.tensors),
+                    accounting_kind=self.state.accounting_kind,
                 )
         # Stable aggregation order is used for matched new experiments. Legacy
         # dense configurations retain their supplied result-order policy.

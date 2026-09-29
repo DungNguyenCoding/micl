@@ -7,7 +7,7 @@ from torch import nn
 
 from bayesfl.config import ExperimentConfig
 from .cifar_resnet import CifarResNet56GN8
-from .mnist_mlp import MNISTMLP
+from .mnist_mlp import MNISTMLP, MNISTMLP256x5
 from .paper_cnn import CifarPaperBasicCNN
 
 
@@ -18,7 +18,10 @@ def _build_model(cfg: ExperimentConfig, *, bayesian: bool) -> nn.Module:
         posterior_rho_init=cfg.bbb.posterior_rho_init,
     )
     if cfg.data.dataset == "mnist":
-        return MNISTMLP(**kwargs)
+        if cfg.model.name == "mlp_784_500_300_10":
+            return MNISTMLP(**kwargs)
+        if cfg.model.name == "mlp_784_256x5_10":
+            return MNISTMLP256x5(**kwargs)
     if cfg.data.dataset == "cifar10":
         if cfg.model.name == "paper_basiccnn":
             return CifarPaperBasicCNN(**kwargs)
