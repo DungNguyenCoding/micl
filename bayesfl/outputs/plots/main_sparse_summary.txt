@@ -1,0 +1,864 @@
+
+====================================================================================================================================
+BAYESFL SPARSE-COMMUNICATION EXPERIMENT REPORT
+====================================================================================================================================
+Generated : 2026-09-27T19:53:43+09:00
+Repository: /home/micl/DungNDH/micl/bayesfl
+Git HEAD  : c4f347ab89708cac80411d54766b6d66e7c75c34
+
+Included completed experiments:
+  - 3 confirmed Dense FOLA R150 baselines
+  - 3 original Dense FedAvg R150 baselines
+  - 3 communication-budget-matched Dense FedAvg runs
+  - 36 Sparse FOLA runs
+      3 data profiles x 4 keep ratios x 3 coordinate-selection rules
+
+====================================================================================================================================
+1. EXPERIMENT DESIGN
+====================================================================================================================================
+
+Dense FOLA
+----------
+Primary Bayesian federated-learning baseline.
+
+keep_ratio = 1.00.
+
+Clients communicate the complete FOLA posterior representation:
+posterior mean + precision.
+
+The communication consumed by Dense FOLA after R150 defines the
+COMMON COMMUNICATION BUDGET for that data profile.
+
+
+Dense FedAvg
+------------
+Conventional dense federated averaging baseline.
+
+FedAvg communicates dense model parameters but does not transmit the
+additional FOLA posterior precision vector.
+
+Two FedAvg results are retained:
+
+  1. Original R150 run:
+     used for SAME-ROUND comparison.
+
+  2. Communication-budget-matched run:
+     allowed to continue beyond R150 until approximately the same
+     communication budget as Dense FOLA R150 is consumed.
+
+
+Sparse FOLA
+-----------
+Local FOLA training itself remains FULL / DENSE.
+
+Sparsification is applied only to the client upload after local training.
+
+Keep ratios:
+
+    0.75
+    0.50
+    0.25
+    0.10
+
+The server-to-client downlink remains dense.
+
+The sparse client upload contains selected posterior-mean coordinates,
+selected precision coordinates, and a packed bitmap describing the mask.
+
+Every sparse experiment is constrained by the communication budget of
+the corresponding Dense FOLA R150 experiment.
+
+
+Coordinate-selection methods
+----------------------------
+
+KL(G->L)
+
+    Coordinate importance is ranked using the per-coordinate divergence:
+
+        KL(global posterior before local training
+           ||
+           local posterior after local training)
+
+
+KL(L->G)
+
+    Reverse-KL ablation:
+
+        KL(local posterior after local training
+           ||
+           global posterior before local training)
+
+
+Random
+
+    Uniform random exact-cardinality coordinate selection.
+
+    Random uses the same keep ratio and therefore the same logical
+    communication payload as the two KL selectors.
+
+
+Communication metric
+--------------------
+
+    cumulative_all_array_bytes
+
+This is the logical array payload accounted by the experiment framework.
+
+Units reported below:
+
+    1 MB = 1,000,000 bytes
+    1 GB = 1,000,000,000 bytes
+
+
+====================================================================================================================================
+2. IMPORTANT INTERPRETATION / FAIRNESS NOTES
+====================================================================================================================================
+
+1. SAME ROUND and SAME COMMUNICATION answer different questions.
+
+   R150 comparison:
+
+       All methods have completed 150 federated rounds.
+
+   Equal-budget comparison:
+
+       Methods may complete different numbers of rounds, but have consumed
+       approximately the same total communication.
+
+
+2. Equal communication does NOT imply equal computation.
+
+   Sparse FOLA still performs full local training before communication
+   sparsification. KL scoring also requires an additional coordinate-
+   importance calculation.
+
+   Therefore, these experiments evaluate COMMUNICATION efficiency,
+   not wall-clock time, FLOPs, or energy efficiency.
+
+
+3. The communication metric is logical model-array payload.
+
+   It should not be interpreted as exact Ethernet/Wi-Fi/network-wire
+   traffic. Protocol headers, serialization metadata, TCP/IP overhead,
+   framework control messages, etc. are not the quantity being optimized.
+
+
+4. Downlink remains dense.
+
+   Therefore, decreasing the upload keep ratio cannot reduce total
+   communication proportionally to the keep ratio.
+
+   At very small keep ratios, communication savings have diminishing
+   returns because dense downlink and bitmap overhead remain.
+
+
+5. Final-point accuracy can be noisy.
+
+   For that reason, the report includes:
+
+       final accuracy
+       last-10-round mean
+       last-10-round standard deviation
+       best observed accuracy
+       best round
+       peak-to-final drop
+
+
+6. All current experiments use one seed (seed 0).
+
+   Differences reported here are descriptive for this experiment set.
+
+   They do NOT provide an estimate of across-seed variance or statistical
+   significance. Multi-seed confirmation would be needed before making
+   strong statistical claims.
+
+
+7. Highest-observed accuracy should not be treated as the main metric.
+
+   Selecting the best point from a noisy trajectory can be optimistic.
+
+   The main comparisons should remain:
+
+       R150 accuracy
+       equal-communication final accuracy
+       last-10-round behavior
+       complete accuracy-vs-communication trajectory
+
+
+
+####################################################################################################################################
+MNIST | fixed distribution | 10 samples/client | 1 class/client
+####################################################################################################################################
+Common communication budget = Dense FOLA R150 = 130.994400 GB
+
+====================================================================================================================================
+A. EXPERIMENT-INTEGRITY / FAIRNESS CHECKS
+====================================================================================================================================
+Dense FOLA reference : R150 | 81.240% | 130.994400 GB
+
+Original FedAvg R150 vs budget-matched FedAvg at R150:
+  old R150 accuracy       = 78.640000%
+  budget-run R150 accuracy= 78.640000%
+  accuracy difference     = +0.000000 pp
+  old R150 bytes          = 65.497200 GB
+  budget-run R150 bytes   = 65.497200 GB
+  communication consistency: PASS
+
+Sparse same-ratio communication equality:
+  keep=0.75 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.50 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.25 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.10 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+
+Budget-matched FedAvg stop reason: communication_budget
+Budget-matched FedAvg used: 130.994400 GB / 130.994400 GB (100.000%)
+
+====================================================================================================================================
+B. ALL RUNS — ACCURACY AND COMMUNICATION COST
+====================================================================================================================================
+TYPE               RULE         KEEP  FINAL_R   R150_ACC  FINAL_ACC    R150_GB   FINAL_GB    MB/RND    USED%
+------------------------------------------------------------------------------------------------------------------------------------
+FedAvg R150        Dense        1.00      150    78.640%    78.640%    65.4972    65.4972   436.648  50.000%
+FedAvg budget      Dense        1.00      300    78.640%    82.410%    65.4972   130.9944   436.648 100.000%
+Dense FOLA         Dense        1.00      150    81.240%    81.240%   130.9944   130.9944   873.296 100.000%
+Sparse FOLA        KL(G->L)     0.75      169    81.270%    81.870%   115.6436   130.2917   770.957  99.464%
+Sparse FOLA        KL(L->G)     0.75      169    81.270%    81.870%   115.6436   130.2917   770.957  99.464%
+Sparse FOLA        Random       0.75      169    80.230%    80.690%   115.6436   130.2917   770.957  99.464%
+Sparse FOLA        KL(G->L)     0.50      197    81.400%    82.680%    99.2692   130.3736   661.795  99.526%
+Sparse FOLA        KL(L->G)     0.50      197    81.400%    82.680%    99.2692   130.3736   661.795  99.526%
+Sparse FOLA        Random       0.50      197    79.020%    79.770%    99.2692   130.3736   661.795  99.526%
+Sparse FOLA        KL(G->L)     0.25      237    81.250%    83.360%    82.8950   130.9740   552.633  99.984%
+Sparse FOLA        KL(L->G)     0.25      237    81.250%    83.350%    82.8950   130.9740   552.633  99.984%
+Sparse FOLA        Random       0.25      237    77.010%    78.500%    82.8950   130.9740   552.633  99.984%
+Sparse FOLA        KL(G->L)     0.10      268    81.080%    83.270%    73.0703   130.5523   487.135  99.663%
+Sparse FOLA        KL(L->G)     0.10      268    81.090%    83.270%    73.0703   130.5523   487.135  99.663%
+Sparse FOLA        Random       0.10      268    73.780%    76.090%    73.0703   130.5523   487.135  99.663%
+
+====================================================================================================================================
+C. DENSE FOLA VS COMMUNICATION-BUDGET-MATCHED FEDAVG CONVERGENCE
+====================================================================================================================================
+
+C1. Same training-round milestones
+  ROUND |   FOLA ACC    FOLA GB |  FEDAVG ACC  FEDAVG GB |   FOLA-FED
+------------------------------------------------------------------------------
+R20     |    75.020%    17.4659 |     70.640%     8.7330 |    +4.380pp
+R50     |    77.640%    43.6648 |     74.010%    21.8324 |    +3.630pp
+R100    |    79.810%    87.3296 |     76.790%    43.6648 |    +3.020pp
+R150    |    81.240%   130.9944 |     78.640%    65.4972 |    +2.600pp
+
+C2. Same communication-budget milestones
+Each value uses the LAST COMPLETED full round whose cumulative communication does not exceed the target.
+
+  BUDGET |  TARGET GB |                  FOLA |                FEDAVG |    ACC GAP
+-------------------------------------------------------------------------------------
+     25% |    32.7486 |           76.78%(R37) |           75.54%(R75) |   +1.240pp
+     50% |    65.4972 |           78.95%(R75) |          78.64%(R150) |   +0.310pp
+     75% |    98.2458 |          80.16%(R112) |          80.52%(R225) |   -0.360pp
+    100% |   130.9944 |          81.24%(R150) |          82.41%(R300) |   -1.170pp
+
+C3. First point reaching Dense-FOLA milestone accuracies
+TARGET              ACC | DENSE FOLA FIRST REACH         | FEDAVG FIRST REACH            
+----------------------------------------------------------------------------------------------
+FOLA@R50        77.640% | R50 | 43.665 GB | 77.640%      | R118 | 51.524 GB | 77.650%    
+FOLA@R100       79.810% | R100 | 87.330 GB | 79.810%     | R193 | 84.273 GB | 79.830%    
+FOLA@R150       81.240% | R150 | 130.994 GB | 81.240%    | R251 | 109.599 GB | 81.270%   
+
+C4. Final equal-budget comparison
+  Dense FOLA : R150 | 81.240% | 130.994400 GB
+  FedAvg     : R300 | 82.410% | 130.994400 GB
+  FedAvg - FOLA final accuracy gap: +1.170 pp
+
+====================================================================================================================================
+D. SPARSE FOLA AT R150 — SAME NUMBER OF TRAINING ROUNDS
+====================================================================================================================================
+Dense FOLA R150 reference: 81.240% @ 130.994400 GB
+
+  KEEP |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    R150 GB  COMM SAVE
+--------------------------------------------------------------------------------------------------------------------------
+  0.75 |    81.270%   +0.030 |    81.270%   +0.030 |    80.230%   -1.010 |   115.6436     11.72%
+  0.50 |    81.400%   +0.160 |    81.400%   +0.160 |    79.020%   -2.220 |    99.2692     24.22%
+  0.25 |    81.250%   +0.010 |    81.250%   +0.010 |    77.010%   -4.230 |    82.8950     36.72%
+  0.10 |    81.080%   -0.160 |    81.090%   -0.150 |    73.780%   -7.460 |    73.0703     44.22%
+
+====================================================================================================================================
+E. SPARSE FOLA AT FINAL COMMON COMMUNICATION BUDGET
+====================================================================================================================================
+Dense FOLA reference: R150 | 81.240% | 130.994400 GB
+
+  KEEP  FINAL_R |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    USED GB    USED%
+---------------------------------------------------------------------------------------------------------------------------------
+  0.75      169 |    81.870%   +0.630 |    81.870%   +0.630 |    80.690%   -0.550 |   130.2917  99.464%
+  0.50      197 |    82.680%   +1.440 |    82.680%   +1.440 |    79.770%   -1.470 |   130.3736  99.526%
+  0.25      237 |    83.360%   +2.120 |    83.350%   +2.110 |    78.500%   -2.740 |   130.9740  99.984%
+  0.10      268 |    83.270%   +2.030 |    83.270%   +2.030 |    76.090%   -5.150 |   130.5523  99.663%
+
+====================================================================================================================================
+F. ACCURACY AT FIXED COMMUNICATION MILESTONES
+====================================================================================================================================
+This section helps characterize the complete accuracy-vs-communication convergence behavior.
+Each cell is Accuracy%(Round), using the last completed round at or below the target communication.
+
+METHOD          KEEP |      25% budget      50% budget      75% budget     100% budget
+-------------------------------------------------------------------------------------------
+Dense FOLA      1.00 |     76.78%(R37)     78.95%(R75)    80.16%(R112)    81.24%(R150)
+FedAvg          1.00 |     75.54%(R75)    78.64%(R150)    80.52%(R225)    82.41%(R300)
+
+KL(G->L)        0.75 |     77.08%(R42)     79.26%(R84)    80.55%(R127)    81.87%(R169)
+KL(G->L)        0.50 |     77.54%(R49)     79.67%(R98)    81.30%(R148)    82.68%(R197)
+KL(G->L)        0.25 |     78.03%(R59)    80.18%(R118)    82.08%(R177)    83.36%(R237)
+KL(G->L)        0.10 |     78.26%(R67)    80.63%(R134)    82.10%(R201)    83.27%(R268)
+
+KL(L->G)        0.75 |     77.08%(R42)     79.26%(R84)    80.55%(R127)    81.87%(R169)
+KL(L->G)        0.50 |     77.54%(R49)     79.67%(R98)    81.30%(R148)    82.68%(R197)
+KL(L->G)        0.25 |     78.03%(R59)    80.18%(R118)    82.08%(R177)    83.35%(R237)
+KL(L->G)        0.10 |     78.26%(R67)    80.64%(R134)    82.09%(R201)    83.27%(R268)
+
+Random          0.75 |     76.52%(R42)     78.56%(R84)    79.78%(R127)    80.69%(R169)
+Random          0.50 |     75.52%(R49)     77.51%(R98)    79.01%(R148)    79.77%(R197)
+Random          0.25 |     73.77%(R59)    76.19%(R118)    77.45%(R177)    78.50%(R237)
+Random          0.10 |     65.58%(R67)    73.60%(R134)    74.99%(R201)    76.09%(R268)
+
+====================================================================================================================================
+G. CONVERGENCE STABILITY / PEAK-TO-FINAL BEHAVIOR
+====================================================================================================================================
+A large BEST-FINAL drop can indicate that the final point understates an earlier peak or that late training is unstable.
+
+METHOD           KEEP     FINAL    LAST10    STD10      BEST  BEST_R  BEST-FINAL
+---------------------------------------------------------------------------------------
+Dense FOLA       1.00   81.240%   81.132%    0.069   81.240%     150      0.000pp
+FedAvg           1.00   82.410%   82.358%    0.040   82.410%     300      0.000pp
+KL(G->L)         0.75   81.870%   81.738%    0.083   81.870%     169      0.000pp
+KL(L->G)         0.75   81.870%   81.738%    0.083   81.870%     169      0.000pp
+Random           0.75   80.690%   80.516%    0.103   80.700%     168      0.010pp
+KL(G->L)         0.50   82.680%   82.631%    0.027   82.680%     197      0.000pp
+KL(L->G)         0.50   82.680%   82.631%    0.027   82.680%     197      0.000pp
+Random           0.50   79.770%   79.698%    0.059   79.830%     194      0.060pp
+KL(G->L)         0.25   83.360%   83.242%    0.056   83.360%     237      0.000pp
+KL(L->G)         0.25   83.350%   83.242%    0.055   83.350%     237      0.000pp
+Random           0.25   78.500%   78.391%    0.096   78.570%     236      0.070pp
+KL(G->L)         0.10   83.270%   83.213%    0.030   83.270%     268      0.000pp
+KL(L->G)         0.10   83.270%   83.211%    0.030   83.270%     268      0.000pp
+Random           0.10   76.090%   76.115%    0.055   76.210%     259      0.120pp
+
+====================================================================================================================================
+H. COORDINATE-SELECTION ABLATION
+====================================================================================================================================
+Positive KL-Random means the KL-selected run achieved higher accuracy than random selection at the same payload.
+Positive G->L minus L->G means the proposed KL direction was higher for that specific measurement.
+
+  KEEP |   G-L vs L-G R150    G-L vs L-G BUD |   G-L vs RAND R150    G-L vs RAND BUD |   L-G vs RAND R150    L-G vs RAND BUD
+------------------------------------------------------------------------------------------------------------------------------
+  0.75 |           +0.000           +0.000 |            +1.040            +1.180 |            +1.040            +1.180
+  0.50 |           +0.000           +0.000 |            +2.380            +2.910 |            +2.380            +2.910
+  0.25 |           +0.000           +0.010 |            +4.240            +4.860 |            +4.240            +4.850
+  0.10 |           -0.010           +0.000 |            +7.300            +7.180 |            +7.310            +7.180
+
+====================================================================================================================================
+I. WHICH SPARSE RATIOS MATCH / EXCEED DENSE FOLA AT THE FINAL COMMUNICATION BUDGET?
+====================================================================================================================================
+Dense FOLA target accuracy = 81.240%
+
+KL(G->L)  : matching/exceeding ratios = [0.75, 0.50, 0.25, 0.10] | lowest qualifying keep = 0.10
+KL(L->G)  : matching/exceeding ratios = [0.75, 0.50, 0.25, 0.10] | lowest qualifying keep = 0.10
+Random    : no tested keep ratio reached Dense-FOLA final-budget accuracy
+
+
+####################################################################################################################################
+CIFAR-10 | alpha=0.01 | local_data_fraction=1.0
+####################################################################################################################################
+Common communication budget = Dense FOLA R150 = 42.169824 GB
+
+====================================================================================================================================
+A. EXPERIMENT-INTEGRITY / FAIRNESS CHECKS
+====================================================================================================================================
+Dense FOLA reference : R150 | 52.750% | 42.169824 GB
+
+Original FedAvg R150 vs budget-matched FedAvg at R150:
+  old R150 accuracy       = 44.290000%
+  budget-run R150 accuracy= 43.090000%
+  accuracy difference     = -1.200000 pp
+  old R150 bytes          = 21.084912 GB
+  budget-run R150 bytes   = 21.084912 GB
+  communication consistency: PASS
+
+Sparse same-ratio communication equality:
+  keep=0.75 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.50 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.25 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.10 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+
+Budget-matched FedAvg stop reason: communication_budget
+Budget-matched FedAvg used: 42.169824 GB / 42.169824 GB (100.000%)
+
+====================================================================================================================================
+B. ALL RUNS — ACCURACY AND COMMUNICATION COST
+====================================================================================================================================
+TYPE               RULE         KEEP  FINAL_R   R150_ACC  FINAL_ACC    R150_GB   FINAL_GB    MB/RND    USED%
+------------------------------------------------------------------------------------------------------------------------------------
+FedAvg R150        Dense        1.00      150    44.290%    44.290%    21.0849    21.0849   140.566  50.000%
+FedAvg budget      Dense        1.00      300    43.090%    47.280%    21.0849    42.1698   140.566 100.000%
+Dense FOLA         Dense        1.00      150    52.750%    52.750%    42.1698    42.1698   281.132 100.000%
+Sparse FOLA        KL(G->L)     0.75      169    51.670%    53.210%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        KL(L->G)     0.75      169    52.650%    53.650%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        Random       0.75      169    50.570%    51.580%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        KL(G->L)     0.50      197    51.420%    53.010%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        KL(L->G)     0.50      197    51.730%    53.770%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        Random       0.50      197    45.640%    47.620%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        KL(G->L)     0.25      237    52.780%    54.460%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        KL(L->G)     0.25      237    52.750%    54.410%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        Random       0.25      237    39.850%    39.670%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        KL(G->L)     0.10      268    43.700%    41.770%    23.5229    42.0275   156.819  99.663%
+Sparse FOLA        KL(L->G)     0.10      268    42.710%    41.630%    23.5229    42.0275   156.819  99.663%
+Sparse FOLA        Random       0.10      268    29.240%    32.110%    23.5229    42.0275   156.819  99.663%
+
+====================================================================================================================================
+C. DENSE FOLA VS COMMUNICATION-BUDGET-MATCHED FEDAVG CONVERGENCE
+====================================================================================================================================
+
+C1. Same training-round milestones
+  ROUND |   FOLA ACC    FOLA GB |  FEDAVG ACC  FEDAVG GB |   FOLA-FED
+------------------------------------------------------------------------------
+R20     |    37.760%     5.6226 |     29.190%     2.8113 |    +8.570pp
+R50     |    44.140%    14.0566 |     34.960%     7.0283 |    +9.180pp
+R100    |    50.160%    28.1132 |     40.620%    14.0566 |    +9.540pp
+R150    |    52.750%    42.1698 |     43.090%    21.0849 |    +9.660pp
+
+C2. Same communication-budget milestones
+Each value uses the LAST COMPLETED full round whose cumulative communication does not exceed the target.
+
+  BUDGET |  TARGET GB |                  FOLA |                FEDAVG |    ACC GAP
+-------------------------------------------------------------------------------------
+     25% |    10.5425 |           42.96%(R37) |           37.27%(R75) |   +5.690pp
+     50% |    21.0849 |           47.97%(R75) |          43.09%(R150) |   +4.880pp
+     75% |    31.6274 |          50.01%(R112) |          45.86%(R225) |   +4.150pp
+    100% |    42.1698 |          52.75%(R150) |          47.28%(R300) |   +5.470pp
+
+C3. First point reaching Dense-FOLA milestone accuracies
+TARGET              ACC | DENSE FOLA FIRST REACH         | FEDAVG FIRST REACH            
+----------------------------------------------------------------------------------------------
+FOLA@R50        44.140% | R39 | 10.964 GB | 44.230%      | R151 | 21.225 GB | 44.490%    
+FOLA@R100       50.160% | R99 | 27.832 GB | 50.230%      | NOT REACHED                   
+FOLA@R150       52.750% | R150 | 42.170 GB | 52.750%     | NOT REACHED                   
+
+C4. Final equal-budget comparison
+  Dense FOLA : R150 | 52.750% | 42.169824 GB
+  FedAvg     : R300 | 47.280% | 42.169824 GB
+  FedAvg - FOLA final accuracy gap: -5.470 pp
+
+====================================================================================================================================
+D. SPARSE FOLA AT R150 — SAME NUMBER OF TRAINING ROUNDS
+====================================================================================================================================
+Dense FOLA R150 reference: 52.750% @ 42.169824 GB
+
+  KEEP |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    R150 GB  COMM SAVE
+--------------------------------------------------------------------------------------------------------------------------
+  0.75 |    51.670%   -1.080 |    52.650%   -0.100 |    50.570%   -2.180 |    37.2281     11.72%
+  0.50 |    51.420%   -1.330 |    51.730%   -1.020 |    45.640%   -7.110 |    31.9568     24.22%
+  0.25 |    52.780%   +0.030 |    52.750%   +0.000 |    39.850%  -12.900 |    26.6856     36.72%
+  0.10 |    43.700%   -9.050 |    42.710%  -10.040 |    29.240%  -23.510 |    23.5229     44.22%
+
+====================================================================================================================================
+E. SPARSE FOLA AT FINAL COMMON COMMUNICATION BUDGET
+====================================================================================================================================
+Dense FOLA reference: R150 | 52.750% | 42.169824 GB
+
+  KEEP  FINAL_R |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    USED GB    USED%
+---------------------------------------------------------------------------------------------------------------------------------
+  0.75      169 |    53.210%   +0.460 |    53.650%   +0.900 |    51.580%   -1.170 |    41.9436  99.464%
+  0.50      197 |    53.010%   +0.260 |    53.770%   +1.020 |    47.620%   -5.130 |    41.9700  99.526%
+  0.25      237 |    54.460%   +1.710 |    54.410%   +1.660 |    39.670%  -13.080 |    42.1633  99.984%
+  0.10      268 |    41.770%  -10.980 |    41.630%  -11.120 |    32.110%  -20.640 |    42.0275  99.663%
+
+====================================================================================================================================
+F. ACCURACY AT FIXED COMMUNICATION MILESTONES
+====================================================================================================================================
+This section helps characterize the complete accuracy-vs-communication convergence behavior.
+Each cell is Accuracy%(Round), using the last completed round at or below the target communication.
+
+METHOD          KEEP |      25% budget      50% budget      75% budget     100% budget
+-------------------------------------------------------------------------------------------
+Dense FOLA      1.00 |     42.96%(R37)     47.97%(R75)    50.01%(R112)    52.75%(R150)
+FedAvg          1.00 |     37.27%(R75)    43.09%(R150)    45.86%(R225)    47.28%(R300)
+
+KL(G->L)        0.75 |     43.51%(R42)     48.08%(R84)    51.15%(R127)    53.21%(R169)
+KL(G->L)        0.50 |     43.78%(R49)     47.90%(R98)    50.67%(R148)    53.01%(R197)
+KL(G->L)        0.25 |     44.99%(R59)    51.83%(R118)    54.43%(R177)    54.46%(R237)
+KL(G->L)        0.10 |     38.71%(R67)    43.05%(R134)    42.57%(R201)    41.77%(R268)
+
+KL(L->G)        0.75 |     43.61%(R42)     48.12%(R84)    51.37%(R127)    53.65%(R169)
+KL(L->G)        0.50 |     45.07%(R49)     49.34%(R98)    51.34%(R148)    53.77%(R197)
+KL(L->G)        0.25 |     46.03%(R59)    51.19%(R118)    52.16%(R177)    54.41%(R237)
+KL(L->G)        0.10 |     36.69%(R67)    45.17%(R134)    42.29%(R201)    41.63%(R268)
+
+Random          0.75 |     41.30%(R42)     46.94%(R84)    49.84%(R127)    51.58%(R169)
+Random          0.50 |     38.33%(R49)     42.72%(R98)    45.44%(R148)    47.62%(R197)
+Random          0.25 |     35.83%(R59)    38.82%(R118)    39.59%(R177)    39.67%(R237)
+Random          0.10 |     27.83%(R67)    28.38%(R134)    30.33%(R201)    32.11%(R268)
+
+====================================================================================================================================
+G. CONVERGENCE STABILITY / PEAK-TO-FINAL BEHAVIOR
+====================================================================================================================================
+A large BEST-FINAL drop can indicate that the final point understates an earlier peak or that late training is unstable.
+
+METHOD           KEEP     FINAL    LAST10    STD10      BEST  BEST_R  BEST-FINAL
+---------------------------------------------------------------------------------------
+Dense FOLA       1.00   52.750%   52.171%    0.360   52.750%     150      0.000pp
+FedAvg           1.00   47.280%   47.261%    0.236   47.630%     291      0.350pp
+KL(G->L)         0.75   53.210%   52.690%    0.399   53.390%     168      0.180pp
+KL(L->G)         0.75   53.650%   53.308%    0.303   53.650%     169      0.000pp
+Random           0.75   51.580%   51.482%    0.466   52.530%     168      0.950pp
+KL(G->L)         0.50   53.010%   52.769%    0.389   53.320%     195      0.310pp
+KL(L->G)         0.50   53.770%   53.573%    0.539   54.490%     195      0.720pp
+Random           0.50   47.620%   47.308%    0.185   47.700%     183      0.080pp
+KL(G->L)         0.25   54.460%   54.914%    0.432   55.680%     208      1.220pp
+KL(L->G)         0.25   54.410%   54.475%    0.635   55.340%     230      0.930pp
+Random           0.25   39.670%   39.676%    0.153   40.390%     154      0.720pp
+KL(G->L)         0.10   41.770%   41.345%    0.463   44.590%     158      2.820pp
+KL(L->G)         0.10   41.630%   41.143%    0.291   45.730%     140      4.100pp
+Random           0.10   32.110%   32.080%    0.362   33.130%     248      1.020pp
+
+====================================================================================================================================
+H. COORDINATE-SELECTION ABLATION
+====================================================================================================================================
+Positive KL-Random means the KL-selected run achieved higher accuracy than random selection at the same payload.
+Positive G->L minus L->G means the proposed KL direction was higher for that specific measurement.
+
+  KEEP |   G-L vs L-G R150    G-L vs L-G BUD |   G-L vs RAND R150    G-L vs RAND BUD |   L-G vs RAND R150    L-G vs RAND BUD
+------------------------------------------------------------------------------------------------------------------------------
+  0.75 |           -0.980           -0.440 |            +1.100            +1.630 |            +2.080            +2.070
+  0.50 |           -0.310           -0.760 |            +5.780            +5.390 |            +6.090            +6.150
+  0.25 |           +0.030           +0.050 |           +12.930           +14.790 |           +12.900           +14.740
+  0.10 |           +0.990           +0.140 |           +14.460            +9.660 |           +13.470            +9.520
+
+====================================================================================================================================
+I. WHICH SPARSE RATIOS MATCH / EXCEED DENSE FOLA AT THE FINAL COMMUNICATION BUDGET?
+====================================================================================================================================
+Dense FOLA target accuracy = 52.750%
+
+KL(G->L)  : matching/exceeding ratios = [0.75, 0.50, 0.25] | lowest qualifying keep = 0.25
+KL(L->G)  : matching/exceeding ratios = [0.75, 0.50, 0.25] | lowest qualifying keep = 0.25
+Random    : no tested keep ratio reached Dense-FOLA final-budget accuracy
+
+
+####################################################################################################################################
+CIFAR-10 | alpha=0.01 | local_data_fraction=0.5
+####################################################################################################################################
+Common communication budget = Dense FOLA R150 = 42.169824 GB
+
+====================================================================================================================================
+A. EXPERIMENT-INTEGRITY / FAIRNESS CHECKS
+====================================================================================================================================
+Dense FOLA reference : R150 | 47.660% | 42.169824 GB
+
+Original FedAvg R150 vs budget-matched FedAvg at R150:
+  old R150 accuracy       = 40.840000%
+  budget-run R150 accuracy= 39.790000%
+  accuracy difference     = -1.050000 pp
+  old R150 bytes          = 21.084912 GB
+  budget-run R150 bytes   = 21.084912 GB
+  communication consistency: PASS
+
+Sparse same-ratio communication equality:
+  keep=0.75 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.50 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.25 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+  keep=0.10 | R150=YES | same bytes/rounds=YES | budget stop=YES | within budget=YES | PASS
+
+Budget-matched FedAvg stop reason: communication_budget
+Budget-matched FedAvg used: 42.169824 GB / 42.169824 GB (100.000%)
+
+====================================================================================================================================
+B. ALL RUNS — ACCURACY AND COMMUNICATION COST
+====================================================================================================================================
+TYPE               RULE         KEEP  FINAL_R   R150_ACC  FINAL_ACC    R150_GB   FINAL_GB    MB/RND    USED%
+------------------------------------------------------------------------------------------------------------------------------------
+FedAvg R150        Dense        1.00      150    40.840%    40.840%    21.0849    21.0849   140.566  50.000%
+FedAvg budget      Dense        1.00      300    39.790%    46.320%    21.0849    42.1698   140.566 100.000%
+Dense FOLA         Dense        1.00      150    47.660%    47.660%    42.1698    42.1698   281.132 100.000%
+Sparse FOLA        KL(G->L)     0.75      169    48.520%    48.670%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        KL(L->G)     0.75      169    47.970%    49.070%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        Random       0.75      169    46.390%    46.790%    37.2281    41.9436   248.187  99.464%
+Sparse FOLA        KL(G->L)     0.50      197    48.900%    50.780%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        KL(L->G)     0.50      197    48.520%    51.050%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        Random       0.50      197    41.190%    42.650%    31.9568    41.9700   213.045  99.526%
+Sparse FOLA        KL(G->L)     0.25      237    50.130%    50.730%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        KL(L->G)     0.25      237    48.910%    51.420%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        Random       0.25      237    34.080%    36.300%    26.6856    42.1633   177.904  99.984%
+Sparse FOLA        KL(G->L)     0.10      268    43.650%    48.500%    23.5229    42.0275   156.819  99.663%
+Sparse FOLA        KL(L->G)     0.10      268    42.020%    48.140%    23.5229    42.0275   156.819  99.663%
+Sparse FOLA        Random       0.10      268    28.680%    30.160%    23.5229    42.0275   156.819  99.663%
+
+====================================================================================================================================
+C. DENSE FOLA VS COMMUNICATION-BUDGET-MATCHED FEDAVG CONVERGENCE
+====================================================================================================================================
+
+C1. Same training-round milestones
+  ROUND |   FOLA ACC    FOLA GB |  FEDAVG ACC  FEDAVG GB |   FOLA-FED
+------------------------------------------------------------------------------
+R20     |    36.030%     5.6226 |     29.200%     2.8113 |    +6.830pp
+R50     |    40.390%    14.0566 |     33.430%     7.0283 |    +6.960pp
+R100    |    43.810%    28.1132 |     36.420%    14.0566 |    +7.390pp
+R150    |    47.660%    42.1698 |     39.790%    21.0849 |    +7.870pp
+
+C2. Same communication-budget milestones
+Each value uses the LAST COMPLETED full round whose cumulative communication does not exceed the target.
+
+  BUDGET |  TARGET GB |                  FOLA |                FEDAVG |    ACC GAP
+-------------------------------------------------------------------------------------
+     25% |    10.5425 |           37.48%(R37) |           35.13%(R75) |   +2.350pp
+     50% |    21.0849 |           42.83%(R75) |          39.79%(R150) |   +3.040pp
+     75% |    31.6274 |          44.93%(R112) |          44.27%(R225) |   +0.660pp
+    100% |    42.1698 |          47.66%(R150) |          46.32%(R300) |   +1.340pp
+
+C3. First point reaching Dense-FOLA milestone accuracies
+TARGET              ACC | DENSE FOLA FIRST REACH         | FEDAVG FIRST REACH            
+----------------------------------------------------------------------------------------------
+FOLA@R50        40.390% | R50 | 14.057 GB | 40.390%      | R136 | 19.117 GB | 41.040%    
+FOLA@R100       43.810% | R97 | 27.270 GB | 43.890%      | R201 | 28.254 GB | 43.910%    
+FOLA@R150       47.660% | R148 | 41.608 GB | 47.820%     | NOT REACHED                   
+
+C4. Final equal-budget comparison
+  Dense FOLA : R150 | 47.660% | 42.169824 GB
+  FedAvg     : R300 | 46.320% | 42.169824 GB
+  FedAvg - FOLA final accuracy gap: -1.340 pp
+
+====================================================================================================================================
+D. SPARSE FOLA AT R150 — SAME NUMBER OF TRAINING ROUNDS
+====================================================================================================================================
+Dense FOLA R150 reference: 47.660% @ 42.169824 GB
+
+  KEEP |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    R150 GB  COMM SAVE
+--------------------------------------------------------------------------------------------------------------------------
+  0.75 |    48.520%   +0.860 |    47.970%   +0.310 |    46.390%   -1.270 |    37.2281     11.72%
+  0.50 |    48.900%   +1.240 |    48.520%   +0.860 |    41.190%   -6.470 |    31.9568     24.22%
+  0.25 |    50.130%   +2.470 |    48.910%   +1.250 |    34.080%  -13.580 |    26.6856     36.72%
+  0.10 |    43.650%   -4.010 |    42.020%   -5.640 |    28.680%  -18.980 |    23.5229     44.22%
+
+====================================================================================================================================
+E. SPARSE FOLA AT FINAL COMMON COMMUNICATION BUDGET
+====================================================================================================================================
+Dense FOLA reference: R150 | 47.660% | 42.169824 GB
+
+  KEEP  FINAL_R |   KL(G->L)     DELTA |   KL(L->G)     DELTA |     RANDOM     DELTA |    USED GB    USED%
+---------------------------------------------------------------------------------------------------------------------------------
+  0.75      169 |    48.670%   +1.010 |    49.070%   +1.410 |    46.790%   -0.870 |    41.9436  99.464%
+  0.50      197 |    50.780%   +3.120 |    51.050%   +3.390 |    42.650%   -5.010 |    41.9700  99.526%
+  0.25      237 |    50.730%   +3.070 |    51.420%   +3.760 |    36.300%  -11.360 |    42.1633  99.984%
+  0.10      268 |    48.500%   +0.840 |    48.140%   +0.480 |    30.160%  -17.500 |    42.0275  99.663%
+
+====================================================================================================================================
+F. ACCURACY AT FIXED COMMUNICATION MILESTONES
+====================================================================================================================================
+This section helps characterize the complete accuracy-vs-communication convergence behavior.
+Each cell is Accuracy%(Round), using the last completed round at or below the target communication.
+
+METHOD          KEEP |      25% budget      50% budget      75% budget     100% budget
+-------------------------------------------------------------------------------------------
+Dense FOLA      1.00 |     37.48%(R37)     42.83%(R75)    44.93%(R112)    47.66%(R150)
+FedAvg          1.00 |     35.13%(R75)    39.79%(R150)    44.27%(R225)    46.32%(R300)
+
+KL(G->L)        0.75 |     37.16%(R42)     42.75%(R84)    46.58%(R127)    48.67%(R169)
+KL(G->L)        0.50 |     40.10%(R49)     43.54%(R98)    48.53%(R148)    50.78%(R197)
+KL(G->L)        0.25 |     41.88%(R59)    47.75%(R118)    50.17%(R177)    50.73%(R237)
+KL(G->L)        0.10 |     40.13%(R67)    43.00%(R134)    46.91%(R201)    48.50%(R268)
+
+KL(L->G)        0.75 |     38.17%(R42)     43.13%(R84)    46.45%(R127)    49.07%(R169)
+KL(L->G)        0.50 |     40.56%(R49)     43.82%(R98)    49.19%(R148)    51.05%(R197)
+KL(L->G)        0.25 |     40.60%(R59)    48.00%(R118)    50.01%(R177)    51.42%(R237)
+KL(L->G)        0.10 |     39.28%(R67)    41.81%(R134)    45.52%(R201)    48.14%(R268)
+
+Random          0.75 |     36.46%(R42)     41.62%(R84)    44.98%(R127)    46.79%(R169)
+Random          0.50 |     35.78%(R49)     38.27%(R98)    41.25%(R148)    42.65%(R197)
+Random          0.25 |     28.36%(R59)    33.41%(R118)    34.32%(R177)    36.30%(R237)
+Random          0.10 |     24.54%(R67)    28.43%(R134)    29.36%(R201)    30.16%(R268)
+
+====================================================================================================================================
+G. CONVERGENCE STABILITY / PEAK-TO-FINAL BEHAVIOR
+====================================================================================================================================
+A large BEST-FINAL drop can indicate that the final point understates an earlier peak or that late training is unstable.
+
+METHOD           KEEP     FINAL    LAST10    STD10      BEST  BEST_R  BEST-FINAL
+---------------------------------------------------------------------------------------
+Dense FOLA       1.00   47.660%   47.472%    0.209   47.820%     148      0.160pp
+FedAvg           1.00   46.320%   46.430%    0.444   47.170%     294      0.850pp
+KL(G->L)         0.75   48.670%   48.562%    0.426   49.260%     160      0.590pp
+KL(L->G)         0.75   49.070%   48.472%    0.465   49.270%     163      0.200pp
+Random           0.75   46.790%   46.359%    0.286   46.880%     158      0.090pp
+KL(G->L)         0.50   50.780%   50.872%    0.226   51.210%     193      0.430pp
+KL(L->G)         0.50   51.050%   50.482%    0.255   51.050%     197      0.000pp
+Random           0.50   42.650%   42.348%    0.468   42.900%     195      0.250pp
+KL(G->L)         0.25   50.730%   51.118%    0.367   51.680%     231      0.950pp
+KL(L->G)         0.25   51.420%   51.474%    0.431   52.370%     225      0.950pp
+Random           0.25   36.300%   36.402%    0.095   36.700%     214      0.400pp
+KL(G->L)         0.10   48.500%   48.401%    0.339   48.920%     261      0.420pp
+KL(L->G)         0.10   48.140%   48.205%    0.305   48.740%     243      0.600pp
+Random           0.10   30.160%   30.049%    0.223   30.320%     265      0.160pp
+
+====================================================================================================================================
+H. COORDINATE-SELECTION ABLATION
+====================================================================================================================================
+Positive KL-Random means the KL-selected run achieved higher accuracy than random selection at the same payload.
+Positive G->L minus L->G means the proposed KL direction was higher for that specific measurement.
+
+  KEEP |   G-L vs L-G R150    G-L vs L-G BUD |   G-L vs RAND R150    G-L vs RAND BUD |   L-G vs RAND R150    L-G vs RAND BUD
+------------------------------------------------------------------------------------------------------------------------------
+  0.75 |           +0.550           -0.400 |            +2.130            +1.880 |            +1.580            +2.280
+  0.50 |           +0.380           -0.270 |            +7.710            +8.130 |            +7.330            +8.400
+  0.25 |           +1.220           -0.690 |           +16.050           +14.430 |           +14.830           +15.120
+  0.10 |           +1.630           +0.360 |           +14.970           +18.340 |           +13.340           +17.980
+
+====================================================================================================================================
+I. WHICH SPARSE RATIOS MATCH / EXCEED DENSE FOLA AT THE FINAL COMMUNICATION BUDGET?
+====================================================================================================================================
+Dense FOLA target accuracy = 47.660%
+
+KL(G->L)  : matching/exceeding ratios = [0.75, 0.50, 0.25, 0.10] | lowest qualifying keep = 0.10
+KL(L->G)  : matching/exceeding ratios = [0.75, 0.50, 0.25, 0.10] | lowest qualifying keep = 0.10
+Random    : no tested keep ratio reached Dense-FOLA final-budget accuracy
+
+
+====================================================================================================================================
+3. CROSS-PROFILE SUMMARY
+====================================================================================================================================
+The 'highest observed' sparse values below are descriptive single-seed maxima, not statistical rankings.
+
+PROFILE         DENSE FOLA  FEDAVG BUD   FED-FOLA |  G->L HIGH   KEEP |  L->G HIGH   KEEP |  RAND HIGH   KEEP
+---------------------------------------------------------------------------------------------------------------------
+MNIST fixed        81.240%     82.410%    +1.170 |    83.360%   0.25 |    83.350%   0.25 |    80.690%   0.75
+CIFAR f1           52.750%     47.280%    -5.470 |    54.460%   0.25 |    54.410%   0.25 |    51.580%   0.75
+CIFAR f0.5         47.660%     46.320%    -1.340 |    50.780%   0.50 |    51.420%   0.25 |    46.790%   0.75
+
+
+====================================================================================================================================
+4. WHAT TO PAY ATTENTION TO WHEN INTERPRETING THESE RESULTS
+====================================================================================================================================
+
+A. Do KL selectors separate clearly from Random?
+
+   If KL remains accurate while Random deteriorates at the exact same
+   communication payload, that is evidence that coordinate selection
+   matters rather than the gain coming only from performing more rounds.
+
+
+B. Does one KL direction consistently outperform the other?
+
+   Compare KL(G->L) vs KL(L->G) at:
+
+       R150
+       final communication budget
+       intermediate communication milestones
+
+   A small or inconsistent difference suggests that the value may come
+   mainly from KL-based importance ranking rather than the KL direction.
+
+
+C. Where does aggressive sparsification begin to fail?
+
+   Observe whether accuracy first improves or remains stable as keep ratio
+   decreases, then deteriorates below some ratio.
+
+   This threshold may differ between MNIST, CIFAR full data, and CIFAR
+   fraction=0.5.
+
+
+D. Separate same-round effects from extra-round effects.
+
+   A sparse method can be worse at R150 but recover by the final budget
+   because its cheaper communication allows additional rounds.
+
+   Therefore both R150 and equal-budget comparisons are necessary.
+
+
+E. Check late-training stability.
+
+   Large BEST-FINAL values or large last-10 standard deviations indicate
+   that a single final checkpoint may not represent the trajectory well.
+
+
+F. Compare communication saving at R150.
+
+   This answers how much communication is removed when the same amount
+   of training has been performed.
+
+
+G. Compare accuracy at fixed communication milestones.
+
+   This gives a stronger picture of communication convergence than using
+   only the final budget point.
+
+
+H. Remember the current statistical limitation.
+
+   All current results are seed 0 only.
+
+   Before treating small differences such as 0.1-0.5 percentage points as
+   meaningful, repeated seeds should be considered.
+
+
+I. Do not interpret communication savings as compute savings.
+
+   Local FOLA training remains dense. The present study isolates the
+   communication side of the problem.
+
+
+====================================================================================================================================
+5. RESOLVED OUTPUT DIRECTORIES
+====================================================================================================================================
+
+MNIST | fixed distribution | 10 samples/client | 1 class/client
+  Dense FOLA    : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_mnist_fixed1c_s10_fola_n100_seed0_e10_b32_lr001_lam0p01_r150_20260924_163805
+  FedAvg R150   : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_r150_20260924_161549
+  FedAvg budget : /home/micl/DungNDH/micl/bayesfl/outputs/run_budgetmatch_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_budget150densefola_20260927_133154
+  Sparse KL(G->L)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p75_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_171523
+  Sparse KL(L->G)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p75_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_181643
+  Sparse Random     keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_random_keep0p75_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_191703
+  Sparse KL(G->L)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p5_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_164620
+  Sparse KL(L->G)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p5_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_180312
+  Sparse Random     keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_random_keep0p5_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_192233
+  Sparse KL(G->L)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p25_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_204055
+  Sparse KL(L->G)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p25_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_224832
+  Sparse Random     keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_random_keep0p25_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260927_010427
+  Sparse KL(G->L)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p1_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_201853
+  Sparse KL(L->G)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p1_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260926_224832
+  Sparse Random     keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_mnist_fixed1c_s10_fola_random_keep0p1_n100_seed0_e10_b32_lr001_lam0p01_budget150dense_20260927_012959
+
+CIFAR-10 | alpha=0.01 | local_data_fraction=1.0
+  Dense FOLA    : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20260924_155002
+  FedAvg R150   : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_r150_20260924_125903
+  FedAvg budget : /home/micl/DungNDH/micl/bayesfl/outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola_20260927_103154
+  Sparse KL(G->L)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221
+  Sparse KL(L->G)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_232954
+  Sparse Random     keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_032226
+  Sparse KL(G->L)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221
+  Sparse KL(L->G)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_000657
+  Sparse Random     keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_043532
+  Sparse KL(G->L)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_090138
+  Sparse KL(L->G)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_142348
+  Sparse Random     keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_194658
+  Sparse KL(G->L)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_071300
+  Sparse KL(L->G)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_131743
+  Sparse Random     keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_192526
+
+CIFAR-10 | alpha=0.01 | local_data_fraction=0.5
+  Dense FOLA    : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p01_r150_20260924_142855
+  FedAvg R150   : /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_r150_20260924_125902
+  FedAvg budget : /home/micl/DungNDH/micl/bayesfl/outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_budget150densefola_20260927_103154
+  Sparse KL(G->L)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_013239
+  Sparse KL(L->G)   keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033434
+  Sparse Random     keep=0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_053358
+  Sparse KL(G->L)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_011007
+  Sparse KL(L->G)   keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033234
+  Sparse Random     keep=0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_055330
+  Sparse KL(G->L)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_081355
+  Sparse KL(L->G)   keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_110454
+  Sparse Random     keep=0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_135522
+  Sparse KL(G->L)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_073352
+  Sparse KL(L->G)   keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_104623
+  Sparse Random     keep=0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_140023
+
+====================================================================================================================================
+REPORT COMPLETE
+====================================================================================================================================
+All numerical results above were extracted from the actual completed global_metrics.csv files.
+The report does not replace the original experiment outputs.
