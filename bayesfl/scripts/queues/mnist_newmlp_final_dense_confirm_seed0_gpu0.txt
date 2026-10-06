@@ -1,0 +1,2 @@
+RESUME|/home/micl/DungNDH/micl/bayesfl/outputs/run_tune4_mnist_newmlp_fixed1c_s10_fola_b5_e10_lr0p05_lam0p02_r60_seed0_20261003_201612|120|45251038080|120
+RESUME|/home/micl/DungNDH/micl/bayesfl/outputs/run_tune3_mnist_newmlp_fixed1c_s10_fedavg_b5_e10_lr0p10_r120_seed0_20261003_191026|240|45251038080|240

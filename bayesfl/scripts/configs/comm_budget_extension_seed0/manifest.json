@@ -1,0 +1,331 @@
+{
+  "profiles": {
+    "cifar_f1": {
+      "d": 878538,
+      "k": 20,
+      "budget_bytes": 42169824000,
+      "dense_fola_run_dir": "/home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20260924_155002",
+      "expected_fedavg_rounds": 300
+    },
+    "cifar_f0p5": {
+      "d": 878538,
+      "k": 20,
+      "budget_bytes": 42169824000,
+      "dense_fola_run_dir": "/home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p01_r150_20260924_142855",
+      "expected_fedavg_rounds": 300
+    },
+    "mnist_fixed": {
+      "d": 545810,
+      "k": 100,
+      "budget_bytes": 130994400000,
+      "dense_fola_run_dir": "/home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_mnist_fixed1c_s10_fola_n100_seed0_e10_b32_lr001_lam0p01_r150_20260924_163805",
+      "expected_fedavg_rounds": 300
+    }
+  },
+  "fedavg_jobs": [
+    {
+      "profile": "cifar_f1",
+      "path": "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola.yaml",
+      "expected_rounds": 300
+    },
+    {
+      "profile": "cifar_f0p5",
+      "path": "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_budget150densefola.yaml",
+      "expected_rounds": 300
+    },
+    {
+      "profile": "mnist_fixed",
+      "path": "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_budget150densefola.yaml",
+      "expected_rounds": 300
+    }
+  ],
+  "sparse_jobs": [
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 219180.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 219180.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "random",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 219180.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 225420.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 225420.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "random",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 225420.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 227760.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 227760.0
+    },
+    {
+      "profile": "cifar_f1",
+      "rule": "random",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 227760.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 109590.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 109590.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "random",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 149790760,
+      "work": 109590.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 112710.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 112710.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "random",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 145573800,
+      "work": 112710.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 113880.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 113880.0
+    },
+    {
+      "profile": "cifar_f0p5",
+      "rule": "random",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 144168200,
+      "work": 113880.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 465303500,
+      "work": 2810.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 465303500,
+      "work": 2810.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "random",
+      "keep_ratio": 0.05,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 281,
+      "round_bytes": 465303500,
+      "work": 2810.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 452204300,
+      "work": 2890.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 452204300,
+      "work": 2890.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "random",
+      "keep_ratio": 0.02,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 289,
+      "round_bytes": 452204300,
+      "work": 2890.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_global_local",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 447837900,
+      "work": 2920.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "kl_local_global",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 447837900,
+      "work": 2920.0
+    },
+    {
+      "profile": "mnist_fixed",
+      "rule": "random",
+      "keep_ratio": 0.01,
+      "path": "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "expected_rounds": 292,
+      "round_bytes": 447837900,
+      "work": 2920.0
+    }
+  ],
+  "wave_a": {
+    "gpu0": [
+      "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola.yaml"
+    ],
+    "gpu1": [
+      "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_budget150densefola.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_budget150densefola.yaml"
+    ]
+  },
+  "wave_b": {
+    "gpu0": [
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p01_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p02_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_global_local_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_kl_local_global_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_mnist_fixed1c_s10_fola_random_keep0p05_n100_seed0_e10_b32_lr001_lam0p01_budget150dense.yaml"
+    ],
+    "gpu1": [
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p01_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml",
+      "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+    ]
+  },
+  "queue0": "scripts/queues/comm_budget_extension_seed0_gpu0.txt",
+  "queue1": "scripts/queues/comm_budget_extension_seed0_gpu1.txt"
+}

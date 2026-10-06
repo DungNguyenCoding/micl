@@ -1,0 +1,1 @@
+scripts/configs/mnist_dense_multicast_seed0/run_multicast_mnist_fixed1c_s10_fedavg_mlp256x5_n100_seed0_e10_b32_lr001_r240_budget120densefola.yaml

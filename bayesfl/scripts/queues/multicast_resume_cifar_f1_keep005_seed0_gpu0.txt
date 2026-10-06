@@ -1,0 +1,1 @@
+RESUME|/home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202|2000|22139157600|1362

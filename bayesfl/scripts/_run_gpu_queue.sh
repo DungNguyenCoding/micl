@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
+set -uo pipefail
 
-set -u
+GPU="${1:?Usage: _run_gpu_queue.sh GPU_ID QUEUE_FILE}"
+QUEUE="${2:?Usage: _run_gpu_queue.sh GPU_ID QUEUE_FILE}"
 
-GPU="$1"
-QUEUE="$2"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
 
-if [ ! -f "$QUEUE" ]; then
-    echo "Queue does not exist: $QUEUE"
-    exit 1
-fi
+PY=/home/micl/anaconda3/envs/dungndh/bin/python
+
+export PATH="/home/micl/anaconda3/envs/dungndh/bin:$PATH"
+export PYTHONPATH="$ROOT/src${PYTHONPATH:+:$PYTHONPATH}"
+export CUDA_VISIBLE_DEVICES="$GPU"
+
+mkdir -p logs
 
 echo "============================================================"
 echo "GPU QUEUE STARTED"
@@ -17,120 +22,125 @@ echo "QUEUE : $QUEUE"
 echo "TIME  : $(date)"
 echo "============================================================"
 
-while IFS= read -r CFG
-do
-    # Ignore blank lines/comments
-    [ -z "$CFG" ] && continue
-    [[ "$CFG" =~ ^# ]] && continue
+while IFS= read -r raw || [[ -n "$raw" ]]; do
 
-    if [ ! -f "$CFG" ]; then
-        echo
-        echo "ERROR: missing config: $CFG"
-        continue
-    fi
+    line="${raw%$'\r'}"
 
-    RUN_NAME="$(
-        python - "$CFG" <<'PY'
+    # Skip blank lines and comments.
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+
+    stamp="$(date +%Y%m%d_%H%M%S)"
+
+    if [[ "$line" == RESUME\|* ]]; then
+
+        IFS='|' read -r kind run_dir round_cap budget expected_round <<< "$line"
+
+        if [[ "$kind" != "RESUME" || -z "$run_dir" || -z "$round_cap" || -z "$budget" ]]; then
+            echo "ERROR: malformed resume queue record:"
+            echo "$line"
+            exit 2
+        fi
+
+        run_dir="$(realpath "$run_dir")"
+        run_name="$(basename "$run_dir")"
+
+        CMD=(
+            "$PY"
+            -m bayesfl.main
+            --resume "$run_dir"
+            --rounds "$round_cap"
+            --max-communication-bytes "$budget"
+        )
+
+        CONFIG_LABEL="resume=$run_dir | cap=R$round_cap | budget=$budget | expected=R${expected_round:-?}"
+
+    else
+
+        config="$line"
+
+        if [[ ! -f "$config" ]]; then
+            echo "ERROR: config does not exist: $config"
+            exit 2
+        fi
+
+        run_name="$(
+            "$PY" - "$config" <<'PY'
 import sys
 import yaml
 
-with open(sys.argv[1], "r", encoding="utf-8") as f:
-    cfg = yaml.safe_load(f)
+with open(sys.argv[1], encoding="utf-8") as f:
+    cfg = yaml.safe_load(f) or {}
 
-print(cfg["run_name"])
+print(cfg.get("run_name", "unnamed_run"))
 PY
-    )"
+        )"
+
+        CMD=(
+            "$PY"
+            -m bayesfl.main
+            --config "$config"
+        )
+
+        CONFIG_LABEL="$config"
+    fi
+
+    LOG="logs/${run_name}_resumequeue_${stamp}.log"
 
     echo
     echo "============================================================"
     echo "START"
     echo "GPU      : $GPU"
-    echo "RUN      : $RUN_NAME"
-    echo "CONFIG   : $CFG"
+    echo "RUN      : $run_name"
+    echo "CONFIG   : $CONFIG_LABEL"
     echo "TIME     : $(date)"
     echo "============================================================"
 
-    CUDA_VISIBLE_DEVICES="$GPU" \
-        bash scripts/_run_nohup.sh "$CFG"
+    "${CMD[@]}" > "$LOG" 2>&1 &
+    pid=$!
 
-    # Give _run_nohup.sh time to create the log/process.
-    sleep 5
-
-    LOG="$(
-        ls -t logs/${RUN_NAME}_*.log \
-        2>/dev/null | head -1
-    )"
-
-    # Retry briefly if log creation is delayed.
-    for _ in {1..6}
-    do
-        [ -n "$LOG" ] && break
-
-        sleep 5
-
-        LOG="$(
-            ls -t logs/${RUN_NAME}_*.log \
-            2>/dev/null | head -1
-        )"
-    done
-
-    if [ -z "$LOG" ]; then
-        echo "ERROR: no log created for $RUN_NAME"
-        continue
-    fi
-
+    echo "Started PID=$pid"
     echo "LOG      : $LOG"
     echo "Waiting for completion..."
 
-    while true
-    do
-        if grep -q \
-            "Simulation finished successfully" \
-            "$LOG"
-        then
-            STATUS="SUCCESS"
-            break
-        fi
+    while kill -0 "$pid" 2>/dev/null; do
+        sleep 30
 
-        # Queue worker itself does not contain RUN_NAME
-        # in its command line, so this checks the actual
-        # simulation process.
-        if ! pgrep -f "$RUN_NAME" >/dev/null
-        then
-            STATUS="FAILED_OR_STOPPED"
-            break
-        fi
-
-        LAST="$(
-            grep "centralized eval" "$LOG" \
-            | tail -1
+        last="$(
+            grep -E \
+                'Round [0-9]+ centralized eval|Traceback|ERROR|RuntimeError|ValueError' \
+                "$LOG" 2>/dev/null \
+                | tail -n 1 \
+                || true
         )"
 
-        if [ -n "$LAST" ]; then
-            echo "$(date '+%H:%M:%S') | $LAST"
+        if [[ -n "$last" ]]; then
+            echo "$(date +%H:%M:%S) | $last"
         fi
-
-        sleep 30
     done
+
+    wait "$pid"
+    rc=$?
+
+    if [[ "$rc" -ne 0 ]]; then
+        echo
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "FAILED  : $run_name"
+        echo "EXIT    : $rc"
+        echo "LOG     : $LOG"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        tail -n 80 "$LOG"
+        exit "$rc"
+    fi
 
     echo
     echo "------------------------------------------------------------"
-    echo "$STATUS : $RUN_NAME"
+    echo "SUCCESS : $run_name"
     echo "------------------------------------------------------------"
 
-    grep "centralized eval" "$LOG" | tail -3
-
-    if [ "$STATUS" != "SUCCESS" ]; then
-        echo
-        echo "Possible errors:"
-
-        grep -iE \
-        'traceback|exception|runtimeerror|cuda out of memory|(^|[^[:alnum:]_])(nan|inf)([^[:alnum:]_]|$)' \
-        "$LOG" | tail -30
-    fi
-
-    # Let Ray clean up before launching next simulation.
-    sleep 10
+    grep -E 'Round [0-9]+ centralized eval' "$LOG" \
+        | tail -n 3 \
+        || true
 
 done < "$QUEUE"
 

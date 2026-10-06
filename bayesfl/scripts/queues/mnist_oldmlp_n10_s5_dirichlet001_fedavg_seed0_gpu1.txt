@@ -1,0 +1,1 @@
+scripts/configs/mnist_oldmlp_n10_s5_dirichlet001_seed0/run_inspect_mnist_oldmlp_dirichlet_a0p01_n10_targetS5_fedavg_b32_e10_lr0p01_r300_seed0.yaml
