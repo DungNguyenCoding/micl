@@ -97,6 +97,9 @@ def main() -> None:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         logger = setup_logging(log_path)
         shutil.copy2(run_dir / "resolved_config.yaml", run_dir / f"resolved_config.before_resume_{stamp}.yaml")
+        # Record the actual configuration used for this continuation.
+        # The previous resolved config has already been timestamp-backed-up above.
+        save_resolved_config(cfg, run_dir)
 
     logger.info("Run directory: %s", run_dir)
     logger.info("Configuration: dataset=%s method=%s", cfg.data.dataset, cfg.method)
