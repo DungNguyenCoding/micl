@@ -1,0 +1,884 @@
+======================================================================
+BAYESFL SIMULATION COMMAND GENERATION GUIDELINE
+======================================================================
+
+When I ask for commands to run simulations in this BayesFL project,
+ALWAYS generate the response using the exact workflow below.
+
+Repository:
+    ~/DungNDH/micl/bayesfl
+
+Python environment:
+    /home/micl/anaconda3/envs/dungndh/bin/python
+
+Use that explicit Python interpreter for:
+    - config generation when importing bayesfl
+    - config validation
+    - partition generation / inspection
+    - result extraction scripts
+    - pytest
+    - any Python command that depends on the BayesFL environment
+
+The queue runner scripts have already been fixed to use the dungndh
+environment. Do not switch back to:
+    /home/micl/anaconda3/bin/python
+
+----------------------------------------------------------------------
+GENERAL EXPERIMENT RULES
+----------------------------------------------------------------------
+
+1. HARD MAXIMUM LOCAL EPOCHS
+
+    local_epochs <= 10
+
+Never generate, recommend, tune, or run E > 10.
+
+If an old paper/reference configuration uses E=20/40/etc., do not use
+that automatically. The current project has a hard E=10 limit unless I
+explicitly change this rule.
+
+2. TUNING VS OFFICIAL NAMING
+
+Use:
+    debug_...
+
+for:
+    - hyperparameter tuning
+    - screening
+    - diagnostics
+    - exploratory runs
+    - architecture/schedule comparisons
+    - fraction tests that are not yet official
+
+Use:
+    run_...
+
+for:
+    - frozen/official experiments
+    - final seed replications
+    - experiments where hyperparameters are already locked
+
+Use:
+    smoke_...
+
+only for very short smoke tests.
+
+3. NEVER SILENTLY RETUNE
+
+If I say:
+    "use locked settings"
+    "official run"
+    "same hyperparameters"
+    "frozen hyperparameters"
+
+then only modify the variables I explicitly ask to change.
+
+Do NOT silently change:
+    LR
+    lambda
+    batch size
+    local epochs
+    optimizer
+    momentum
+    weight decay
+    participation
+    architecture
+    schedule
+    number of clients
+    FOLA mode
+    partition method
+
+unless required by my request.
+
+4. CURRENT COMMON TRAINING PROFILE
+
+Unless a specific experiment says otherwise:
+
+    optimizer            = SGD
+    local_epochs         = 10
+    batch_size           = 32
+    momentum             = 0.0
+    weight_decay         = 0.0
+    grad_clip_norm       = 10.0
+    full participation   = True
+
+For optional diagnostic source fields such as:
+
+    max_local_steps_per_round
+
+set them to None for normal/official experiments.
+
+During tuning/official training, keep:
+
+    output.save_full_client_posteriors = false
+
+unless I explicitly request compression snapshot collection.
+
+5. FOLA COMMON SETTINGS
+
+For current paper-style FOLA experiments:
+
+    mode                    = paper_reference
+    lambda_scale_by_size    = false
+    paper_mean_only_eval    = true
+
+Use the locked lambda for the particular dataset/setting.
+
+Do not confuse covariance with precision:
+FOLA transmits/stores mean + diagonal precision (omega).
+
+6. PAIRED COMPARISONS
+
+FedAvg and FOLA paired runs must use:
+    - same seed
+    - same client partition
+    - same client count
+    - same participation
+    - same requested local-data condition
+
+Pre-generate the partition before launching the simulations.
+
+7. TWO GPU EXECUTION MODEL
+
+There are two RTX 5090 GPUs.
+
+Do NOT start many independent Ray clusters simultaneously.
+
+Preferred pattern:
+    GPU0 queue -> jobs run serially
+    GPU1 queue -> jobs run serially
+
+Thus only approximately two simulations are active at once.
+
+Use:
+    scripts/_run_gpu_queue.sh
+
+Queue files live under:
+    scripts/queues/
+
+8. OUTPUT / RESULT STYLE
+
+I prefer results printed DIRECTLY in the terminal.
+
+Do NOT use:
+    tee
+    output text files
+    CSV summary files
+
+for result presentation unless I explicitly request them.
+
+Every simulation command response must include the matching
+terminal-only result extraction command.
+
+9. RESULT METRIC CONVENTIONS
+
+For a run of R rounds:
+
+    R50
+        accuracy exactly at communication round 50
+
+    R100
+        accuracy exactly at round 100
+
+    R150
+        accuracy exactly at round 150
+
+    last10
+        mean accuracy across the final 10 communication rounds
+
+        For R150:
+            rounds 141-150
+
+        For R50:
+            rounds 41-50
+
+    mean1-R
+        average global test accuracy over every communication round
+        from round 1 through R
+
+        This is treated as a communication-efficiency /
+        convergence-trajectory metric.
+
+    best
+        highest observed accuracy during the run
+
+    bestR
+        round where "best" occurred
+
+When comparing FOLA and FedAvg always print:
+
+    FOLA - FedAvg gap
+
+in percentage points (pp).
+
+10. RESULT ACCURACY COLUMN
+
+For FedAvg prefer:
+    accuracy
+    global_accuracy
+    test_accuracy
+
+For FOLA prefer:
+    fola_mean_accuracy
+then fall back to:
+    accuracy
+    global_accuracy
+    test_accuracy
+
+Normalize to fractions internally if necessary and display as percent.
+
+======================================================================
+MANDATORY 5-STAGE RESPONSE FORMAT
+======================================================================
+
+Whenever I ask:
+    "give me commands to run X simulations"
+
+produce ALL FIVE stages below, in this order.
+
+----------------------------------------------------------------------
+STAGE 1 — GENERATE CONFIG FILES AND TWO GPU QUEUES
+----------------------------------------------------------------------
+
+Provide ONE executable terminal block that:
+
+A. Starts with:
+
+    cd ~/DungNDH/micl/bayesfl
+
+B. Uses Python/YAML to construct configs from the most appropriate
+existing locked template.
+
+Do not recreate a configuration from memory if an existing locked config
+can safely be cloned.
+
+C. Explicitly set every experiment-defining field that matters, such as:
+
+    runtime.seed
+
+    data.dataset
+
+    data.partition.type
+    data.partition.dirichlet_alpha
+    data.partition.local_data_fraction
+
+or for explicit distributions:
+
+    data.partition.type = fixed_labels
+    samples_per_client
+    labels_per_client
+
+    model.name
+
+    federation.num_clients
+    federation.clients_per_round
+
+    training.local_epochs
+    training.batch_size
+    training.lr
+    training.lr_schedule
+    training.lr_min
+    training.lr_decay_rounds
+    training.momentum
+    training.weight_decay
+    training.grad_clip_norm
+    training.rounds
+
+    method
+
+    fola.mode
+    fola.prior_lambda
+    fola.lambda_scale_by_size
+    fola.paper_mean_only_eval
+
+    output.save_full_client_posteriors
+
+D. Include:
+
+    assert cfg["training"]["local_epochs"] <= 10
+
+E. Give each config an unambiguous run_name.
+
+The run_name should normally encode:
+
+    dataset
+    architecture
+    alpha or distribution type
+    method
+    num clients
+    fraction/sample condition
+    seed
+    E
+    B
+    LR
+    lambda for FOLA
+    schedule if relevant
+    round count
+
+Examples:
+
+    run_cifar_basiccnn_a0p01_official_
+    fola_cos400_n20_f1_seed0_
+    e10_b32_lr002_lam0p01_r150
+
+    run_mnist_fixed1c_s10_official_
+    fola_n100_seed0_
+    e10_b32_lr001_lam0p01_r150
+
+F. Create exactly two queue files:
+
+    scripts/queues/<experiment>_gpu0.txt
+    scripts/queues/<experiment>_gpu1.txt
+
+Balance the workload sensibly.
+
+Whenever possible keep paired FedAvg/FOLA jobs near each other or keep
+similar experiment groups together.
+
+Do not create one queue per simulation.
+
+G. At the end of Stage 1 print:
+
+    number of configs created
+    number of jobs in GPU0 queue
+    number of jobs in GPU1 queue
+
+Use assertions so accidental missing/extra configurations fail early.
+
+----------------------------------------------------------------------
+STAGE 2 — VALIDATE ALL CONFIGS BEFORE RUNNING
+----------------------------------------------------------------------
+
+Provide a separate terminal block.
+
+It must:
+
+A. Read the actual queue files from Stage 1.
+
+B. Load every config using:
+
+    from bayesfl.config import load_config
+
+C. Assert:
+    - every referenced config exists
+    - exact expected total number of configs
+    - no duplicate config path
+    - seed values are correct
+    - local_epochs <= 10
+    - batch size is correct
+    - round count is correct
+    - dataset is correct
+    - model is correct
+    - client count / participation is correct
+    - requested fraction/distribution is correct
+    - LR is correct
+    - LR schedule is correct
+    - lr_min is correct where relevant
+    - lr_decay_rounds is correct where relevant
+    - FOLA lambda is correct
+    - FOLA mode is correct
+    - lambda_scale_by_size is false
+    - paper_mean_only_eval is true
+    - diagnostic-only features are disabled unless requested
+
+D. For official experiments validate that no old tuning value leaked into
+the config.
+
+Example:
+if using fixed_labels:
+    assert "dirichlet_alpha" not in partition
+    assert "local_data_fraction" not in partition
+if those should not be present.
+
+E. Print one concise validation line for every config.
+
+Example:
+
+    OK | cifar10 | alpha=.01 | f=.5 | fola |
+    R=150 | lr=.02 | cosine
+
+F. Finish with something like:
+
+    PASS: all 12 configs valid
+
+Do not launch GPU work unless this validation succeeds.
+
+----------------------------------------------------------------------
+STAGE 3 — PRE-GENERATE AND INSPECT PARTITIONS
+----------------------------------------------------------------------
+
+Provide a separate terminal block BEFORE launching simulations.
+
+Use:
+
+    from bayesfl.data.datasets import prepare_partition
+
+Read all queue configs, identify unique partition keys, and generate each
+partition exactly once.
+
+A typical unique key is:
+
+    (
+        dataset,
+        partition type,
+        alpha / explicit-distribution parameters,
+        local fraction,
+        num_clients,
+        seed,
+    )
+
+FedAvg and FOLA using the same condition should resolve to the same
+partition.
+
+For every unique partition print:
+
+    dataset
+    partition type
+    alpha if Dirichlet
+    local_data_fraction if used
+    number of clients
+    seed
+    partition path
+    SHA256 when available
+
+and distribution statistics:
+
+    total samples used
+    mean samples/client
+    median samples/client when useful
+    min samples/client
+    max samples/client
+    mean classes/client
+
+For severe scarcity also print, when useful:
+
+    clients <= 1 sample
+    clients <= 5 samples
+    clients <= 10 samples
+
+For fixed/custom distributions validate their explicit guarantees.
+
+Example for:
+    10 samples/client
+    1 class/client
+    N=100
+
+assert:
+
+    every client size == 10
+    every client has exactly 1 class
+    1000 unique samples total
+    no duplicate training indices
+
+If balanced across MNIST labels is intended:
+
+    exactly 10 clients per digit
+
+Print a final PASS statement.
+
+IMPORTANT:
+Always use the REALIZED data distribution in the final report.
+Do not report only the requested theoretical fraction.
+
+Example:
+    requested fraction .03
+may realize:
+    74.50 samples/client
+
+Report 74.50, not merely "~75", when precision matters.
+
+----------------------------------------------------------------------
+STAGE 4 — LAUNCH THE SIMULATIONS
+----------------------------------------------------------------------
+
+Provide one terminal block.
+
+Pattern:
+
+    cd ~/DungNDH/micl/bayesfl
+
+    TS="$(date +%Y%m%d_%H%M%S)"
+
+    nohup bash scripts/_run_gpu_queue.sh \
+      0 scripts/queues/<queue0>.txt \
+      > "logs/queue_<name>_gpu0_${TS}.log" \
+      2>&1 &
+
+    PID0=$!
+
+    nohup bash scripts/_run_gpu_queue.sh \
+      1 scripts/queues/<queue1>.txt \
+      > "logs/queue_<name>_gpu1_${TS}.log" \
+      2>&1 &
+
+    PID1=$!
+
+    echo "GPU0 PID=$PID0"
+    echo "GPU1 PID=$PID1"
+
+    pgrep -af "_run_gpu_queue.sh"
+
+Use nohup so the simulations continue if the terminal disconnects.
+
+Do NOT launch every config independently with its own nohup/Ray process.
+
+If useful, also provide a short monitoring command such as:
+
+    watch -n 5 '...'
+
+showing:
+    GPU utilization
+    VRAM
+    tail of GPU0 queue log
+    tail of GPU1 queue log
+
+Monitoring is optional, but the launch block is mandatory.
+
+----------------------------------------------------------------------
+STAGE 5 — TERMINAL-ONLY RESULT EXTRACTION
+----------------------------------------------------------------------
+
+Always provide this in the SAME response as the simulation commands.
+
+Do not wait for me to ask for it later.
+
+This command is intended to be run AFTER all jobs finish.
+
+It must:
+
+A. Read the exact queue files/configs created in Stage 1.
+
+Do not rely on broad wildcard guessing if exact run names/configs are
+available.
+
+B. Resolve actual output directories.
+
+The project often appends timestamps, so support both:
+
+    outputs/<run_name>
+
+and:
+
+    outputs/<run_name>_YYYYMMDD_HHMMSS
+
+Select the latest matching timestamped output if needed.
+
+C. Find:
+
+    metrics/global_metrics.csv
+
+with safe fallback to:
+    global_metrics.csv
+or recursive search if necessary.
+
+D. Verify the expected final round exists.
+
+Examples:
+
+    R50 run:
+        max round >= 50
+
+    R150 run:
+        max round >= 150
+
+If incomplete, fail clearly:
+
+    INCOMPLETE: <run_name> last=Rxx
+
+E. Print a main result table containing appropriate checkpoints.
+
+For R50 runs print:
+
+    R10
+    R20
+    R30
+    R40
+    R50
+    last10
+    mean1-50
+
+For R150 runs print:
+
+    R20 or R50 as useful
+    R50
+    R100
+    R150
+    last10
+    mean1-150
+    best
+    bestR
+
+F. Print paired FOLA - FedAvg differences for every directly paired
+condition.
+
+Example:
+
+    MNIST alpha=.01 fixed 10 samples/client:
+        R50     +3.63 pp
+        R100    +3.02 pp
+        R150    +2.60 pp
+        last10  +2.62 pp
+        mean     +3.xx pp
+
+G. Print directly to terminal only.
+
+Do not:
+    tee output.txt
+    save a summary CSV
+unless I explicitly ask.
+
+======================================================================
+MULTI-SEED RULES
+======================================================================
+
+When I request multi-seed replication:
+
+1. Do not rerun an existing seed unless explicitly requested.
+
+2. Generate explicit seed config files.
+
+Example:
+    seed0
+    seed1
+    seed2
+    seed3
+    seed4
+
+3. Keep hyperparameters IDENTICAL across seeds.
+
+4. Each seed should generate/use its own deterministic partition.
+
+5. For FedAvg/FOLA paired comparison:
+    same seed => same partition.
+
+6. Print every individual seed result first.
+
+7. Then print aggregate metrics:
+
+    method mean
+    method SD
+    paired FOLA-FedAvg mean gap
+    paired gap SD
+    95% CI when requested/useful
+    number of FOLA wins / number of seeds
+
+8. If seed0 was used for tuning/selection and seeds1-4 are independent
+replication seeds, report:
+
+    seeds1-4 as the primary replication result
+
+and keep seed0 separate unless I explicitly ask for a combined 5-seed
+descriptive result.
+
+======================================================================
+PARTITION MODES CURRENTLY RELEVANT
+======================================================================
+
+A. PAPER DIRICHLET
+
+Example:
+
+    data:
+      partition:
+        type: paper_dirichlet
+        dirichlet_alpha: 0.01
+        local_data_fraction: 0.125
+
+Supports:
+    MNIST
+    CIFAR-10
+
+The local-data fraction is applied deterministically after the underlying
+partition and should preserve nested subsets where that implementation is
+being used.
+
+B. FIXED LABEL DISTRIBUTION
+
+Example:
+
+    data:
+      partition:
+        type: fixed_labels
+        samples_per_client: 10
+        labels_per_client: 1
+
+Currently used for controlled MNIST distribution experiments.
+
+Do not include Dirichlet alpha in a fixed_labels experiment.
+
+The existing Dirichlet code path must remain available; fixed_labels is an
+additional partition mode, not a replacement.
+
+======================================================================
+CURRENT LOCKED SETTINGS TO REMEMBER
+======================================================================
+
+MNIST
+-----
+
+Model:
+    mlp_784_500_300_10
+
+N:
+    100
+
+Participation:
+    100/100
+
+E:
+    10
+
+B:
+    32
+
+SGD:
+    momentum = 0
+    weight_decay = 0
+    grad clip = 10
+
+FedAvg:
+    LR = .01
+    constant schedule
+
+FOLA alpha=.01 / severe heterogeneity:
+    LR = .01
+    lambda = .01
+    constant schedule
+    mode = paper_reference
+
+FOLA alpha=.1:
+    LR = .01
+    lambda = .0001
+    constant schedule
+    mode = paper_reference
+
+
+CURRENT OFFICIAL CIFAR-10 BASICCNN SETTINGS
+------------------------------------------
+
+Model:
+    BasicCNN
+
+N:
+    20
+
+Participation:
+    20/20
+
+E:
+    10
+
+B:
+    32
+
+FedAvg alpha=.1:
+    LR = .02
+    constant
+
+FedAvg alpha=.01:
+    LR = .01
+    constant
+
+FOLA alpha=.1:
+    lambda = .1
+    LR base = .02
+    lr_schedule = cosine
+    lr_min = .0001
+    lr_decay_rounds = 400
+
+FOLA alpha=.01:
+    lambda = .01
+    LR base = .02
+    lr_schedule = cosine
+    lr_min = .0001
+    lr_decay_rounds = 400
+
+IMPORTANT:
+For scheduled CIFAR FOLA, lr_decay_rounds=400 is the cosine HORIZON,
+not necessarily the run length.
+
+A 150-round run can still have:
+    lr_decay_rounds = 400
+
+======================================================================
+PLOT GENERATION RULES
+======================================================================
+
+When I ask for official accuracy-vs-round plots:
+
+1. Use the exact official run names, not broad heuristic discovery.
+
+2. Plot:
+    x = communication round
+    y = global test accuracy (%)
+
+3. Put FedAvg and FOLA together when comparing them.
+
+4. Show final accuracy in the legend:
+
+    FedAvg (final: xx.xx%)
+    FOLA   (final: yy.yy%)
+
+5. Mark/label the final endpoint when useful.
+
+6. Prefer realized samples/client in the title rather than raw fraction.
+
+Example:
+
+    CIFAR-10 | alpha=.01
+    ~2499 samples/client
+
+or for explicit distribution:
+
+    MNIST | Fixed distribution
+    10 samples/client | 1 class/client
+
+7. Save PNG at 300 dpi and PDF.
+
+Default plot path:
+
+    outputs/plots/official_accuracy_round/
+
+======================================================================
+COMMUNICATION / FOLA PAYLOAD NOTE
+======================================================================
+
+Current FOLA transport payload is:
+
+    mean / model parameters   float32
+    precision omega           float32
+
+Server aggregation may temporarily use float64 internally for numerical
+stability but casts back to float32 for transport.
+
+Therefore raw transmitted payload is approximately:
+
+FedAvg:
+    4P bytes per model direction
+
+FOLA:
+    8P bytes per model direction
+
+where P = number of scalar model parameters.
+
+Do not describe FOLA as transmitting covariance directly unless discussing
+it conceptually. The implementation transfers diagonal precision omega.
+
+======================================================================
+DECISION-MAKING RULE
+======================================================================
+
+If a simulation result is required before deciding what experiment to run
+next:
+
+    give only the current experiment / diagnostic commands
+
+Do not automatically generate future result-dependent simulations.
+
+After I paste the result:
+    analyze it first,
+    then recommend/generate the next experiment if appropriate.
+
+======================================================================
+END OF BAYESFL COMMAND GENERATION GUIDELINE
+======================================================================

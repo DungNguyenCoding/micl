@@ -1,0 +1,517 @@
+MULTICAST COMMUNICATION ACCOUNTING AND UPDATED SIMULATION PLAN
+================================================================
+
+PURPOSE
+-------
+This note records the communication-accounting change from repeated
+server-to-client unicast delivery to one shared multicast downlink, the
+updated MNIST model, and the new budget-matched simulation targets.
+
+The objective is to REUSE the simulations that have already been completed
+whenever possible and extend only the runs that are still shorter than the
+new required budget-matched number of rounds.
+
+
+================================================================
+1. ASSUMPTIONS USED IN THE NEW COMMUNICATION MODEL
+================================================================
+
+Notation:
+
+    d   = number of Bayesian model-weight coordinates
+    K   = number of participating clients in one global round
+    r   = sparse keep ratio
+    m   = ceil(r*d)
+    mu  = posterior mean, float32
+    tau = posterior precision, float32
+
+Therefore:
+
+    one (mu, tau) pair = 32 + 32 = 64 bits.
+
+Sparse upload also includes a packed bitmap:
+
+    bitmap size = d bits
+                = ceil(d/8) bytes in an exact byte implementation.
+
+Current client counts assumed in the communication-budget calculations:
+
+    MNIST    : K = 100 participating clients
+    CIFAR-10 : K = 20 participating clients
+
+If future experiments use partial participation, replace K with the actual
+number of participating clients K_t for that round.
+
+
+================================================================
+2. OLD ACCOUNTING: REPEATED UNICAST DOWNLINK
+================================================================
+
+Previously, the communication model counted the same global posterior once
+for every participating client.
+
+Dense FOLA per round:
+
+    downlink = 64*K*d bits
+    uplink   = 64*K*d bits
+
+so
+
+    C_dense_unicast
+        = 128*K*d bits.
+
+
+Sparse FOLA per round:
+
+    dense downlink
+        = 64*K*d bits
+
+    sparse uplink
+        ~= K*d*(64*r + 1) bits
+
+where:
+    64*r*d bits = selected float32 mean-precision pairs
+    d bits      = packed bitmap
+
+Therefore:
+
+    C_sparse_unicast
+        ~= K*d*(65 + 64*r) bits.
+
+
+The corresponding old total-communication saving was:
+
+    Saving_unicast(r)
+        = 1 - C_sparse_unicast / C_dense_unicast
+        = 1 - (65 + 64*r)/128.
+
+
+================================================================
+3. NEW ACCOUNTING: ONE SHARED MULTICAST DOWNLINK
+================================================================
+
+All participating clients receive the SAME global posterior
+(global mean + global precision).
+
+Under the new single-cell multicast payload model, the server transmits
+that common global posterior ONCE per global round instead of K separate
+copies.
+
+IMPORTANT:
+    - every client still receives the complete global posterior;
+    - only the server's repeated transmission is removed from the modeled
+      communication cost;
+    - client uploads are still client-specific and are counted separately.
+
+
+Dense FOLA multicast per round:
+
+    shared downlink
+        = 64*d bits
+
+    K dense client uploads
+        = 64*K*d bits
+
+Therefore:
+
+    C_dense_multicast
+        = 64*d*(K + 1) bits.
+
+
+Sparse FOLA multicast per round:
+
+    shared dense downlink
+        = 64*d bits
+
+    K sparse client uploads
+        ~= K*d*(64*r + 1) bits
+
+Therefore:
+
+    C_sparse_multicast
+        ~= d * [64 + K*(64*r + 1)] bits.
+
+
+Exact byte expression for sparse FOLA:
+
+    C_sparse_multicast_bytes
+        = 8*d
+          + K * [8*ceil(r*d) + ceil(d/8)].
+
+
+================================================================
+4. CHANGE IN THE COMMUNICATION-COST GAP
+================================================================
+
+With multicast, the total communication saving of sparse FOLA relative to
+dense FOLA becomes:
+
+    Saving_multicast(r, K)
+        = 1
+          - [64 + K*(64*r + 1)] / [64*(K + 1)]
+
+or equivalently:
+
+    Saving_multicast(r, K)
+        = K/(K+1) * (1 - r - 1/64).
+
+
+The sparsification benefit becomes much larger in the TOTAL communication
+metric because the common dense downlink is now paid only once.
+
+
+Approximate total-communication saving:
+
+KEEP      OLD UNICAST       MNIST MULTICAST      CIFAR-10 MULTICAST
+r         SAVING            K=100                K=20
+--------------------------------------------------------------------
+0.75       11.72%             23.21%               22.32%
+0.50       24.22%             47.96%               46.13%
+0.25       36.72%             72.71%               69.94%
+0.10       44.22%             87.56%               84.23%
+0.05       46.72%             92.51%               88.99%
+
+
+Interpretation:
+
+    The absolute uplink reduction produced by sparsification has not
+    magically changed.
+
+    What changed is the accounting of the COMMON downlink:
+        old model -> K copies of the same global posterior;
+        new model -> 1 multicast transmission of the global posterior.
+
+    Consequently, sparse client uploads represent a much larger fraction
+    of the remaining total communication cost.
+
+
+================================================================
+5. UPDATED MNIST MODEL
+================================================================
+
+The MNIST training model is now:
+
+    a six-layer multi-layer perceptron (MLP)
+    with 256 hidden units per layer
+    and ReLU activation functions,
+
+with:
+
+    d = 466,698 model weights.
+
+
+This model-size change affects the ABSOLUTE communication volume
+(bytes / MB / GB), because all communication costs are proportional to d.
+
+However, d cancels when solving for the number of sparse rounds that match a
+fixed number of dense-FOLA rounds.
+
+Therefore, assuming K and the payload representation remain unchanged,
+the matched-round ratios depend on K and r, but not directly on d.
+
+
+For reference, with MNIST K=100 and d=466,698:
+
+    Dense-FOLA multicast communication per round
+        = 64*d*(K+1) bits
+        = 377,091,984 bytes
+        ~= 377.092 MB per round.
+
+A 120-round dense-FOLA reference therefore corresponds to approximately:
+
+        45.251 GB
+
+of modeled multicast communication payload.
+
+
+================================================================
+6. NEW SIMULATION BUDGET
+================================================================
+
+NEW dense-FOLA reference:
+
+    Dense FOLA baseline = 120 global rounds.
+
+For each sparse keep ratio, choose the maximum complete number of sparse
+rounds that does not exceed the communication budget of 120 dense-FOLA
+multicast rounds.
+
+The general formula is:
+
+    T_sparse(r)
+        = floor(
+            T_dense
+            * C_dense_multicast
+            / C_sparse_multicast
+          )
+
+Using the approximate bit expressions:
+
+    T_sparse(r)
+        = floor(
+            120 * 64*(K+1)
+            / [64 + K*(64*r + 1)]
+          ).
+
+
+================================================================
+7. ALREADY-COMPLETED RUNS
+================================================================
+
+The following runs have already been completed:
+
+    Dense FOLA : 150 rounds
+
+    keep 0.75  : ~169 rounds
+    keep 0.50  : ~197 rounds
+    keep 0.25  : ~237 rounds
+    keep 0.10  : ~268 rounds
+    keep 0.05  : ~281 rounds
+
+
+Reuse rule:
+
+    If the new required number of rounds is LESS THAN OR EQUAL TO the
+    already-completed run length, DO NOT rerun it.
+
+    Use the checkpoint / metric at the required round from the existing run.
+
+Example:
+
+    Dense FOLA:
+        already completed = 150 rounds
+        new requirement   = 120 rounds
+
+    => no new dense-FOLA run is needed.
+       Use the Round-120 checkpoint from the existing dense-FOLA trajectory,
+       provided the training schedule does not depend on the configured
+       maximum number of rounds.
+
+
+================================================================
+8. NEW MNIST TARGETS: DENSE BASELINE = 120 ROUNDS
+================================================================
+
+Assumptions:
+
+    K = 100
+    d = 466,698
+    multicast downlink
+    float32 mean
+    float32 precision
+    packed bitmap
+
+
+KEEP     NEW REQUIRED     ALREADY RUN     ADDITIONAL ROUNDS NEEDED
+------------------------------------------------------------------
+0.75        156              169                 0
+0.50        230              197                33
+0.25        439              237               202
+0.10        964              268               696
+0.05       1602              281              1321
+
+
+Therefore, for MNIST:
+
+    keep 0.75:
+        required = 156
+        already  = 169
+        action   = NO NEW TRAINING; use R156 from existing run.
+
+    keep 0.50:
+        required = 230
+        already  = 197
+        action   = extend by 33 rounds.
+
+    keep 0.25:
+        required = 439
+        already  = 237
+        action   = extend by 202 rounds.
+
+    keep 0.10:
+        required = 964
+        already  = 268
+        action   = extend by 696 rounds.
+
+    keep 0.05:
+        required = 1602
+        already  = 281
+        action   = extend by 1321 rounds.
+
+
+Dense FOLA:
+
+    required = 120
+    already  = 150
+    action   = NO NEW TRAINING; use the R120 checkpoint.
+
+
+================================================================
+9. NEW CIFAR-10 TARGETS: DENSE BASELINE = 120 ROUNDS
+================================================================
+
+Assumptions:
+
+    K = 20
+    multicast downlink
+    float32 mean
+    float32 precision
+    packed bitmap
+
+
+KEEP     NEW REQUIRED     ALREADY RUN     ADDITIONAL ROUNDS NEEDED
+------------------------------------------------------------------
+0.75        154              169                 0
+0.50        222              197                25
+0.25        399              237               162
+0.10        760              268               492
+0.05       1089              281               808
+
+
+Therefore, for CIFAR-10:
+
+    keep 0.75:
+        required = 154
+        already  = 169
+        action   = NO NEW TRAINING; use R154 from existing run.
+
+    keep 0.50:
+        required = 222
+        already  = 197
+        action   = extend by 25 rounds.
+
+    keep 0.25:
+        required = 399
+        already  = 237
+        action   = extend by 162 rounds.
+
+    keep 0.10:
+        required = 760
+        already  = 268
+        action   = extend by 492 rounds.
+
+    keep 0.05:
+        required = 1089
+        already  = 281
+        action   = extend by 808 rounds.
+
+
+Dense FOLA:
+
+    required = 120
+    already  = 150
+    action   = NO NEW TRAINING; use the R120 checkpoint.
+
+
+================================================================
+10. COMPACT ACTION SUMMARY
+================================================================
+
+MNIST (K=100)
+--------------
+Dense:
+    R120 required; existing R150 is sufficient.
+
+Sparse:
+    r=0.75 -> target R156  | existing R169  | +0
+    r=0.50 -> target R230  | existing R197  | +33
+    r=0.25 -> target R439  | existing R237  | +202
+    r=0.10 -> target R964  | existing R268  | +696
+    r=0.05 -> target R1602 | existing R281  | +1321
+
+
+CIFAR-10 (K=20)
+---------------
+Dense:
+    R120 required; existing R150 is sufficient.
+
+Sparse:
+    r=0.75 -> target R154  | existing R169  | +0
+    r=0.50 -> target R222  | existing R197  | +25
+    r=0.25 -> target R399  | existing R237  | +162
+    r=0.10 -> target R760  | existing R268  | +492
+    r=0.05 -> target R1089 | existing R281  | +808
+
+
+================================================================
+11. IMPORTANT IMPLEMENTATION / INTERPRETATION NOTES
+================================================================
+
+1. MULTICAST IS A COMMUNICATION-MODEL CHANGE
+   ------------------------------------------
+   The existing Flower runs did not automatically become real wireless
+   multicast experiments.
+
+   The new communication metric should be described as a MODELED multicast
+   payload cost unless an actual multicast transport is implemented.
+
+
+2. APPLY MULTICAST TO ALL BASELINES
+   --------------------------------
+   Dense FOLA must also receive the multicast benefit.
+
+   Do not compare:
+       sparse FOLA + multicast
+   against:
+       dense FOLA + repeated unicast
+
+   when claiming the isolated benefit of KL sparsification.
+
+
+3. EXISTING ACCURACY TRAJECTORIES MAY BE REUSED
+   ---------------------------------------------
+   If multicast changes only communication accounting and every client
+   receives exactly the same global posterior as before, the learning
+   trajectory itself is unchanged.
+
+   Therefore existing checkpoints can be reused for rounds that have already
+   been completed.
+
+
+4. CHECK THE LEARNING-RATE / TRAINING SCHEDULE
+   --------------------------------------------
+   Reusing or extending an existing run is valid only if training behavior
+   is not changed by the originally configured maximum round count.
+
+   Check whether:
+       - learning-rate decay depends on max_rounds;
+       - cosine scheduling depends on max_rounds;
+       - client selection depends on remaining communication budget;
+       - any stopping logic modifies training before the final round.
+
+   If the schedule was designed around the old maximum round count, simply
+   continuing the run may not be mathematically identical to a fresh run
+   configured for the new target.
+
+
+5. PREFER RESUME FROM CHECKPOINT
+   -----------------------------
+   For cases requiring more rounds, resume from the latest existing model /
+   optimizer / scheduler / server state when the implementation supports it.
+
+   Do not restart from round 0 solely to obtain a longer trajectory unless
+   reproducibility or scheduler logic requires a fresh run.
+
+
+6. USE FLOOR FOR BUDGET MATCHING
+   ------------------------------
+   The reported target rounds use floor(...), so a completed sparse run stays
+   at or below the 120-round dense-FOLA multicast communication budget.
+
+
+7. RECORD BOTH ROUND AND COMMUNICATION
+   ------------------------------------
+   For every checkpoint keep:
+       - global round;
+       - test accuracy;
+       - multicast-modeled cumulative communication bytes;
+       - keep ratio;
+       - selection rule.
+
+   Paper plots should compare accuracy against communication as well as
+   accuracy against round.
+
+
+================================================================
+END
+================================================================

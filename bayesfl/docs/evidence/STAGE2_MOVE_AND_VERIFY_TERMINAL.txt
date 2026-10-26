@@ -1,0 +1,318 @@
+(dungndh) micl@oem-MS73-HB1-000:~/DungNDH/micl/bayesfl$ cd ~/DungNDH/micl/bayesfl
+
+set -o pipefail
+
+python scripts/bayesfl_same_ssd_organizer.py --preview \
+  | tee ../bayesfl_same_ssd_preview.txt
+
+==============================================================================
+BAYESFL SAME-SSD ORGANIZER — PREVIEW
+==============================================================================
+Original : /home/micl/DungNDH/micl/bayesfl
+Archive  : /home/micl/DungNDH/micl/bayesfl_historical_archive
+Manifest : /home/micl/DungNDH/micl/bayesfl_cleanup_DRY_RUN_20261026_194253.csv
+Protected folders verified: 42
+Historical folders total  : 121
+Still in repository       : 121
+Already in archive        : 0
+Archived logical size     : 8.613 GiB
+Unknown untouched folders : 0
+Free disk space gained    : 0 (same SSD)
+
+EXACT PATHS TO MOVE:
+     209.5 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_225052
+     209.4 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_225051
+     209.8 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202
+     197.1 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_131743
+     177.0 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_142348
+     149.9 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_000657
+     129.7 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_232954
+     211.5 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_053138
+     116.8 MiB  outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_budget150densefola_20260927_103154
+      50.2 MiB  outputs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f0p5_seed0_e10_b32_lr001_r150_20260923_075942
+      96.2 MiB  outputs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p01_r150_20260923_092834
+      50.2 MiB  outputs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f0p5_seed0_e10_b32_lr002_r150_20260923_063306
+      96.9 MiB  outputs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p1_r150_20260923_080058
+     210.9 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_053208
+     215.7 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_022548
+     534.5 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_073352
+     294.0 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_081355
+     180.4 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_011007
+     133.1 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_013239
+     210.5 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_090409
+     211.2 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_055248
+     198.0 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_104623
+     177.9 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_110454
+     151.1 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033234
+     130.3 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033434
+     207.7 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_123528
+     209.0 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_092135
+     469.0 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_140023
+     269.1 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_135522
+     173.3 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_055330
+     129.6 MiB  outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_053358
+      50.2 MiB  outputs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f1_seed0_e10_b32_lr001_r150_20260922_220548
+      96.8 MiB  outputs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20260923_044012
+      50.3 MiB  outputs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f1_seed0_e10_b32_lr002_r150_20260922_155235
+      96.5 MiB  outputs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p1_r150_20260923_030536
+     129.4 MiB  outputs/run_budgetmatch_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_budget150densefola_20260927_133154
+      32.7 MiB  outputs/run_mnist_a0p01_official_fedavg_n100_s10_f0p016667_seed0_e10_b32_lr001_r150_20260922_191028
+      32.8 MiB  outputs/run_mnist_a0p01_official_fedavg_n100_s75_f0p125_seed0_e10_b32_lr001_r150_20260922_155235
+      52.5 MiB  outputs/run_mnist_a0p01_official_fola_n100_s10_f0p016667_seed0_e10_b32_lr001_lam0p01_r150_20260922_202723
+      51.3 MiB  outputs/run_mnist_a0p01_official_fola_n100_s75_f0p125_seed0_e10_b32_lr001_lam0p01_r150_20260922_171159
+      32.7 MiB  outputs/run_mnist_fixed1c_s10_official_fedavg_n100_seed0_e10_b32_lr001_r150_20260923_131518
+      53.0 MiB  outputs/run_mnist_fixed1c_s10_official_fola_n100_seed0_e10_b32_lr001_lam0p01_r150_20260923_131518
+      73.4 MiB  outputs/run_mnist_stage17_oldmlp_fixed1c_s5_n20_fola_seed0_e5_b128_lr0p01_lam0p01_r200_20261009_123003
+      63.2 MiB  outputs/run_multicast_mnist_fixed1c_s10_fedavg_mlp256x5_n100_seed0_e10_b32_lr001_r240_budget120densefola_20260930_014849
+      47.1 MiB  outputs/run_multicast_mnist_fixed1c_s10_fola_mlp256x5_n100_seed0_e10_b32_lr001_lam0p01_r120_20260930_014849
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed0_fedavg_clip_r400_20261010_065858
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed0_fedavg_noclip_r400_20261010_051927
+      29.1 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed0_fola_clip_r200_20261010_042926
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed0_fola_noclip_r200_20261010_033925
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed1_fedavg_clip_r400_20261010_120534
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed1_fedavg_noclip_r400_20261010_102532
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed1_fola_clip_r200_20261010_093531
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed1_fola_noclip_r200_20261010_084430
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed2_fedavg_clip_r400_20261010_115804
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed2_fedavg_noclip_r400_20261010_101832
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed2_fola_clip_r200_20261010_092831
+      29.4 MiB  outputs/run_mnist_stage20_n100_cnn_s10_seed2_fola_noclip_r200_20261010_083800
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed0_fedavg_clip_r400_20261009_210018
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed0_fedavg_noclip_r400_20261009_191916
+      29.0 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed0_fola_clip_r200_20261009_182915
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed0_fola_noclip_r200_20261009_173844
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed1_fedavg_clip_r400_20261009_205847
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed1_fedavg_noclip_r400_20261009_191816
+      29.2 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed1_fola_clip_r200_20261009_182845
+      29.4 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed1_fola_noclip_r200_20261009_173844
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed2_fedavg_clip_r400_20261010_020153
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed2_fedavg_noclip_r400_20261010_002121
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed2_fola_clip_r200_20261009_233120
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed2_fola_noclip_r200_20261009_224119
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed3_fedavg_clip_r400_20261010_015923
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed3_fedavg_noclip_r400_20261010_001851
+      29.1 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed3_fola_clip_r200_20261009_232850
+      29.2 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed3_fola_noclip_r200_20261009_223919
+      41.5 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed4_fedavg_clip_r400_20261010_070229
+      41.6 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed4_fedavg_noclip_r400_20261010_052226
+      29.1 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed4_fola_clip_r200_20261010_043256
+      29.3 MiB  outputs/run_mnist_stage20_n100_cnn_s5_seed4_fola_noclip_r200_20261010_034325
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed1_e5_b10_lr0p10_r300_20261008_162417
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed2_e5_b10_lr0p10_r300_20261008_162347
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed3_e5_b10_lr0p10_r300_20261008_164217
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed4_e5_b10_lr0p10_r300_20261008_164216
+      12.4 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed1_e5_b10_lr0p10_lam0p01_r150_20261008_161746
+      12.3 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed2_e5_b10_lr0p10_lam0p01_r150_20261008_161746
+      12.2 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed3_e5_b10_lr0p10_lam0p01_r150_20261008_163547
+      12.2 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed4_e5_b10_lr0p10_lam0p01_r150_20261008_163546
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed1_e5_b5_lr0p03_r300_20261008_173518
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed1_e5_b5_lr0p10_r300_20261008_165947
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed2_e5_b5_lr0p03_r300_20261008_173318
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed2_e5_b5_lr0p10_r300_20261008_165917
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p03_r300_20261008_175219
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed4_e5_b5_lr0p03_r300_20261008_175119
+      14.6 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed4_e5_b5_lr0p10_r300_20261008_171618
+      12.2 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed1_e5_b5_lr0p03_lam0p01_r150_20261008_172918
+      12.3 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed1_e5_b5_lr0p10_lam0p01_r150_20261008_165348
+      12.3 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed2_e5_b5_lr0p03_lam0p01_r150_20261008_172718
+      12.3 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed2_e5_b5_lr0p10_lam0p01_r150_20261008_165317
+      12.1 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed3_e5_b5_lr0p03_lam0p01_r150_20261008_174619
+      12.1 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed3_e5_b5_lr0p10_lam0p01_r150_20261008_171118
+      12.0 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed4_e5_b5_lr0p03_lam0p01_r150_20261008_174448
+      12.2 MiB  outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed4_e5_b5_lr0p10_lam0p01_r150_20261008_171018
+      16.1 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed1_e5_b10_lr0p10_lam0p01_r200_20261009_155413
+      16.1 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed2_e5_b10_lr0p10_lam0p01_r200_20261009_155313
+      16.0 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed3_e5_b10_lr0p10_lam0p01_r200_20261009_160243
+      16.2 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed4_e5_b10_lr0p10_lam0p01_r200_20261009_160143
+      16.1 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed0_e5_b5_lr0p10_lam0p01_r200_20261009_152742
+      16.1 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed1_e5_b5_lr0p10_lam0p01_r200_20261009_152743
+      16.1 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed2_e5_b5_lr0p10_lam0p01_r200_20261009_153613
+      16.0 MiB  outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed4_e5_b5_lr0p10_lam0p01_r200_20261009_154513
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed0_e5_b10_lr0p03_r400_20261009_114208
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed1_e5_b10_lr0p10_r400_20261009_143630
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed2_e5_b10_lr0p10_r400_20261009_143530
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed3_e5_b10_lr0p10_r400_20261009_145200
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed4_e5_b10_lr0p10_r400_20261009_145030
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed0_e5_b5_lr0p03_r400_20261009_114108
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed0_e5_b5_lr0p10_r400_20261009_115608
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed1_e5_b5_lr0p10_r400_20261009_140429
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed2_e5_b5_lr0p10_r400_20261009_140429
+      19.2 MiB  outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed4_e5_b5_lr0p10_r400_20261009_142000
+      89.7 MiB  outputs/run_stage16_paper00_fedavg_oldmlp_s10_n20_seed0_e5_b128_lr0p01_r400_20261009_112437
+      89.7 MiB  outputs/run_stage16_paper00_fedavg_oldmlp_s5_n20_seed0_e5_b128_lr0p01_r400_20261009_112437
+       8.2 MiB  outputs/plots
+
+PASS: PREVIEW ONLY — no files moved
+(dungndh) micl@oem-MS73-HB1-000:~/DungNDH/micl/bayesfl$ cd ~/DungNDH/micl/bayesfl
+
+set -o pipefail
+
+python scripts/bayesfl_same_ssd_organizer.py \
+  --move \
+  --confirm MOVE_121_ARCHIVE_CANDIDATES \
+  | tee ../bayesfl_same_ssd_move_log.txt
+
+==============================================================================
+BAYESFL SAME-SSD ORGANIZER — MOVE
+==============================================================================
+Original : /home/micl/DungNDH/micl/bayesfl
+Archive  : /home/micl/DungNDH/micl/bayesfl_historical_archive
+Manifest : /home/micl/DungNDH/micl/bayesfl_cleanup_DRY_RUN_20261026_194253.csv
+Protected folders verified: 42
+Historical folders total  : 121
+Still in repository       : 121
+Already in archive        : 0
+Archived logical size     : 8.613 GiB
+Unknown untouched folders : 0
+Free disk space gained    : 0 (same SSD)
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_225052
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_225051
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_131743
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_142348
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_000657
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_232954
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_053138
+MOVED: outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f0p5_seed0_e10_b32_lr001_budget150densefola_20260927_103154
+MOVED: outputs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f0p5_seed0_e10_b32_lr001_r150_20260923_075942
+MOVED: outputs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p01_r150_20260923_092834
+MOVED: outputs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f0p5_seed0_e10_b32_lr002_r150_20260923_063306
+MOVED: outputs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f0p5_seed0_e10_b32_lr002_lam0p1_r150_20260923_080058
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_053208
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_022548
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_073352
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_081355
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_011007
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_013239
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_090409
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_055248
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_104623
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_110454
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033234
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_kl_local_global_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_033434
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p02_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260929_123528
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_092135
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_140023
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_135522
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_055330
+MOVED: outputs/run_sparse_cifar_basiccnn_a0p01_f0p5_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260926_053358
+MOVED: outputs/run_cifar_basiccnn_a0p01_official_fedavg_n20_f1_seed0_e10_b32_lr001_r150_20260922_220548
+MOVED: outputs/run_cifar_basiccnn_a0p01_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20260923_044012
+MOVED: outputs/run_cifar_basiccnn_a0p1_official_fedavg_n20_f1_seed0_e10_b32_lr002_r150_20260922_155235
+MOVED: outputs/run_cifar_basiccnn_a0p1_official_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p1_r150_20260923_030536
+MOVED: outputs/run_budgetmatch_mnist_fixed1c_s10_fedavg_n100_seed0_e10_b32_lr001_budget150densefola_20260927_133154
+MOVED: outputs/run_mnist_a0p01_official_fedavg_n100_s10_f0p016667_seed0_e10_b32_lr001_r150_20260922_191028
+MOVED: outputs/run_mnist_a0p01_official_fedavg_n100_s75_f0p125_seed0_e10_b32_lr001_r150_20260922_155235
+MOVED: outputs/run_mnist_a0p01_official_fola_n100_s10_f0p016667_seed0_e10_b32_lr001_lam0p01_r150_20260922_202723
+MOVED: outputs/run_mnist_a0p01_official_fola_n100_s75_f0p125_seed0_e10_b32_lr001_lam0p01_r150_20260922_171159
+MOVED: outputs/run_mnist_fixed1c_s10_official_fedavg_n100_seed0_e10_b32_lr001_r150_20260923_131518
+MOVED: outputs/run_mnist_fixed1c_s10_official_fola_n100_seed0_e10_b32_lr001_lam0p01_r150_20260923_131518
+MOVED: outputs/run_mnist_stage17_oldmlp_fixed1c_s5_n20_fola_seed0_e5_b128_lr0p01_lam0p01_r200_20261009_123003
+MOVED: outputs/run_multicast_mnist_fixed1c_s10_fedavg_mlp256x5_n100_seed0_e10_b32_lr001_r240_budget120densefola_20260930_014849
+MOVED: outputs/run_multicast_mnist_fixed1c_s10_fola_mlp256x5_n100_seed0_e10_b32_lr001_lam0p01_r120_20260930_014849
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed0_fedavg_clip_r400_20261010_065858
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed0_fedavg_noclip_r400_20261010_051927
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed0_fola_clip_r200_20261010_042926
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed0_fola_noclip_r200_20261010_033925
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed1_fedavg_clip_r400_20261010_120534
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed1_fedavg_noclip_r400_20261010_102532
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed1_fola_clip_r200_20261010_093531
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed1_fola_noclip_r200_20261010_084430
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed2_fedavg_clip_r400_20261010_115804
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed2_fedavg_noclip_r400_20261010_101832
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed2_fola_clip_r200_20261010_092831
+MOVED: outputs/run_mnist_stage20_n100_cnn_s10_seed2_fola_noclip_r200_20261010_083800
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed0_fedavg_clip_r400_20261009_210018
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed0_fedavg_noclip_r400_20261009_191916
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed0_fola_clip_r200_20261009_182915
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed0_fola_noclip_r200_20261009_173844
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed1_fedavg_clip_r400_20261009_205847
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed1_fedavg_noclip_r400_20261009_191816
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed1_fola_clip_r200_20261009_182845
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed1_fola_noclip_r200_20261009_173844
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed2_fedavg_clip_r400_20261010_020153
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed2_fedavg_noclip_r400_20261010_002121
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed2_fola_clip_r200_20261009_233120
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed2_fola_noclip_r200_20261009_224119
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed3_fedavg_clip_r400_20261010_015923
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed3_fedavg_noclip_r400_20261010_001851
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed3_fola_clip_r200_20261009_232850
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed3_fola_noclip_r200_20261009_223919
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed4_fedavg_clip_r400_20261010_070229
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed4_fedavg_noclip_r400_20261010_052226
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed4_fola_clip_r200_20261010_043256
+MOVED: outputs/run_mnist_stage20_n100_cnn_s5_seed4_fola_noclip_r200_20261010_034325
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed1_e5_b10_lr0p10_r300_20261008_162417
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed2_e5_b10_lr0p10_r300_20261008_162347
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed3_e5_b10_lr0p10_r300_20261008_164217
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fedavg_seed4_e5_b10_lr0p10_r300_20261008_164216
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed1_e5_b10_lr0p10_lam0p01_r150_20261008_161746
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed2_e5_b10_lr0p10_lam0p01_r150_20261008_161746
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed3_e5_b10_lr0p10_lam0p01_r150_20261008_163547
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s10_n20_fola_seed4_e5_b10_lr0p10_lam0p01_r150_20261008_163546
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed1_e5_b5_lr0p03_r300_20261008_173518
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed1_e5_b5_lr0p10_r300_20261008_165947
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed2_e5_b5_lr0p03_r300_20261008_173318
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed2_e5_b5_lr0p10_r300_20261008_165917
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p03_r300_20261008_175219
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed4_e5_b5_lr0p03_r300_20261008_175119
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed4_e5_b5_lr0p10_r300_20261008_171618
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed1_e5_b5_lr0p03_lam0p01_r150_20261008_172918
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed1_e5_b5_lr0p10_lam0p01_r150_20261008_165348
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed2_e5_b5_lr0p03_lam0p01_r150_20261008_172718
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed2_e5_b5_lr0p10_lam0p01_r150_20261008_165317
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed3_e5_b5_lr0p03_lam0p01_r150_20261008_174619
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed3_e5_b5_lr0p10_lam0p01_r150_20261008_171118
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed4_e5_b5_lr0p03_lam0p01_r150_20261008_174448
+MOVED: outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fola_seed4_e5_b5_lr0p10_lam0p01_r150_20261008_171018
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed1_e5_b10_lr0p10_lam0p01_r200_20261009_155413
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed2_e5_b10_lr0p10_lam0p01_r200_20261009_155313
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed3_e5_b10_lr0p10_lam0p01_r200_20261009_160243
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed4_e5_b10_lr0p10_lam0p01_r200_20261009_160143
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed0_e5_b5_lr0p10_lam0p01_r200_20261009_152742
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed1_e5_b5_lr0p10_lam0p01_r200_20261009_152743
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed2_e5_b5_lr0p10_lam0p01_r200_20261009_153613
+MOVED: outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed4_e5_b5_lr0p10_lam0p01_r200_20261009_154513
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed0_e5_b10_lr0p03_r400_20261009_114208
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed1_e5_b10_lr0p10_r400_20261009_143630
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed2_e5_b10_lr0p10_r400_20261009_143530
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed3_e5_b10_lr0p10_r400_20261009_145200
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed4_e5_b10_lr0p10_r400_20261009_145030
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed0_e5_b5_lr0p03_r400_20261009_114108
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed0_e5_b5_lr0p10_r400_20261009_115608
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed1_e5_b5_lr0p10_r400_20261009_140429
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed2_e5_b5_lr0p10_r400_20261009_140429
+MOVED: outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed4_e5_b5_lr0p10_r400_20261009_142000
+MOVED: outputs/run_stage16_paper00_fedavg_oldmlp_s10_n20_seed0_e5_b128_lr0p01_r400_20261009_112437
+MOVED: outputs/run_stage16_paper00_fedavg_oldmlp_s5_n20_seed0_e5_b128_lr0p01_r400_20261009_112437
+MOVED: outputs/plots
+
+PASS: MOVE + VERIFICATION COMPLETE
+(dungndh) micl@oem-MS73-HB1-000:~/DungNDH/micl/bayesfl$ cd ~/DungNDH/micl/bayesfl
+
+python scripts/bayesfl_same_ssd_organizer.py --verify
+
+==============================================================================
+BAYESFL SAME-SSD ORGANIZER — VERIFY
+==============================================================================
+Original : /home/micl/DungNDH/micl/bayesfl
+Archive  : /home/micl/DungNDH/micl/bayesfl_historical_archive
+Manifest : /home/micl/DungNDH/micl/bayesfl_cleanup_DRY_RUN_20261026_194253.csv
+Protected folders verified: 42
+Historical folders total  : 121
+Still in repository       : 0
+Already in archive        : 121
+Archived logical size     : 8.613 GiB
+Unknown untouched folders : 0
+Free disk space gained    : 0 (same SSD)
+
+PASS: All archive folders validated; protected originals retained
+(dungndh) micl@oem-MS73-HB1-000:~/DungNDH/micl/bayesfl$ du -sh \
+  ~/DungNDH/micl/bayesfl \
+  ~/DungNDH/micl/bayesfl_historical_archive
+
+df -h /
+6.3G    /home/micl/DungNDH/micl/bayesfl
+8.8G    /home/micl/DungNDH/micl/bayesfl_historical_archive
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2  938G  654G  237G  74% /

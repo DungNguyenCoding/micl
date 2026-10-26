@@ -1,0 +1,34 @@
+VERIFIED CIFAR-10 SPARSE RESULTS - MATCHED MULTICAST BYTES
+=================================================================
+N=20, alpha=0.01, local fraction=1.0, seed=0, BasicCNN (878538 params)
+Local E=10, B=32; FOLA LR=0.02 cosine horizon400; FedAvg LR=0.01 constant
+Both historical CIFAR baselines use gradient clipping norm=10.
+Equal communication budget: 17,711,326,080 bytes = 17.711326080 GB
+Dense FOLA R120: 51.240% (bytes=17,711,326,080)
+Dense FedAvg R240: 46.040% (bytes=17,711,326,080)
+Equal-byte Dense FOLA - FedAvg: +5.200 pp
+
+Keep   Sparsity   Rounds   Comm GB      KL acc%   Random acc%   KL-Random pp   KL-Dense pp
+0.75         25%      154    17.655993      51.830       51.170         +0.660        +0.590
+0.50         50%      222    17.650710      52.340       48.310         +4.030        +1.100
+0.25         75%      399    17.702139      56.100       44.580        +11.520        +4.860
+0.10         90%      760    17.693791      52.190       38.990        +13.200        +0.950
+0.05         95%     1089    17.699500      53.270       32.140        +21.130        +2.030
+
+Output run directories:
+Dense FOLA: /home/micl/DungNDH/micl/bayesfl/outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20261010_195905
+FedAvg: /home/micl/DungNDH/micl/bayesfl/outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola_20260927_103154
+KL keep 0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221
+Random keep 0.75: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_032226
+KL keep 0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221
+Random keep 0.50: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_043532
+KL keep 0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_090138
+Random keep 0.25: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_194658
+KL keep 0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_071300
+Random keep 0.10: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_192526
+KL keep 0.05: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202
+Random keep 0.05: /home/micl/DungNDH/micl/bayesfl/outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_024119
+
+All rows were verified against cumulative_all_array_bytes.
+Accuracies use raw checkpoint metrics, not smoothed plot curves.
+This is a selected seed, not a multiseed confidence interval.

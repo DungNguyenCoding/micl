@@ -1,78 +1,76 @@
-# Algorithm notes
+# Algorithm and implementation contract — current interpretation
 
-This repository intentionally separates three algorithms:
+Scope: FedAvg, full-posterior FOLA (figure label **Full-posterior BayesFL**), and post-local-training sparse FOLA (figure label **FedKLS** for KL(global || local)). BBB and `online_recurrence` are retained alternatives, not current paper experiments. This is a description of the documented implementation, not independent certification of exact Paper-00 or Paper-02 reproduction.
 
-1. **FedAvg**: deterministic local SGD and sample-weighted parameter averaging.
-2. **BBB**: Bayes by Backprop with diagonal Gaussian variational weights and the two-component zero-mean Gaussian scale-mixture prior from Blundell et al. (2015).
-3. **FOLA**: the online diagonal Laplace method, prior iteration, and Gaussian-product aggregation from Liu et al. (2023/2024).
+## FedAvg
 
-## Bayes by Backprop
+Clients start from the broadcast deterministic network, minimize mean cross-entropy with local SGD, then the server averages parameters with `pi_k=n_k/sum_j n_j`. n_k is assigned data count, not E*n_k. Optional clipping is part of the experimental configuration. Stage-16 is the later strict/unclipped control; Stage-23 is the selected **clipped** MNIST comparison. Do not call every run strict Paper-00 just because the method field is `fedavg`.
 
-For every Bayesian weight tensor, `bayesian-torch` supplies trainable `mu` and `rho`, with
+## FOLA `paper_reference`
 
-```
-sigma = softplus(rho)
-w = mu + sigma * epsilon, epsilon ~ N(0, I)
-```
+An ordinary deterministic network stores the posterior mean; raw float32 omega/precision arrays accompany its named parameters. The inspected code and source handoff describe the following round-t update (t starts at 1):
 
-The repository does **not** use `bayesian_torch.models.dnn_to_bnn.get_kl_loss` for BBB because the requested prior is a Gaussian scale mixture, not a single Gaussian. Instead it reconstructs the exact last sampled weight from the layer's epsilon buffer and evaluates
-
-```
-log q(w | mu, sigma) - log[pi N(w;0,sigma1^2) + (1-pi) N(w;0,sigma2^2)]
-```
-
-with `logaddexp` for stability.
-
-The paper's equal-minibatch scheme is preserved through `beta_i = 1/M`. The project-specific configuration additionally applies `kl_weight = 1/d` when `kl_weight: null`. For CIFAR-10, `d=851,514`, so this resolves to approximately `1.17438e-6`. This `1/d` factor is a project normalization layered on top of BBB; it is not the equal-minibatch rule itself.
-
-### Federated aggregation caveat
-
-The original BBB paper is not a federated-learning paper and does not define a server aggregation rule. The default `bbb.aggregation: gaussian_product` is therefore a **project extension**: each client's diagonal Gaussian variational posterior is combined with the same sample-ratio-tempered Gaussian-product equation used in the FOLA paper. `bbb.aggregation: fedavg_variational` is included as an ablation that directly averages all variational parameters.
-
-## Federated Online Laplace Approximation
-
-The client objective is
-
-```
-L = L_task + lambda * 0.5 * sum_j precision_global[j] * (theta[j]-mu_global[j])^2
+```text
+mu_local starts from mu_global
+omega_local starts from omega_global
+For each minibatch b across all E epochs:
+    task_loss = mean cross_entropy
+    g_task = gradient(task_loss)
+    omega_local += (actual_batch_size/client_size) * g_task**2
+    prior_loss = (0.5/t) * sum(omega_global*(theta-mu_global)**2)
+    objective = task_loss + prior_lambda*prior_loss
+    backprop objective; optionally clip objective gradient; SGD step
 ```
 
-and the diagonal task curvature is accumulated online from squared task gradients at every optimization step. The local precision is then
+The task gradient-square accumulator is computed before gradient clipping. It is **not** an explicitly computed per-example Fisher or Hessian. Do not replace the accumulator with the separate `online_recurrence` formula or apply that branch's variance-floor semantics to these runs.
 
-```
-precision_local = (1/r) * fisher_local + ((r-1)/r) * precision_global
-```
+For the documented paper-reference reducer:
 
-for one-based round `r`. The implementation uses squared **minibatch** task gradients, matching the operational structure of Algorithm 1 and avoiding the prohibitive per-example Jacobian materialization of a large ResNet.
-
-Server aggregation is the diagonal form of the paper's multivariate Gaussian product:
-
-```
-precision_global = sum_k alpha_k * precision_k
-mu_global = sum_k alpha_k * precision_k * mu_k / precision_global
-alpha_k = |D_k| / sum_j |D_j|
+```text
+omega_new = sum_k pi_k*omega_effective_k
+mu_new = sum_k pi_k*omega_effective_k*mu_effective_k / (omega_new+epsilon)
 ```
 
-## Variance floor
+The epsilon is operational, not merely a plotting safeguard. Float64 accumulation and float32 transport are documented. Initialization and precision settings belong to the selected YAML, not a universal paper default. New source modifications must first inspect the current code and regression tests.
 
-The requested stabilization rule is implemented for both Bayesian methods but is not presented as part of either paper:
+## FedKLS / sparse random protocol
 
+A client snapshots the incoming global posterior, runs the complete local fit, and selects exactly `ceil(r*d)` coordinates over the whole model. Selection does not prune/freezes weights, train a subnet, add dropout rescaling, or apply error feedback.
+
+For valid positive Gaussian variances:
+
+```text
+KL(global || local) = .5*[log(v_local/v_global)
+                         + (v_global+(mu_local-mu_global)**2)/v_local - 1]
 ```
-sigma_local >= variance_floor_ratio * sigma_global
+
+Equivalently, with positive precisions tau:
+
+```text
+.5*[log(tau_global/tau_local) + tau_local/tau_global
+    + tau_local*(mu_global-mu_local)**2 - 1]
 ```
 
-For FOLA this is equivalent to
+The global distribution is the **pre-local-training round broadcast**; the local distribution is the **post-fit posterior**. `kl_local_global` reverses the entire KL argument order and is a historical ablation, not the current proposed selector. Ties in the documented selector use lower global coordinate indices.
 
+Random selection is uniform without replacement at the same exact coordinate count, with independent seed/client/true-round mask randomness; it pays the same bitmap bytes. A seed-derived random mask does not remove bitmap cost in this protocol.
+
+Each sparse upload contains three arrays:
+
+```text
+uint8[ceil(d/8)] bitmap, little bit order
+float32[m] selected means, ascending global indices
+float32[m] selected raw precisions, same order
 ```
-precision_local <= precision_global / variance_floor_ratio^2
-```
 
-The fraction of affected parameters is logged each round.
+Scores are not uploaded. The server validates the packet and reconstructs omitted coordinates from the exact broadcast. It must not read hidden full local posteriors. Sample weights are normalized once across accepted clients, not once per coordinate. After the common dense reducer, coordinates omitted by **every** participating client are restored exactly to broadcast mean and precision; touched coordinates retain baseline epsilon behavior. The documented failure policy rejects incomplete/invalid rounds rather than silently changing the client set.
 
-## CIFAR-10 model dimension
+## Zero precision and score-only floors
 
-The CIFAR model is a 6n+2 ResNet-56 (`n=9`) with GroupNorm-8. All convolution weights plus the final linear weight and bias are Bayesian under BBB; GroupNorm affine parameters remain deterministic. With 1x1 projection shortcuts at the two stage transitions, the Bayesian random-variable count is exactly **851,514**. A unit test enforces this.
+CIFAR's documented initialization is raw omega=0. A zero-precision state is not a proper finite-variance Gaussian. `floor_for_score` uses a positive surrogate only to calculate KL scores; it must not silently floor the trained, transmitted, reconstructed or aggregated raw omega. `strict` rejects nonpositive scoring precision. Read and preserve the saved `precision_policy` and `score_precision_floor`; do not infer that floor policies calibrate uncertainty.
 
-## Source-vs-project choices
+## Boundaries
 
-The online-Laplace paper uses an MLP for MNIST and a smaller CNN for CIFAR-10. This repository follows the user's requested `ResNet56 + GroupNorm-8`, 100 clients, sparse CIFAR partition, disabled augmentation, and cosine LR schedule instead. Therefore the implementation is algorithm-derived from the paper but is not a reproduction of its CIFAR experiment table.
+The current study does not implement a physical wireless channel, analog AirComp, adaptive client keep ratios, sparse downlink, secure aggregation, privacy noise, quantization or permanent model pruning. Future wireless development is a proposed next research direction, not an existing feature. Reverse KL, BBB and alternate FOLA modes remain useful research controls but must not be relabeled as the final experiment.
+
+Current byte model: [COMMUNICATION_ACCOUNTING.md](COMMUNICATION_ACCOUNTING.md). Original explanations, including obsolete formulas, are preserved byte-for-byte in [history](history/README.md).

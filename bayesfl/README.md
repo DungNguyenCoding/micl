@@ -1,27 +1,37 @@
-# BayesFL — sparse posterior communication implementation
+# BayesFL / FedKLS
 
-The uploaded FedAvg/FOLA baseline has been extended with model-wide packed-bitmap posterior communication, both KL argument orders, an exact-size random control, communication-budget-aware execution, cumulative accuracy-versus-byte logging, and clean completed-round resume.
+**Project documentation updated: 2026-10-26.** Research code for dense FedAvg, full-posterior FOLA/BayesFL and KL-guided sparse posterior uplinks. The current final figures use MNIST CNN s10/N20/seed0 and CIFAR-10 BasicCNN alpha=.01/full-data/N20/seed0 at **dense FOLA R150 multicast communication budgets**.
 
-**Start here: [SPARSE_README.md](SPARSE_README.md).** It contains runnable commands, paired MNIST/CIFAR configurations, terminal-only result summaries, plotting, and the important precision/zero-omega policies.
+## Read first
 
-- [Implementation report](IMPLEMENTATION_REPORT.md): code audit, concrete changes, baseline preservation, and known boundaries.
-- [Validation report](VALIDATION_SPARSE.md): checks actually run and optional dependencies not exercised.
-- [Original supplied source handoff](docs/BASELINE_HANDOFF_README.md): original locked experiments and historical results, not new sparse results.
-- [Implementation guideline](docs/SPARSE_IMPLEMENTATION_GUIDELINE.md): requested extension specification.
-- [Old README from the source archive](docs/BASELINE_ARCHIVE_README.md): historical documentation, not the new sparse contract.
+- [Current project entry point](docs/START_HERE.md)
+- [New-chat handoff](docs/CHAT_HANDOFF.md)
+- [Locked simulation settings](docs/LOCKED_EXPERIMENTS.md)
+- [Command rules and execution preferences](docs/COMMAND_RULES.md)
+- [Full documentation index](docs/README.md)
 
-## Quick validation
-
-Use the established Python 3.10 research environment and original dependencies:
+## Regenerate the chosen figures
 
 ```bash
-python -m pip install -e . --no-deps
-python -m pytest -q
-python -m pytest -q tests/test_sparse_flower_integration.py
+cd ~/DungNDH/micl/bayesfl || exit 1
+PYTHONPATH="$PWD/src${PYTHONPATH:+:$PYTHONPATH}" \
+/home/micl/anaconda3/envs/dungndh/bin/python \
+  scripts/plot_ieee_multicast_results_mnist_s10_stage22.py \
+  --mnist-fedavg clipped
 ```
 
-A skipped Flower integration module does not validate Flower/Ray execution. The available authoring environment produced **110 passed, 5 dependency-related skip reports** using a different CPU/Python stack; details are in the validation report. No new MNIST/CIFAR performance results are claimed.
+This reads existing result CSVs; it does not retrain. Expected current filenames are `plots/Acc_Com.{pdf,png}` and `plots/Acc_KeepRatio.{pdf,png}`. Code alone is not sufficient on another PC: transfer the required metrics at their expected paths. See [data/Git policy](docs/DATA_AND_GIT.md).
 
-The original 398 experiment YAMLs, local training modules, models, partition generation code, and dependency manifests are preserved. The 10 new paired configs are under `scripts/configs/bayesian_sparse/`.
+## Important distinctions
 
-**Critical representation choice:** this baseline stores raw float32 precision/omega, not variance. Sparse and dense FOLA retain that wire representation. Zero-initialized CIFAR uses an explicit score-only positive-precision surrogate; local training and transmitted omega are not floored. See the sparse README before running or interpreting those experiments.
+The selected MNIST dense FOLA and sparse runs are **unclipped**; its primary FedAvg is the recovered **clipped Stage23** run. CIFAR uses clipped methods but different FOLA/FedAvg LR schedules. These choices must be disclosed, not hidden by generic figure labels.
+
+Sparsity applies to post-fit uploads, not local network training. Raw precision is transmitted with means. The downlink is a modeled single multicast broadcast. No physical wireless/AirComp simulation, adaptive ratio or compute-saving claim is implied.
+
+The [current results page](docs/RESULTS_AND_PLOTTING.md) separates known MNIST endpoints, older CIFAR R120 numbers and still-unextracted CIFAR R150 accuracies. The [evidence page](docs/EVIDENCE_AND_GAPS.md) distinguishes reported runs from fresh code/test validation.
+
+## Preservation
+
+Runtime code, configs, outputs and dependency files are not changed by this docs refresh. The original uploaded docs are preserved in [docs/history](docs/history/README.md). Root `CHANGE_MANIFEST.json` and `PACKAGE_MANIFEST.txt` are **historical release records**, not a current inventory. The new `DOCS_UPDATE_MANIFEST.json` covers the documentation package only.
+
+Repository organization: Stage2 archived121 historical folders while retaining42 protected folders; Stage3B completion of the13-file historical cleanup was user-reported. Do not delete or relocate additional configs/scripts without dependency review. See [cleanup state](docs/CLEANUP_STATE.md).

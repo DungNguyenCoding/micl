@@ -1,0 +1,1044 @@
+{
+  "schema": "bayesfl_documentation_registry_v1",
+  "as_of": "2026-10-26",
+  "not_an_executable_training_config": true,
+  "repository": "/home/micl/DungNDH/micl/bayesfl",
+  "archive": "/home/micl/DungNDH/micl/bayesfl_historical_archive",
+  "source_of_paths": "2026-10-26 cleanup CSV, Stage-3 registry, and user terminal preflight",
+  "primary_figure_run_count": 24,
+  "protected_paper_category_run_count": 25,
+  "protected_folder_count": 42,
+  "profiles": {
+    "mnist_s10": {
+      "d": 80202,
+      "participating_clients": 20,
+      "dense_round": 150,
+      "fedavg_round": 300,
+      "budget_bytes": 2021090400,
+      "budget_gb": 2.0210904,
+      "sparse_targets": [
+        {
+          "keep_ratio": 0.75,
+          "selected_coordinates": 60152,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 10466456,
+          "target_round": 193,
+          "endpoint_bytes": 2020026008,
+          "per_round_saving_percent": 22.320723506479467
+        },
+        {
+          "keep_ratio": 0.5,
+          "selected_coordinates": 40101,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 7258296,
+          "target_round": 278,
+          "endpoint_bytes": 2017806288,
+          "per_round_saving_percent": 46.13084105490779
+        },
+        {
+          "keep_ratio": 0.25,
+          "selected_coordinates": 20051,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 4050296,
+          "target_round": 498,
+          "endpoint_bytes": 2017047408,
+          "per_round_saving_percent": 69.9397711255271
+        },
+        {
+          "keep_ratio": 0.1,
+          "selected_coordinates": 8021,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 2125496,
+          "target_round": 950,
+          "endpoint_bytes": 2019221200,
+          "per_round_saving_percent": 84.22512916789867
+        },
+        {
+          "keep_ratio": 0.05,
+          "selected_coordinates": 4011,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 1483896,
+          "target_round": 1362,
+          "endpoint_bytes": 2021066352,
+          "per_round_saving_percent": 88.98691518202253
+        }
+      ]
+    },
+    "cifar10_a0p01_f1": {
+      "d": 878538,
+      "participating_clients": 20,
+      "dense_round": 150,
+      "fedavg_round": 300,
+      "budget_bytes": 22139157600,
+      "budget_gb": 22.1391576,
+      "sparse_targets": [
+        {
+          "keep_ratio": 0.75,
+          "selected_coordinates": 658904,
+          "bitmap_bytes": 109818,
+          "per_round_bytes": 114649304,
+          "target_round": 193,
+          "endpoint_bytes": 22127315672,
+          "per_round_saving_percent": 22.321364205835902
+        },
+        {
+          "keep_ratio": 0.5,
+          "selected_coordinates": 439269,
+          "bitmap_bytes": 109818,
+          "per_round_bytes": 79507704,
+          "target_round": 278,
+          "endpoint_bytes": 22103141712,
+          "per_round_saving_percent": 46.13094221796407
+        },
+        {
+          "keep_ratio": 0.25,
+          "selected_coordinates": 219635,
+          "bitmap_bytes": 109818,
+          "per_round_bytes": 44366264,
+          "target_round": 499,
+          "endpoint_bytes": 22138765736,
+          "per_round_saving_percent": 69.94041182488353
+        },
+        {
+          "keep_ratio": 0.1,
+          "selected_coordinates": 87854,
+          "bitmap_bytes": 109818,
+          "per_round_bytes": 23281304,
+          "target_round": 950,
+          "endpoint_bytes": 22117238800,
+          "per_round_saving_percent": 84.22615863216042
+        },
+        {
+          "keep_ratio": 0.05,
+          "selected_coordinates": 43927,
+          "bitmap_bytes": 109818,
+          "per_round_bytes": 16252984,
+          "target_round": 1362,
+          "endpoint_bytes": 22136564208,
+          "per_round_saving_percent": 88.98807423458605
+        }
+      ]
+    },
+    "mnist_s5_alternative": {
+      "d": 80202,
+      "participating_clients": 20,
+      "dense_round": 150,
+      "fedavg_round": 300,
+      "budget_bytes": 2021090400,
+      "budget_gb": 2.0210904,
+      "sparse_targets": [
+        {
+          "keep_ratio": 0.75,
+          "selected_coordinates": 60152,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 10466456,
+          "target_round": 193,
+          "endpoint_bytes": 2020026008,
+          "per_round_saving_percent": 22.320723506479467
+        },
+        {
+          "keep_ratio": 0.5,
+          "selected_coordinates": 40101,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 7258296,
+          "target_round": 278,
+          "endpoint_bytes": 2017806288,
+          "per_round_saving_percent": 46.13084105490779
+        },
+        {
+          "keep_ratio": 0.25,
+          "selected_coordinates": 20051,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 4050296,
+          "target_round": 498,
+          "endpoint_bytes": 2017047408,
+          "per_round_saving_percent": 69.9397711255271
+        },
+        {
+          "keep_ratio": 0.1,
+          "selected_coordinates": 8021,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 2125496,
+          "target_round": 950,
+          "endpoint_bytes": 2019221200,
+          "per_round_saving_percent": 84.22512916789867
+        },
+        {
+          "keep_ratio": 0.05,
+          "selected_coordinates": 4011,
+          "bitmap_bytes": 10026,
+          "per_round_bytes": 1483896,
+          "target_round": 1362,
+          "endpoint_bytes": 2021066352,
+          "per_round_saving_percent": 88.98691518202253
+        }
+      ]
+    }
+  },
+  "runs": [
+    {
+      "id": "n100_incomplete_resume_sensitive_seed3",
+      "profile": "n100_incomplete",
+      "role": "resume_sensitive",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage20_n100_cnn_s10_seed3_fola_noclip_r200_20261010_134606",
+      "run_name": "run_mnist_stage20_n100_cnn_s10_seed3_fola_noclip_r200",
+      "plot_target_round": null,
+      "last_metric_round_in_cleanup_report": 152,
+      "last_checkpoint_round_in_cleanup_report": 152,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage20_n100_cnn/run_mnist_stage20_n100_cnn_s10_seed3_fola_noclip_r200.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "n100_incomplete_resume_sensitive_seed4",
+      "profile": "n100_incomplete",
+      "role": "resume_sensitive",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage20_n100_cnn_s10_seed4_fola_noclip_r200_20261010_133836",
+      "run_name": "run_mnist_stage20_n100_cnn_s10_seed4_fola_noclip_r200",
+      "plot_target_round": null,
+      "last_metric_round_in_cleanup_report": 172,
+      "last_checkpoint_round_in_cleanup_report": 172,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage20_n100_cnn/run_mnist_stage20_n100_cnn_s10_seed4_fola_noclip_r200.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "mnist_s5_alternative_fedavg_baseline",
+      "profile": "mnist_s5_alternative",
+      "role": "fedavg_baseline",
+      "method": "fedavg",
+      "keep_ratio": null,
+      "grad_clip_norm": 10.0,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p10_r300_20261008_171748",
+      "run_name": "run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p10_r300",
+      "plot_target_round": 300,
+      "last_metric_round_in_cleanup_report": 400,
+      "last_checkpoint_round_in_cleanup_report": 400,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage15_cnn_multiseed/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p10_r300.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 83.55,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_dense_fola",
+      "profile": "mnist_s5_alternative",
+      "role": "dense_fola",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed3_e5_b5_lr0p10_lam0p01_r200_20261009_153613",
+      "run_name": "run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed3_e5_b5_lr0p10_lam0p01_r200",
+      "plot_target_round": 150,
+      "last_metric_round_in_cleanup_report": 200,
+      "last_checkpoint_round_in_cleanup_report": 200,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage18_fola_noclip_cnn/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s5_n20_seed3_e5_b5_lr0p10_lam0p01_r200.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 84.85,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_kl_sparse_0.05",
+      "profile": "mnist_s5_alternative",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p05_budget150_r1362_20261010_165629",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p05_budget150_r1362",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p05_budget150_r1362.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 85.06,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_kl_sparse_0.1",
+      "profile": "mnist_s5_alternative",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p10_budget150_r950_20261010_153027",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p10_budget150_r950",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p10_budget150_r950.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 83.94,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_kl_sparse_0.25",
+      "profile": "mnist_s5_alternative",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p25_budget150_r498_20261010_145857",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p25_budget150_r498",
+      "plot_target_round": 498,
+      "last_metric_round_in_cleanup_report": 498,
+      "last_checkpoint_round_in_cleanup_report": 498,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p25_budget150_r498.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 84.38,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_kl_sparse_0.5",
+      "profile": "mnist_s5_alternative",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p50_budget150_r278_20261010_144426",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p50_budget150_r278",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p50_budget150_r278.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 84.66,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_kl_sparse_0.75",
+      "profile": "mnist_s5_alternative",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p75_budget150_r193_20261010_143526",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p75_budget150_r193",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_kl_global_local_keep0p75_budget150_r193.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 84.92,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_random_sparse_0.05",
+      "profile": "mnist_s5_alternative",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p05_budget150_r1362_20261010_165559",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p05_budget150_r1362",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p05_budget150_r1362.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 82.29,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_random_sparse_0.1",
+      "profile": "mnist_s5_alternative",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p10_budget150_r950_20261010_153027",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p10_budget150_r950",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p10_budget150_r950.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 82.13,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_random_sparse_0.25",
+      "profile": "mnist_s5_alternative",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p25_budget150_r498_20261010_145826",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p25_budget150_r498",
+      "plot_target_round": 498,
+      "last_metric_round_in_cleanup_report": 498,
+      "last_checkpoint_round_in_cleanup_report": 498,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p25_budget150_r498.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 82.53,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_random_sparse_0.5",
+      "profile": "mnist_s5_alternative",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p50_budget150_r278_20261010_144426",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p50_budget150_r278",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p50_budget150_r278.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 83.85,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_random_sparse_0.75",
+      "profile": "mnist_s5_alternative",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p75_budget150_r193_20261010_143526",
+      "run_name": "run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p75_budget150_r193",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage21_sparse_cnn_s5_seed3/run_mnist_stage21_cnn_s5_n20_seed3_fola_random_keep0p75_budget150_r193.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 83.73,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s5_alternative_fedavg_unclipped_reference",
+      "profile": "mnist_s5_alternative",
+      "role": "fedavg_unclipped_reference",
+      "method": "fedavg",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed3_e5_b5_lr0p10_r400_20261009_142030",
+      "run_name": "run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed3_e5_b5_lr0p10_r400",
+      "plot_target_round": 300,
+      "last_metric_round_in_cleanup_report": 400,
+      "last_checkpoint_round_in_cleanup_report": 400,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage16_paper00_fedavg/run_stage16_paper00_fedavg_cnn16_32_s5_n20_seed3_e5_b5_lr0p10_r400.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 83.78,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_dense_fola_clipped_ablation",
+      "profile": "mnist_s10",
+      "role": "dense_fola_clipped_ablation",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": 10.0,
+      "primary_figure": false,
+      "relative_output": "outputs/run_mnist_stage24_cnn16_32_fixed1c_s10_n20_fola_clip_seed0_e5_b10_lr0p10_lam0p01_r200_20261011_094131",
+      "run_name": "run_mnist_stage24_cnn16_32_fixed1c_s10_n20_fola_clip_seed0_e5_b10_lr0p10_lam0p01_r200",
+      "plot_target_round": 150,
+      "last_metric_round_in_cleanup_report": 200,
+      "last_checkpoint_round_in_cleanup_report": 200,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage24_recover_clipped_fola_s10/run_mnist_stage24_cnn16_32_fixed1c_s10_n20_fola_clip_seed0_e5_b10_lr0p10_lam0p01_r200.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_fedavg_baseline",
+      "profile": "cifar10_a0p01_f1",
+      "role": "fedavg_baseline",
+      "method": "fedavg",
+      "keep_ratio": null,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola_20260927_103154",
+      "run_name": "run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola",
+      "plot_target_round": 300,
+      "last_metric_round_in_cleanup_report": 300,
+      "last_checkpoint_round_in_cleanup_report": 300,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/cifar_plot_recovery/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola.yaml",
+        "scripts/configs/comm_budget_extension_seed0/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_dense_fola",
+      "profile": "cifar10_a0p01_f1",
+      "role": "dense_fola",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20261010_195905",
+      "run_name": "run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150",
+      "plot_target_round": 150,
+      "last_metric_round_in_cleanup_report": 150,
+      "last_checkpoint_round_in_cleanup_report": 150,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/cifar_plot_recovery/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150.yaml",
+        "scripts/configs/confirm_newsrc_dense/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "mnist_s10_dense_fola",
+      "profile": "mnist_s10",
+      "role": "dense_fola",
+      "method": "fola",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200_20261009_154443",
+      "run_name": "run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200",
+      "plot_target_round": 150,
+      "last_metric_round_in_cleanup_report": 200,
+      "last_checkpoint_round_in_cleanup_report": 200,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage18_fola_noclip_cnn/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 89.44,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_kl_sparse_0.05",
+      "profile": "mnist_s10",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p05_budget150_r1362_20261011_023714",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p05_budget150_r1362",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p05_budget150_r1362.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.58,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_kl_sparse_0.1",
+      "profile": "mnist_s10",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p10_budget150_r950_20261011_011043",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p10_budget150_r950",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p10_budget150_r950.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.44,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_kl_sparse_0.25",
+      "profile": "mnist_s10",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p25_budget150_r498_20261011_003912",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p25_budget150_r498",
+      "plot_target_round": 498,
+      "last_metric_round_in_cleanup_report": 498,
+      "last_checkpoint_round_in_cleanup_report": 498,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p25_budget150_r498.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 89.01,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_kl_sparse_0.5",
+      "profile": "mnist_s10",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p50_budget150_r278_20261011_002442",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p50_budget150_r278",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p50_budget150_r278.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.19,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_kl_sparse_0.75",
+      "profile": "mnist_s10",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p75_budget150_r193_20261011_001511",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p75_budget150_r193",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p75_budget150_r193.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.86,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_random_sparse_0.05",
+      "profile": "mnist_s10",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p05_budget150_r1362_20261011_023914",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p05_budget150_r1362",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p05_budget150_r1362.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 86.07,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_random_sparse_0.1",
+      "profile": "mnist_s10",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p10_budget150_r950_20261011_011143",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p10_budget150_r950",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p10_budget150_r950.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 86.54,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_random_sparse_0.25",
+      "profile": "mnist_s10",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p25_budget150_r498_20261011_003942",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p25_budget150_r498",
+      "plot_target_round": 498,
+      "last_metric_round_in_cleanup_report": 498,
+      "last_checkpoint_round_in_cleanup_report": 498,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p25_budget150_r498.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 86.96,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_random_sparse_0.5",
+      "profile": "mnist_s10",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p50_budget150_r278_20261011_002512",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p50_budget150_r278",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p50_budget150_r278.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.08,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_random_sparse_0.75",
+      "profile": "mnist_s10",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": null,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p75_budget150_r193_20261011_001511",
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p75_budget150_r193",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage22_sparse_cnn_s10_seed0/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p75_budget150_r193.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.59,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "mnist_s10_fedavg_baseline",
+      "profile": "mnist_s10",
+      "role": "fedavg_baseline",
+      "method": "fedavg",
+      "keep_ratio": null,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400_20261011_091458",
+      "run_name": "run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400",
+      "plot_target_round": 300,
+      "last_metric_round_in_cleanup_report": 400,
+      "last_checkpoint_round_in_cleanup_report": 400,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage23_recovery/run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.23,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    },
+    {
+      "id": "cifar10_a0p01_f1_kl_sparse_0.05",
+      "profile": "cifar10_a0p01_f1",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_kl_sparse_0.1",
+      "profile": "cifar10_a0p01_f1",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_071300",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_kl_sparse_0.25",
+      "profile": "cifar10_a0p01_f1",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_090138",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 499,
+      "last_metric_round_in_cleanup_report": 499,
+      "last_checkpoint_round_in_cleanup_report": 499,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_kl_sparse_0.5",
+      "profile": "cifar10_a0p01_f1",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_kl_sparse_0.75",
+      "profile": "cifar10_a0p01_f1",
+      "role": "kl_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_random_sparse_0.05",
+      "profile": "cifar10_a0p01_f1",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.05,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_024119",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 1362,
+      "last_metric_round_in_cleanup_report": 1362,
+      "last_checkpoint_round_in_cleanup_report": 1362,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/comm_budget_extension_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_random_sparse_0.1",
+      "profile": "cifar10_a0p01_f1",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.1,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_192526",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 950,
+      "last_metric_round_in_cleanup_report": 950,
+      "last_checkpoint_round_in_cleanup_report": 950,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_random_sparse_0.25",
+      "profile": "cifar10_a0p01_f1",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.25,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_194658",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 499,
+      "last_metric_round_in_cleanup_report": 499,
+      "last_checkpoint_round_in_cleanup_report": 499,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_random_sparse_0.5",
+      "profile": "cifar10_a0p01_f1",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.5,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_043532",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 278,
+      "last_metric_round_in_cleanup_report": 278,
+      "last_checkpoint_round_in_cleanup_report": 278,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "cifar10_a0p01_f1_random_sparse_0.75",
+      "profile": "cifar10_a0p01_f1",
+      "role": "random_sparse",
+      "method": "fola",
+      "keep_ratio": 0.75,
+      "grad_clip_norm": 10.0,
+      "primary_figure": true,
+      "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_032226",
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "plot_target_round": 193,
+      "last_metric_round_in_cleanup_report": 193,
+      "last_checkpoint_round_in_cleanup_report": 193,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/sparse_main_seed0/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": null,
+      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+    },
+    {
+      "id": "mnist_s10_fedavg_unclipped_reference",
+      "profile": "mnist_s10",
+      "role": "fedavg_unclipped_reference",
+      "method": "fedavg",
+      "keep_ratio": null,
+      "grad_clip_norm": null,
+      "primary_figure": false,
+      "relative_output": "outputs/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed0_e5_b10_lr0p10_r400_20261009_115708",
+      "run_name": "run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed0_e5_b10_lr0p10_r400",
+      "plot_target_round": 300,
+      "last_metric_round_in_cleanup_report": 400,
+      "last_checkpoint_round_in_cleanup_report": 400,
+      "config_paths_from_stage3_registry": [
+        "scripts/configs/mnist_stage16_paper00_fedavg/run_stage16_paper00_fedavg_cnn16_32_s10_n20_seed0_e5_b10_lr0p10_r400.yaml"
+      ],
+      "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
+      "metrics_relative_path": "metrics/global_metrics.csv",
+      "accuracy_percent_from_supplied_result": 88.64,
+      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+    }
+  ],
+  "shared_partition_directory": "outputs/partitions"
+}
