@@ -1,0 +1,54 @@
+{
+  "accounting_kind": "modeled_multicast_payload",
+  "array_count": 8,
+  "config_fingerprint": "5a99e7f5560748b3bc96d5e27fc11e7ccbb146306101b64ec7b21d335ea0f310",
+  "cumulative_examples_seen": 150000,
+  "cumulative_local_steps": 30000,
+  "deterministic_client_schedule": true,
+  "downlink_mode": "multicast",
+  "experiment_seed": 3,
+  "last_evaluation": {
+    "accuracy": 0.8355,
+    "brier": 0.26720534391397965,
+    "ece": 0.1051391953170299,
+    "expected_entropy": 0.15697343873808034,
+    "mce": 0.305987363220543,
+    "mean_confidence": 0.94063919531703,
+    "mutual_information": 0.0,
+    "nll": 0.8840369295718047,
+    "predictive_entropy": 0.15697343873808034,
+    "round": 300.0
+  },
+  "last_round_stats": {
+    "local_examples_seen": 500,
+    "local_training_steps": 100,
+    "num_aggregated_clients": 20,
+    "num_downlink_transmissions": 1,
+    "num_download_recipients": 20,
+    "num_upload_replies": 20,
+    "round_wall_time_seconds": 0.6323384447023273,
+    "selection_time_seconds": 0.0
+  },
+  "layout_id": "25d0f49825ced7a132964de1cc6f724e782e07dbe631129b9659a08c5331552b",
+  "ledger": {
+    "event_count": 6340,
+    "event_sha256": "b8d5f999fa2d1839633cd02e8f056cf925c79e9c1a7cbe40401480d2a1b3d613",
+    "serialized_tensor_bytes": 2027541600,
+    "serialized_tensor_observed": true,
+    "totals": {
+      "all_array_bytes": 2021090400,
+      "evaluation_array_bytes": 0,
+      "initialization_array_bytes": 0,
+      "train_downlink_array_bytes": 96242400,
+      "train_total_array_bytes": 2021090400,
+      "train_uplink_array_bytes": 1924848000
+    },
+    "unmeasured_array_messages": 0
+  },
+  "optimizer_state_policy": "fresh local optimizer each fit, as in supplied baseline",
+  "partition_sha256": "6059bb8b1cc1d05250257009d7324260b11eba15e6a06c694ef8511d02c2b146",
+  "rng_policy": "baseline per-client/per-round reseed; separate SHA256 mask/schedule streams",
+  "round_id": 300,
+  "state_snapshot_id": "9738bb390bf5feabcfd06addd0c33c882be695a0075165479b2bff4ac1943af6",
+  "version": 1
+}

@@ -1,0 +1,120 @@
+{
+  "source": "scripts/configs/mnist_stage18_fola_noclip_cnn/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200.yaml",
+  "dense_rounds": 150,
+  "budget_bytes": 2021090400,
+  "seed": 0,
+  "clients": 20,
+  "dimension": 80202,
+  "jobs": [
+    {
+      "method": "kl_global_local",
+      "keep_ratio": 0.75,
+      "coordinates": 60152,
+      "rounds": 193,
+      "round_bytes": 10466456,
+      "total_bytes": 2020026008,
+      "leftover_bytes": 1064392,
+      "gpu": 0,
+      "skipped_completed": false
+    },
+    {
+      "method": "random",
+      "keep_ratio": 0.75,
+      "coordinates": 60152,
+      "rounds": 193,
+      "round_bytes": 10466456,
+      "total_bytes": 2020026008,
+      "leftover_bytes": 1064392,
+      "gpu": 1,
+      "skipped_completed": false
+    },
+    {
+      "method": "kl_global_local",
+      "keep_ratio": 0.5,
+      "coordinates": 40101,
+      "rounds": 278,
+      "round_bytes": 7258296,
+      "total_bytes": 2017806288,
+      "leftover_bytes": 3284112,
+      "gpu": 0,
+      "skipped_completed": false
+    },
+    {
+      "method": "random",
+      "keep_ratio": 0.5,
+      "coordinates": 40101,
+      "rounds": 278,
+      "round_bytes": 7258296,
+      "total_bytes": 2017806288,
+      "leftover_bytes": 3284112,
+      "gpu": 1,
+      "skipped_completed": false
+    },
+    {
+      "method": "kl_global_local",
+      "keep_ratio": 0.25,
+      "coordinates": 20051,
+      "rounds": 498,
+      "round_bytes": 4050296,
+      "total_bytes": 2017047408,
+      "leftover_bytes": 4042992,
+      "gpu": 0,
+      "skipped_completed": false
+    },
+    {
+      "method": "random",
+      "keep_ratio": 0.25,
+      "coordinates": 20051,
+      "rounds": 498,
+      "round_bytes": 4050296,
+      "total_bytes": 2017047408,
+      "leftover_bytes": 4042992,
+      "gpu": 1,
+      "skipped_completed": false
+    },
+    {
+      "method": "kl_global_local",
+      "keep_ratio": 0.1,
+      "coordinates": 8021,
+      "rounds": 950,
+      "round_bytes": 2125496,
+      "total_bytes": 2019221200,
+      "leftover_bytes": 1869200,
+      "gpu": 0,
+      "skipped_completed": false
+    },
+    {
+      "method": "random",
+      "keep_ratio": 0.1,
+      "coordinates": 8021,
+      "rounds": 950,
+      "round_bytes": 2125496,
+      "total_bytes": 2019221200,
+      "leftover_bytes": 1869200,
+      "gpu": 1,
+      "skipped_completed": false
+    },
+    {
+      "method": "kl_global_local",
+      "keep_ratio": 0.05,
+      "coordinates": 4011,
+      "rounds": 1362,
+      "round_bytes": 1483896,
+      "total_bytes": 2021066352,
+      "leftover_bytes": 24048,
+      "gpu": 0,
+      "skipped_completed": false
+    },
+    {
+      "method": "random",
+      "keep_ratio": 0.05,
+      "coordinates": 4011,
+      "rounds": 1362,
+      "round_bytes": 1483896,
+      "total_bytes": 2021066352,
+      "leftover_bytes": 24048,
+      "gpu": 1,
+      "skipped_completed": false
+    }
+  ]
+}

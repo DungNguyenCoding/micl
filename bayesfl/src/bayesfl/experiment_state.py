@@ -31,6 +31,11 @@ def config_fingerprint(cfg: ExperimentConfig) -> str:
     # invalidate its optimization-state fingerprint.  The ledger itself is
     # still checked separately and must be migrated consistently.
     data["training"].pop("rounds")
+    # Backwards compatible: old checkpoints had no paper00_strict flag.
+    # Include it only when enabled, so new paper-faithful runs have
+    # a distinct and immutable resume fingerprint.
+    if not data["training"].get("paper00_strict", False):
+        data["training"].pop("paper00_strict", None)
     data["communication"].pop("max_communication_bytes")
     data["communication"].pop("downlink_mode", None)
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()

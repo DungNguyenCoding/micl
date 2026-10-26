@@ -1,0 +1,1 @@
+scripts/configs/mnist_stage23_recovery/run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400.yaml

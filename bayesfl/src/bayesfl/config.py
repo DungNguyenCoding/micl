@@ -53,6 +53,9 @@ class TrainingConfig:
     lr_min: float = 0.0001
     lr_decay_rounds: int = 100
     grad_clip_norm: Optional[float] = None
+    # Opt-in strict replication of Paper 00, Algorithm 1.
+    # Disabled by default to preserve historical runs and resumes.
+    paper00_strict: bool = False
 
 
 @dataclass
@@ -255,6 +258,17 @@ class ExperimentConfig:
             raise ValueError("lr_decay_rounds must be positive")
         if self.training.grad_clip_norm is not None and self.training.grad_clip_norm <= 0:
             raise ValueError("grad_clip_norm must be positive when provided")
+        if not isinstance(self.training.paper00_strict, bool):
+            raise ValueError("paper00_strict must be boolean")
+        if self.training.paper00_strict:
+            if self.method != "fedavg":
+                raise ValueError("paper00_strict is only for FedAvg")
+            if self.training.lr_schedule.lower() not in {"constant", "none"}:
+                raise ValueError("Paper 00 Algorithm 1 requires a constant learning rate")
+            if self.training.momentum != 0.0 or self.training.weight_decay != 0.0:
+                raise ValueError("Paper 00 Algorithm 1 excludes momentum and weight decay")
+            if self.training.grad_clip_norm is not None:
+                raise ValueError("Paper 00 Algorithm 1 excludes gradient clipping")
         if self.bbb.mc_train < 1 or self.bbb.mc_eval < 1 or self.fola.mc_eval < 1:
             raise ValueError("Monte Carlo sample counts must be positive")
         self.bbb.prior_type = self.bbb.prior_type.lower()
@@ -294,9 +308,15 @@ class ExperimentConfig:
         if self.data.dataset == "mnist" and self.model.name not in {
             "mlp_784_500_300_10",
             "mlp_784_256x5_10",
+            "mlp_784_200_200_10",
+            "mnist_cnn_16_32_128",
+            "mlp_784_256x3_10",
         }:
             raise ValueError(
-                "MNIST model.name must be mlp_784_500_300_10 or mlp_784_256x5_10"
+                "MNIST model.name must be one of: "
+                "mlp_784_500_300_10, mlp_784_256x5_10, "
+                "mlp_784_200_200_10, mnist_cnn_16_32_128, "
+                "mlp_784_256x3_10"
             )
 
     def resolved_kl_weight(self, bayesian_dimension: int) -> float:

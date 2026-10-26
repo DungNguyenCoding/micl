@@ -7,7 +7,8 @@ from torch import nn
 
 from bayesfl.config import ExperimentConfig
 from .cifar_resnet import CifarResNet56GN8
-from .mnist_mlp import MNISTMLP, MNISTMLP256x5
+from .mnist_mlp import MNISTMLP, MNISTMLP256x5, MNISTMLP200x2, MNISTMLP256x3
+from .mnist_cnn import MNISTCompactCNN
 from .paper_cnn import CifarPaperBasicCNN
 
 
@@ -22,6 +23,12 @@ def _build_model(cfg: ExperimentConfig, *, bayesian: bool) -> nn.Module:
             return MNISTMLP(**kwargs)
         if cfg.model.name == "mlp_784_256x5_10":
             return MNISTMLP256x5(**kwargs)
+        if cfg.model.name == "mlp_784_200_200_10":
+            return MNISTMLP200x2(**kwargs)
+        if cfg.model.name == "mnist_cnn_16_32_128":
+            return MNISTCompactCNN(**kwargs)
+        if cfg.model.name == "mlp_784_256x3_10":
+            return MNISTMLP256x3(**kwargs)
     if cfg.data.dataset == "cifar10":
         if cfg.model.name == "paper_basiccnn":
             return CifarPaperBasicCNN(**kwargs)

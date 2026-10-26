@@ -1,0 +1,98 @@
+{
+  "auxiliary_policy": "baseline_named_parameters_only",
+  "bitmap_bitorder": "little",
+  "d": 80202,
+  "entries": [
+    {
+      "count": 400,
+      "dtype": "float32",
+      "name": "conv1.weight",
+      "offset": 0,
+      "representation": "parameter",
+      "shape": [
+        16,
+        1,
+        5,
+        5
+      ]
+    },
+    {
+      "count": 16,
+      "dtype": "float32",
+      "name": "conv1.bias",
+      "offset": 400,
+      "representation": "parameter",
+      "shape": [
+        16
+      ]
+    },
+    {
+      "count": 12800,
+      "dtype": "float32",
+      "name": "conv2.weight",
+      "offset": 416,
+      "representation": "parameter",
+      "shape": [
+        32,
+        16,
+        5,
+        5
+      ]
+    },
+    {
+      "count": 32,
+      "dtype": "float32",
+      "name": "conv2.bias",
+      "offset": 13216,
+      "representation": "parameter",
+      "shape": [
+        32
+      ]
+    },
+    {
+      "count": 65536,
+      "dtype": "float32",
+      "name": "fc1.weight",
+      "offset": 13248,
+      "representation": "parameter",
+      "shape": [
+        128,
+        512
+      ]
+    },
+    {
+      "count": 128,
+      "dtype": "float32",
+      "name": "fc1.bias",
+      "offset": 78784,
+      "representation": "parameter",
+      "shape": [
+        128
+      ]
+    },
+    {
+      "count": 1280,
+      "dtype": "float32",
+      "name": "fc2.weight",
+      "offset": 78912,
+      "representation": "parameter",
+      "shape": [
+        10,
+        128
+      ]
+    },
+    {
+      "count": 10,
+      "dtype": "float32",
+      "name": "fc2.bias",
+      "offset": 80192,
+      "representation": "parameter",
+      "shape": [
+        10
+      ]
+    }
+  ],
+  "layout_id": "25d0f49825ced7a132964de1cc6f724e782e07dbe631129b9659a08c5331552b",
+  "order": "named_parameters/C",
+  "version": 1
+}

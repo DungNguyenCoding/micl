@@ -1,0 +1,32 @@
+{
+  "class_client_counts": {
+    "0": 3,
+    "1": 3,
+    "2": 3,
+    "3": 3,
+    "4": 3,
+    "5": 3,
+    "6": 3,
+    "7": 3,
+    "8": 3,
+    "9": 3
+  },
+  "class_draws_exhausted": 0,
+  "empty_client_backfills": 0,
+  "labels_per_client_config": 1,
+  "max_classes_per_client": 1,
+  "max_size": 10,
+  "mean_classes_per_client": 1.0,
+  "mean_size": 10.0,
+  "median_size": 10.0,
+  "min_classes_per_client": 1,
+  "min_size": 10,
+  "num_classes": 10,
+  "num_clients": 30,
+  "num_empty_clients_after_backfill": 0,
+  "samples_per_client_config": 10,
+  "seed": 0,
+  "sha256": "347fcdbcbdf1a38baf6ec1b373b99e51c46712d8d016956790a9388064767a5c",
+  "total_samples_used": 300,
+  "type": "fixed_labels"
+}

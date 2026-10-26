@@ -1,0 +1,63 @@
+{
+  "accounting_kind": "modeled_multicast_payload",
+  "array_count": 16,
+  "config_fingerprint": "93200bb834bcf44e5f567e4902a6276282a3bd2cda2a483e442a271bc3a61af5",
+  "cumulative_examples_seen": 151963520,
+  "cumulative_local_steps": 4784960,
+  "deterministic_client_schedule": true,
+  "downlink_mode": "multicast",
+  "experiment_seed": 0,
+  "last_evaluation": {
+    "accuracy": 0.3765,
+    "brier": 0.8215473849967846,
+    "ece": 0.20427219367027283,
+    "expected_entropy": 1.1165916765518855,
+    "fola_mean_accuracy": 0.3765,
+    "fola_mean_brier": 0.8215473849967846,
+    "fola_mean_ece": 0.20427219367027283,
+    "fola_mean_expected_entropy": 1.1165916765518855,
+    "fola_mean_mce": 0.33063186453914484,
+    "fola_mean_mean_confidence": 0.5807721936702728,
+    "fola_mean_mutual_information": 0.0,
+    "fola_mean_nll": 2.7606725377446875,
+    "fola_mean_predictive_entropy": 1.1165916765518855,
+    "mce": 0.33063186453914484,
+    "mean_confidence": 0.5807721936702728,
+    "mutual_information": 0.0,
+    "nll": 2.7606725377446875,
+    "predictive_entropy": 1.1165916765518855,
+    "round": 304.0
+  },
+  "last_round_stats": {
+    "local_examples_seen": 499880,
+    "local_training_steps": 15740,
+    "num_aggregated_clients": 20,
+    "num_downlink_transmissions": 1,
+    "num_download_recipients": 20,
+    "num_upload_replies": 20,
+    "round_wall_time_seconds": 74.90509811835364,
+    "selection_time_seconds": 1.005147535353899
+  },
+  "layout_id": "a0509ce640d3c2c0e78f0234bbf7cccbeb4a319ccf0522e3d853553509bdda19",
+  "ledger": {
+    "event_count": 6464,
+    "event_sha256": "9c16abc3b8472f963ea9bbe15fbf9272ce889babdbf190ae5e6861142da1f7c1",
+    "serialized_tensor_bytes": 4943864448,
+    "serialized_tensor_observed": true,
+    "totals": {
+      "all_array_bytes": 4940907136,
+      "evaluation_array_bytes": 0,
+      "initialization_array_bytes": 0,
+      "train_downlink_array_bytes": 2136604416,
+      "train_total_array_bytes": 4940907136,
+      "train_uplink_array_bytes": 2804302720
+    },
+    "unmeasured_array_messages": 0
+  },
+  "optimizer_state_policy": "fresh local optimizer each fit, as in supplied baseline",
+  "partition_sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+  "rng_policy": "baseline per-client/per-round reseed; separate SHA256 mask/schedule streams",
+  "round_id": 304,
+  "state_snapshot_id": "497a86e772582ba07a677c7706dbfefedd41cf564082bb663430884bd1c858bb",
+  "version": 1
+}

@@ -31,3 +31,27 @@ outputs/*
 # Any output directory whose run_name starts with "run"
 !outputs/run*/
 !outputs/run*/**
+
+# ==========================================
+# Large archives
+# ==========================================
+*.zip
+*.tar.gz
+
+# ==========================================
+# Model weights and checkpoints
+# ==========================================
+*.pt
+*.pth
+*.ckpt
+
+/outputs/**/checkpoints/
+/outputs/**/resume/
+/outputs/**/posterior/
+
+# ==========================================
+# Large experiment logs
+# ==========================================
+/outputs/**/communication/events.jsonl
+/outputs/**/metrics/client_metrics.csv
+/outputs/**/metrics/round_train_metrics.csv

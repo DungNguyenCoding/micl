@@ -91,3 +91,68 @@ class MNISTMLP256x5(nn.Module):
         x = torch.relu(bayesian_forward(self.fc4, x))
         x = torch.relu(bayesian_forward(self.fc5, x))
         return bayesian_forward(self.fc6, x)
+
+class MNISTMLP200x2(nn.Module):
+    """Compact, two-hidden-layer MNIST MLP: 784 -> 200 -> 200 -> 10.
+
+    There are exactly 199,210 deterministic trainable parameters (biases
+    included). All hidden layers use ReLU; the output gives raw logits.
+    """
+
+    def __init__(
+        self,
+        *,
+        bayesian: bool = False,
+        posterior_mu_init: float = 0.0,
+        posterior_rho_init: float = -3.0,
+    ) -> None:
+        super().__init__()
+        self.bayesian = bool(bayesian)
+        make = _linear_factory(
+            bayesian=bayesian,
+            posterior_mu_init=posterior_mu_init,
+            posterior_rho_init=posterior_rho_init,
+        )
+        self.fc1 = make(28 * 28, 200)
+        self.fc2 = make(200, 200)
+        self.fc3 = make(200, 10)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.flatten(x, 1)
+        x = torch.relu(bayesian_forward(self.fc1, x))
+        x = torch.relu(bayesian_forward(self.fc2, x))
+        return bayesian_forward(self.fc3, x)
+
+
+class MNISTMLP256x3(nn.Module):
+    """Intermediate-depth MNIST MLP: 784 -> 256 -> 256 -> 256 -> 10.
+
+    There are exactly 335,114 deterministic trainable parameters (biases
+    included). All three hidden layers use ReLU; the output gives raw logits.
+    """
+
+    def __init__(
+        self,
+        *,
+        bayesian: bool = False,
+        posterior_mu_init: float = 0.0,
+        posterior_rho_init: float = -3.0,
+    ) -> None:
+        super().__init__()
+        self.bayesian = bool(bayesian)
+        make = _linear_factory(
+            bayesian=bayesian,
+            posterior_mu_init=posterior_mu_init,
+            posterior_rho_init=posterior_rho_init,
+        )
+        self.fc1 = make(28 * 28, 256)
+        self.fc2 = make(256, 256)
+        self.fc3 = make(256, 256)
+        self.fc4 = make(256, 10)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = torch.flatten(x, 1)
+        x = torch.relu(bayesian_forward(self.fc1, x))
+        x = torch.relu(bayesian_forward(self.fc2, x))
+        x = torch.relu(bayesian_forward(self.fc3, x))
+        return bayesian_forward(self.fc4, x)

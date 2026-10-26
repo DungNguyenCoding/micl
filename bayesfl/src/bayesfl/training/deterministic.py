@@ -21,12 +21,19 @@ def train_fedavg(
 ) -> Dict[str, float]:
     model.train()
     lr = round_learning_rate(cfg.training, server_round)
-    optimizer = torch.optim.SGD(
-        model.parameters(),
-        lr=lr,
-        momentum=cfg.training.momentum,
-        weight_decay=cfg.training.weight_decay,
-    )
+    if cfg.training.paper00_strict:
+        # Paper 00 Algorithm 1: plain mini-batch SGD, nothing extra.
+        # Config validation rejects momentum, decay, LR schedules and clipping.
+        cfg.validate()
+        optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    else:
+        # Unchanged historical project behavior.
+        optimizer = torch.optim.SGD(
+            model.parameters(),
+            lr=lr,
+            momentum=cfg.training.momentum,
+            weight_decay=cfg.training.weight_decay,
+        )
     loss_sum = 0.0
     correct = 0
     seen = 0
@@ -39,7 +46,7 @@ def train_fedavg(
             logits = model(x)
             loss = torch.nn.functional.cross_entropy(logits, y)
             loss.backward()
-            if cfg.training.grad_clip_norm is not None:
+            if not cfg.training.paper00_strict and cfg.training.grad_clip_norm is not None:
                 torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.training.grad_clip_norm)
             optimizer.step()
             batch = int(y.numel())

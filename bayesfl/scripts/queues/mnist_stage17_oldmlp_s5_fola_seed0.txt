@@ -1,0 +1,1 @@
+scripts/configs/mnist_stage17_oldmlp_s5/run_mnist_stage17_oldmlp_fixed1c_s5_n20_fola_seed0_e5_b128_lr0p01_lam0p01_r200.yaml

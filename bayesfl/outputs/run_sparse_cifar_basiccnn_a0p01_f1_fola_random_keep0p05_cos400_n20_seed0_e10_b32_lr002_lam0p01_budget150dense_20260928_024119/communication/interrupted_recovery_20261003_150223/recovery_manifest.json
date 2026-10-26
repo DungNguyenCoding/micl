@@ -1,0 +1,11 @@
+{
+  "checkpoint_event_count": 6443,
+  "checkpoint_event_sha256": "328b79d2aaf22d90952d1e3935f42586a67089fdb59e4f21915b0f6b4f15f012",
+  "committed_round": 303,
+  "current_event_count_before_recovery": 6444,
+  "interrupted_array_payload_bytes": 7028304,
+  "interrupted_event_count": 1,
+  "policy": "Interrupted operator-induced tail archived separately; experiment ledger restored to latest completed evaluated checkpoint before deterministic resume.",
+  "reason": "Administrative termination while moving CIFAR .05 jobs to a single GPU queue.",
+  "verified_prefix_sha256": "328b79d2aaf22d90952d1e3935f42586a67089fdb59e4f21915b0f6b4f15f012"
+}

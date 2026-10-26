@@ -1,0 +1,1289 @@
+from pathlib import Path
+import argparse
+
+import csv
+
+import math
+
+import matplotlib
+
+matplotlib.use("Agg")
+
+import matplotlib.pyplot as plt
+
+from matplotlib.lines import Line2D
+
+# ============================================================
+
+# Paths
+
+# ============================================================
+
+# Use the repository root even when called from another working directory.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ROOT = PROJECT_ROOT / "outputs"
+OUT = PROJECT_ROOT / "plots"
+
+OUT.mkdir(parents=True, exist_ok=True)
+
+COMM_PDF = OUT / "Acc_Com.pdf"
+
+COMM_PNG = OUT / "Acc_Com.png"
+
+KEEP_PDF = OUT / "Acc_KeepRatio.pdf"
+
+KEEP_PNG = OUT / "Acc_KeepRatio.png"
+
+# ============================================================
+
+# Plot style
+
+# ============================================================
+
+RED = "#C62828"
+
+GREY = "#6E6E6E"
+
+# Distinct colors for KL sparse keep ratios
+
+KEEP_COLORS = {
+
+    0.75: "#1f77b4",  # blue
+
+    0.50: "#ff7f0e",  # orange
+
+    0.25: "#2ca02c",  # green
+
+    0.10: "#9467bd",  # purple
+
+    0.05: "#8c564b",  # brown
+
+}
+
+BLUE = "#1565C0"
+
+GREEN = "#2E7D32"
+
+GRID = "#D5D5D5"
+
+KEEP_ORDER = [
+
+    0.75,
+
+    0.50,
+
+    0.25,
+
+    0.10,
+
+    0.05,
+
+]
+
+SMOOTH_WINDOW = 7  # mild smoothing for paper readability
+
+plt.rcParams.update({
+
+    "font.family": "serif",
+
+    "font.serif": [
+
+        "Times New Roman",
+
+        "Times",
+
+        "DejaVu Serif",
+
+    ],
+
+    "mathtext.fontset": "stix",
+
+    "font.size": 8.0,
+
+    "axes.labelsize": 8.0,
+
+    "axes.titlesize": 8.5,
+
+    "xtick.labelsize": 7.0,
+
+    "ytick.labelsize": 7.0,
+
+    "legend.fontsize": 7.0,
+
+    "axes.linewidth": 0.75,
+
+    "lines.linewidth": 1.45,
+
+    "xtick.direction": "in",
+
+    "ytick.direction": "in",
+
+    "xtick.major.width": 0.7,
+
+    "ytick.major.width": 0.7,
+
+    "pdf.fonttype": 42,
+
+    "ps.fonttype": 42,
+
+    "savefig.bbox": "tight",
+
+    "savefig.pad_inches": 0.03,
+
+})
+
+# ============================================================
+
+# Experiment definitions
+
+# ============================================================
+
+PARSER = argparse.ArgumentParser(
+    description="Regenerate IEEE multicast figures for Stage-22 MNIST (10 samples/client) and CIFAR-10."
+)
+PARSER.add_argument(
+    "--mnist-fedavg",
+    choices=("unclipped", "clipped"),
+    default="clipped",
+    help="MNIST FedAvg baseline; default clipped matches the prior IEEE figure."
+)
+ARGS = PARSER.parse_args()
+
+MNIST_FEDAVG = {
+    "unclipped": (
+        "run_stage16_paper00_fedavg_cnn16_32_"
+        "s10_n20_seed0_e5_b10_lr0p10_r400"
+    ),
+    "clipped": (
+        "run_mnist_stage23_cnn16_32_fixed1c_s10_n20_"
+        "fedavg_clip_seed0_e5_b10_lr0p10_r400"
+    ),
+}
+
+PROFILES = {
+
+    "MNIST": {
+        "short_title": "MNIST",
+        "d": 80_202,
+        "K": 20,
+        # MNIST CNN 16-32, N=20, 10 samples/client, one class/client.
+        # Full client participation (20 clients per round).
+        # Dense FOLA: Stage-18 unclipped run, evaluated at R150.
+        # KL and Random sparse FOLA: Stage-22 experiments.
+        # Common budget: Dense FOLA R150 under multicast accounting.
+        "budget": 2_021_090_400,
+        "dense_target": 150,
+        "fedavg_target": 300,
+        "keep_order": [0.75, 0.50, 0.25, 0.10, 0.05],
+        "dense": (
+            "run_mnist_stage18_cnn16_32_fola_noclip_"
+            "fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200"
+        ),
+        "fedavg": MNIST_FEDAVG[ARGS.mnist_fedavg],
+        "sparse_pattern": (
+            "run_mnist_stage22_cnn_s10_n20_seed0_fola_"
+            "{rule}_keep{tag}_budget150_r{rounds}"
+        ),
+        "targets": {
+            0.75: 193,
+            0.50: 278,
+            0.25: 498,
+            0.10: 950,
+            0.05: 1362,
+        },
+        "tags": {
+            0.75: "0p75",
+            0.50: "0p50",
+            0.25: "0p25",
+            0.10: "0p10",
+            0.05: "0p05",
+        },
+    },
+
+    "CIFAR-10": {
+
+        "short_title": "CIFAR-10",
+
+        "d": 878_538,
+
+        "K": 20,
+
+        # CIFAR-10 BasicCNN, N=20, Dirichlet alpha=0.01.
+        # Full local dataset fraction (f=1.0) and full client participation.
+        # Common budget = Dense FOLA R150 under multicast accounting.
+        # Equal-byte comparison: Dense FOLA R150 versus FedAvg R300.
+
+        "budget": 22_139_157_600,
+
+        "dense_target": 150,
+
+        "fedavg_target": 300,
+
+        "keep_order": [0.75, 0.50, 0.25, 0.10, 0.05],
+
+        "dense": (
+
+            "run_confirm_newsrc_"
+
+            "cifar_basiccnn_a0p01_fola_cos400_n20_f1_"
+
+            "seed0_e10_b32_lr002_lam0p01_r150"
+
+        ),
+
+        "fedavg": (
+
+            "run_budgetmatch_"
+
+            "cifar_basiccnn_a0p01_fedavg_n20_f1_"
+
+            "seed0_e10_b32_lr001_budget150densefola"
+
+        ),
+
+        "sparse_prefix": "run_sparse_cifar_basiccnn_a0p01_f1_fola_",
+
+        "sparse_suffix": "_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+
+        "targets": {
+            0.75: 193,
+            0.50: 278,
+            0.25: 499,
+            0.10: 950,
+            0.05: 1362,
+        },
+
+        "tags": {
+
+            0.75: "0p75",
+
+            0.50: "0p5",
+
+            0.25: "0p25",
+
+            0.10: "0p1",
+
+            0.05: "0p05",
+
+        },
+
+    },
+
+}
+
+# ============================================================
+
+# Helpers
+
+# ============================================================
+
+def resolve(prefix: str) -> Path:
+
+    exact = ROOT / prefix
+
+    matches = []
+
+    if exact.is_dir():
+
+        matches.append(exact)
+
+    matches.extend(
+
+        p for p in ROOT.glob(prefix + "_*")
+
+        if p.is_dir()
+
+    )
+
+    if not matches:
+
+        raise RuntimeError(
+
+            f"Could not find output directory for:\n{prefix}"
+
+        )
+
+    return max(set(matches), key=lambda p: p.stat().st_mtime)
+
+def load_metrics(run_dir: Path):
+
+    path = run_dir / "metrics" / "global_metrics.csv"
+
+    if not path.exists():
+
+        raise RuntimeError(f"Missing global_metrics.csv:\n{path}")
+
+    with path.open(newline="", encoding="utf-8") as f:
+
+        raw = list(csv.DictReader(f))
+
+    by_round = {}
+
+    for row in raw:
+
+        try:
+
+            rnd = int(float(row["round"]))
+
+        except (KeyError, ValueError):
+
+            continue
+
+        if rnd >= 1:
+
+            by_round[rnd] = row
+
+    return [by_round[r] for r in sorted(by_round)]
+
+def accuracy(row) -> float:
+
+    preferred = [
+
+        "global_test_accuracy",
+
+        "global_accuracy",
+
+        "centralized_accuracy",
+
+        "centralized_acc",
+
+        "mean_accuracy",
+
+        "mean_acc",
+
+        "fola_mean_accuracy",
+
+        "accuracy",
+
+    ]
+
+    for key in preferred:
+
+        value = row.get(key)
+
+        if value not in (None, ""):
+
+            x = float(value)
+
+            return 100.0 * x if x <= 1.5 else x
+
+    for key, value in row.items():
+
+        low = key.lower()
+
+        if (
+
+            value not in (None, "")
+
+            and "local" not in low
+
+            and ("accuracy" in low or low.endswith("_acc"))
+
+        ):
+
+            try:
+
+                x = float(value)
+
+            except ValueError:
+
+                continue
+
+            return 100.0 * x if x <= 1.5 else x
+
+    raise RuntimeError(f"Could not find accuracy column in {list(row.keys())}")
+
+def communication_bytes(row) -> int:
+
+    return int(float(row["cumulative_all_array_bytes"]))
+
+def row_at(rows, target_round: int):
+
+    for row in rows:
+
+        if int(float(row["round"])) == target_round:
+
+            return row
+
+    final_round = max(int(float(x["round"])) for x in rows)
+
+    raise RuntimeError(
+
+        f"Required R{target_round} does not exist. "
+
+        f"Trajectory currently ends at R{final_round}."
+
+    )
+
+def rows_through(rows, target_round: int):
+
+    selected = [r for r in rows if int(float(r["round"])) <= target_round]
+
+    row_at(selected, target_round)
+
+    return selected
+
+def sparse_run(profile, rule: str, keep: float):
+    tag = profile["tags"][keep]
+    if "sparse_pattern" in profile:
+        # Stage-22 naming includes each keep ratio's round cap.
+        name = profile["sparse_pattern"].format(
+            rule=rule,
+            tag=tag,
+            rounds=profile["targets"][keep],
+        )
+    else:
+        # Historical CIFAR-10 names remain exactly as before.
+        name = (
+            profile["sparse_prefix"]
+            + rule
+            + "_keep"
+            + tag
+            + profile["sparse_suffix"]
+        )
+    return resolve(name)
+
+def validate_sparse_endpoint(profile, keep, row):
+
+    d = profile["d"]
+
+    K = profile["K"]
+
+    budget = profile["budget"]
+
+    target = profile["targets"][keep]
+
+    m = math.ceil(keep * d)
+
+    per_round = 8 * d + K * (8 * m + math.ceil(d / 8))
+
+    expected = target * per_round
+
+    actual = communication_bytes(row)
+
+    if actual != expected:
+
+        raise RuntimeError(
+
+            f"Communication mismatch for keep={keep}: "
+
+            f"actual={actual:,}, expected={expected:,}"
+
+        )
+
+    if expected > budget:
+
+        raise RuntimeError(f"Target R{target} exceeds budget.")
+
+    if (target + 1) * per_round <= budget:
+
+        raise RuntimeError(
+
+            f"R{target} is not the maximum round within budget."
+
+        )
+
+def moving_average(y, window=7):
+
+    if len(y) <= 2 or window <= 1:
+
+        return list(y)
+
+    window = min(window, len(y))
+
+    if window % 2 == 0:
+
+        window -= 1
+
+    if window < 3:
+
+        return list(y)
+
+    pad = window // 2
+
+    yy = [y[0]] * pad + list(y) + [y[-1]] * pad
+
+    out = []
+
+    for i in range(len(y)):
+
+        s = 0.0
+
+        for j in range(window):
+
+            s += yy[i + j]
+
+        out.append(s / window)
+
+    return out
+
+# ============================================================
+
+# Load and validate data
+
+# ============================================================
+
+DATA = {}
+
+print("=" * 100)
+
+print("PLOT DATA PREFLIGHT")
+
+print("=" * 100)
+
+for label, p in PROFILES.items():
+
+    DATA[label] = {}
+
+    dense_dir = resolve(p["dense"])
+
+    if label == "CIFAR-10" and "f0p5" in dense_dir.name.lower():
+
+        raise RuntimeError(f"Wrong CIFAR profile selected (f0p5): {dense_dir}")
+
+    dense_rows = load_metrics(dense_dir)
+
+    dense_rows = rows_through(dense_rows, p["dense_target"])
+
+    dense_final = row_at(dense_rows, p["dense_target"])
+
+    dense_expected = p["dense_target"] * 8 * p["d"] * (p["K"] + 1)
+
+    if communication_bytes(dense_final) != dense_expected:
+
+        raise RuntimeError(f"{label}: dense FOLA communication mismatch.")
+
+    if dense_expected != p["budget"]:
+
+        raise RuntimeError(f"{label}: dense budget mismatch.")
+
+    DATA[label]["dense"] = dense_rows
+
+    fedavg_dir = resolve(p["fedavg"])
+
+    if label == "CIFAR-10" and "f0p5" in fedavg_dir.name.lower():
+
+        raise RuntimeError(f"Wrong CIFAR profile selected (f0p5): {fedavg_dir}")
+
+    fedavg_rows = load_metrics(fedavg_dir)
+
+    fedavg_final = row_at(fedavg_rows, p["fedavg_target"])
+
+    fedavg_expected = p["fedavg_target"] * 4 * p["d"] * (p["K"] + 1)
+
+    if communication_bytes(fedavg_final) != fedavg_expected:
+
+        raise RuntimeError(f"{label}: FedAvg communication mismatch.")
+
+    if fedavg_expected != p["budget"]:
+
+        raise RuntimeError(f"{label}: FedAvg budget mismatch.")
+
+    # Truncate each FedAvg trajectory at the equal-communication endpoint.
+    # MNIST: FedAvg R300 versus Dense FOLA R150.
+    # CIFAR-10: FedAvg R300 versus Dense FOLA R150.
+
+    fedavg_rows = rows_through(
+
+        fedavg_rows,
+
+        p["fedavg_target"],
+
+    )
+
+    DATA[label]["fedavg"] = fedavg_rows
+
+    DATA[label]["fedavg_final"] = fedavg_final
+
+    DATA[label]["kl"] = {}
+
+    DATA[label]["random_final"] = {}
+
+    for keep in p["keep_order"]:
+
+        target = p["targets"][keep]
+
+        kl_dir = sparse_run(p, "kl_global_local", keep)
+
+        if label == "CIFAR-10" and "f0p5" in kl_dir.name.lower():
+
+            raise RuntimeError(f"Wrong CIFAR sparse profile selected (f0p5): {kl_dir}")
+
+        kl_rows = load_metrics(kl_dir)
+
+        kl_rows = rows_through(kl_rows, target)
+
+        kl_final = row_at(kl_rows, target)
+
+        validate_sparse_endpoint(p, keep, kl_final)
+
+        DATA[label]["kl"][keep] = kl_rows
+
+        rand_dir = sparse_run(p, "random", keep)
+
+        if label == "CIFAR-10" and "f0p5" in rand_dir.name.lower():
+
+            raise RuntimeError(f"Wrong CIFAR random profile selected (f0p5): {rand_dir}")
+
+        rand_rows = load_metrics(rand_dir)
+
+        rand_final = row_at(rand_rows, target)
+
+        validate_sparse_endpoint(p, keep, rand_final)
+
+        DATA[label]["random_final"][keep] = rand_final
+
+        DATA[label].setdefault("run_dirs", {})[keep] = {
+
+            "kl_global_local": kl_dir,
+
+            "random": rand_dir,
+
+        }
+
+    print()
+
+    print(label)
+
+    print(f"  Dense FOLA R{p['dense_target']}: {accuracy(dense_final):.3f}%")
+
+    print(f"  FedAvg R{p['fedavg_target']}: {accuracy(fedavg_final):.3f}%")
+
+    print(f"  Dense run : {dense_dir}")
+
+    print(f"  FedAvg run: {fedavg_dir}")
+
+    for keep in p["keep_order"]:
+
+        kl_final = row_at(DATA[label]["kl"][keep], p["targets"][keep])
+
+        rand_final = DATA[label]["random_final"][keep]
+
+        print(
+
+            f"  keep={keep:.2f} R{p['targets'][keep]:4d} | "
+
+            f"KL={accuracy(kl_final):7.3f}% | "
+
+            f"Random={accuracy(rand_final):7.3f}% | "
+
+            f"comm={communication_bytes(kl_final)/1e9:9.6f} GB"
+
+        )
+
+        print(f"      KL run    : {DATA[label]['run_dirs'][keep]['kl_global_local']}")
+
+        print(f"      Random run: {DATA[label]['run_dirs'][keep]['random']}")
+
+print()
+
+print("PASS: all required checkpoints are present and valid.")
+
+# ============================================================
+
+# Figure 1: Accuracy vs communication cost (1x2)
+
+# ============================================================
+
+fig, axes = plt.subplots(
+    1, 2,
+    figsize=(7.2, 3.8),
+    constrained_layout=False,
+)
+
+fig.subplots_adjust(
+    left=0.085,
+    right=0.995,
+    top=0.90,
+    bottom=0.31,
+    wspace=0.20,
+)
+
+for ax, (label, p) in zip(axes, PROFILES.items()):
+
+    max_comm_gb = p["budget"] / 1e9
+
+    # ------------------------------------------------------
+
+    # Dense FedAvg full accuracy-vs-communication trajectory
+
+    # ------------------------------------------------------
+
+    fedavg_rows = DATA[label]["fedavg"]
+
+    x_fedavg = [
+
+        communication_bytes(r) / 1e9
+
+        for r in fedavg_rows
+
+    ]
+
+    y_fedavg = [
+
+        accuracy(r)
+
+        for r in fedavg_rows
+
+    ]
+
+    y_fedavg_sm = moving_average(
+
+        y_fedavg,
+
+        SMOOTH_WINDOW,
+
+    )
+
+    # Saved only for the MNIST final-stage inset.
+    inset_series = [
+        (x_fedavg, y_fedavg_sm, GREY, (0, (5, 3)), None),
+    ]
+
+    # Publication figure: smoothed lines only (raw curves are not drawn).
+
+    # Main publication curve.
+
+    ax.plot(
+
+        x_fedavg,
+
+        y_fedavg_sm,
+
+        color=GREY,
+
+        linestyle=(0, (5, 3)),
+
+        linewidth=1.55,
+
+        label="FedAvg",
+
+        zorder=3,
+
+    )
+
+    # Dense FOLA (7-round smoothed only)
+
+    dense_rows = DATA[label]["dense"]
+
+    x_dense = [communication_bytes(r) / 1e9 for r in dense_rows]
+
+    y_dense = [accuracy(r) for r in dense_rows]
+
+    y_dense_sm = moving_average(y_dense, SMOOTH_WINDOW)
+
+    inset_series.append((x_dense, y_dense_sm, RED, "-", None))
+
+    ax.plot(
+
+        x_dense, y_dense_sm,
+
+        color=RED,
+
+        linewidth=1.75,
+
+        label="Full-posterior BayesFL",
+
+        zorder=5,
+
+    )
+
+    # KL sparse curves with different colors
+
+    for keep in p["keep_order"]:
+
+        rows = DATA[label]["kl"][keep]
+
+        x = [communication_bytes(r) / 1e9 for r in rows]
+
+        y = [accuracy(r) for r in rows]
+
+        y_sm = moving_average(y, SMOOTH_WINDOW)
+
+        color = KEEP_COLORS[keep]
+
+        marker = {
+
+            0.75: "o",
+
+            0.50: "s",
+
+            0.25: "^",
+
+            0.10: "D",
+
+            0.05: "v",
+
+        }[keep]
+
+        inset_series.append((x, y_sm, color, "-", marker))
+
+        mark_every = max(1, len(rows) // 12)
+
+        ax.plot(
+
+            x, y_sm,
+
+            color=color,
+
+            linewidth=1.35,
+
+            marker=marker,
+
+            markersize=3.0,
+
+            markerfacecolor="white",
+
+            markeredgewidth=0.75,
+
+            markevery=mark_every,
+
+            label=f"FedKLS (r = {float(keep):.2f})",
+
+            zorder=4,
+
+        )
+
+    ax.set_xlim(0, max_comm_gb * 1.015)
+
+    ax.set_title(p["short_title"], pad=4, fontweight="bold")
+
+    ax.set_xlabel("Communication payload (GB)")
+
+    ax.set_ylabel("Global test accuracy (%)")
+
+    ax.grid(
+
+        True,
+
+        which="major",
+
+        color=GRID,
+
+        linewidth=0.45,
+
+        linestyle=":",
+
+        alpha=0.8,
+
+    )
+
+    ax.tick_params(top=True, right=True)
+
+    if label == "MNIST":
+        # An inset in the unused lower-right region of the main MNIST panel.
+        # The main panel remains full-range; CIFAR-10 is not modified.
+        # Plot only the exact same 7-point smoothed curves in the inset.
+        inset = ax.inset_axes([0.48, 0.14, 0.49, 0.41])
+        inset.set_facecolor("white")
+        xmin = 0.65 * max_comm_gb
+        xmax = 1.007 * max_comm_gb
+        inset.set_xlim(xmin, xmax)
+
+        # Fit the y-axis around the final-stage range (not the early transients).
+        zoom_values = []
+        for x_curve, y_curve, color, linestyle, endpoint_marker in inset_series:
+            inset.plot(
+                x_curve, y_curve,
+                color=color, linestyle=linestyle,
+                linewidth=1.15, zorder=3,
+            )
+            if endpoint_marker is not None:
+                inset.plot(
+                    x_curve[-1], y_curve[-1],
+                    marker=endpoint_marker, markersize=3.0,
+                    markerfacecolor="white", markeredgecolor=color,
+                    markeredgewidth=0.85, linestyle="none", zorder=5,
+                )
+            zoom_values.extend(
+                yv for xv, yv in zip(x_curve, y_curve)
+                if xmin <= xv <= max_comm_gb
+            )
+
+        if not zoom_values:
+            raise RuntimeError("No MNIST points available for final-stage inset")
+        lower, upper = min(zoom_values), max(zoom_values)
+        padding = max(0.30, 0.13 * (upper - lower))
+        inset.set_ylim(lower - padding, upper + padding)
+        inset.set_title("Final-stage zoom", fontsize=7, pad=2)
+        inset.tick_params(
+            axis="both", labelsize=6, direction="in",
+            length=2, width=0.5, pad=1.5,
+        )
+        inset.locator_params(axis="x", nbins=3)
+        inset.locator_params(axis="y", nbins=4)
+        inset.grid(color=GRID, linewidth=0.40, linestyle=":", alpha=0.75)
+        for spine in inset.spines.values():
+            spine.set_linewidth(0.65)
+
+# Shared legend: union both panels (both have keep=0.05).
+
+# ============================================================
+# Shared legend for Acc_Com
+# Two centered rows:
+#
+# Row 1: FedKLS (r = 0.75), FedKLS (r = 0.5),
+#        FedKLS (r = 0.25), FedKLS (r = 0.10),
+#        FedKLS (r = 0.05)
+# Row 2: Full-posterior BayesFL, FedAvg
+# ============================================================
+
+legend_by_label = {}
+
+# Collect legend handles from both dataset panels.
+for ax in axes:
+    hh, ll = ax.get_legend_handles_labels()
+    for h, lab in zip(hh, ll):
+        if lab not in legend_by_label:
+            legend_by_label[lab] = h
+
+row1_labels = [
+    "FedKLS (r = 0.75)",
+    "FedKLS (r = 0.50)",
+    "FedKLS (r = 0.25)",
+    "FedKLS (r = 0.10)",
+    "FedKLS (r = 0.05)",
+]
+
+row2_labels = [
+    "Full-posterior BayesFL",
+    "FedAvg",
+]
+
+row1_handles = [legend_by_label[lab] for lab in row1_labels]
+row2_handles = [legend_by_label[lab] for lab in row2_labels]
+row1_display = [lab for lab in row1_labels]
+# # Display 0.5 rather than 0.50
+# row1_display = [
+#     "FedKLS (r = 0.5)" if lab == "FedKLS (r = 0.50)" else lab
+#     for lab in row1_labels
+# ]
+
+fig.legend(
+    row1_handles,
+    row1_display,
+    loc="center",
+    bbox_to_anchor=(0.5, 0.145),
+    ncol=5,
+    frameon=False,
+    fontsize=7.0,
+    columnspacing=1.05,
+    handlelength=2.6,
+    handletextpad=0.45,
+    borderaxespad=0.0,
+)
+
+fig.legend(
+    row2_handles,
+    row2_labels,
+    loc="center",
+    bbox_to_anchor=(0.5, 0.070),
+    ncol=2,
+    frameon=False,
+    fontsize=7.0,
+    columnspacing=1.60,
+    handlelength=2.8,
+    handletextpad=0.5,
+    borderaxespad=0.0,
+)
+
+fig.savefig(COMM_PDF)
+
+fig.savefig(COMM_PNG, dpi=600)
+
+plt.close(fig)
+
+# ============================================================
+
+# Figure 2: Accuracy vs sparsity ratio (1x2)
+
+# ============================================================
+
+fig, axes = plt.subplots(
+
+    1, 2,
+
+    figsize=(7.2, 3.0),
+
+    constrained_layout=False,
+
+)
+
+fig.subplots_adjust(
+
+    left=0.085,
+
+    right=0.995,
+
+    top=0.90,
+
+    bottom=0.26,
+
+    wspace=0.20,
+
+)
+
+for ax, (label, p) in zip(axes, PROFILES.items()):
+
+    dense_final = row_at(DATA[label]["dense"], p["dense_target"])
+
+    dense_acc = accuracy(dense_final)
+
+    # Dense FOLA is not a separate horizontal baseline here.
+
+    # It is the 0% sparsity endpoint of BOTH selector curves.
+
+    x_sparsity = [0.0]
+
+    kl_acc = [dense_acc]
+
+    rand_acc = [dense_acc]
+
+    for keep in p["keep_order"]:
+
+        kl_row = row_at(DATA[label]["kl"][keep], p["targets"][keep])
+
+        rand_row = DATA[label]["random_final"][keep]
+
+        x_sparsity.append(100.0 * (1.0 - keep))
+
+        kl_acc.append(accuracy(kl_row))
+
+        rand_acc.append(accuracy(rand_row))
+
+    ax.plot(
+
+        x_sparsity,
+
+        kl_acc,
+
+        color=BLUE,
+
+        linestyle="-",
+
+        linewidth=1.65,
+
+        marker="o",
+
+        markersize=4.0,
+
+        markerfacecolor="white",
+
+        markeredgewidth=1.0,
+
+        label="FedKLS",
+
+        zorder=4,
+
+    )
+
+    ax.plot(
+
+        x_sparsity,
+
+        rand_acc,
+
+        color=GREEN,
+
+        linestyle="-.",
+
+        linewidth=1.45,
+
+        marker="s",
+
+        markersize=3.8,
+
+        markerfacecolor="white",
+
+        markeredgewidth=1.0,
+
+        label="Random sparse Bayesian FL",
+
+        zorder=3,
+
+    )
+
+    # Observed sparsity levels:
+
+    # MNIST and CIFAR: 0, 25, 50, 75, 90, 95
+
+    ticks = [0, 25, 50, 75, 90]
+
+    if 0.05 in p["keep_order"]:
+
+        ticks.append(95)
+
+    ax.set_xlim(-2, 100)
+
+    ax.set_xticks(ticks)
+
+    ax.set_title(p["short_title"], pad=4, fontweight="bold")
+
+    ax.set_xlabel("Sparsity ratio (%)")
+
+    ax.set_ylabel("Global test accuracy (%)")
+
+    ax.grid(
+
+        True,
+
+        which="major",
+
+        color=GRID,
+
+        linewidth=0.45,
+
+        linestyle=":",
+
+        alpha=0.8,
+
+    )
+
+    ax.tick_params(top=True, right=True)
+
+handles = [
+
+    Line2D(
+
+        [0], [0],
+
+        color=BLUE,
+
+        linestyle="-",
+
+        marker="o",
+
+        markerfacecolor="white",
+
+        linewidth=1.65,
+
+        label="FedKLS",
+
+    ),
+
+    Line2D(
+
+        [0], [0],
+
+        color=GREEN,
+
+        linestyle="-.",
+
+        marker="s",
+
+        markerfacecolor="white",
+
+        linewidth=1.45,
+
+        label="Random sparse Bayesian FL",
+
+    ),
+
+]
+
+fig.legend(
+
+    handles=handles,
+
+    loc="lower center",
+
+    bbox_to_anchor=(0.5, 0.02),
+
+    ncol=2,
+
+    frameon=False,
+
+    columnspacing=1.2,
+
+    handlelength=2.8,
+
+    handletextpad=0.5,
+
+)
+
+fig.savefig(KEEP_PDF)
+
+fig.savefig(KEEP_PNG, dpi=600)
+
+plt.close(fig)
+
+# ============================================================
+
+# Terminal summary
+
+# ============================================================
+
+print()
+
+print("=" * 100)
+
+print("FIGURES GENERATED")
+
+print("=" * 100)
+
+print(f"1) {COMM_PDF.resolve()}")
+
+print(f"2) {COMM_PNG.resolve()}")
+
+print(f"3) {KEEP_PDF.resolve()}")
+
+print(f"4) {KEEP_PNG.resolve()}")
+
+print()
+
+print("Notes:")
+
+print(
+    "- Both figures use a 1x2 layout: "
+    "MNIST (CNN, 10 samples/client) and "
+    "CIFAR-10 (Dirichlet alpha=0.01, fraction=1.0)."
+)
+
+print(
+    "- MNIST: Dense FOLA R150 versus FedAvg R300 "
+    "at 2.0210904 GB."
+)
+
+print(
+    "- CIFAR-10: Dense FOLA R150 versus FedAvg R300 "
+    "at 22.1391576 GB."
+)
+
+print(
+    "- Accuracy-versus-communication trajectories use "
+    "7-point moving-average smoothing; "
+    "raw curves are not displayed."
+)
+
+print(
+    "- Acc_Com includes a final-stage zoom inset "
+    "for the MNIST panel."
+)
+
+print(
+    "- Acc_Com legend: Full-posterior BayesFL, FedAvg, "
+    "and FedKLS at five retention ratios."
+)
+
+print(
+    "- Both datasets include keep=0.05: "
+    "MNIST R1362 and CIFAR-10 R1362."
+)
+
+print(
+    "- Acc_KeepRatio uses sparsity ratios "
+    "0, 25, 50, 75, 90, and 95%."
+)
+
+print(
+    "- In Acc_KeepRatio, Dense FOLA is the shared "
+    "0% sparsity endpoint of the KL and Random curves."
+)
+
+print(
+    f"- MNIST FedAvg gradient-clipping policy: "
+    f"{ARGS.mnist_fedavg} "
+    "(not indicated in figure labels)."
+)
+
+print("PASS")

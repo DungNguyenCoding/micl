@@ -1,0 +1,1 @@
+RESUME|/home/micl/DungNDH/micl/bayesfl/outputs/run_mnist_stage15_cnn16_32_fixed1c_s5_n20_fedavg_seed3_e5_b5_lr0p10_r300_20261008_171748|400|2694787200|400
