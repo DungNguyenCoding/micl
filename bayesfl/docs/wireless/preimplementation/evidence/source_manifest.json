@@ -1,0 +1,49 @@
+{
+  "scope": "Pre-implementation audit only; no production wireless changes",
+  "baseline_zip_sha256": "36343d890cd5313d74ceb953f46d9ce81af2d90a7588d1538cd9fce712a2b41b",
+  "proposal_zip_sha256": "3622dbf89fc0984eb48388d710175248b31122aebb67d8c2c9681e45e6b2599f",
+  "baseline_files": {
+    "src/bayesfl/config.py": "c7203fceb90d689695c8045fd2458ab9b9586faa3064c182fe25f326265df5d9",
+    "src/bayesfl/client.py": "3ca1871ee1b4b716409865dbc13f0180311e67c05cd964885fcb61bde988e5f4",
+    "src/bayesfl/server.py": "a6b97167869f2baa3c1ac8647434ee468dce194b44806a5d5ee81f3f969d21d5",
+    "src/bayesfl/budget_server.py": "779b6eb44b30a6acbbfa0bd7b0d88fc1d7e8e5a38e9645f6bbc41f659555c883",
+    "src/bayesfl/experiment_state.py": "bc85810767a697fce20b08aa73d790db312b9dbc05057a0a65ffcfe9989f5849",
+    "src/bayesfl/communication.py": "a17b782a5463fa1eb5fd99f4557b04316f18940619ea1a2f7d4ae1ffe23b5f9c",
+    "src/bayesfl/posterior/sparse.py": "837927d25e4c0e8a5f34adaf2d870726bd8c8241e624b4fe3eb98e5f73b0ce5d",
+    "src/bayesfl/posterior/aggregation.py": "519dcba730256f1c0e6c6218f0b888de00acbd8939a9fd70f0601a7b5d5b5133",
+    "src/bayesfl/strategies/research_strategy.py": "c4c48983d4851eb04231f9db1bd4f7f0f9093692071fcaeb73ba71d6fcad2beb",
+    "src/bayesfl/evaluation.py": "14f56d3b44348382298cbb0934e2ee3e349f363a20dc66c07ac03e8aeb869e3b",
+    "src/bayesfl/training/fola.py": "d6c36ecede38028a76896b0381d22f88ae3259c3fd4c6d20e227ce3b70c2c2c1",
+    "src/bayesfl/training/deterministic.py": "d3914cdc8f28dbdebb443da0bf53e9b40073961270a7684bf039b68acad3eecc",
+    "docs/tools/export_handoff.py": "4aa3a21e620403c6ea7c7fbceaeda53b28f221acf74b0b6959ee8bc77c710d50",
+    "scripts/_run_gpu_queue.sh": "3cc9299bfa0c3d97128de4def377219ab124b44fb188b984faf0adf340aa1d03",
+    "scripts/plot_ieee_multicast_results_mnist_s10_stage22.py": "63cea8abc0b86ab1200088243945a01033ac509972496aebad5d68b85b4d3c40",
+    "pyproject.toml": "1f94cd39a633f632a7da9eb351f1eeb6a31a911ff02f830c5512945ceb1226be",
+    "requirements.txt": "b4d49924646e9db423f724405bf92eae932555efea08b688c46f472bf2134054",
+    ".gitignore": "2609ecbb137f4e283c57108aa7a875a0d5c8771153fe0cb390f2a402d3ae5cd0"
+  },
+  "proposal_files": {
+    "CHANGELOG.md": "6eca98d4efc8f2519e56cf3be5146e989229142eec54f8e953e0ff234e0f7db6",
+    "wireless_model.tex": "11e8ce5732a28222e40f9e48376deff63643abc2bf38a8bedb2c4b6b12689654",
+    "preamble.tex": "1954661a2d14f1718d58daf61e7ec3ad3c306c5bb55cd5813b1adeaf8d79f9b0",
+    "main.tex": "19d552ead187b128f949c342832e4d286f3f16fc355ab3680a5755651b1b8ec5",
+    "IMPLEMENTATION.md": "246433b8fb11a2f79489c6b7b0ffbe6fd39b8db9e49cca633915042435e1d4c3",
+    "joint_problem.tex": "eeec614b1d3bf1ccf1bf10e1114133fd7a469cd1d1d5e8ba0a88139fe3e31897",
+    "references.tex": "3734e153840e93ccf39a029878fb622230f99515ebc7b5dcba7b0fe78b6e618a",
+    "paper_section.tex": "00844b30e5b516c537e23940b65c792c98e57d5e322066d7ae914b2d3f69114d",
+    "README.md": "7c42f44fc68eb83549c6c814407eed306ffb9b1fc3bdde9c7e4c7b774fe48c4a",
+    "implementation.tex": "4998266cf514e7e1ebfd24d71964fdc7c39f89e7cf3210fda3234ad7def3646c",
+    "method1.tex": "89ec2a7b6805e72680638fece92d082e2a1e0bec256409cbf2c4110172340399"
+  },
+  "audit_environment": {
+    "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+    "torch": "2.10.0+cpu",
+    "torchvision": "0.25.0+cpu",
+    "flwr": null,
+    "ray": null,
+    "numpy": "2.3.5",
+    "PyYAML": "6.0.3",
+    "pytest": "9.0.2",
+    "bayesian-torch": null
+  }
+}

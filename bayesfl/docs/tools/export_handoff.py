@@ -2,7 +2,8 @@
 """Read primary BayesFL endpoints or export a lightweight new-chat snapshot.
 
 Default/--check: terminal only. --export: creates one NEW ZIP beside the repo.
-Never trains, imports BayesFL, loads weights, edits metrics or changes Git.
+Never trains, loads weights, edits metrics or changes Git. Wireless mode imports
+only the standard-library wireless reporting module; no Torch/Flower import.
 The ZIP is NOT a complete training/resume backup. Standard library only.
 """
 from __future__ import annotations
@@ -23,11 +24,12 @@ import sys
 import zipfile
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
-TEXT_SUFFIXES = {'.py', '.sh', '.yaml', '.yml', '.json', '.md', '.txt', '.toml', '.ini', '.cfg'}
+TEXT_SUFFIXES = {'.tex', '.py', '.sh', '.yaml', '.yml', '.json', '.md', '.txt', '.toml', '.ini', '.cfg'}
 EXCLUDED_PARTS = {'.git', '__pycache__', '.pytest_cache', '.venv', 'venv', 'node_modules'}
 ROOT_FILES = ('README.md', 'AGENTS.md', 'SPARSE_README.md', 'IMPLEMENTATION_REPORT.md',
               'VALIDATION.md', 'VALIDATION_SPARSE.md', 'pyproject.toml', 'requirements.txt',
-              'CHANGE_MANIFEST.json', 'PACKAGE_MANIFEST.txt', 'DOCS_UPDATE_MANIFEST.json', '.gitignore')
+              'CHANGE_MANIFEST.json', 'PACKAGE_MANIFEST.txt', 'DOCS_UPDATE_MANIFEST.json', '.gitignore',
+              'WIRELESS_CHANGE_MANIFEST.json', 'WIRELESS_IMPLEMENTATION_REPORT.md')
 
 
 def fail(message: str) -> None:
@@ -200,12 +202,27 @@ def selected_export_files(root: Path, registry: dict) -> dict[str, Path]:
     return files
 
 
-def export(root: Path, registry: dict, results: list[dict]) -> Path:
+def export(root: Path, registry: dict, results: list[dict], wireless_results: list[dict] | None = None) -> Path:
     for rel in ('src/bayesfl/main.py', 'scripts/_run_gpu_queue.sh',
                 'scripts/plot_ieee_multicast_results_mnist_s10_stage22.py'):
         if not safe_path(root, rel).is_file():
             fail('Required current source/plot tool missing: '+rel)
     files = selected_export_files(root, registry)
+    wireless_results = wireless_results or []
+    for result in wireless_results:
+        directory = Path(result['run_dir']).resolve()
+        try:
+            relative = directory.relative_to(root).as_posix()
+        except ValueError:
+            fail('Wireless output must be inside the selected repository for a portable export')
+        for name in ('metrics/global_metrics.csv', 'metrics/wireless_rounds.csv', 'metrics/wireless_clients.csv',
+                     'resolved_config.yaml', 'source_config.yaml', 'partition_metadata.json', 'environment.json',
+                     'run_summary.json', 'wireless/protocol.json', 'wireless/layout_manifest.json',
+                     'wireless/channel_trace.csv'):
+            rel = relative + '/' + name
+            item = safe_path(root, rel)
+            if item.is_file():
+                files[rel] = item
     now = datetime.now().astimezone()
     dest = root.parent / ('bayesfl_LIVE_HANDOFF_'+now.strftime('%Y%m%d_%H%M%S_%f')+'.zip')
     versions = {}
@@ -217,11 +234,16 @@ def export(root: Path, registry: dict, results: list[dict]) -> Path:
     summary = {'captured_at': now.isoformat(), 'repository': str(root),
                'python_executable': sys.executable, 'python_version': platform.python_version(),
                'installed_distribution_versions': versions, 'primary_endpoints': results,
-               'scope': 'Current selected code/docs/configs/tests and 24 primary metrics; not a full backup.',
+               'wireless_endpoints': wireless_results,
+               'scope': f'Current code/docs/configs/tests, {len(results)} legacy primary endpoints and {len(wireless_results)} explicit wireless runs; not a full backup.',
                'excluded': ['datasets', 'model weights', 'resume arrays', 'communication events ledgers',
                             'logs', '.git', 'partition NPZs', 'historical experiment trees', 'environment secrets'],
                'snapshot_warning': 'Per-file stability is checked. Whole-tree atomicity is not guaranteed; stop writers before export.'}
     observed_hashes = {r['metrics_relative_path']: r['metrics_sha256'] for r in results}
+    for result in wireless_results:
+        relative = Path(result['run_dir']).resolve().relative_to(root).as_posix()
+        for name, digest in result['input_hashes'].items():
+            observed_hashes[relative+'/'+name] = digest
     index = []
     with zipfile.ZipFile(dest, 'x', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as out:
         for rel, path in sorted(files.items()):
@@ -255,17 +277,44 @@ def main() -> int:
     mode.add_argument('--export', action='store_true', help='Check and create a NEW lightweight ZIP beside the repo.')
     parser.add_argument('--accuracy-unit', choices=('fraction','percent'), default='fraction',
                         help='Explicit stored CSV accuracy unit; never inferred from an individual value.')
+    parser.add_argument('--wireless-run-dir', type=Path, action='append', default=[],
+                        help='Explicit completed wireless output to verify/include; repeatable. No globs or newest-run guessing.')
+    parser.add_argument('--wireless-only', action='store_true',
+                        help='Skip the 24 legacy-paper endpoint requirement; still include current code/docs/configs.')
     args = parser.parse_args()
     root = args.root.expanduser().resolve()
+    if args.wireless_only and not args.wireless_run_dir:
+        parser.error('--wireless-only requires at least one explicit --wireless-run-dir')
     path = safe_path(root, 'docs/EXPERIMENT_REGISTRY.json')
-    registry = json.loads(stable_read(path))
+    registry = json.loads(stable_read(path)) if not args.wireless_only else {'runs': [], 'profiles': {}}
     selected = [r for r in registry['runs'] if r['primary_figure']]
-    if len(selected) != 24:
+    if not args.wireless_only and len(selected) != 24:
         fail(f'Expected 24 explicitly registered primary runs; found {len(selected)}')
     results = [read_endpoint(root, r, registry['profiles'], args.accuracy_unit) for r in selected]
-    print_results(results)
+    if selected:
+        print_results(results)
+    wireless_results = []
+    if args.wireless_run_dir:
+        # The wireless reporting module itself uses only the standard library.
+        # It reads variable packet costs, not the legacy round*constant formula.
+        sys.path.insert(0, str(safe_path(root, 'src')))
+        from bayesfl.wireless.reporting import inspect_run, print_results as print_wireless
+        seen = set()
+        for directory in args.wireless_run_dir:
+            directory = directory.expanduser()
+            if not directory.is_absolute():
+                directory = root / directory
+            directory = directory.resolve()
+            if directory in seen:
+                fail('Duplicate wireless run directory')
+            seen.add(directory)
+            if not directory.is_relative_to(root):
+                fail('Wireless run directory is outside the selected repository')
+            safe_path(root, directory.relative_to(root).as_posix())
+            wireless_results.append(inspect_run(directory))
+        print_wireless(wireless_results)
     if args.export:
-        export(root, registry, results)
+        export(root, registry, results, wireless_results)
     return 0
 
 

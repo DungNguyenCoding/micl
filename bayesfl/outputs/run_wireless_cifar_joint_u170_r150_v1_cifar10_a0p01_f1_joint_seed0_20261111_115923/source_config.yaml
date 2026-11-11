@@ -1,0 +1,260 @@
+run_name: run_wireless_cifar_joint_u170_r150_v1_cifar10_a0p01_f1_joint_seed0
+method: fola
+data:
+  dataset: cifar10
+  root: ./data
+  num_classes: 10
+  augment: true
+  crop_padding: 4
+  crop_fill: 128
+  random_flip: true
+  autoaugment_policy: cifar10
+  cutout_holes: 1
+  cutout_length: 16
+  normalize_mean:
+  - 0.5
+  - 0.5
+  - 0.5
+  normalize_std:
+  - 0.5
+  - 0.5
+  - 0.5
+  partition:
+    type: paper_dirichlet
+    dirichlet_alpha: 0.01
+    local_data_fraction: 1.0
+federation:
+  num_clients: 20
+  clients_per_round: 20
+model:
+  name: paper_basiccnn
+  group_norm_groups: 8
+training:
+  optimizer: sgd
+  lr: 0.02
+  momentum: 0.0
+  weight_decay: 0.0
+  batch_size: 32
+  local_epochs: 10
+  rounds: 150
+  lr_schedule: cosine
+  lr_min: 0.0001
+  lr_decay_rounds: 400
+  grad_clip_norm: 10.0
+  paper00_strict: false
+bbb:
+  posterior_mu_init: 0.0
+  posterior_rho_init: -3.0
+  prior_type: standard_normal
+  prior_mean: 0.0
+  prior_sigma: 1.0
+  prior_pi: 0.5
+  prior_sigma1: 1.0
+  prior_sigma2: 0.0024787521766663585
+  kl_weight: null
+  kl_reference_dimension: null
+  kl_scheme: equal_minibatch
+  kl_weight_schedule: false
+  kl_warmup_rounds: 20
+  lambda_scale_by_size: true
+  mc_train: 2
+  mc_eval: 5
+  variance_floor_ratio: 0.5
+  rho_lr_multiplier: 0.1
+  aggregation: gaussian_product
+  match_deterministic_init: false
+fola:
+  prior_lambda: 0.01
+  lambda_scale_by_size: false
+  mc_eval: 5
+  variance_floor_ratio: 0.5
+  precision_min: 1.0e-12
+  precision_max: 1000000000000.0
+  initial_precision: 0.0
+  mode: paper_reference
+  aggregation_epsilon: 1.0e-05
+  paper_mean_only_eval: true
+runtime:
+  client_num_cpus: 2.0
+  client_num_gpus: 0.25
+  central_eval_device: auto
+  seed: 0
+  torch_num_threads: 1
+  verbose_flower: false
+output:
+  logs_dir: ./logs
+  outputs_dir: ./outputs
+  checkpoint_every: 10
+  save_full_client_posteriors: false
+  full_client_posterior_rounds:
+  - 1
+  - 5
+  - 10
+  - 25
+  - 40
+  - 50
+compression:
+  selection_rule: kl_global_local
+  keep_ratio: 1.0
+  covariance_representation: precision
+  precision_policy: floor_for_score
+  score_precision_floor: null
+communication:
+  max_communication_bytes: null
+  budget_metric: cumulative_all_array_bytes
+  downlink_mode: multicast
+  deterministic_client_schedule: true
+wireless:
+  enabled: true
+  backend: flower
+  policy: joint
+  uplink_bandwidth_hz: 1000000.0
+  downlink_bandwidth_hz: 1000000.0
+  round_target_s: 170.0
+  total_time_budget_s: null
+  control_reserve_s: 30.0
+  control_rate_bps: 1000000.0
+  control_exchange_latency_s: 0.001
+  rpc_timeout_s: 3600.0
+  channel:
+    mode: fixed
+    seed: 0
+    path_gains:
+    - 4.899364596462921e-12
+    - 2.4635088937531964e-11
+    - 8.518567076736542e-10
+    - 4.695011028186721e-09
+    - 3.0947901736654714e-12
+    - 2.4911870204435724e-12
+    - 5.36992361760074e-12
+    - 3.796549580186012e-12
+    - 6.599482561960496e-12
+    - 2.380585120654482e-12
+    - 3.076393104660904e-12
+    - 1.3783159182384805e-07
+    - 2.8021009051381673e-12
+    - 1.2379569285246275e-09
+    - 3.794995506521575e-12
+    - 5.519606636079879e-11
+    - 2.7669622183077896e-12
+    - 6.64915031930857e-12
+    - 2.02147937292965e-11
+    - 1.0591484653268602e-11
+    uplink_psd_w_hz:
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    downlink_psd_w_hz: 3.9810717055349735e-05
+    noise_psd_w_hz: 3.981071705534986e-21
+    reciprocal_fading: true
+    trace_csv: null
+    client_power_cap_w:
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+  compute:
+    seconds_per_sample_epoch:
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    fixed_seconds:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    score_seconds:
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+  solver:
+    initial_price: 1.0
+    max_bracket_queries: 48
+    max_bisection_queries: 64
+    price_atol: 0.0
+    price_rtol: 1.0e-12
+    gap_atol: 1.0e-10
+    gap_rtol: 1.0e-06

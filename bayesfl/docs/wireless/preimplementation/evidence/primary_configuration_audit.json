@@ -1,0 +1,3819 @@
+[
+  {
+    "id": "cifar10_a0p01_f1_fedavg_baseline",
+    "profile": "cifar10_a0p01_f1",
+    "role": "fedavg_baseline",
+    "keep_ratio": null,
+    "relative_output": "outputs/run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola_20260927_103154",
+    "resolved_config_sha256": "300fbad89bc57dfa4595a52ff66457a7d7d917bf9ba8c09b581a7123ab817f7d",
+    "resolved_config": {
+      "run_name": "run_budgetmatch_cifar_basiccnn_a0p01_fedavg_n20_f1_seed0_e10_b32_lr001_budget150densefola",
+      "method": "fedavg",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.01,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1000,
+        "lr_schedule": "constant",
+        "lr_min": 0.01,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 100.0,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "dense",
+        "keep_ratio": 1.0,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 42169824000,
+        "budget_metric": "cumulative_all_array_bytes",
+        "deterministic_client_schedule": false,
+        "downlink_mode": "multicast"
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_dense_fola",
+    "profile": "cifar10_a0p01_f1",
+    "role": "dense_fola",
+    "keep_ratio": null,
+    "relative_output": "outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20261010_195905",
+    "resolved_config_sha256": "da58f33134b510e4fe6159f3d2b1e7b5ffd3334e42ce4571994f0b7c8ec87ae4",
+    "resolved_config": {
+      "run_name": "run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 150,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "dense",
+        "keep_ratio": 1.0,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": null,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": false
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "mnist_s10_dense_fola",
+    "profile": "mnist_s10",
+    "role": "dense_fola",
+    "keep_ratio": null,
+    "relative_output": "outputs/run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200_20261009_154443",
+    "resolved_config_sha256": "8ee0722ad8cb4f31af05a4f54846f8afbba7f98642f84f1171c376702c491c5e",
+    "resolved_config": {
+      "run_name": "run_mnist_stage18_cnn16_32_fola_noclip_fixed1c_s10_n20_seed0_e5_b10_lr0p10_lam0p01_r200",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 200,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "dense",
+        "keep_ratio": 1.0,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": null,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_kl_sparse_0.05",
+    "profile": "mnist_s10",
+    "role": "kl_sparse",
+    "keep_ratio": 0.05,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p05_budget150_r1362_20261011_023714",
+    "resolved_config_sha256": "d05e638c2a4b01cefad62b9fbcacb8f8e897c04a740eecdf86d955fcd4d58a8d",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p05_budget150_r1362",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 1362,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.05,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_kl_sparse_0.1",
+    "profile": "mnist_s10",
+    "role": "kl_sparse",
+    "keep_ratio": 0.1,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p10_budget150_r950_20261011_011043",
+    "resolved_config_sha256": "71fb643f7638abeb930cb27d5776f3af780781694a5e7dfb88fdde4925f7cc8a",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p10_budget150_r950",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 950,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.1,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_kl_sparse_0.25",
+    "profile": "mnist_s10",
+    "role": "kl_sparse",
+    "keep_ratio": 0.25,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p25_budget150_r498_20261011_003912",
+    "resolved_config_sha256": "a42c45962c80fdb27f1c84b94233d6c98e7554ff5231024d5cb676c422c68ebd",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p25_budget150_r498",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 498,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.25,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_kl_sparse_0.5",
+    "profile": "mnist_s10",
+    "role": "kl_sparse",
+    "keep_ratio": 0.5,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p50_budget150_r278_20261011_002442",
+    "resolved_config_sha256": "d6e40ee8d36416fa6dfc525f8271c41ef759ddc089ffaae201b593cb78ac4dd3",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p50_budget150_r278",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 278,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.5,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_kl_sparse_0.75",
+    "profile": "mnist_s10",
+    "role": "kl_sparse",
+    "keep_ratio": 0.75,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p75_budget150_r193_20261011_001511",
+    "resolved_config_sha256": "22a0c4e7dea8dc50eb92882b08919b220e6e78159b70f8f5cc0e08a72e16d0c8",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_kl_global_local_keep0p75_budget150_r193",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 193,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.75,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_random_sparse_0.05",
+    "profile": "mnist_s10",
+    "role": "random_sparse",
+    "keep_ratio": 0.05,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p05_budget150_r1362_20261011_023914",
+    "resolved_config_sha256": "1b36a360a8079e871e788f1ada942ce95cc7a14a17035d43ad632ef202f790e0",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p05_budget150_r1362",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 1362,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.05,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_random_sparse_0.1",
+    "profile": "mnist_s10",
+    "role": "random_sparse",
+    "keep_ratio": 0.1,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p10_budget150_r950_20261011_011143",
+    "resolved_config_sha256": "ccc22a500269e8f325d35b6fd43bc4c46884765f109073d1064c4b5e1c1dd61b",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p10_budget150_r950",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 950,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.1,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_random_sparse_0.25",
+    "profile": "mnist_s10",
+    "role": "random_sparse",
+    "keep_ratio": 0.25,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p25_budget150_r498_20261011_003942",
+    "resolved_config_sha256": "566cf4d686ecfb5c5cc9a072b25ce45d1a0a3f66c584f2e51bb9272a5665916b",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p25_budget150_r498",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 498,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.25,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_random_sparse_0.5",
+    "profile": "mnist_s10",
+    "role": "random_sparse",
+    "keep_ratio": 0.5,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p50_budget150_r278_20261011_002512",
+    "resolved_config_sha256": "848cfcfb01919c7c45c4beb0c642b778b9ba9173dbe78882417545958a6d9f06",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p50_budget150_r278",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 278,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.5,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_random_sparse_0.75",
+    "profile": "mnist_s10",
+    "role": "random_sparse",
+    "keep_ratio": 0.75,
+    "relative_output": "outputs/run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p75_budget150_r193_20261011_001511",
+    "resolved_config_sha256": "da1719b1ecc181b106315286a9600978416efac1165f7255c8472a094a71e566",
+    "resolved_config": {
+      "run_name": "run_mnist_stage22_cnn_s10_n20_seed0_fola_random_keep0p75_budget150_r193",
+      "method": "fola",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 193,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": null,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.75,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 2021090400,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "mnist_s10_fedavg_baseline",
+    "profile": "mnist_s10",
+    "role": "fedavg_baseline",
+    "keep_ratio": null,
+    "relative_output": "outputs/run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400_20261011_091458",
+    "resolved_config_sha256": "df6bf795d6accec6fcbf67de1ce3f1cd1ed29441b7a0600c277b8df632c4d189",
+    "resolved_config": {
+      "run_name": "run_mnist_stage23_cnn16_32_fixed1c_s10_n20_fedavg_clip_seed0_e5_b10_lr0p10_r400",
+      "method": "fedavg",
+      "data": {
+        "dataset": "mnist",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": false,
+        "crop_padding": 0,
+        "crop_fill": 0,
+        "random_flip": false,
+        "autoaugment_policy": "none",
+        "cutout_holes": 0,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.1307
+        ],
+        "normalize_std": [
+          0.3081
+        ],
+        "partition": {
+          "type": "fixed_labels",
+          "samples_per_client": 10,
+          "labels_per_client": 1
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "mnist_cnn_16_32_128",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.1,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 10,
+        "local_epochs": 5,
+        "rounds": 400,
+        "lr_schedule": "constant",
+        "lr_min": 0.1,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0,
+        "paper00_strict": false
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "scale_mixture",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-08,
+        "precision_max": 100000000.0,
+        "initial_precision": 1.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.125,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "dense",
+        "keep_ratio": 1.0,
+        "covariance_representation": "precision",
+        "precision_policy": "strict",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": null,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_client_counts": {
+        "0": 2,
+        "1": 2,
+        "2": 2,
+        "3": 2,
+        "4": 2,
+        "5": 2,
+        "6": 2,
+        "7": 2,
+        "8": 2,
+        "9": 2
+      },
+      "class_draws_exhausted": 0,
+      "empty_client_backfills": 0,
+      "labels_per_client_config": 1,
+      "max_classes_per_client": 1,
+      "max_size": 10,
+      "mean_classes_per_client": 1.0,
+      "mean_size": 10.0,
+      "median_size": 10.0,
+      "min_classes_per_client": 1,
+      "min_size": 10,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "samples_per_client_config": 10,
+      "seed": 0,
+      "sha256": "f083a94a732554c495b304d604222b3c68efc46237b56970f1c00f61f64f015a",
+      "total_samples_used": 200,
+      "type": "fixed_labels"
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_kl_sparse_0.05",
+    "profile": "cifar10_a0p01_f1",
+    "role": "kl_sparse",
+    "keep_ratio": 0.05,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260927_193202",
+    "resolved_config_sha256": "a0b7f72387878f720a6d29a656fe8e50088ba18a5f027888343b02eb5df55b1a",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 2000,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.05,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_kl_sparse_0.1",
+    "profile": "cifar10_a0p01_f1",
+    "role": "kl_sparse",
+    "keep_ratio": 0.1,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_071300",
+    "resolved_config_sha256": "18233540235e4b3e1e55f74d4c098fb9193e04c30c8b0c679330f707ed6d405a",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.1,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_kl_sparse_0.25",
+    "profile": "cifar10_a0p01_f1",
+    "role": "kl_sparse",
+    "keep_ratio": 0.25,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_090138",
+    "resolved_config_sha256": "a62397bca8118e1e42afd282980a7d7d70f4ea29527caa31a2b49c7a0b222fd8",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.25,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_kl_sparse_0.5",
+    "profile": "cifar10_a0p01_f1",
+    "role": "kl_sparse",
+    "keep_ratio": 0.5,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221",
+    "resolved_config_sha256": "67a9cbc4a38fe0935ef57ddcdc397a34c8055be79c2e30f1362797fa1098e6ef",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.5,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_kl_sparse_0.75",
+    "profile": "cifar10_a0p01_f1",
+    "role": "kl_sparse",
+    "keep_ratio": 0.75,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260924_194221",
+    "resolved_config_sha256": "565c0eeb01ce1f34a074186077fda1e75ca5bdf0fbb03c45948dd30ca9be1c9d",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_kl_global_local_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "kl_global_local",
+        "keep_ratio": 0.75,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_random_sparse_0.05",
+    "profile": "cifar10_a0p01_f1",
+    "role": "random_sparse",
+    "keep_ratio": 0.05,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260928_024119",
+    "resolved_config_sha256": "e94961de07d678324eb80fc52b41682d7d7a0e08fcc3f21a6343bf67a90d280c",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p05_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 2000,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.05,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_random_sparse_0.1",
+    "profile": "cifar10_a0p01_f1",
+    "role": "random_sparse",
+    "keep_ratio": 0.1,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_192526",
+    "resolved_config_sha256": "29dd3cd81958ec2591462eeb5c7f70427509976359cdf29be390dbd7b49e3ada",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p1_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.1,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_random_sparse_0.25",
+    "profile": "cifar10_a0p01_f1",
+    "role": "random_sparse",
+    "keep_ratio": 0.25,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_194658",
+    "resolved_config_sha256": "e1a0e216868e767ed9b2af221b69a2fd8d6e499992819dcf0b67c05cb150740a",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p25_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.25,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_random_sparse_0.5",
+    "profile": "cifar10_a0p01_f1",
+    "role": "random_sparse",
+    "keep_ratio": 0.5,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_043532",
+    "resolved_config_sha256": "01442b0939b03ba9bd28581d19d8d500a296e5845919a187bb1193f10fdfb72f",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.5,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  },
+  {
+    "id": "cifar10_a0p01_f1_random_sparse_0.75",
+    "profile": "cifar10_a0p01_f1",
+    "role": "random_sparse",
+    "keep_ratio": 0.75,
+    "relative_output": "outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_032226",
+    "resolved_config_sha256": "d331854cb7e2ae6ca4cc2d7043fb67894f100c7705ab5f1d43a0c255e7a4dbdb",
+    "resolved_config": {
+      "run_name": "run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense",
+      "method": "fola",
+      "data": {
+        "dataset": "cifar10",
+        "root": "./data",
+        "num_classes": 10,
+        "augment": true,
+        "crop_padding": 4,
+        "crop_fill": 128,
+        "random_flip": true,
+        "autoaugment_policy": "cifar10",
+        "cutout_holes": 1,
+        "cutout_length": 16,
+        "normalize_mean": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "normalize_std": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "partition": {
+          "type": "paper_dirichlet",
+          "dirichlet_alpha": 0.01,
+          "local_data_fraction": 1.0
+        }
+      },
+      "federation": {
+        "num_clients": 20,
+        "clients_per_round": 20
+      },
+      "model": {
+        "name": "paper_basiccnn",
+        "group_norm_groups": 8
+      },
+      "training": {
+        "optimizer": "sgd",
+        "lr": 0.02,
+        "momentum": 0.0,
+        "weight_decay": 0.0,
+        "batch_size": 32,
+        "local_epochs": 10,
+        "rounds": 1500,
+        "lr_schedule": "cosine",
+        "lr_min": 0.0001,
+        "lr_decay_rounds": 400,
+        "grad_clip_norm": 10.0
+      },
+      "bbb": {
+        "posterior_mu_init": 0.0,
+        "posterior_rho_init": -3.0,
+        "prior_type": "standard_normal",
+        "prior_mean": 0.0,
+        "prior_sigma": 1.0,
+        "prior_pi": 0.5,
+        "prior_sigma1": 1.0,
+        "prior_sigma2": 0.0024787521766663585,
+        "kl_weight": null,
+        "kl_reference_dimension": null,
+        "kl_scheme": "equal_minibatch",
+        "kl_weight_schedule": false,
+        "kl_warmup_rounds": 20,
+        "lambda_scale_by_size": true,
+        "mc_train": 2,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "rho_lr_multiplier": 0.1,
+        "aggregation": "gaussian_product",
+        "match_deterministic_init": false
+      },
+      "fola": {
+        "prior_lambda": 0.01,
+        "lambda_scale_by_size": false,
+        "mc_eval": 5,
+        "variance_floor_ratio": 0.5,
+        "precision_min": 1e-12,
+        "precision_max": 1000000000000.0,
+        "initial_precision": 0.0,
+        "mode": "paper_reference",
+        "aggregation_epsilon": 1e-05,
+        "paper_mean_only_eval": true
+      },
+      "runtime": {
+        "client_num_cpus": 2.0,
+        "client_num_gpus": 0.25,
+        "central_eval_device": "auto",
+        "seed": 0,
+        "torch_num_threads": 1,
+        "verbose_flower": false
+      },
+      "output": {
+        "logs_dir": "./logs",
+        "outputs_dir": "./outputs",
+        "checkpoint_every": 10,
+        "save_full_client_posteriors": false,
+        "full_client_posterior_rounds": [
+          1,
+          5,
+          10,
+          25,
+          40,
+          50
+        ]
+      },
+      "compression": {
+        "selection_rule": "random",
+        "keep_ratio": 0.75,
+        "covariance_representation": "precision",
+        "precision_policy": "floor_for_score",
+        "score_precision_floor": null
+      },
+      "communication": {
+        "max_communication_bytes": 22139157600,
+        "budget_metric": "cumulative_all_array_bytes",
+        "downlink_mode": "multicast",
+        "deterministic_client_schedule": true
+      }
+    },
+    "partition_metadata": {
+      "class_draws_exhausted": 0,
+      "dirichlet_alpha": 0.01,
+      "empty_client_backfills": 2,
+      "max_size": 8706,
+      "mean_classes_per_client": 1.35,
+      "mean_size": 2499.4,
+      "min_size": 1,
+      "num_classes": 10,
+      "num_clients": 20,
+      "num_empty_clients_after_backfill": 0,
+      "reference": "OnlineLaplaceApproximationBayesianFL released CIFAR partition",
+      "seed": 0,
+      "sha256": "914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2",
+      "total_samples_used": 49988,
+      "total_unassigned_samples": 14,
+      "total_unique_samples_used": 49986,
+      "type": "paper_dirichlet",
+      "unassigned_per_class": [
+        1,
+        1,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        2
+      ]
+    }
+  }
+]

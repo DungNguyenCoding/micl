@@ -1,0 +1,124 @@
+\section{Wireless System and Synchronized Timing}
+\label{sec:system}
+We consider one server and $K$ participating clients indexed by $\mathcal K=\{1,\ldots,K\}$. The common neural network has $d\ge2$ scalar parameters. Client $k$ holds $n_k>0$ samples and has aggregation weight $\pi_k=n_k/\sum_j n_j$. As in FedKLS~\cite{fedkls}, each client trains the full local model and subsequently transmits selected posterior mean--variance pairs. Sparsity therefore changes the message, not the local training architecture. The proposed extension allocates bandwidth and retention based on current wireless conditions and posterior changes; it does not replace the underlying Bayesian learning algorithm.
+
+\subsection{Orthogonal Digital Links and Channel Model}
+Clients upload concurrently over nonoverlapping frequency resources. The allocated bandwidths satisfy
+\begin{equation}
+ B_{k,t}>0,\qquad \sum_{k\in\mathcal K}B_{k,t}\le B,
+ \label{eq:bandwidth-budget}
+\end{equation}
+where $B$ is the total uplink bandwidth. Orthogonality suppresses intra-cell interference in the analytical model. This frequency-allocation abstraction is compatible with, but does not require, a particular multicarrier waveform. In contrast, the source scheduling framework explicitly chooses OFDMA~\cite[Sec.~II-C]{scheduling}.
+
+A proposed block-fading model separates path gain and small-scale fading:
+\begin{equation}
+ H_{k,t}=\sqrt{\beta_k}\,h_{k,t},\qquad
+ \beta_k=\beta_0\left(\frac{\ell_k}{\ell_0}\right)^{-\alpha},
+ \label{eq:channel}
+\end{equation}
+where $\ell_k\ge\ell_0>0$ is the client--server distance, $\beta_0$ is the gain at reference distance $\ell_0$, and $\alpha$ is the path-loss exponent. For the initial simulation, choose $h_{k,t}\sim\mathcal{CN}(0,1)$ independently between rounds and keep the gain fixed over the current allocation and upload phase. This Rayleigh assumption is a modeling choice, not implied by the rate formula. Fixed client positions isolate persistent distance effects from round-to-round fading. Perfect current channel knowledge is assumed for the initial allocator.
+
+The uplink uses the idealized rate model
+\begin{equation}
+ R_{k,t}^{\UL}=B_{k,t}c_{k,t},\qquad
+ c_{k,t}=\log_2(1+\gamma_{k,t}^{\UL})>0.
+ \label{eq:rate}
+\end{equation}
+Here $c_{k,t}$ is spectral efficiency, held fixed during the bandwidth decision. One physically consistent convention is a fixed transmit power spectral density $p_{k,t}^{\mathrm{PSD}}$ (W/Hz):
+\begin{equation}
+ \gamma_{k,t}^{\UL}
+ =\frac{p_{k,t}^{\mathrm{PSD}}\beta_k|h_{k,t}|^2}{N_0},
+ \qquad P_{k,t}=p_{k,t}^{\mathrm{PSD}}B_{k,t},
+ \label{eq:snr-psd}
+\end{equation}
+where $N_0$ is noise power spectral density. The allocation problem does not optimize power. If a total-power limit $P_k^{\max}$ is to hold automatically without adding a bandwidth cap, a sufficient configuration is $p_{k,t}^{\mathrm{PSD}}B\le P_k^{\max}$. The actual power and energy must then be evaluated using the allocated $B_{k,t}$.
+
+Under a different convention with fixed total transmit power, the rate would instead be
+\begin{equation}
+ R_{k,t}^{\UL}(B_{k,t})
+ =B_{k,t}\log_2\!\left(1+
+ \frac{P_{k,t}\beta_k|h_{k,t}|^2}{N_0B_{k,t}}\right).
+ \label{eq:fixed-power-caution}
+\end{equation}
+Equation~\eqref{eq:fixed-power-caution} is not used in the derivations below. Holding both total power and SNR fixed while varying bandwidth would be inconsistent with this noise model.
+
+\subsection{Posterior Payload and Transmission Time}
+Let $b$ denote the bits used to represent one posterior mean or variance. Client $k$ transmits $m_{k,t}$ pairs, where
+\begin{equation}
+ m_{k,t}\in\{1,\ldots,d\},\qquad
+ r_{k,t}=\frac{m_{k,t}}{d}\in(0,1].
+ \label{eq:retention}
+\end{equation}
+Thus, every integer retained count is allowed; no preset percentage menu is introduced. The percentage keep ratio is $100r_{k,t}$, with unavoidable resolution $100/d$ percentage points.
+
+With the submitted FedKLS bitmap representation~\cite[Sec.~II-B]{fedkls}, the uplink payload is
+\begin{equation}
+ L_{k,t}^{\UL}(m)=
+ \begin{cases}
+ d+2bm,&1\le m<d,\\
+ 2bd,&m=d.
+ \end{cases}
+ \label{eq:uplink-payload}
+\end{equation}
+The $d$-bit bitmap identifies sparse coordinates. At full retention, coordinate order is known and the bitmap is omitted. Additional headers, byte padding, and packet fragmentation are neglected, but the bitmap is retained. Payload $L$ is measured in bits, not in time. Accordingly,
+\begin{equation}
+ T_{k,t}^{\UL}(m_{k,t},B_{k,t})
+ =\frac{L_{k,t}^{\UL}(m_{k,t})}{B_{k,t}c_{k,t}}.
+ \label{eq:upload-time}
+\end{equation}
+
+The server sends the full global posterior by reliable digital multicast. Its payload is $2bd$ bits, counted once. Using a rate supported by the worst intended receiver, as in~\cite[Eqs.~(4)--(5)]{scheduling},
+\begin{equation}
+ T_t^{\DL}=\frac{2bd}{B^{\DL}\log_2\!\left(
+ 1+\min_{k\in\mathcal K}\gamma_{k,t}^{\DL}\right)}.
+ \label{eq:downlink-time}
+\end{equation}
+Reducing uplink retention does not shorten this dense downlink. Reliable decoding means that successfully delivered values equal their transmitted finite-precision representation; no additive channel noise is injected directly into those decoded values in the initial model. Additional quantization, packet loss, and retransmissions are outside the initial formulation.
+
+\subsection{Local Preparation and the Reporting Barrier}
+The general local preparation duration is
+\begin{align}
+ T_{k,t}^{\local}
+ &=T_{k,t}^{\train}+T_{k,t}^{\KL},\label{eq:local-time}\\
+ T_{k,t}^{\train}
+ &\simeq\frac{E_{k,t}n_kC_{\mathrm{FOLA}}}
+ {f_{k,t}^{\mathrm{eff}}},\label{eq:train-time}
+\end{align}
+where $E_{k,t}$ is the number of local epochs, $C_{\mathrm{FOLA}}$ is the effective computation per processed example including the adopted posterior-curvature estimator, and $f_{k,t}^{\mathrm{eff}}$ is throughput in operations/s. Equation~\eqref{eq:train-time} adapts the operation-count latency model in~\cite[Eq.~(16)]{scheduling}; profiled durations may be substituted. The initial approximation $T_{k,t}^{\local}\simeq T_{k,t}^{\train}$ neglects KL computation and ranking time. Alternatively, computing a complete score ranking once permits its measured cost to be included without making local preparation depend on the allocated count.
+
+The protocol is multicast, parallel local preparation, collection of current importance information and channel information, allocation, concurrent posterior uploads, and aggregation. All clients wait until the current information required by the allocator exists. A client finishing early therefore has pre-upload waiting time
+\begin{equation}
+ W_{k,t}^{\mathrm{pre}}
+ =\max_iT_{i,t}^{\local}-T_{k,t}^{\local}.
+ \label{eq:waiting}
+\end{equation}
+The per-client elapsed completion time is
+\begin{equation}
+ \begin{split}
+ T_{k,t}^{\round}(m_{k,t},B_{k,t})
+ ={}&T_t^{\DL}+\max_iT_{i,t}^{\local}\\
+ &+T_{k,t}^{\UL}(m_{k,t},B_{k,t}).
+ \end{split}
+ \label{eq:round-time}
+\end{equation}
+This preserves the staged structure of~\cite[Eq.~(18)]{scheduling}. In that source, the client index specifies the sole selected uploader; here it specifies an individual completion time in a multi-client round. It does not denote independent federated clocks.
+
+Channel-estimation, control-report, grant, packing, server-allocation, and aggregation durations are omitted initially. Their omission is a latency approximation, not permission to allocate using information before it is available. In particular, the proposed iterative price coordination occurs after the reporting barrier and before the main uploads.
+
+\subsection{Prescribed Common Completion Time}
+Let $T_t^{\round}$, without client index, be a prescribed common completion target. It and the current downlink and local durations are known when allocation begins. Define
+\begin{equation}
+ U_t=T_t^{\round}-T_t^{\DL}-\max_iT_{i,t}^{\local}>0.
+ \label{eq:uplink-budget}
+\end{equation}
+The equality-based allocation enforces $T_{k,t}^{\round}=T_t^{\round}$ for all clients, or equivalently
+\begin{equation}
+ L_{k,t}^{\UL}(m_{k,t})=U_tB_{k,t}c_{k,t}.
+ \label{eq:time-equality}
+\end{equation}
+Counts are chosen as integers, and bandwidth is then recovered as
+\begin{equation}
+ B_{k,t}=\frac{L_{k,t}^{\UL}(m_{k,t})}{U_tc_{k,t}}.
+ \label{eq:bandwidth-recovery}
+\end{equation}
+This yields exactly $U_t$ seconds of idealized uploading and may leave some total bandwidth unused. It is not the policy that uses all bandwidth to minimize completion time. At a fixed bandwidth, flooring $(U_tB_{k,t}c_{k,t}-d)/(2b)$ only enforces a sparse packet-fitting inequality, not an exact time equality.

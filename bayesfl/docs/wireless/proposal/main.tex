@@ -1,0 +1,18 @@
+\documentclass[journal]{IEEEtran}
+\input{preamble}
+\begin{document}
+\title{Joint Bandwidth and Posterior-Retention Allocation for Digital Wireless FedKLS}
+\author{Manuscript formulation and implementation plan}
+\maketitle
+\begin{abstract}
+This manuscript formulation extends KL-guided selective posterior transmission (FedKLS) to orthogonal digital wireless links with distance-dependent path loss and small-scale fading. Full local Bayesian training and prior-fill posterior aggregation are preserved. A synchronous reporting barrier precedes resource allocation, and a prescribed common round duration determines the available upload interval. Client-specific integer retention counts and bandwidths are jointly selected to minimize weighted local posterior-reconstruction divergence. An exact elimination of bandwidth reduces the problem to a separable integer resource-allocation problem. Lagrangian dual decomposition yields an exact local KL-threshold response, including the bitmap-free dense-message option. The server coordinates these responses through price bisection while maintaining a feasible allocation and a dual lower bound. No predefined list of keep ratios is required. Global optimality is asserted only when supported by a valid objective-gap certificate. An implementation workflow and validation criteria are provided; wireless learning-performance gains are not assumed or reported.
+\end{abstract}
+\begin{IEEEkeywords}
+Bayesian federated learning, digital wireless communication, bandwidth allocation, posterior sparsification, Lagrangian decomposition.
+\end{IEEEkeywords}
+\input{wireless_model}
+\input{joint_problem}
+\input{method1}
+\input{implementation}
+\input{references}
+\end{document}

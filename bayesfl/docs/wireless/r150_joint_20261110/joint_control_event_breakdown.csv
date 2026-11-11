@@ -1,0 +1,15 @@
+phase,operation,events,control_bytes,array_bytes,energy_j
+control_request,price,5579,50767830,0,0.0
+reply,price,111580,46533653,0,0.0
+control_request,upload,150,2873583,0,0.0
+reply,tail,6000,2492009,0,0.0
+reply,upload,3000,2119642,10384355648,0.0
+control_request,tail,300,2113980,0,0.0
+reply,prepare,3000,1656860,0,0.0
+reply,release,3000,1156140,0,0.0
+control_request,prepare,150,1028490,0,0.0
+control_request,release,150,1028490,0,0.0
+multicast,,150,0,1054245600,23093.75654714369
+preparation_barrier,,150,0,0,0.0
+upload_airtime,,150,0,0,2221.9848965192896
+slot_idle,,150,0,0,0.0

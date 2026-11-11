@@ -1,0 +1,938 @@
+{
+  "release": "fedkls_wireless_v1",
+  "built_date": "2026-11-09",
+  "protocol": "fedkls_wireless_integer_precision_v2",
+  "baseline_zip_sha256": "36343d890cd5313d74ceb953f46d9ce81af2d90a7588d1538cd9fce712a2b41b",
+  "proposal_zip_sha256": "3622dbf89fc0984eb48388d710175248b31122aebb67d8c2c9681e45e6b2599f",
+  "modified": 29,
+  "added_excluding_this_manifest": 102,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "status": "modified",
+      "original_sha256": "64d056c6fcd03a0a3aaf0fe9175c9399a3541b7658c17667eb4b092889d52462",
+      "sha256": "802d3d08b234524589a9e6f22786104f75c31b12b152e749ef49c056fa00cfa6",
+      "bytes": 2271
+    },
+    {
+      "path": "IMPLEMENTATION_REPORT.md",
+      "status": "modified",
+      "original_sha256": "35d90fd241a920e6322709f929d2a7951bf56d6bc9aa035f91ae4def3c5301b3",
+      "sha256": "05b03f882561cd6da9b46c2e0712b55c730a113d8f1344deeca2d112cfffdba0",
+      "bytes": 894
+    },
+    {
+      "path": "README.md",
+      "status": "modified",
+      "original_sha256": "0b6dc7ecb12558190aaa58da07aa27b9f3453fc5f70131756746d45d281d5f4d",
+      "sha256": "b655ea765c31f2cd9e13df25d22d71d5c638f35ef145221ad994b1da6bf960b9",
+      "bytes": 3197
+    },
+    {
+      "path": "SPARSE_README.md",
+      "status": "modified",
+      "original_sha256": "c2e74bc09497abd3e67c53e1fb5bc9290287640f7b505e59032e84a7f996cb37",
+      "sha256": "07d7cb655f8a7bbc576ea2c686fc9f6ccee33e99dc2bfac31f1c0d545c655301",
+      "bytes": 926
+    },
+    {
+      "path": "VALIDATION.md",
+      "status": "modified",
+      "original_sha256": "26f8d0ae2bfdd9759137bf85f19f27acffaac2ccf076f4d1800e6178b953cb1b",
+      "sha256": "440b5c74c69305d2fff48f6931dabee1f5797bd0d430a13526dbe33d5fca06a6",
+      "bytes": 586
+    },
+    {
+      "path": "VALIDATION_SPARSE.md",
+      "status": "modified",
+      "original_sha256": "f39195ec4d54defed736f80cbca8abcb4a014d53f5e4159a9dfb41d78a3fca1b",
+      "sha256": "a459ad7b6bdf89cb040da04d316628a3e44a5f33600c32385ca73149aeb160c9",
+      "bytes": 917
+    },
+    {
+      "path": "WIRELESS_IMPLEMENTATION_REPORT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "8dc810d89be3a56f8d445bdd20ecf192d0d21ae0c65fbffc4d613e0f751da3b4",
+      "bytes": 3968
+    },
+    {
+      "path": "docs/ALGORITHM_NOTES.md",
+      "status": "modified",
+      "original_sha256": "d019e15509a1342a7add407f82b30ae1decbefc6cb932dccc8c104be1cd5b4cb",
+      "sha256": "f95a1114783140061392bee1e36493e0b2d60e5f5b0bae17d821ae30d2676eed",
+      "bytes": 1914
+    },
+    {
+      "path": "docs/CHAT_HANDOFF.md",
+      "status": "modified",
+      "original_sha256": "55f79daec56977a68527740e7295047f9f831b2c59b0bea17b61585ea29295cd",
+      "sha256": "2e56007fa6400d2bb7fe5ba5f4b7106977c3702cc1993f1ac1f9780b29d8711c",
+      "bytes": 21339
+    },
+    {
+      "path": "docs/COMMAND_RULES.md",
+      "status": "modified",
+      "original_sha256": "dcee673372b5353bbf72aad55423e659bfd5000e8ffa084e53991b002077edab",
+      "sha256": "3e784dc0ca14328e68f9218cef989a61658ad14c38c249505f503770585d7aec",
+      "bytes": 2634
+    },
+    {
+      "path": "docs/COMMUNICATION_ACCOUNTING.md",
+      "status": "modified",
+      "original_sha256": "04c288a3c3091f61e6af8abaf066d3efc2f33b7568271df20090de5d4f50d01f",
+      "sha256": "b68e002d8b19f1e96add38cc12c54238f3a0bc9d7b26b0700691a12c2e858267",
+      "bytes": 2844
+    },
+    {
+      "path": "docs/DATA_AND_GIT.md",
+      "status": "modified",
+      "original_sha256": "df947c8e383fbb91c26b477f8ec3a9eed6283974ec26d198b364cb03ebb914b5",
+      "sha256": "3007440e095f5511fd8b33947a1776e4778f07483394b414fe8299ba9632ef3c",
+      "bytes": 1930
+    },
+    {
+      "path": "docs/DECISIONS_AND_NEXT_WORK.md",
+      "status": "modified",
+      "original_sha256": "cc3a5d24726b5cce47c02e2caa656923cc47f5415af4bd186b95904e5fff2e00",
+      "sha256": "d88f7c41646f5540346dbbb147b9bcecb6b1fdcd33d8843ce62d03dbc9bbc986",
+      "bytes": 1778
+    },
+    {
+      "path": "docs/DOCUMENTATION_VALIDATION.md",
+      "status": "modified",
+      "original_sha256": "6681a12a0901ec682cd4e78ad2a97da1310efef5d9850cfe961bd1df485d6a9a",
+      "sha256": "3ecf9ba6c65c5c3700a03134165a05c0f09fd2b52d5b7f3d66bce35524a70048",
+      "bytes": 2896
+    },
+    {
+      "path": "docs/DOC_CHANGELOG.md",
+      "status": "modified",
+      "original_sha256": "2e936aced5b1c5a5d9544c15c68d2b5943df36a6c8206e520129ccfbe61e99f7",
+      "sha256": "6d95cde1fc74cdc968d3b98935c030226d0c9e85df5165222063f6ea7207188c",
+      "bytes": 1215
+    },
+    {
+      "path": "docs/EVIDENCE_AND_GAPS.md",
+      "status": "modified",
+      "original_sha256": "6240b8624f05cc36656e0bd874680123b515385d94e95d42a29d640d736734e8",
+      "sha256": "fa48fe2547fddec8f3f85a822159cfa6da676c911355020a3aaa37c95dfc9124",
+      "bytes": 2831
+    },
+    {
+      "path": "docs/EXPERIMENT_REGISTRY.json",
+      "status": "modified",
+      "original_sha256": "1f0ad2d0b101c9a0f890726f012ef8daf34702d0836bec659faa0092e78414eb",
+      "sha256": "3d324ee6f97a227c7980bda66ae026589068244665b2ccd9483dcd14daa3d5d3",
+      "bytes": 59233
+    },
+    {
+      "path": "docs/LOCKED_EXPERIMENTS.md",
+      "status": "modified",
+      "original_sha256": "f31c444086373c239f6384a7ae136da936f7440185249d814591b536d745fb76",
+      "sha256": "3b2e90c4206879336e2ea58375164d3370a34c6cb49d4949017e7dbb618c13b5",
+      "bytes": 7092
+    },
+    {
+      "path": "docs/PAPER_CIFAR10_PROFILE.md",
+      "status": "modified",
+      "original_sha256": "80a346532fdf3a4e92bdce63aa612477a7cf1a1c21b41410537822e1bb591d92",
+      "sha256": "fc11e2808dfbb2687550e82abb4888a85b5710dd16db7201fe92f663f06ff91b",
+      "bytes": 922
+    },
+    {
+      "path": "docs/README.md",
+      "status": "modified",
+      "original_sha256": "305fb327704dcbf3f2c0da28c0305d50b3717c51c5028429aa454ec76e6b1632",
+      "sha256": "5fdcf9cd4a4d03bc485d656019b9e63bb59ed8f35af0fc892758bd2fe42238e5",
+      "bytes": 1939
+    },
+    {
+      "path": "docs/REPOSITORY_MAP.md",
+      "status": "modified",
+      "original_sha256": "6b1e8ca9eb3a98f2da23b96aba63665d510a96ed0e963eebb599ca5c7a1c5e13",
+      "sha256": "a1ebb0c0c7acf97428ea505ae4897ab3de5a7166fe5c2a0f6ad87f624a6481ff",
+      "bytes": 2479
+    },
+    {
+      "path": "docs/RESULTS_AND_PLOTTING.md",
+      "status": "modified",
+      "original_sha256": "e03a286c4ae4924388adb23368729f4cd789251385361d13ef8d069dd4fac4e8",
+      "sha256": "27f2b8151a768d2c5c3bf5815b6219a219618a7c536fa901a4a4a26302a01465",
+      "bytes": 2434
+    },
+    {
+      "path": "docs/RUNBOOK.md",
+      "status": "modified",
+      "original_sha256": "6952298666418f72bcd87263a88a6dd533f52fc7521cb264e5ee9c36ecdd2c03",
+      "sha256": "cda5e83dcc8c64d1366c873cb80955db10f94dd8c9a787911602b675195b47bd",
+      "bytes": 1918
+    },
+    {
+      "path": "docs/SCRIPT_REGISTRY.md",
+      "status": "modified",
+      "original_sha256": "585f47161b6a950aebce6670e26e1371b597ff266ee72260831d2e1e8bcccb98",
+      "sha256": "5d91f6509306be16657a010fe9fd574d362d3807f6bdb598f7eb615876ebffe6",
+      "bytes": 2140
+    },
+    {
+      "path": "docs/START_HERE.md",
+      "status": "modified",
+      "original_sha256": "c5c9394e63dbcbd9759c5dc9f1eca167519a2560e8f319883f5697a556f34cc0",
+      "sha256": "3cc95d6fd3e2821e983e83a4390ad64298e1242de88cf0b307519a2dca7ce61e",
+      "bytes": 1644
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/AGENTS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "64d056c6fcd03a0a3aaf0fe9175c9399a3541b7658c17667eb4b092889d52462",
+      "bytes": 1785
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/IMPLEMENTATION_REPORT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "35d90fd241a920e6322709f929d2a7951bf56d6bc9aa035f91ae4def3c5301b3",
+      "bytes": 1578
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ee4ccbda844d44e16b090a907ab27a4fbd908df2a25761de9a72bb633227f818",
+      "bytes": 410
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/SPARSE_README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "c2e74bc09497abd3e67c53e1fb5bc9290287640f7b505e59032e84a7f996cb37",
+      "bytes": 1188
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/VALIDATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "26f8d0ae2bfdd9759137bf85f19f27acffaac2ccf076f4d1800e6178b953cb1b",
+      "bytes": 1674
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/VALIDATION_SPARSE.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "f39195ec4d54defed736f80cbca8abcb4a014d53f5e4159a9dfb41d78a3fca1b",
+      "bytes": 1643
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/ALGORITHM_NOTES.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d019e15509a1342a7add407f82b30ae1decbefc6cb932dccc8c104be1cd5b4cb",
+      "bytes": 5502
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/CHAT_HANDOFF.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "55f79daec56977a68527740e7295047f9f831b2c59b0bea17b61585ea29295cd",
+      "bytes": 18035
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/COMMAND_RULES.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "dcee673372b5353bbf72aad55423e659bfd5000e8ffa084e53991b002077edab",
+      "bytes": 6567
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/COMMUNICATION_ACCOUNTING.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "04c288a3c3091f61e6af8abaf066d3efc2f33b7568271df20090de5d4f50d01f",
+      "bytes": 4007
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/DATA_AND_GIT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "df947c8e383fbb91c26b477f8ec3a9eed6283974ec26d198b364cb03ebb914b5",
+      "bytes": 4832
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/DECISIONS_AND_NEXT_WORK.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "cc3a5d24726b5cce47c02e2caa656923cc47f5415af4bd186b95904e5fff2e00",
+      "bytes": 3575
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/DOCUMENTATION_VALIDATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6681a12a0901ec682cd4e78ad2a97da1310efef5d9850cfe961bd1df485d6a9a",
+      "bytes": 2406
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/DOC_CHANGELOG.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2e936aced5b1c5a5d9544c15c68d2b5943df36a6c8206e520129ccfbe61e99f7",
+      "bytes": 1565
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/EVIDENCE_AND_GAPS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6240b8624f05cc36656e0bd874680123b515385d94e95d42a29d640d736734e8",
+      "bytes": 6009
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/EXPERIMENT_REGISTRY.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1f0ad2d0b101c9a0f890726f012ef8daf34702d0836bec659faa0092e78414eb",
+      "bytes": 57714
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/LOCKED_EXPERIMENTS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "f31c444086373c239f6384a7ae136da936f7440185249d814591b536d745fb76",
+      "bytes": 6161
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/PAPER_CIFAR10_PROFILE.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "80a346532fdf3a4e92bdce63aa612477a7cf1a1c21b41410537822e1bb591d92",
+      "bytes": 1155
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "305fb327704dcbf3f2c0da28c0305d50b3717c51c5028429aa454ec76e6b1632",
+      "bytes": 2652
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/REPOSITORY_MAP.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6b1e8ca9eb3a98f2da23b96aba63665d510a96ed0e963eebb599ca5c7a1c5e13",
+      "bytes": 6405
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/RESULTS_AND_PLOTTING.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "e03a286c4ae4924388adb23368729f4cd789251385361d13ef8d069dd4fac4e8",
+      "bytes": 5862
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/RUNBOOK.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6952298666418f72bcd87263a88a6dd533f52fc7521cb264e5ee9c36ecdd2c03",
+      "bytes": 7308
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/SCRIPT_REGISTRY.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "585f47161b6a950aebce6670e26e1371b597ff266ee72260831d2e1e8bcccb98",
+      "bytes": 4234
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/START_HERE.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "c5c9394e63dbcbd9759c5dc9f1eca167519a2560e8f319883f5697a556f34cc0",
+      "bytes": 2511
+    },
+    {
+      "path": "docs/history/pre_wireless_v1/docs/tools/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "afecfd6aa9f5393698ccd8b61cd21b55b719099fcdc46dc1499b314d42a406c4",
+      "bytes": 20439
+    },
+    {
+      "path": "docs/tools/README.md",
+      "status": "modified",
+      "original_sha256": "afecfd6aa9f5393698ccd8b61cd21b55b719099fcdc46dc1499b314d42a406c4",
+      "sha256": "d74a83cf2e37d344f5c694df5573e945577c9d73b8f5c2f4c560d81601aab574",
+      "bytes": 22836
+    },
+    {
+      "path": "docs/tools/export_handoff.py",
+      "status": "modified",
+      "original_sha256": "4aa3a21e620403c6ea7c7fbceaeda53b28f221acf74b0b6959ee8bc77c710d50",
+      "sha256": "a10422c0e87a47960a033b810776d4661f9ecfbfd874a4114d031bddb6f6d389",
+      "bytes": 17092
+    },
+    {
+      "path": "docs/wireless/CONFIGURATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "9f546a9a8f8a0cd10fbf7e30670821ff5ac1b9a5be1af135c64c10844653e1d8",
+      "bytes": 4594
+    },
+    {
+      "path": "docs/wireless/DECISIONS_AND_OPEN_ITEMS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "8bb9b2af11bea33f54f20958382f474ba028a557cf17a6c155131b91fea0ac45",
+      "bytes": 458
+    },
+    {
+      "path": "docs/wireless/DESIGN_REVIEW.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ce866901e4ac2d57111cdd1a2219f8efcdb2fbe1ab314710c8e03c4b128421d6",
+      "bytes": 425
+    },
+    {
+      "path": "docs/wireless/IMPLEMENTATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "8d0e2c84f36e4ccfc58fe86687d6407c37c9894aa6e3a3523c81c0a081fa30ba",
+      "bytes": 7414
+    },
+    {
+      "path": "docs/wireless/IMPLEMENTATION_PLAN.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ae5dcc7fa0132ce8bdaf24284c6ba6e92b3cff149502d8a653a9902876a7fe4c",
+      "bytes": 443
+    },
+    {
+      "path": "docs/wireless/OUTPUTS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "92b639f9826bd76183c8ca05272d181f3265afd78435cbb75a8e1a0b787808ae",
+      "bytes": 3980
+    },
+    {
+      "path": "docs/wireless/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "43faf8752664cfc2d534f5f1d1301a6d849db18e7a77d7cdda1dc8ae5b05cf08",
+      "bytes": 2513
+    },
+    {
+      "path": "docs/wireless/RUNBOOK.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7c4d30877d4f007f7b1952c1890d18ee04ab747be3778800fb312826fa10abae",
+      "bytes": 6788
+    },
+    {
+      "path": "docs/wireless/SOURCE_AUDIT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4ac59fb9ea8aaa67716aa2edb60cf6bd35115cb337defe1047bccc39e3c4d51a",
+      "bytes": 422
+    },
+    {
+      "path": "docs/wireless/STATUS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "44648213e253f7e5c8afaa5454f719ca3b379b78c2355c6d70fb88a57068053d",
+      "bytes": 1956
+    },
+    {
+      "path": "docs/wireless/VALIDATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "57a877b0b323bd44e515da4ef8afb287df20c7445f3ef428311b109d4dfa5a24",
+      "bytes": 3582
+    },
+    {
+      "path": "docs/wireless/VALIDATION_PLAN.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "f6192b63e3498be2935bf9ef0905bdd70451edb75cd10d73a510a51b56022028",
+      "bytes": 431
+    },
+    {
+      "path": "docs/wireless/preimplementation/DECISIONS_AND_OPEN_ITEMS.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "b72dd64a21f2e761f3344f9834b5565ad7ebc85f24da5080282babb31d12842d",
+      "bytes": 4086
+    },
+    {
+      "path": "docs/wireless/preimplementation/DESIGN_REVIEW.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6dde981a5c3654e95bbc6d5b07c1132712c1927dd896e94c1051981063c64ba5",
+      "bytes": 15425
+    },
+    {
+      "path": "docs/wireless/preimplementation/IMPLEMENTATION_PLAN.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "34eb594131c9f1a0f5a524a6bff0e47f97e7ceed49711f70c02b6d4e648fb5ef",
+      "bytes": 16264
+    },
+    {
+      "path": "docs/wireless/preimplementation/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "492ab209cc367de57dad7ebff1be5adf4cac65722c492bf14b5ee16739cc2425",
+      "bytes": 3665
+    },
+    {
+      "path": "docs/wireless/preimplementation/REVIEW_MANIFEST.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4865a13f62377faa4928f1d66cc88a73cd58d71bafef4ffe1932433b4bba2d81",
+      "bytes": 2638
+    },
+    {
+      "path": "docs/wireless/preimplementation/SOURCE_AUDIT.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "eaae5c74b911123237a73417ddea915afe5ac2190c1ac4ce2edda48bd9c4dc52",
+      "bytes": 5257
+    },
+    {
+      "path": "docs/wireless/preimplementation/VALIDATION_PLAN.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1436fbad6a28bfbeb1a20e803e8ebcfca2d97515eb2658d1992db5675e802e11",
+      "bytes": 7229
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/baseline_primary_endpoints.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ab9ba53c81c154ec6d6f388bdc8ddf2d1215d45886f1798b7890bbc3b79271e4",
+      "bytes": 2045
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/baseline_pytest.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "dc544211ce28ed6aad4c83744d274da41f30c7109d49d7c4ca911ba224ed1664",
+      "bytes": 845
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/baseline_source_excerpts.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "28e58d83e510ccd0a6330285bb9e9c8d91a38e70c9a36eecdb5b38306ceecadd",
+      "bytes": 45459
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/primary_configuration_audit.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "296a496287d848b15983aed0f6e539446ecdc6e1d4eacd479d784679f6f199b6",
+      "bytes": 108877
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/proposal_sources.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d854c91e31dde34cd42c897bb1effcccbb3c950959d95f7ca60c5f1fc24240f0",
+      "bytes": 90149
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/review_checks.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d4f7f8fedb5a38537eec9374bed61b54d53925b367726701d07dc470c3ce9f71",
+      "bytes": 910
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/review_checks.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "fe1a00cdf5573c858f6cf49200b5606220a813643129602f0de0c4c1d83afb88",
+      "bytes": 4847
+    },
+    {
+      "path": "docs/wireless/preimplementation/evidence/source_manifest.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "083236170934172d25176413e72419a32186de9e60361bff2c016451f6994c2f",
+      "bytes": 3460
+    },
+    {
+      "path": "docs/wireless/proposal/CHANGELOG.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6eca98d4efc8f2519e56cf3be5146e989229142eec54f8e953e0ff234e0f7db6",
+      "bytes": 1258
+    },
+    {
+      "path": "docs/wireless/proposal/IMPLEMENTATION.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "246433b8fb11a2f79489c6b7b0ffbe6fd39b8db9e49cca633915042435e1d4c3",
+      "bytes": 8440
+    },
+    {
+      "path": "docs/wireless/proposal/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7c42f44fc68eb83549c6c814407eed306ffb9b1fc3bdde9c7e4c7b774fe48c4a",
+      "bytes": 3423
+    },
+    {
+      "path": "docs/wireless/proposal/implementation.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4998266cf514e7e1ebfd24d71964fdc7c39f89e7cf3210fda3234ad7def3646c",
+      "bytes": 8407
+    },
+    {
+      "path": "docs/wireless/proposal/joint_problem.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "eeec614b1d3bf1ccf1bf10e1114133fd7a469cd1d1d5e8ba0a88139fe3e31897",
+      "bytes": 5015
+    },
+    {
+      "path": "docs/wireless/proposal/main.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "19d552ead187b128f949c342832e4d286f3f16fc355ab3680a5755651b1b8ec5",
+      "bytes": 1716
+    },
+    {
+      "path": "docs/wireless/proposal/method1.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "89ec2a7b6805e72680638fece92d082e2a1e0bec256409cbf2c4110172340399",
+      "bytes": 11337
+    },
+    {
+      "path": "docs/wireless/proposal/paper_section.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "00844b30e5b516c537e23940b65c792c98e57d5e322066d7ae914b2d3f69114d",
+      "bytes": 33876
+    },
+    {
+      "path": "docs/wireless/proposal/preamble.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1954661a2d14f1718d58daf61e7ec3ad3c306c5bb55cd5813b1adeaf8d79f9b0",
+      "bytes": 794
+    },
+    {
+      "path": "docs/wireless/proposal/references.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "3734e153840e93ccf39a029878fb622230f99515ebc7b5dcba7b0fe78b6e618a",
+      "bytes": 900
+    },
+    {
+      "path": "docs/wireless/proposal/wireless_model.tex",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "11e8ce5732a28222e40f9e48376deff63643abc2bf38a8bedb2c4b6b12689654",
+      "bytes": 8560
+    },
+    {
+      "path": "scripts/_run_wireless_queue.sh",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "fd0dd99bb23f94a77a12aa287d2c9d4e3b1318f57989ae74347e7f2ec6d784bc",
+      "bytes": 2266
+    },
+    {
+      "path": "scripts/configs/wireless/scenario_example.yaml",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "121137fc1783a5e91b6a8c6c7d3cd1764ee249c9809a5676f5b240eb820479f9",
+      "bytes": 2477
+    },
+    {
+      "path": "scripts/plot_wireless_results.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1ece104cdb4f3fe2dd4342de4e3bbf967274f89e4f7e0e25d8bccdecf4314722",
+      "bytes": 1869
+    },
+    {
+      "path": "scripts/prepare_wireless_study.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "5aa98c06a76093ae2df6efa58b922403c1634d4643f1baf9882a30c6e8f20240",
+      "bytes": 8172
+    },
+    {
+      "path": "scripts/smoke_wireless_flower.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "f9f134b30d41bbe4da9afa0608fcbb313b8e8c88b4b52efcee349ceb1b88cd9b",
+      "bytes": 2976
+    },
+    {
+      "path": "scripts/smoke_wireless_offline.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "4a93e6a7fa6853a72b3ce56fc378a6d29e0bb35b09eb327b9cddada655ac764a",
+      "bytes": 167
+    },
+    {
+      "path": "scripts/summarize_wireless_results.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "67e3a4101c02116e8e43978ac4b5960bae7b54293a4e439b07667c19e0012039",
+      "bytes": 529
+    },
+    {
+      "path": "scripts/summarize_wireless_study.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "274638c9895e5cea56b08e2cb739f8418de5ee457b876352426d511e31773e69",
+      "bytes": 1501
+    },
+    {
+      "path": "src/bayesfl/config.py",
+      "status": "modified",
+      "original_sha256": "c7203fceb90d689695c8045fd2458ab9b9586faa3064c182fe25f326265df5d9",
+      "sha256": "606665967aae8954360e89d487757474a4e5d97573f869cd2359a36634730979",
+      "bytes": 18891
+    },
+    {
+      "path": "src/bayesfl/main.py",
+      "status": "modified",
+      "original_sha256": "d21abd0f6098aba5ea8d8b1feb609b9de599c1e46d488f59436e8bf3c09ef93a",
+      "sha256": "290c99a661ab0d79359f502c6335f21497f192e3203854481958de3639e00027",
+      "bytes": 7085
+    },
+    {
+      "path": "src/bayesfl/server.py",
+      "status": "modified",
+      "original_sha256": "a6b97167869f2baa3c1ac8647434ee468dce194b44806a5d5ee81f3f969d21d5",
+      "sha256": "24b32a5c7f84273158f4f4ddf9394a06557b9ed91ce4e8bb7ad6058b722fab7b",
+      "bytes": 5249
+    },
+    {
+      "path": "src/bayesfl/wireless/__init__.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "3e2efa45451089e8b826ec7fc7bf3b7572e896b1a8651c5057eff37b6b8ae1e0",
+      "bytes": 129
+    },
+    {
+      "path": "src/bayesfl/wireless/allocation.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "42a01b4d77134c65dd60143768a2859d5918143945ca9efc4d3dc943c048847a",
+      "bytes": 8131
+    },
+    {
+      "path": "src/bayesfl/wireless/channel.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "bf23b533cac3366268bc35efed42c41f85218e23214b43619dedfcac4aeeccd2",
+      "bytes": 4137
+    },
+    {
+      "path": "src/bayesfl/wireless/client.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "57f05fbeb3d50dbd6b02052bedd29f3df805efe7bb875fd346309c31e2ea37fe",
+      "bytes": 10858
+    },
+    {
+      "path": "src/bayesfl/wireless/config.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "cf80f57817dda70cbf473b99a30e320ffee2e71c00fdfdaf37633f2becbdb564",
+      "bytes": 8139
+    },
+    {
+      "path": "src/bayesfl/wireless/controller.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "0af2089430c4b6f792b5d4bd004acadba5156abfe070f7a2feec4f88514c32ca",
+      "bytes": 13591
+    },
+    {
+      "path": "src/bayesfl/wireless/oracle.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "8145b4d9e99b4ea725ac2f551c93d172eee4d9e4b75c97a08cc468818a136efd",
+      "bytes": 3775
+    },
+    {
+      "path": "src/bayesfl/wireless/payload.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "eaa22ebb8e90cd8a8af81fb4134303f71d212b523ecb7daadb5b070c43111ef1",
+      "bytes": 2194
+    },
+    {
+      "path": "src/bayesfl/wireless/protocol.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7490ede98d052140855f5325a365a57c18a5897d45604e4baa10679a9562a12b",
+      "bytes": 7843
+    },
+    {
+      "path": "src/bayesfl/wireless/reporting.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "cfc76fabad0a9af006021955fa014ff61de435f62cf28571eaeccb761cc383c6",
+      "bytes": 7544
+    },
+    {
+      "path": "src/bayesfl/wireless/runner.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "edc72b35b1a46c69e704b4584d6779f6545e13cc031b3c48633c9e3e978d3c32",
+      "bytes": 6789
+    },
+    {
+      "path": "src/bayesfl/wireless/smoke.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2233114d69afd841850c9685aab5b613c2ccfd1715843b1a0ee027dc276273ed",
+      "bytes": 6937
+    },
+    {
+      "path": "src/bayesfl/wireless/state.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "2a42e2148ee0a1f38114e6769d195e14535664e0e49bd9501a14fdc3798d69a9",
+      "bytes": 12091
+    },
+    {
+      "path": "src/bayesfl/wireless/transport.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "14d0012a8f997fde265b8ce6197e9ffa756f4c0ca100cdea50e83a7269419718",
+      "bytes": 4203
+    },
+    {
+      "path": "tests/wireless/test_flower.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "bf6c74d3482f59cb44edbce3866f946ecaa4aac32ae279f8b8a211697c47da77",
+      "bytes": 2585
+    },
+    {
+      "path": "tests/wireless/test_integration.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "1ea0542cfd5e7414f3385efa795cba15df8bd6d4b8c26bd7820bd98d387b3bd0",
+      "bytes": 3390
+    },
+    {
+      "path": "tests/wireless/test_numerical.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "d6c2611b553fae203df24f29ff2428fb9d9d3768a9d1a169f2e07adf2b16cb1b",
+      "bytes": 4134
+    },
+    {
+      "path": "tests/wireless/test_protocol.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7759fc9cc12be63b9613ff26f34aea6fe09a4586bb2fb6ccb1c99d53c016b66c",
+      "bytes": 4955
+    },
+    {
+      "path": "tests/wireless/test_runner.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ae2b676f2e018612364060c54647c78a72768a10f437b32163e8a12e3abfb912",
+      "bytes": 2476
+    },
+    {
+      "path": "tests/wireless/test_tooling.py",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "41be89a250ebe01bf4fb59f940d00b435b633a614408050b1fc33aaf3b24d19c",
+      "bytes": 5607
+    },
+    {
+      "path": "validation/wireless/README.md",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "95a2f14f62bb2d025bf0c729c5c52b1d4da87d316ab67727affbb83eb947b5c6",
+      "bytes": 820
+    },
+    {
+      "path": "validation/wireless/baseline_preservation.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "0f1f2dd3feedc947b4941bf852df3ec48f446f94bac20cb4b68c2f301bc69d7e",
+      "bytes": 1155
+    },
+    {
+      "path": "validation/wireless/environment.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "42ec9162b6c50634a5e2ad40a8e08c9b9fd4de5fc330729b86c3f62a1a3d33af",
+      "bytes": 466
+    },
+    {
+      "path": "validation/wireless/installer_checks.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "a49ec258c333913873d18e84ab38404993d0537707ca788ae2a0554789c8d94d",
+      "bytes": 371
+    },
+    {
+      "path": "validation/wireless/legacy_config_compatibility.json",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "bb452936a3c2e2142dca6b3bab69b4f671b5f5aaade31062416851edf384ceec",
+      "bytes": 149
+    },
+    {
+      "path": "validation/wireless/legacy_endpoints.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "ab9ba53c81c154ec6d6f388bdc8ddf2d1215d45886f1798b7890bbc3b79271e4",
+      "bytes": 2045
+    },
+    {
+      "path": "validation/wireless/pytest_final.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "6539b21539bbae71f1f7b98a2aef9d739b75388ae892c0f64759ef58b78a8326",
+      "bytes": 1029
+    },
+    {
+      "path": "validation/wireless/pytest_first_full.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "e518254db94be420e4ddae467e70763d77293e9a5553eceb9a02d5c4c8f6519a",
+      "bytes": 926
+    },
+    {
+      "path": "validation/wireless/synthetic_six_policies.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "287229bf6ca1062834cd91c4a3f209a053a9fc2539612abe49ed818f97c19fcc",
+      "bytes": 1119
+    },
+    {
+      "path": "validation/wireless/synthetic_summary.txt",
+      "status": "added",
+      "original_sha256": null,
+      "sha256": "7cdfeff362b84544187e8ddcec9633a93c0cd44f828cbf69c931bfec0466e8f6",
+      "bytes": 617
+    }
+  ],
+  "note": "This manifest excludes its own hash. Original historical release manifests are retained. No outputs/data/dependencies are installation targets.",
+  "validation": {
+    "pytest_passed": 186,
+    "pytest_skipped": 6,
+    "legacy_yaml_fingerprints_identical": 891,
+    "primary_endpoints_passed": 24,
+    "target_flower_ray_executed": false,
+    "cuda_executed": false,
+    "real_dataset_wireless_training_executed": false
+  }
+}

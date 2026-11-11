@@ -1,0 +1,14 @@
+{
+  "array_accounting": "one multicast model + individual actual packet arrays",
+  "clock": "fixed slots, control reservation, modeled preparation max; no simulated sleep",
+  "control_accounting": "canonical UTF-8 JSON of instructions/replies; excludes Flower/network framing",
+  "layout_id": "a0509ce640d3c2c0e78f0234bbf7cccbeb4a319ccf0522e3d853553509bdda19",
+  "method": "fola",
+  "num_clients": 20,
+  "policy": "joint",
+  "power_model": "fixed PSD; ideal successful digital delivery; not AirComp",
+  "protocol": "fedkls_wireless_integer_precision_v2",
+  "round_target_s": 160.0,
+  "selection_rule": "kl_global_local",
+  "trace_sha256": null
+}

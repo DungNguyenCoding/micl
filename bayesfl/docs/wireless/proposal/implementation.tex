@@ -1,0 +1,74 @@
+\section{Implementation and Evaluation Protocol}
+\label{sec:implementation}
+\subsection{Separation of Learning and Allocation}
+Keep the existing local FOLA training and FedKLS reconstruction/aggregation intact. Introduce the wireless simulator and allocator as separate modules so that changing the resource policy does not silently change the local learner. A suggested interface is given in Table~\ref{tab:modules}. These are implementation contracts, not claims of completed training experiments.
+
+\begin{table}[t]
+\caption{Suggested implementation modules.}
+\label{tab:modules}
+\centering\footnotesize
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.25\columnwidth}>{\raggedright\arraybackslash}p{0.68\columnwidth}@{}}
+\toprule
+Module & Responsibility and principal outputs\\
+\midrule
+Channel model & Distances, path gains, fading, PSD convention; current $c_{k,t}$ and multicast rate.\\
+Client preparation & Full local training, positive posterior variances, KL scores, sorted indices, and tail sums.\\
+Local price response & Given $\lambda,U_t,c_{k,t},\pi_k$, return exact priced count and $D_{k,t}(m)$.\\
+Server allocator & Check feasibility; coordinate prices; maintain incumbent, bounds, and termination status.\\
+Packet serializer & Send bitmap and top-$m$ pairs, or bitmap-free dense values; record actual byte count separately.\\
+Round controller & Enforce the reporting barrier, grants, common upload interval, aggregation, and logging.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For a simulated round, obtain the global posterior and downlink duration, execute each client's full local preparation, and compute $U_t$ using the maximum preparation duration. Refresh or generate channel conditions for the allocation/upload phase; do not assume an old channel measurement remains valid through arbitrarily long local training. The server then invokes Procedure~1. In an initial single-process simulator, client-response calls may be local function calls, but the server must not use the clients' full score vectors for decisions beyond the specified response interface. Account separately for the network exchanges those calls represent.
+
+After a grant, client $k$ selects its stored top-$\widehat m_{k,t}$ indices and serializes the corresponding pairs. It does not train again during the price search. The server fills omitted marginals with the broadcast global values and preserves the original normalized weighted product~\cite[Sec.~II-A]{fedkls}:
+\begin{equation}
+ q_{t+1,0}(\boldsymbol\theta)
+ \propto\prod_{k\in\mathcal K}
+ \widetilde q_{k,t}(\boldsymbol\theta)^{\pi_k}.
+ \label{eq:aggregation}
+\end{equation}
+Do not renormalize $\pi_k$ separately over only those clients that transmitted a particular coordinate; that would change the agreed prior-fill aggregation rule.
+
+\subsection{Numerical and Feasibility Safeguards}
+Use one source of truth for the piecewise payload in~\eqref{eq:uplink-payload}. Validate $U_t>0$, finite positive $c_{k,t}$, $1\le\widehat m_{k,t}\le d$, and
+\begin{equation}
+ \sum_k\widehat B_{k,t}\le B,\qquad
+ \frac{L_k(\widehat m_{k,t})}{\widehat B_{k,t}c_{k,t}}=U_t
+ \label{eq:postconditions}
+\end{equation}
+up to declared numerical tolerances. Never round an infeasible count upward to one or silently exclude a client. A violated all-client requirement must return an infeasibility status for the experiment controller to handle explicitly.
+
+Compute score sums and objective comparisons in at least float64 for the initial numerical implementation. Construct tail sums by reverse accumulation rather than subtracting a nearly equal prefix from the total. Validate positive finite variances; apply the same damping/flooring convention to all compared learners. For variance ratio $v_0/v_k=1+u$, the variance contribution $u-\log(1+u)$ can be evaluated with a numerically stable logarithm near $u=0$. Reject nonfinite scores and distinguish tiny roundoff negatives from genuinely invalid inputs.
+
+Use deterministic score ties and dense/sparse cost ties. A numerically approximate local response need not achieve the exact local Lagrangian minimum; its evaluated value is then not automatically a valid dual lower bound. Mathematical certificates in~\eqref{eq:gap-bound} require exact local minimization or rigorously bounded numerical errors. Without such error control, label the reported gap as a numerical diagnostic. Price iterations should have explicit limits and return the best feasible incumbent on termination.
+
+The initial channel model fixes PSD, not total transmit power. Log $P_{k,t}=p_{k,t}^{\mathrm{PSD}}\widehat B_{k,t}$ and, under the equality timing policy, $E_{k,t}^{\UL}=P_{k,t}U_t$. If an experiment instead fixes total power, replace the rate and rederive the allocation cost; do not merely recompute SNR once and reuse the fixed-$c$ threshold.
+
+\subsection{Equal-Bandwidth Baseline and Controlled Comparisons}
+Use Version A as a baseline under the same reporting barrier and round target. Assign $B_{k,t}^{A}=B/K$ and define $Q_{k,t}=U_t(B/K)c_{k,t}$. Check $Q_{k,t}\ge2bd$ first, in which case $m_{k,t}^{A}=d$. Otherwise use
+\begin{equation}
+ m_{k,t}^{A}
+ =\min\left\{d-1,
+ \left\lfloor\frac{Q_{k,t}-d}{2b}\right\rfloor\right\},
+ \label{eq:version-a}
+\end{equation}
+only when the result is at least one. Infeasibility under equal bandwidth does not imply infeasibility under joint allocation. The baseline transmits within $U_t$ and can finish early; the equality-based policy recovers its own bandwidths using~\eqref{eq:final-allocation}.
+
+If Version A is feasible, its counts are feasible for the reduced joint problem because
+\begin{equation}
+ \sum_kw_{k,t}(m_{k,t}^{A})\le\sum_k B/K=B.
+ \label{eq:baseline-incumbent}
+\end{equation}
+Initializing the feasible incumbent with this vector guarantees that the returned frozen-round reconstruction objective is no worse than Version A's, since it is never replaced by a worse feasible candidate. This statement compares identical local posteriors in one round; it does not guarantee higher accuracy or domination along separate training trajectories.
+
+Start validation with frozen local posteriors. On small synthetic cases, compare the local threshold response against evaluation of all integer counts and compare the complete feasible solution against exhaustive enumeration of the tiny joint count space. Include zero scores, repeated scores, the dense exception, an all-dense feasible budget, an infeasible minimum budget, and heterogeneous $c_k$. Test that bandwidth demand is nonincreasing over increasing prices, that~\eqref{eq:postconditions} holds, and that valid lower and upper bounds bracket the tiny-instance optimum.
+
+Then evaluate repeated federated training using matched initial models, local data partitions, channel draws, training settings, and round targets. Compare joint KL-aware allocation with feasible equal-bandwidth adaptation and a uniform-retention baseline. A random-selection ablation should match retained counts and assigned bandwidths to isolate the coordinate selector. Record accuracy and calibration versus cumulative time, reconstruction objective, count distributions, bandwidths, power/energy, price-query counts, feasibility failures, and objective gaps.
+
+\subsection{Overhead Accounting and Scope of Claims}
+The analytical round target omits price messages and server computation, but code should separately record or model both. Wall-clock time for in-memory function calls is not wireless-report latency. If their contribution is material, reserve a control-time allowance before allocation or explicitly subtract it from the upload budget. A finite price-query cap makes such an allowance operationally meaningful. Keep simulated parallel client durations separate from the sequential runtime of a single-machine simulation.
+
+Under a fixed round duration, the intended benefit is better posterior preservation and potentially better learning within the same time budget, not an automatic reduction in per-round latency. The exact results are the reconstruction identity, bandwidth elimination, local priced solution, and conditional dual-bound certificate. The proposed price-based integer allocation is feasible by construction when the safeguards succeed, but is not universally globally optimal. Improved convergence, accuracy, calibration, and negligible control overhead remain hypotheses to be evaluated through the implementation.

@@ -1,0 +1,165 @@
+status: EXAMPLE_NOT_LOCKED
+scenario_id: cifar10_joint_sensitivity6_v1_u170
+provenance:
+  purpose: Joint-only CIFAR10 one-factor sensitivity experiment u170; no reference-paper
+    numerical result implied
+  baseline_source_sha256: 61fa0744708a75a5a5218f095a48a27bcbc07dba94b5bc264dec574a96a759cb
+  sensitivity_variable: round_target_s
+  frozen: Seed-0 learning config, 20 clients, fixed path gains, 1MHz downlink, original
+    noise and PSD, compute and control, fixed 24dBm power cap
+  status: Pilot engineering assumptions; not a locked physical deployment scenario
+  topology_file: topology.json
+wireless:
+  enabled: true
+  backend: flower
+  policy: equal_bandwidth
+  uplink_bandwidth_hz: 1000000.0
+  downlink_bandwidth_hz: 1000000.0
+  round_target_s: 170.0
+  total_time_budget_s: null
+  control_reserve_s: 30.0
+  control_rate_bps: 1000000.0
+  control_exchange_latency_s: 0.001
+  rpc_timeout_s: 3600.0
+  channel:
+    mode: fixed
+    seed: 0
+    path_gains:
+    - 4.899364596462921e-12
+    - 2.4635088937531964e-11
+    - 8.518567076736542e-10
+    - 4.695011028186721e-09
+    - 3.0947901736654714e-12
+    - 2.4911870204435724e-12
+    - 5.36992361760074e-12
+    - 3.796549580186012e-12
+    - 6.599482561960496e-12
+    - 2.380585120654482e-12
+    - 3.076393104660904e-12
+    - 1.3783159182384805e-07
+    - 2.8021009051381673e-12
+    - 1.2379569285246275e-09
+    - 3.794995506521575e-12
+    - 5.519606636079879e-11
+    - 2.7669622183077896e-12
+    - 6.64915031930857e-12
+    - 2.02147937292965e-11
+    - 1.0591484653268602e-11
+    uplink_psd_w_hz:
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    downlink_psd_w_hz: 3.9810717055349735e-05
+    noise_psd_w_hz: 3.981071705534986e-21
+    reciprocal_fading: true
+    trace_csv: null
+    client_power_cap_w:
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+  compute:
+    seconds_per_sample_epoch:
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    fixed_seconds:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    score_seconds:
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+  solver:
+    initial_price: 1.0
+    max_bracket_queries: 48
+    max_bisection_queries: 64
+    price_atol: 0.0
+    price_rtol: 1.0e-12
+    gap_atol: 1.0e-10
+    gap_rtol: 1.0e-06

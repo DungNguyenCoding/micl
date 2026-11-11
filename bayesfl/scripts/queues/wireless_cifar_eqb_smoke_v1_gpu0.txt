@@ -1,0 +1,1 @@
+scripts/configs/wireless/cifar_eqb_smoke_v1/smoke_wireless_cifar_eqb_smoke_v1_cifar10_a0p01_f1_equal_bandwidth_seed0.yaml

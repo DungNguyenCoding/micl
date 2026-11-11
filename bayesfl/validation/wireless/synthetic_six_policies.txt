@@ -1,0 +1,46 @@
+PASS: SYNTHETIC CPU protocol/trainer check; not dataset performance or Flower/Ray certification
+Dense cases use a larger bandwidth solely to exercise dense-format code paths.
+[
+  {
+    "method": "wireless_fola_joint_kl_global_local",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 1765,
+    "control_bytes": 367479
+  },
+  {
+    "method": "wireless_fola_joint_random",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 1773,
+    "control_bytes": 367572
+  },
+  {
+    "method": "wireless_fola_equal_bandwidth_kl_global_local",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 1917,
+    "control_bytes": 35244
+  },
+  {
+    "method": "wireless_fola_uniform_kl_global_local",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 1437,
+    "control_bytes": 35204
+  },
+  {
+    "method": "wireless_fola_dense_dense",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 3552,
+    "control_bytes": 28335
+  },
+  {
+    "method": "wireless_fedavg_dense_dense",
+    "rounds": 3,
+    "modeled_seconds": 3.0,
+    "array_bytes": 1776,
+    "control_bytes": 28300
+  }
+]

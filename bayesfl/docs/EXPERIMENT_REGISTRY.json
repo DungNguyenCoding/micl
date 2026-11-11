@@ -531,8 +531,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 47.28,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "a094e0610e57f4bae498775820e7a7a6104f0c21c7ae3991b50a1107fed90f7e"
     },
     {
       "id": "cifar10_a0p01_f1_dense_fola",
@@ -553,8 +554,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 53.1,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "874982573a132a0c94587f1a5e5a0e88bc5545b2d10e668f144bd67275c8c6ee"
     },
     {
       "id": "mnist_s10_dense_fola",
@@ -575,7 +577,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 89.44,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "c638eb45fbcd234bbb1ee273943e37083d459b31d430e2e63ac944047e1abb4d"
     },
     {
       "id": "mnist_s10_kl_sparse_0.05",
@@ -596,7 +599,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.58,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "678682588221d6b82cc561fc19ca3775cb31d3268b9b3d006bd6d8637783e155"
     },
     {
       "id": "mnist_s10_kl_sparse_0.1",
@@ -617,7 +621,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.44,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "8af79f7ee13b2aea641d93185adae96083050ac3680609c61ded39f0164b6808"
     },
     {
       "id": "mnist_s10_kl_sparse_0.25",
@@ -638,7 +643,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 89.01,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "c38bf591706c4810aeaf788c8699f54215eadb1a9eb159518fee1e3b8fa51c89"
     },
     {
       "id": "mnist_s10_kl_sparse_0.5",
@@ -659,7 +665,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.19,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "62abea3d575f9d146851932c38c015836716496e3c3951f22025c8a0fb9c2be4"
     },
     {
       "id": "mnist_s10_kl_sparse_0.75",
@@ -680,7 +687,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.86,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "3b209996d14c4e226740585420973d2e44b609a972815415eaeaa938e2b954f4"
     },
     {
       "id": "mnist_s10_random_sparse_0.05",
@@ -700,8 +708,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": 86.07,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_percent_from_supplied_result": 86.07000000000001,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "b904d7b6628bf6949e8b39825e0a0e824137213a82a8d159859f6b8558bec0e8"
     },
     {
       "id": "mnist_s10_random_sparse_0.1",
@@ -721,8 +730,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": 86.54,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_percent_from_supplied_result": 86.53999999999999,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "c53073cac7f361c2a20b01e28e1152d1aa9719835c0af578a914f12fe41feb76"
     },
     {
       "id": "mnist_s10_random_sparse_0.25",
@@ -742,8 +752,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": 86.96,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_percent_from_supplied_result": 86.96000000000001,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "abf7866f8ae6f18601c81c1dd700e9a764ce7f305be17f66493869bf9c227f56"
     },
     {
       "id": "mnist_s10_random_sparse_0.5",
@@ -764,7 +775,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.08,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "3b05282f8734d60992686dba74a89af5b4dd80cbedf4206c19c828a1808298bb"
     },
     {
       "id": "mnist_s10_random_sparse_0.75",
@@ -785,7 +797,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.59,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "f657999f1fc53a3eef709e15ff1630bb94ba6243f46d14d41cc0123231e80eef"
     },
     {
       "id": "mnist_s10_fedavg_baseline",
@@ -806,7 +819,8 @@
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
       "accuracy_percent_from_supplied_result": 88.23,
-      "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "c78763d69d2a2b7063e291f9b863b7d9a8fb48492cdd7f569fb94a4180a5ffe0"
     },
     {
       "id": "cifar10_a0p01_f1_kl_sparse_0.05",
@@ -826,8 +840,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 51.980000000000004,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "94ef8060372bd7e6ca357d8ae5e2f75659364b866ddbb27754bb6176b414f9c9"
     },
     {
       "id": "cifar10_a0p01_f1_kl_sparse_0.1",
@@ -847,8 +862,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 53.42,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "181765f02516f99e6ace0673c3cbcc039c01aa6bc1e78c68ea246a22dac26061"
     },
     {
       "id": "cifar10_a0p01_f1_kl_sparse_0.25",
@@ -868,8 +884,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 57.53,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "731756de93b5ebd575095b43496e2168eb7358fee6e157bbabe4fefc02dbf225"
     },
     {
       "id": "cifar10_a0p01_f1_kl_sparse_0.5",
@@ -889,8 +906,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 53.580000000000005,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "64000195872f40470bc68a0ad8269fb815d23030890351f03558851b620a7059"
     },
     {
       "id": "cifar10_a0p01_f1_kl_sparse_0.75",
@@ -910,8 +928,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 53.7,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "29a1c5478ad9a68666138b155e42144136f00b749e6491039c0cabf44ce8409f"
     },
     {
       "id": "cifar10_a0p01_f1_random_sparse_0.05",
@@ -931,8 +950,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 33.629999999999995,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "1946d699bd73a509528cb747885fd24c336226ecfa39275668e4a6cfcb1bc5c6"
     },
     {
       "id": "cifar10_a0p01_f1_random_sparse_0.1",
@@ -952,8 +972,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 38.73,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "aec605c35ec138770e2667eebfe5984377e725d7bb5a30cd4db4b9dd31336318"
     },
     {
       "id": "cifar10_a0p01_f1_random_sparse_0.25",
@@ -973,8 +994,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 44.76,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "1722873d4f21a98d6dc1d0c06b9337846579648bf57cf6ad95b09f4a0ffe21c6"
     },
     {
       "id": "cifar10_a0p01_f1_random_sparse_0.5",
@@ -994,8 +1016,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 50.07,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "93cacb12b4fbd9e6891f53977787e1313e487e332085c2bbf89a254c2d10b021"
     },
     {
       "id": "cifar10_a0p01_f1_random_sparse_0.75",
@@ -1015,8 +1038,9 @@
       ],
       "config_match_note": "Literal run-name match only; candidate configs may differ from the resolved run configuration. Read resolved_config.yaml before reuse.",
       "metrics_relative_path": "metrics/global_metrics.csv",
-      "accuracy_percent_from_supplied_result": null,
-      "accuracy_evidence": "Not supplied at this checkpoint; read the actual global_metrics.csv. Do not substitute historical R120 results."
+      "accuracy_percent_from_supplied_result": 52.73,
+      "accuracy_evidence": "Read from raw CSV in uploaded baseline_src.zip during wireless-v1 verification; not a newly trained result.",
+      "verified_metrics_sha256": "d02bc743087b07ebe47172fc323dd2a080ea22a672df57017cc552a5a3d24aba"
     },
     {
       "id": "mnist_s10_fedavg_unclipped_reference",
@@ -1040,5 +1064,6 @@
       "accuracy_evidence": "User-supplied terminal output / discussion; not recomputed from CSV in the documentation authoring environment."
     }
   ],
-  "shared_partition_directory": "outputs/partitions"
+  "shared_partition_directory": "outputs/partitions",
+  "wireless_v1_note": "Legacy-primary registry only. Wireless studies use their new study manifests and explicit exporter --wireless-run-dir paths."
 }

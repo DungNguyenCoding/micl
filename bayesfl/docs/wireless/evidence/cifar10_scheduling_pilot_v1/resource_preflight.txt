@@ -1,0 +1,65 @@
+====================================================================================================
+CIFAR-10 WIRELESS RESOURCE PREFLIGHT — no training or file writes
+====================================================================================================
+Scenario status: EXAMPLE_NOT_LOCKED
+Scenario SHA256: 61fa0744708a75a5a5218f095a48a27bcbc07dba94b5bc264dec574a96a759cb
+Partition SHA256: 914fe035f7b504b0059ca85b5a6a194bd41027fb2cfe2765ee777142d68280f2
+Clients=20 | d=878,538 | realized samples min/mean/max=1/2499.4/8706
+Distances min/max: 26.165340/483.495715 m
+Noise PSD: 3.98107170553e-21 W/Hz
+UL PSD/client: 2.51188643151e-07 W/Hz
+Equal bandwidth: 50000.000 Hz/client
+Power at equal bandwidth: 0.0125594321575 W/client
+UL spectral efficiency min/max: 7.240360/23.052018 bit/s/Hz
+Multicast downlink: 3.867259582 s
+Modeled preparation barrier: 87.160000000 s (ASSUMED device model)
+Control reservation: 30.000000 s; rate=1000000 bit/s (ASSUMED)
+Weakest ideal full-band control capacity: 7240359.810 bit/s (control cost itself not certified)
+Available upload window: 58.972740418 s | slot=180.000000 s
+Bitmap: 109,818 bytes | minimum sparse upload=109,826 bytes
+Dense posterior upload: 7,028,304 bytes
+
+CID  Samples  Distance(m)   UL SNR(dB)       Count      Keep   UL power(mW)
+  0     4993     399.0494      24.9014      367601   0.41842      12.559432
+  1     8499     259.7050      31.9155      474780   0.54042      12.559432
+  2       28     101.2096      47.3037      710253   0.80845      12.559432
+  3        1      64.2799      54.7164      823703   0.93758      12.559432
+  4      863     450.9075      22.9063      337191   0.38381      12.559432
+  5      323     477.6912      21.9641      322852   0.36749      12.559432
+  6        1     389.4341      25.2997      373678   0.42534      12.559432
+  7     2252     427.0529      23.7939      350713   0.39920      12.559432
+  8        6     368.6546      26.1951      387346   0.44090      12.559432
+  9     4976     483.4957      21.7668      319853   0.36407      12.559432
+ 10     8706     451.6231      22.8804      336797   0.38336      12.559432
+ 11       65      26.1653      69.3935      878538   1.00000      12.559432
+ 12     4999     462.9806      22.4748      330623   0.37633      12.559432
+ 13     4083      91.6318      48.9271      735099   0.83673      12.559432
+ 14     2461     427.0994      23.7921      350686   0.39917      12.559432
+ 15     2538     209.5564      35.4191      528378   0.60143      12.559432
+ 16       94     464.5371      22.4200      329789   0.37538      12.559432
+ 17     2407     367.9202      26.2277      387843   0.44146      12.559432
+ 18     2586     273.7297      31.0567      461645   0.52547      12.559432
+ 19      107     325.0720      28.2496      418730   0.47662      12.559432
+
+Equal-share keep min/mean/max: 0.364074/0.525082/1.000000
+Dense-format clients: 1/20
+Equal-share modeled array bytes/round: 82,923,630; control counted separately
+All-dense FOLA minimum fixed-slot duration with optimally divided bandwidth: 241.023289 s
+All-dense FOLA feasible at this slot: False
+Joint minimum-payload feasibility: PASS (the returned equal-share counts are already feasible).
+No current-round CIFAR KL objective or learning accuracy was estimated.
+
+RAYLEIGH DIAGNOSTIC ONLY: 9/150 tested rounds fail at least one equal-share/control assumption.
+  R25: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R30: At least one equal-bandwidth client cannot upload even one coordinate
+  R50: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R59: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R63: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R73: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R82: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R127: Assumed serialized full-band control rate exceeds the weakest ideal link
+  R129: Assumed serialized full-band control rate exceeds the weakest ideal link
+No fading configuration was written; no channel was redrawn, clipped or repaired.
+Do not treat a zero-failure finite scan as a guarantee for future fading realizations.
+
+PASS: fixed-gain resource preflight. Real CIFAR/Flower/CUDA smoke and observed control usage remain required.

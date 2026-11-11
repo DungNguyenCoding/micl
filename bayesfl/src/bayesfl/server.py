@@ -33,6 +33,8 @@ def run_flower_simulation(
     logger,
     resume: bool = False,
 ) -> None:
+    if cfg.wireless_enabled:
+        raise ValueError("Use bayesfl.main / wireless.runner for wireless configurations, not legacy assembly")
     seed_everything(cfg.runtime.seed)
     initial_model = initialize_model(cfg)
     layout = ParameterLayout.from_model(initial_model)

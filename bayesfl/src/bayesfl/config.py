@@ -10,6 +10,8 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from bayesfl.wireless.config import WirelessConfig, parse_wireless
+
 
 @dataclass
 class DataConfig:
@@ -178,12 +180,20 @@ class ExperimentConfig:
     compression: CompressionConfig = field(default_factory=CompressionConfig)
     communication: CommunicationConfig = field(default_factory=CommunicationConfig)
 
+    wireless: WirelessConfig | None = None
+
+    @property
+    def wireless_enabled(self) -> bool:
+        return self.wireless is not None and self.wireless.enabled
+
     @property
     def sparse_enabled(self) -> bool:
         return self.method == "fola" and self.compression.selection_rule != "dense"
 
     @property
     def method_id(self) -> str:
+        if self.wireless_enabled:
+            return "wireless_" + self.method + "_" + self.wireless.policy + "_" + self.compression.selection_rule
         if self.sparse_enabled:
             return "fola_sparse_" + self.compression.selection_rule
         return self.method + "_dense" if self.method in {"fola", "fedavg"} else self.method
@@ -319,6 +329,9 @@ class ExperimentConfig:
                 "mlp_784_256x3_10"
             )
 
+        if self.wireless is not None:
+            self.wireless.validate(self)
+
     def resolved_kl_weight(self, bayesian_dimension: int) -> float:
         if self.bbb.kl_weight is not None:
             return float(self.bbb.kl_weight)
@@ -332,7 +345,11 @@ class ExperimentConfig:
         return 1.0 / float(denominator)
 
     def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        # Legacy disabled configs serialize identically, preserving fingerprints.
+        if not self.wireless_enabled:
+            data.pop("wireless", None)
+        return data
 
 
 def _make_section(cls: type, raw: Dict[str, Any] | None):
@@ -343,6 +360,9 @@ def load_config(path: str | Path) -> ExperimentConfig:
     path = Path(path)
     with path.open("r", encoding="utf-8") as handle:
         raw = yaml.safe_load(handle) or {}
+    for key in raw:
+        if isinstance(key, str) and key.lower().startswith("wire") and key != "wireless":
+            raise ValueError(f"Unknown wireless-like top-level key: {key}; use wireless")
     cfg = ExperimentConfig(
         run_name=str(raw.get("run_name", path.stem)),
         method=str(raw.get("method", "fedavg")),
@@ -356,6 +376,7 @@ def load_config(path: str | Path) -> ExperimentConfig:
         output=_make_section(OutputConfig, raw.get("output")),
         compression=_make_section(CompressionConfig, raw.get("compression")),
         communication=_make_section(CommunicationConfig, raw.get("communication")),
+        wireless=parse_wireless(raw.get("wireless")),
     )
     cfg.validate()
     return cfg

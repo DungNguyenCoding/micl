@@ -1,0 +1,1 @@
+scripts/configs/wireless/cifar_joint_u150_r150_v1/run_wireless_cifar_joint_u150_r150_v1_cifar10_a0p01_f1_joint_seed0.yaml

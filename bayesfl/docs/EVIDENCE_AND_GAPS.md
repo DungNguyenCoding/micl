@@ -1,51 +1,44 @@
-# Evidence, corrections, and outstanding checks
-
-Documentation date: **2026-10-26 (Asia/Seoul)**. This is a documentation refresh, not a new training-code release.
+# Evidence and remaining gaps — wireless v1, 2026-11-09
 
 ## Evidence precedence
 
-For observed results, use the exact run's raw metrics and saved configuration. For intended future work, use the user's latest explicit decision. If an artifact disagrees with that decision, flag the disagreement; never silently rewrite an old experiment to match a new intention.
+For results: raw CSV at the exact run and its saved configuration. For intended future
+work: the user's latest explicit decision. Resolve disagreements explicitly rather than
+silently rewriting an experiment or promoting old reports to current measurements.
 
-| Evidence | What it supports | What it does not support |
-| --- | --- | --- |
-| Current user decisions and pasted plot preflight | Final profiles, chosen baseline, exact reported paths/accuracies | Recomputed metrics or exact current source implementation |
-| [Stage-3 registry](evidence/STAGE3_REGISTRY_20261026_211438.txt) | Presence of scripts/configs; literal run-name matches; 42 protected and 121 archived folders at audit time | Full dependency graph or semantic equivalence of configs |
-| [Stage-2 terminal log](evidence/STAGE2_MOVE_AND_VERIFY_TERMINAL.txt) | Actual 121-folder move and follow-up verification | An independent external backup |
-| User statement “done, stage 3B” | Reported completion of the 13-file organization | A newly uploaded post-Stage-3B verification transcript |
-| [Source inventory excerpt](evidence/SOURCE_INVENTORY_EXCERPT_20261026.txt) | Current module filenames and recorded metadata | Current code bodies or current hashes |
-| Supplied root docs and docs.zip | Historical protocol explanation and earlier implementation/validation | Current locks without the corrections below |
-| Earlier mounted bayesfl.zip | Inspection of an older source snapshot, including the queue format, FOLA equations and CIFAR config templates | Later MNIST CNN implementation or strict-FedAvg patches |
-| [CIFAR R120 table](evidence/CIFAR_R120_RESULTS_HISTORICAL.txt) | Earlier 17.711326080 GB results | R150-budget endpoint accuracies |
-| Integer arithmetic in this refresh | Budget and affordable-round tables for the stated payload model | Physical radio traffic, speed or measured accuracy |
+This release used the actual uploaded `baseline_src.zip` with later CNN/clipping/resume
+code and `FedKLS_Wireless_Develop.zip` with the proposed method. Their SHA-256 identities
+are recorded in the wireless change manifest. Current resolved primary configurations
+and all 24 raw endpoints were inspected/checked. Earlier docs saying only an old MLP ZIP
+was available or that CIFAR R150 results were unavailable are superseded.
 
-The older source ZIP inspected for structure has SHA-256
-`d6358dd692df9480b01b603460c148e6b6c7e21717020f4f526761cdb8b17983`.
-Its latest ZIP-member timestamp is 2026-10-06; it lacks `models/mnist_cnn.py` and later strict-FedAvg code. **Do not install it over the current repository.** This refresh does not contain a replacement `src/`.
+## What was actually checked
 
-## Important corrections
+Read `wireless/VALIDATION.md` and `validation/wireless/` at repository root. Executed
+checks include available baseline/new unit tests, local synthetic trainer integration,
+real MNIST CNN/CentralEvaluator on synthetic images, clean resume, dynamic reporting and
+lightweight exports, integer/codec guards, 891 original YAML serialization/fingerprint
+comparisons, and all24 existing primary byte totals/endpoints. These are not experiments
+on newly trained wireless MNIST/CIFAR models.
 
-| Old statement | Current treatment |
-| --- | --- |
-| MNIST MLP, N=100, E=10, B=32 is the official lock | Historical. Main paper: CNN 16–32, N=20, fixed 10/client, seed 0, E=5, B=10, LR=0.10. |
-| CIFAR paper profile is ResNet-56 / alpha=.1 / half data | Historical profiles. Main paper: BasicCNN, alpha=.01, local-data fraction 1.0, 20/20 clients. |
-| Communication is `16*K*d` per dense FOLA round | Historical unicast count. Current plots use `8*d*(K+1)` under modeled single multicast downlink. |
-| CIFAR R120 is the current plot reference | Historical table retained; current reference is R150 / FedAvg R300. |
-| MNIST clipped FedAvg R300 is 88.12% | That is the old deleted Stage-12 run's reported value. The selected recovered Stage-23 run reports **88.23%**. Do not merge them. |
-| Dense FOLA should use clipped Stage-24 | User reverted to **unclipped Stage-18**. Stage-24 remains an ablation. |
-| Every trainer is unchanged since the original sparse release | Only a historical preservation claim. Later clipping controls and strict-FedAvg work happened. |
-| No resume support / sparse study not yet implemented | Historical. Sparse runs and clean completed-round resume are in the current workflow. |
-| 398 or 408 configs / 110 tests describe the live repository | Historical snapshot counts/results. Stage-3 recorded 898 files under configs; no fresh full suite was run for this refresh. |
-| Sparse full retention and dense FOLA have identical bytes | Same mathematical inputs can aggregate identically, but the sparse packet still has a bitmap. The dense curve is not a sparse bitmap run at r=1. |
-| `refs=0`, `NO_STATIC_RUN_MATCH` or a `debug_` name means unused | Not valid evidence for deletion. |
-| Identical seed/name guarantees bitwise replay | False as a guarantee; read actual partition, configuration, source and runtime records. |
+## Remaining boundaries
 
-## Outstanding evidence (do not invent)
+* Flower1.29/Ray, Bayesian-Torch and CUDA were unavailable in the authoring runtime.
+  Optional real Flower tests are present but skipped here; GPU/Ray correctness needs
+  the actual target-environment gates. No dependency files were changed to suit the author.
+* Wireless physical settings are not yet locked. The source accepts explicit profiles
+  and channel traces; the included example is labeled nonfinal.
+* Ideal successful digital transmission, fixed PSD and fixed slots are modeling choices.
+  Control counts exclude radio/network framing and startup/CSI costs. Energy is not total
+  device energy. No real radio measurement, AirComp or packet-loss recovery is implemented.
+* Source preservation and tests are evidence, not a proof of absence of all bugs.
+  No universally certified integer optimality or future accuracy guarantee is asserted.
+* The existing `.gitignore` was supplied and retained; live Git tracked/history status was
+  not inspected. A same-SSD archive is not an independent backup.
+* Stage3B completion remains user-reported unless separately verified on the server.
+  The earlier recovered FedAvg difference is recorded, but its cause is not established.
 
-1. **CIFAR R150-budget accuracies:** completion through targets is recorded, but the supplied numeric table is R120-based. Extract the raw R150/R300 and sparse endpoints before quoting final paper numbers.
-2. **Current full source audit:** current `mnist_cnn.py`, `factory.py`, `config.py`, `training/deterministic.py`, `experiment_state.py` and other recently changed files need live inspection before an implementation patch. Paths are known; their current bodies were not supplied in this documentation task.
-3. **Current resolved configs:** core locks are decision/terminal-supported. Additional MNIST precision-score policy, exact CNN layer details, preprocessing, evaluation and runtime controls must be read from the live YAML/source rather than inferred from the older MLP template.
-4. **Latest full test results:** absent. Old CPU test counts and archive checks are not current training certification.
-5. **Git status:** .gitignore was discussed but no applied file/status was supplied. Do not claim Git portability or ignored-file tracking has already been verified.
-6. **Recovery difference:** the recovered clipped FedAvg endpoint differs from the old reported endpoint. Preserve both provenance records; the cause was not established.
-
-`tools/export_handoff.py --check` reads current primary metrics and validates exact byte endpoints. `--export` additionally copies a lightweight current-code/metrics snapshot outside the repository. Neither operation runs training or edits experiment data. This closes the most useful handoff gaps without pretending the documentation alone contains the code.
+The handoff exporter reads current files. Its default mode checks legacy24 and its
+explicit wireless mode checks variable-count metrics. It does not automatically update
+docs from conversations or create complete resume backups. Stop concurrent writers
+before exports; per-file checks do not make the entire filesystem snapshot atomic.

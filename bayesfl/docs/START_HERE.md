@@ -1,23 +1,26 @@
-# Start here — current BayesFL/FedKLS state
+# Start here — two workflows, one preserved learner
 
-**As of 2026-10-26.** This documentation supersedes older experiment defaults while preserving the supplied originals unchanged under [history](history/README.md).
+**Current source release: wireless v1, 2026-11-09.** The earlier documentation-only
+snapshot is preserved in `history/pre_wireless_v1/`; older historical docs remain in
+`history/pre_refresh_20261026/`.
 
-For a new chat, first read [CHAT_HANDOFF.md](CHAT_HANDOFF.md). Before changing code or writing execution commands, also read [COMMAND_RULES.md](COMMAND_RULES.md), [LOCKED_EXPERIMENTS.md](LOCKED_EXPERIMENTS.md) and [EVIDENCE_AND_GAPS.md](EVIDENCE_AND_GAPS.md). The [full index](README.md) gives the remaining module/run/result maps.
+1. Read [CHAT_HANDOFF.md](CHAT_HANDOFF.md) for continuity and exact legacy output paths.
+2. Read [COMMAND_RULES.md](COMMAND_RULES.md) and [LOCKED_EXPERIMENTS.md](LOCKED_EXPERIMENTS.md)
+   before executing or changing a study.
+3. Read [wireless/README.md](wireless/README.md), [wireless/STATUS.md](wireless/STATUS.md)
+   and [wireless/VALIDATION.md](wireless/VALIDATION.md) for implementation and validation scope.
 
-## Current choice
+The current primary figures still use MNIST CNN s10/N20/seed0 and CIFAR BasicCNN
+alpha=.01/f1/N20/seed0. Both use legacy dense FOLA R150 budgets and FedAvg R300.
+The new opt-in wireless controller does not replace these finished experiments.
 
-MNIST CNN16–32: **s10, N20, seed0, unclipped dense/sparse FOLA, clipped recovered FedAvg**. CIFAR-10 BasicCNN: **alpha .01, full local-data fraction, N20, seed0**. Both panels use **dense FOLA R150 / FedAvg R300** with modeled multicast budgets. Do not silently revert to old MLP/N100, ResNet, CIFAR half-data or R120.
+The supplied current `baseline_src.zip` was inspected and extended. The source audit,
+legacy configuration-serialization comparison and primary CSV checks replace earlier
+statements that only an old MLP source snapshot was available. This does not certify
+runtime behavior on the user's GPU server. Physical wireless scenario values remain
+explicit experimental choices; an example YAML is not an approved paper setting.
 
-Primary MNIST dense is Stage18, not Stage24. Primary sparse is Stage22, not Stage21 s5. Current figures are Acc_Com and Acc_KeepRatio under `plots/`. The user reports plotting normally after cleanup. No new simulations are needed simply to install or use these docs.
-
-## What “current” means here
-
-This bundle reconciles the latest user decisions with uploaded documentation and recorded runtime/cleanup evidence. It is not a freshly audited full working repository. The exact current source and raw metric rows should be captured/read for code changes and for quoting the still-unsupplied CIFAR R150 accuracies. Existing snapshots and inferred facts are labeled, not silently promoted to measurements.
-
-`CHANGE_MANIFEST.json` and `PACKAGE_MANIFEST.txt` at root remain historical release artifacts. `pyproject.toml` and `requirements.txt` remain byte-unchanged. `DOCS_UPDATE_MANIFEST.json` describes only this documentation refresh. No `.gitignore` change is applied.
-
-## Minimal continuation message
-
-> Continue this BayesFL/FedKLS project using the attached current CHAT_HANDOFF.md and documentation bundle. Read the command rules, locked profiles, registry and evidence limits first. Preserve final experiments and archive state. Do not retune, rerun completed jobs or modify source until my requested task requires it. Use current code/config/metric files rather than historical source snapshots when implementing changes.
-
-Attach the lightweight live export as well for a code/metrics task. Docs alone cannot contain the entire latest source or guarantee access to another chat's attachments.
+For a new chat, export the current tree. Default export includes the 24 primary legacy
+runs; wireless runs require explicit `--wireless-run-dir` flags. See
+[tools/README.md](tools/README.md). The exporter copies decisions already written in
+docs; it cannot learn decisions from chat history automatically.

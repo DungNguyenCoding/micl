@@ -1,0 +1,87 @@
+\section{Joint Bandwidth and Posterior-Retention Allocation}
+\label{sec:problem}
+\subsection{Exact Local Reconstruction Cost}
+Let $q_{t,0}$ be the broadcast diagonal Gaussian posterior and $q_{k,t}$ the full local diagonal Gaussian approximation after training. All variances are strictly positive. The original FedKLS omission score~\cite[Sec.~II-A]{fedkls} is
+\begin{align}
+ s_{k,t,i}&=\Dkl{q_{t,0,i}}{q_{k,t,i}}\notag\\
+ &=\frac{1}{2}\left[
+ \frac{(\mu_{k,t,i}-\mu_{t,0,i})^2}{v_{k,t,i}}
+ +\frac{v_{t,0,i}}{v_{k,t,i}}
+ -1-\log\frac{v_{t,0,i}}{v_{k,t,i}}\right],
+ \label{eq:score}
+\end{align}
+where $v$ denotes variance. Sort the scores so that $s_{k,t,(1)}\ge\cdots\ge s_{k,t,(d)}$. Let $\mathcal S_{k,t}(m)$ contain the indices of the largest $m$ scores, using a deterministic rule for ties. The server's reconstructed marginal is
+\begin{equation}
+ \widetilde q_{k,t,i}(m)=
+ \begin{cases}
+ q_{k,t,i},&i\in\mathcal S_{k,t}(m),\\
+ q_{t,0,i},&i\notin\mathcal S_{k,t}(m).
+ \end{cases}
+ \label{eq:prior-fill}
+\end{equation}
+
+Define the discarded-score function
+\begin{equation}
+ D_{k,t}(m)=\sum_{j=m+1}^{d}s_{k,t,(j)},\qquad D_{k,t}(d)=0.
+ \label{eq:discarded}
+\end{equation}
+It is nonincreasing since $D_{k,t}(m+1)=D_{k,t}(m)-s_{k,t,(m+1)}$. Factorization and~\eqref{eq:prior-fill} give
+\begin{align}
+ \Dkl{\widetilde q_{k,t}(m)}{q_{k,t}}
+ &=\sum_{i=1}^{d}\Dkl{\widetilde q_{k,t,i}(m)}{q_{k,t,i}}\notag\\
+ &=\sum_{i\notin\mathcal S_{k,t}(m)}s_{k,t,i}
+ =D_{k,t}(m).
+ \label{eq:exact-kl}
+\end{align}
+Thus the objective measures exact reconstruction KL relative to the computed local Gaussian distributions, assuming exact delivery of retained values. It is not an exact KL to the true Bayesian posterior, global loss, or test-accuracy degradation. Top-score retention minimizes this local reconstruction cost for a fixed count. Equivalently, minimizing discarded scores maximizes retained scores because the total score is fixed during allocation.
+
+\subsection{Joint Problem and Exact Reduction}
+The proposed problem is
+\begin{equation}
+ \begin{aligned}
+ (\mathsf P_1)\quad
+ \min_{\{m_{k,t},B_{k,t}\}}\quad&
+ \sum_k\pi_k\Dkl{\widetilde q_{k,t}(m_{k,t})}{q_{k,t}}\\
+ \mathrm{s.t.}\quad&
+ L_{k,t}^{\UL}(m_{k,t})=U_tB_{k,t}c_{k,t},\quad\forall k,\\
+ &\sum_kB_{k,t}\le B,\\
+ &m_{k,t}\in\{1,\ldots,d\},\quad B_{k,t}>0.
+ \end{aligned}
+ \label{prob:joint}
+\end{equation}
+All $K$ clients participate. There is no whole-client exclusion variable and no allowed-ratio menu. Current local posteriors, aggregation weights, channel efficiencies, and preparation times are fixed inputs, not decision variables.
+
+Define the required bandwidth in Hz by
+\begin{equation}
+ w_{k,t}(m)=\frac{L_{k,t}^{\UL}(m)}{U_tc_{k,t}}.
+ \label{eq:bandwidth-cost}
+\end{equation}
+Substitution of~\eqref{eq:bandwidth-recovery} and~\eqref{eq:exact-kl} yields
+\begin{equation}
+ \begin{aligned}
+ (\mathsf P_2)\quad \min_{\mathbf m_t}\quad&
+ F_t(\mathbf m_t)=\sum_k\pi_kD_{k,t}(m_{k,t})\\
+ \mathrm{s.t.}\quad&\sum_kw_{k,t}(m_{k,t})\le B,\\
+ &m_{k,t}\in\{1,\ldots,d\},\quad\forall k.
+ \end{aligned}
+ \label{prob:counts}
+\end{equation}
+
+\begin{proposition}
+For $U_t>0$, $B>0$, and $c_{k,t}>0$, problems $\mathsf P_1$ and $\mathsf P_2$ have identical feasible retained-count vectors and optimal reconstruction objectives. Every feasible $\widehat{\mathbf m}_t$ yields a feasible joint allocation through~\eqref{eq:bandwidth-recovery}.
+\end{proposition}
+\begin{proof}
+The time equalities uniquely impose $B_{k,t}=w_{k,t}(m_{k,t})$. Their sum satisfies~\eqref{eq:bandwidth-budget} exactly when the reduced resource constraint holds. Conversely, assigning these bandwidths to any feasible count vector satisfies each time equality. Equation~\eqref{eq:exact-kl} gives the same objective in both problems.
+\end{proof}
+The same count-feasibility condition also characterizes a model with $T_{k,t}^{\UL}\le U_t$: any feasible bandwidth can be reduced to its required value when no additional lower bandwidth limits are imposed. Equality is the selected recovery policy, not a reason to restrict counts to special ratios.
+
+\subsection{Feasibility and Endpoint Cases}
+Require $U_t>0$ and positive channel efficiencies. Define
+\begin{equation}
+ W_t^{\min}=\sum_k\min\{w_{k,t}(1),w_{k,t}(d)\},\qquad
+ W_t^{\dense}=\sum_kw_{k,t}(d).
+ \label{eq:endpoint-costs}
+\end{equation}
+The minimum uses only these two endpoints because the sparse payload increases with $m$. If $W_t^{\min}>B$, the prescribed all-client problem is infeasible. If $W_t^{\dense}\le B$, full retention attains the global lower limit $F_t=0$. Otherwise, resource allocation is required, although zero scores may still permit a zero-distortion sparse solution.
+
+The dense exception is material: a near-dense sparse message with $d+2bm\ge2bd$ is weakly dominated by the dense message, which uses no more bandwidth and has zero reconstruction cost. Consequently, the payload is not globally increasing over $m=1,\ldots,d$. All comparisons below use the exact piecewise expression~\eqref{eq:uplink-payload}.

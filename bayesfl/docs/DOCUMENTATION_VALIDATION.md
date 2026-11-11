@@ -28,3 +28,11 @@ The helper fixtures contained 24 synthetic endpoint CSVs with known byte totals.
 No live-server installation, current full pytest suite, Flower/Ray training, GPU run, fresh current-source audit or actual new CIFAR R150 accuracy extraction was performed. The current production code and raw CSVs remain on the user's machine. Installation preview/apply/verify and the optional endpoint check must run there.
 
 The final package includes exact hashes for every payload file and preserves 14 supplied original files byte-for-byte. It deliberately leaves runtime source, existing scripts/configs/queues, tests, dependency declarations, .gitignore, data, outputs and the original historical code/package manifests outside its write scope.
+
+## Superseded as current source status by wireless v1
+
+This file records the October documentation-only package. The 2026-11-09 source release
+also changes runtime code and updates documentation. Its executable checks are recorded
+in wireless/VALIDATION.md and repository-root validation/wireless/. Old documentation
+installer hashes intentionally differ after an approved source/docs update. Historical
+checks remain evidence of their original scope, not current GPU/Flower/Ray execution.

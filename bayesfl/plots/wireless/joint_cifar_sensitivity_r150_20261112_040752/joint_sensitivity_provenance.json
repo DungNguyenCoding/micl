@@ -1,0 +1,69 @@
+{
+  "study": "CIFAR-10 joint-only sensitivity R150; seed0; simulated fixed channels; EXAMPLE_NOT_LOCKED",
+  "audited_zip_mode": false,
+  "cases": {
+    "reference": {
+      "study_tag": "cifar_eqb_joint150_fixed_v1",
+      "run_rel": "outputs/run_wireless_cifar_eqb_joint150_fixed_v1_cifar10_a0p01_f1_joint_seed0_20261109_230207",
+      "run_summary_sha256": "be58eb6e8b637934603bb3508edf0ccf4e0a4b8f93cc105dfea6f8377748c925",
+      "resolved_config_sha256": "2bab084e93d2c6465d67eb6d328b572cb824e888dd791eb857ed61c62351a424",
+      "global_metrics_sha256": "4c241809b1e9ca5f8cb2f325f132396b5a4cc066197fe969f71de87d57d72037",
+      "wireless_rounds_sha256": "7e413e227ed9159956a5535f7d01c7e05a79951fa7fc02a660c959b4979df76d"
+    },
+    "u170": {
+      "study_tag": "cifar_joint_u170_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_u170_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_115923",
+      "run_summary_sha256": "2206aa6882d67342516049488ea03c37fb9aea76f21c21f33e0ded8fa5339475",
+      "resolved_config_sha256": "bdf2fa8c52c88bb3a819febf803b4d0fc376007262dbb72c02c117210dd9e959",
+      "global_metrics_sha256": "7c7510e0e4dc9a61eda106d889ce327211347734598b31e484cde496a1873ad3",
+      "wireless_rounds_sha256": "57f5b0716113722bd7b46b32c1801f9857a2b1d23b755ebb1dbe89519694b804"
+    },
+    "u160": {
+      "study_tag": "cifar_joint_u160_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_u160_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_171008",
+      "run_summary_sha256": "f59bee53c280df028b8cf8a7ca277e8876419f9e8942522717ffc21dcecdb6cc",
+      "resolved_config_sha256": "734fa31dc7db099d7c6297655e0f173bc9cd66c19da63dd707c0d378c6779e67",
+      "global_metrics_sha256": "e4db32e43501b40c0d4b052a0de6345b00cebc03ea12e030d7b1b001fd3216a6",
+      "wireless_rounds_sha256": "37b78fc1205603fbca143c1bb60b61f4ea91c44dd2f864d34a4bb975e3d4d528"
+    },
+    "u150": {
+      "study_tag": "cifar_joint_u150_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_u150_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_221432",
+      "run_summary_sha256": "b1b827ee755f55c555f61171b93f742a5964c50dbbfb6947f74a0d0d6d686c5c",
+      "resolved_config_sha256": "d450afe2dff9e837155e1a504306dfd490969aad92b54a06c02b1e5f04d38036",
+      "global_metrics_sha256": "765304638f1ef976eedf1e16c53aa2f9cf2b3cc65c96e73f3605b5d6e8e9382a",
+      "wireless_rounds_sha256": "ba217345123d17e1eba271935d40c84e72b53ec5b408d499fe8248bcd08c119e"
+    },
+    "b0550": {
+      "study_tag": "cifar_joint_b0550_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_b0550_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_115526",
+      "run_summary_sha256": "1b8865ea3f998f01aae909cb1c854a91ff2b48ef28547e4fe9fe7aeaca0140ef",
+      "resolved_config_sha256": "376d26032d85c33bade95f89d5fe1dcfeba982be0bc069105703dcae850271ce",
+      "global_metrics_sha256": "5007119366adeab70264681186becdbb7589d995c6e21d05fc231df1d4130100",
+      "wireless_rounds_sha256": "c0bf0763fd85c64862ae74c5f5d9c804e787532bd8c7401908db85249851ad9e"
+    },
+    "b0750": {
+      "study_tag": "cifar_joint_b0750_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_b0750_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_170448",
+      "run_summary_sha256": "e42ac8ccc9f03a02dfeb30ab8c977de66ede147345ef719657211eff132352c2",
+      "resolved_config_sha256": "b310fc1363b22695e7cd2ba26e52e4b40f1d265ff9c246b92df406b288c0f7ee",
+      "global_metrics_sha256": "f066cee0a379afd2d5749ea63c4311eeceda6763ae1d0124a9c5323ae8219743",
+      "wireless_rounds_sha256": "1c622b961f6ba6566e8b8f7d8b2e063e4cc9b1892ab1f3f68c2d13f9e19cea4c"
+    },
+    "b0950": {
+      "study_tag": "cifar_joint_b0950_r150_v1",
+      "run_rel": "outputs/run_wireless_cifar_joint_b0950_r150_v1_cifar10_a0p01_f1_joint_seed0_20261111_221033",
+      "run_summary_sha256": "2e117dfaa20b50e7c79615c73b16a9144abf97541d02bd21d84c362930dc0dcc",
+      "resolved_config_sha256": "2b420469110c3998b69a27e3e4e9030e8d3b425d1e7f86dc32d0ceddf4baf9e4",
+      "global_metrics_sha256": "73399b36d0286cc57d02dafeddaec4f95bbf609581a06ff668c358ea648b609c",
+      "wireless_rounds_sha256": "c09831fda7474c2dbe32920151b9f0e8dd4f25965d58dbe414c73ed45d26f624"
+    }
+  },
+  "methodology": "All seven runs match in resolved config after removing run_name, wireless.uplink_bandwidth_hz and wireless.round_target_s.",
+  "limitations": [
+    "Single seed, fixed channels, uncalibrated compute/control times",
+    "Different modeled round duration in U-sweep; compare rounds AND elapsed hours",
+    "KL curves are evaluated on independently evolving posteriors, not shared posteriors",
+    "Solver numerical diagnostics are not proof of integer global optimality"
+  ]
+}

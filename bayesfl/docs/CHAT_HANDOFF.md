@@ -1,14 +1,78 @@
-# BayesFL / FedKLS — new-chat handoff
+# BayesFL / FedKLS — current new-chat handoff
 
-**State date: 2026-10-26, Asia/Seoul.** This is a continuation record, not a new request to tune, launch training, clean the repository or implement wireless communication.
+**Source release: wireless v1, 2026-11-09.** The user requested the full implementation
+of the attached digital wireless FedKLS proposal, including source, tests, commands and
+documentation. That implementation is supplied in this repository. No new long wireless
+MNIST/CIFAR experiment or target GPU/Flower/Ray success is claimed.
 
-## 1. Start here and respect evidence limits
+## Current source, evidence and next task
 
-The user is preparing a sparse Bayesian federated-learning paper and wants future chats to continue without reconstructing the long preceding conversation. Current paper simulations are sufficient in the user's judgment. Cleanup is finished for now; plotting was reported to work normally.
+This release extends the actual uploaded `baseline_src.zip`, not the older MLP-only
+snapshot referred to by October documentation. It was checked against the supplied
+`FedKLS_Wireless_Develop.zip`. The source includes the current CNN/clipping/strict-FedAvg
+features and raw legacy24 metrics. Current numeric results are in RESULTS_AND_PLOTTING.md;
+CIFAR R150 results are no longer missing: dense53.10%, FedAvg47.28%, KL .75/.5/.25/.1/.05
+53.70/53.58/57.53/53.42/51.98%, random52.73/50.07/44.76/38.73/33.63%.
+MNIST dense89.44%, recovered clipped FedAvg88.23%; do not substitute old88.12%.
 
-Read this file, then the current `LOCKED_EXPERIMENTS.md`, `COMMAND_RULES.md`, `REPOSITORY_MAP.md`, `EXPERIMENT_REGISTRY.json` and `EVIDENCE_AND_GAPS.md`. The documentation package preserves all supplied old documents under `docs/history/pre_refresh_20261026/`; those are **historical**, not current defaults.
+Read COMMAND_RULES.md, LOCKED_EXPERIMENTS.md, wireless/README.md, wireless/STATUS.md and
+wireless/VALIDATION.md. Then inspect actual current source and saved configs. The detailed
+legacy run paths below remain useful, but any older prospective-wireless/missing-source/
+missing-CIFAR statement in historical records is superseded by this section and current
+EVIDENCE_AND_GAPS.md. The pre-wireless version is archived in history/pre_wireless_v1/.
 
-This handoff combines uploaded documentation, user terminal results, the October 26 registry/cleanup reports and limited inspection of an older source ZIP. The old ZIP predates the current MNIST CNN and strict-FedAvg changes. It must not replace the working source. Actual current source and raw metrics remain on the user's Linux machine; request/read them before source edits when they are not available in the new chat. Do not claim a current GPU test suite passed based on older reports.
+## Wireless contract to preserve
+
+- Opt-in `wireless.enabled`; absent/false preserves legacy serialized configs/fingerprints.
+- Reliable digital orthogonal transmission, fixed PSD, full participation, full local
+  training once per round; **not AirComp**, not noise injection or local model pruning.
+- PREPARE caches current posterior/scores on clients; scalar TAIL/PRICE queries do not
+  retrain/send scores; exact integer grants drive UPLOAD; RELEASE then evaluate/commit.
+- Counts1..d are direct integers, never ceil((m/d)*d). New packet v2 omits bitmap at full
+  retention and pads sparse bitmaps to bytes; original packet v1 remains unchanged.
+- Raw precision, score-only CIFAR floor, original epsilon reducer/prior fill and
+  all-client-omitted restoration stay intact. Do not rewrite trainer/reducer equations.
+- Fixed slot model; preparation barrier uses real sample counts; log array/control bytes,
+  modeled time/UL+DL energy and emulator walltime separately. No hidden deadline expansion,
+  client dropping or channel redraw on infeasibility. Numerical gap is not a certificate.
+- Joint KL, joint/random, equal-bandwidth adaptive, uniform count, dense FOLA/FedAvg
+  policies are implemented. Scenario example is **not a locked physical experiment**.
+- Wireless fingerprint/resume is separate; clean evaluated round only. Never import a
+  legacy model-only checkpoint or truncate partial accounting to make resume pass.
+
+New source is in `src/bayesfl/wireless/`. Existing edits are routing/config and handoff
+export only. New command tools are `prepare_wireless_study.py`, `_run_wireless_queue.sh`,
+`smoke_wireless_offline.py`, `smoke_wireless_flower.py`, `summarize_wireless_study.py`,
+`summarize_wireless_results.py`, `plot_wireless_results.py`. Detailed commands are in
+wireless/RUNBOOK.md. Wireless resume grammar is
+`WRESUME|ABSOLUTE_RUN|TOTAL_ROUNDS|TOTAL_TIME_CAP_OR_none`, not the legacy grammar below.
+
+## Validation / handoff continuity
+
+CPU tests, synthetic six-policy integrations, clean resume, actual CNN/evaluator on
+synthetic images and legacy compatibility/endpoint checks were executed; exact counts
+are in wireless/VALIDATION.md. Real Flower/Ray tests are supplied but skipped here due
+to missing dependencies. Target Flower/Ray and CUDA dataset smoke remain execution gates.
+No dependency migration or new wireless accuracy result is implied.
+
+The exporter default still includes the legacy24 results. Add explicit repeatable
+`--wireless-run-dir outputs/ACTUAL_RUN` to include new wireless trajectories; add
+`--wireless-only` to intentionally omit the legacy requirement. It verifies dynamic
+packet bytes/time, not round*fixedratio. It excludes resume arrays/full ledgers and is
+not a complete training backup. Update this handoff/decisions after meaningful work,
+then regenerate a ZIP before switching chats. Do not assume old chat attachments remain
+available unless supplied in the new conversation.
+
+The immediate next stage is target-runtime validation and approval of physical scenario
+settings before a long study. Preserve completed paper experiments and archive state;
+no new cleanup, retuning, or long queue should be inferred from this handoff alone.
+
+---
+# Preserved legacy benchmark reference
+
+The following detailed environment/profile/run map documents the pre-wireless branch.
+It is not a request to rerun historical experiments. The current sections above govern
+wireless implementation and evidence status.
 
 ## 2. Environment and interaction rules
 
@@ -40,7 +104,7 @@ The last field is informational in the inspected runner; check the actual endpoi
 | Field | MNIST primary | CIFAR-10 primary |
 | --- | --- | --- |
 | Model | CNN 16–32–FC128, d=80,202 | `paper_basiccnn`, d=878,538 |
-| Model identifier | `mnist_cnn_16_32_128` (validate current factory) | `paper_basiccnn` |
+| Model identifier | `mnist_cnn_16_32_128` (verified in supplied current factory) | `paper_basiccnn` |
 | Clients / participation | 20 / 20 | 20 / 20 |
 | Data | fixed_labels, 10 samples/client, one class/client | paper_dirichlet, alpha=.01, local_data_fraction=1.0 |
 | Seed | 0 | 0 |
@@ -60,7 +124,7 @@ Sparse methods: `kl_global_local` and `random`, r in {.75,.50,.25,.10,.05}; same
 
 Historical MNIST s5/seed3, N20, E5/B5/LR.10 is preserved as an alternative. N100, old/new MLP, ResNet, alpha .1, half-data and reverse KL are distinct historical experiments. Do not reintroduce their defaults.
 
-Current CIFAR numerical policy is documented as zero initial raw omega with score-only `floor_for_score` (floor resolved from precision_min=1e-12); epsilon=1e-5, precision_max=1e12. Additional MNIST numerical/CNN-layer/runtime details require current source/resolved YAML inspection. Do not invent them from the parameter count.
+The inspected CIFAR numerical policy is zero initial raw omega with score-only `floor_for_score` (floor resolved from precision_min=1e-12); epsilon=1e-5, precision_max=1e12. The current source/resolved YAMLs were subsequently supplied and audited for wireless v1; inspect them for additional numerical/CNN/runtime details.
 
 ## 4. Algorithm and payload contract
 
@@ -119,9 +183,9 @@ r       KL       Random    KL-Random pp
 .05     88.58    86.07     +2.51
 ```
 
-These are user-reported raw checkpoints. No sparse KL endpoint exceeds dense89.44 in this s10 case. The old deleted clipped FedAvg was88.12, not the current recovered88.23. Stage-16 unclipped FedAvg R300 was88.64. Keep run provenance distinct.
+These raw checkpoints were re-read from the supplied baseline CSVs during wireless-v1 verification. No sparse KL endpoint exceeds dense89.44 in this s10 case. The old deleted clipped FedAvg was88.12, not the current recovered88.23. Stage-16 unclipped FedAvg R300 was88.64. Keep run provenance distinct.
 
-CIFAR R150 completion is known, **but final R150-budget accuracies were not supplied in this documentation task**. Historical R120 values (dense51.24, FedAvg46.04, best KL56.10 at r=.25/R399) must not be relabeled R150/R499. Run the bundled `docs/tools/export_handoff.py --check` on the actual repository to print current raw endpoints; the JSON registry keeps missing values null.
+CIFAR R150 raw results are now verified from the supplied CSVs: dense53.10%, FedAvg47.28%, best KL57.53% at r=.25/R499. Full raw tables are in RESULTS_AND_PLOTTING.md and the registry. Historical R120 values (dense51.24, FedAvg46.04, best KL56.10 at r=.25/R399) remain separate and must not be relabeled R150/R499.
 
 Single selected seeds do not prove universal superiority, and budget-matched extra rounds do not establish compute/latency/energy savings or reduced overfitting. Interpret overall trends and keep-ratio effects, not just individual favorable values.
 
@@ -141,11 +205,13 @@ Stage2: 121 historical folders archived, 42 protected original folders verified;
 
 Cleanup managers depend on `../bayesfl_cleanup_DRY_RUN_20261026_194253.csv` and archive manifests/journals. Two incomplete N100/s10 unclipped FOLA runs are protected at last reported R152 seed3 and R172 seed4. Do not delete or relocate them.
 
-`.gitignore` changes were discussed but **not confirmed applied**. A clone must include required metrics (24 primary trajectories, plus optional controls) to plot; source alone is insufficient. Archives/weights can be excluded from Git while preserving local full outputs. Do not globally ignore all NPZ/CSV, lose partition/test fixtures, or ignore a ledger and then assume the clone can resume. Current code, configs, metadata, docs and selected metrics need explicit transfer. The old source CHANGE_MANIFEST.json and PACKAGE_MANIFEST.txt are immutable historical artifacts, not current live inventories.
+The supplied current `.gitignore` is retained unchanged; actual live Git tracked-file/history status has not been verified. A clone must include required metrics (24 primary trajectories, plus optional controls) to plot; source alone is insufficient. Archives/weights can be excluded from Git while preserving local full outputs. Do not globally ignore all NPZ/CSV, lose partition/test fixtures, or ignore a ledger and then assume the clone can resume. Current code, configs, metadata, docs and selected metrics need explicit transfer. The old source CHANGE_MANIFEST.json and PACKAGE_MANIFEST.txt are immutable historical artifacts, not current live inventories.
 
-## 8. Next work
+## 8. Current next work and export
 
-The present task is documentation/handoff. No new training or wireless patch is implied. An optional live export captures current source, configs, primary raw metrics, hashes and package versions, without model arrays/datasets or changing existing files:
+Run the target-runtime validation gates from wireless/RUNBOOK.md, approve the physical
+scenario, then execute a distinctly named short dataset smoke before long studies.
+No new tuning/cleanup or long queue is implied merely by loading this handoff.
 
 ```bash
 cd ~/DungNDH/micl/bayesfl || exit 1
@@ -153,7 +219,10 @@ cd ~/DungNDH/micl/bayesfl || exit 1
 /home/micl/anaconda3/envs/dungndh/bin/python docs/tools/export_handoff.py --export
 ```
 
-The export is a lightweight chat/plot snapshot, **not a full training backup**. Attach it with this handoff for a code-editing task. The proposed next research topic is wireless/AirComp uplink and condition-dependent client keep ratios; none is implemented or certified by these docs. Read current code and relevant project papers before that design.
+These defaults preserve legacy24. For new wireless runs repeat explicit
+`--wireless-run-dir outputs/ACTUAL_RUN`; optional `--wireless-only` skips the legacy
+result requirement. The export is a lightweight source/plot snapshot, not a full resume
+backup. Digital wireless is implemented as described above; AirComp remains out of scope.
 
 ## 9. Exact primary run paths
 
@@ -307,3 +376,30 @@ outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p5_cos400_n20_seed0_
 ```text
 outputs/run_sparse_cifar_basiccnn_a0p01_f1_fola_random_keep0p75_cos400_n20_seed0_e10_b32_lr002_lam0p01_budget150dense_20260925_032226
 ```
+
+<!-- BEGIN JOINT_FEDKLS_CIFAR10_R150_VERIFIED_20261110 -->
+### 2026-11-10 — Joint-only CIFAR-10 R150 audit (supersedes earlier pending CIFAR/Flower statuses)
+
+- **Primary research method:** FedKLS joint KL-guided bandwidth and integer coordinate retention. Equal bandwidth is a historical engineering pilot, **not the focus** of the current research.
+- **Verified run:** `run_wireless_cifar_eqb_joint150_fixed_v1_cifar10_a0p01_f1_joint_seed0_20261109_230207`; **R150 accuracy 52.63%**, NLL 1.40449; best 52.76% at R148; final-20-round mean 52.1115%.
+- **Source audit:** `PASS_ENGINEERING_RECORD_INTEGRITY`; 150 rounds, 3,000 client-round rows, 5,579 price queries, 11,438,601,248 model-array bytes and 111,770,677 control bytes. All 161 included exported-evidence hashes independently verified.
+- **Limits:** One CIFAR-10 seed 0 and fixed wireless path-loss scenario; no globally certified integer solution; power/control/compute times remain modeled, not physical measurements; no independent checkpoint-tensor examination.
+- **Evidence & detailed findings:** [CIFAR-10 Joint R150 Review](wireless/r150_joint_20261110/JOINT_R150_REVIEW.md) (includes control breakdown, retention, learning curves and normalized KL contribution correction).
+- **Derived audit caveat:** Previously generated per-client `weighted_discarded_kl` audit CSV contains `n_k*tail` rather than `(n_k/N)*tail`; the production round objective is correct. Use the corrected per-client CSV included in the R150 review package.
+
+<!-- END JOINT_FEDKLS_CIFAR10_R150_VERIFIED_20261110 -->
+
+<!-- BEGIN FEDKLS_JOINT_SENSITIVITY_R150_V1 -->
+## Joint CIFAR-10 wireless sensitivity R150 — verified 2026-11-12
+
+- Main method: **joint-KL** bandwidth/retention; 20 clients, CIFAR BasicCNN, seed 0, fixed channel gains, 150 rounds. The original joint reference (Bmax=1 MHz, U=58.973 s) reached **52.63%**. Six additional fixed-channel R150 cases passed engineering record-integrity audits.
+- **U sweep** at Bmax=1 MHz: U=48.973 s → 50.25%; U=38.973 s → 52.47%; U=28.973 s → 43.43%.
+- **B sweep** at U=58.973 s: Bmax=0.55 MHz → 47.29%; 0.75 MHz → 52.53%; 0.95 MHz → 54.01%.
+- All seven source-audit ZIPs independently matched their **161 SHA-256 evidence hashes**. Configurations match except run_name, uplink bandwidth and round target. The R150 learning outcomes are **non-monotone**, and the two harshest cases show pronounced learning oscillations.
+- Price-search `price_tolerance` in U150 **21/150** and B0550 **27/150** rounds. This is a solver stopping caution, not an audit failure; global integer optimality is not certified.
+- This is a **single-seed engineering simulation**. The reference scenario is `EXAMPLE_NOT_LOCKED`, not physically calibrated. Shorter U also means shorter modeled round duration; compare both accuracy vs rounds and modeled time.
+
+**Full verified audit and results:** `docs/wireless/JOINT_CIFAR10_SENSITIVITY_R150_20261112.md`  
+**Reproducible plotting guide:** `docs/wireless/JOINT_SENSITIVITY_PLOTS_RUNBOOK_v1.md`  
+**Plot script:** `scripts/plot_joint_cifar_sensitivity_v1.py` (generates 4 side-by-side PNG/PDF figures + CSVs without retraining).
+<!-- END FEDKLS_JOINT_SENSITIVITY_R150_V1 -->

@@ -1,0 +1,42 @@
+{
+  "schema": "cifar10_wireless_pilot_setup_v1",
+  "date": "2026-11-09",
+  "scope": "Additive pilot scenario/docs/resource checker only; no replacement or auto training",
+  "files": [
+    {
+      "path": "INSTALL_CIFAR10_PILOT.md",
+      "bytes": 1384,
+      "sha256": "4fdbda7ff66261839abdfb20033008540904ae8632a6588a8c329c794cb956ab"
+    },
+    {
+      "path": "docs/wireless/CIFAR10_STAGED_PLAN.md",
+      "bytes": 17244,
+      "sha256": "8be7ee5e89b31ae346334418427c096a96d51fc049c3b02dc43ba492353b0816"
+    },
+    {
+      "path": "docs/wireless/evidence/cifar10_scheduling_pilot_v1/resource_preflight.txt",
+      "bytes": 4381,
+      "sha256": "56b852964a3bd5274bf8ee32aebfda9927f8c6791680361ebac3f2f58dc33b96"
+    },
+    {
+      "path": "docs/wireless/evidence/cifar10_scheduling_pilot_v1/setup_checks.json",
+      "bytes": 1547,
+      "sha256": "6237c071d91d3779a2f802c7986a65ecf1bd6025daa8037227f599712152270b"
+    },
+    {
+      "path": "scripts/check_cifar_wireless_scenario_v1.py",
+      "bytes": 11163,
+      "sha256": "7949fed00cfb7227f73dfbf15104ea46ef5e4cb347c3ead0a56b5daa6c9b1c11"
+    },
+    {
+      "path": "scripts/configs/wireless/cifar10_scheduling_pilot_v1/scenario_fixed.yaml",
+      "bytes": 4074,
+      "sha256": "61fa0744708a75a5a5218f095a48a27bcbc07dba94b5bc264dec574a96a759cb"
+    },
+    {
+      "path": "scripts/configs/wireless/cifar10_scheduling_pilot_v1/topology.json",
+      "bytes": 5581,
+      "sha256": "2a9e1d42a00c738a0c527fa2b1269655ecf9585491600ab248cea2ba8b977fc1"
+    }
+  ]
+}

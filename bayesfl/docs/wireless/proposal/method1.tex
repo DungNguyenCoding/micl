@@ -1,0 +1,184 @@
+\section{Lagrangian Decomposition and KL-Threshold Allocation}
+\label{sec:solution}
+We use only a shared-price Lagrangian method for the proposed allocator. Bandwidth elimination is exact, whereas the remaining integer allocation is approached through exact local price responses, a coordinated price search, and an explicitly feasible incumbent. General dual-decomposition and KKT concepts follow~\cite{decomposition,boyd}; the formulas below specialize them to the stated FedKLS objective.
+
+\subsection{Separable Local Price Problems}
+Suppress $t$ for this section. Introduce a multiplier $\lambda\ge0$ for the bandwidth constraint. The Lagrangian separates as
+\begin{equation}
+ \mathcal L(\mathbf m,\lambda)
+ =\sum_k\left[\pi_kD_k(m_k)+\lambda w_k(m_k)\right]-\lambda B.
+ \label{eq:lagrangian}
+\end{equation}
+For a broadcast price, each client returns
+\begin{equation}
+ m_k(\lambda)\in
+ \argmin_{m\in\{1,\ldots,d\}}
+ \underbrace{\left[\pi_kD_k(m)+\lambda w_k(m)\right]}_{F_k(m;\lambda)}.
+ \label{eq:local-price}
+\end{equation}
+The client needs its own scores, $\pi_k$, $U$, and $c_k$, but not another client's posterior. The server coordinates the common price and checks the shared resource constraint. The price $\lambda$ is distinct from any regularization coefficient used in local Bayesian training.
+
+\subsection{Exact Sparse Threshold and Dense Comparison}
+For $1\le m\le d-2$, both $m$ and $m+1$ use the sparse format. The change in the local priced objective is
+\begin{align}
+ F_k(m+1;\lambda)-F_k(m;\lambda)
+ &=-\pi_ks_{k,(m+1)}+\lambda\frac{2b}{Uc_k}.
+ \label{eq:marginal-change}
+\end{align}
+Thus the next pair is worth retaining when
+\begin{equation}
+ s_{k,(m+1)}>\theta_k(\lambda),\qquad
+ \theta_k(\lambda)=\frac{2b\lambda}{\pi_kUc_k}.
+ \label{eq:threshold}
+\end{equation}
+Let $N_k(\lambda)=\#\{i:s_{k,i}>\theta_k(\lambda)\}$. Because scores decrease with rank, a sparse minimizer is
+\begin{equation}
+ m_k^{\spc}(\lambda)
+ =\min\{d-1,\max\{1,N_k(\lambda)\}\}.
+ \label{eq:sparse-response}
+\end{equation}
+Strict thresholding selects the lowest-count sparse minimizer when scores equal the threshold. A deterministic coordinate-index rule resolves score ties when constructing the actual message.
+
+The full-retention option must be compared separately:
+\begin{align}
+ F_k^{\spc}(\lambda)
+ &=\pi_kD_k(m_k^{\spc})
+ +\lambda\frac{d+2b m_k^{\spc}}{Uc_k},\label{eq:sparse-price}\\
+ F_k^{\dense}(\lambda)&=\lambda\frac{2bd}{Uc_k}.
+ \label{eq:dense-price}
+\end{align}
+Choose the candidate with smaller priced objective; in a tie choose the smaller required bandwidth, then the smaller discarded KL if necessary. Equations~\eqref{eq:sparse-response}--\eqref{eq:dense-price} solve~\eqref{eq:local-price} exactly in mathematical arithmetic. In particular, the bitmap is included even though its constant cost cancels in~\eqref{eq:marginal-change}.
+
+The resulting count is an integer computed from current scores, not an entry in a predefined ratio list. For fixed price, stronger channels and larger aggregation weights lower the threshold. Equivalently, the marginal benefit per additional Hz on the sparse branch is
+\begin{equation}
+ \rho_{k,i}=\frac{\pi_kUc_ks_{k,i}}{2b},
+ \label{eq:priority}
+\end{equation}
+and the threshold retains marginal entries with $\rho_{k,i}>\lambda$.
+
+\subsection{Server Price Search}
+Define the total required bandwidth and the response objective by
+\begin{equation}
+ G(\lambda)=\sum_kw_k(m_k(\lambda)),\qquad
+ F(\mathbf m(\lambda))=\sum_k\pi_kD_k(m_k(\lambda)).
+ \label{eq:demand}
+\end{equation}
+For exact local minimizers, $G(\lambda)$ is nonincreasing, including dense-format switches. Indeed, let $m_1,m_2$ minimize one client's priced objective at $\lambda_1<\lambda_2$. Adding the two optimality inequalities gives
+\begin{equation}
+ (\lambda_2-\lambda_1)\big[w_k(m_2)-w_k(m_1)\big]\le0.
+ \label{eq:monotonicity}
+\end{equation}
+Summing over clients proves the claim. The dense exception prevents replacing bandwidth demand by an unqualified count-only proxy; the server evaluates the actual piecewise payload at every query.
+
+The server increases the price when $G(\lambda)>B$ and decreases it when a lower price may preserve more information while remaining feasible. It maintains a bracket with an infeasible low-price response and a feasible high-price response, and queries midpoint prices. An initial high price can be doubled until a feasible response is found, subject to a finite iteration and numerical-safety limit. At every query, the best feasible vector is retained rather than blindly accepting the last trial. A minimum-bandwidth vector from~\eqref{eq:endpoint-costs} provides a feasible fallback whenever the problem is feasible.
+
+After choosing $\widehat{\mathbf m}$, the server grants
+\begin{equation}
+ \widehat B_k=\frac{L_k(\widehat m_k)}{Uc_k},\qquad
+ \widehat r_k=\frac{\widehat m_k}{d}.
+ \label{eq:final-allocation}
+\end{equation}
+Thus every idealized upload takes $U$ and the common completion target is met. Reallocating unused bandwidth to accelerate uploads would constitute a different completion policy, not the equality recovery in~\eqref{eq:final-allocation}.
+
+\subsection{Dual Bound, Stopping Rule, and Optimality Scope}
+The dual function is
+\begin{equation}
+ g(\lambda)=\sum_k\min_{1\le m\le d,\,m\in\mathbb Z}
+ \left[\pi_kD_k(m)+\lambda w_k(m)\right]-\lambda B.
+ \label{eq:dual}
+\end{equation}
+For any feasible incumbent $\widehat{\mathbf m}$ and $\lambda\ge0$,
+\begin{equation}
+ g(\lambda)\le F^\star\le F(\widehat{\mathbf m}),
+ \label{eq:gap-bound}
+\end{equation}
+where $F^\star$ is the optimal value of~\eqref{prob:counts}. The first inequality follows because the Lagrangian is no greater than the primal objective at any feasible point, and $g$ minimizes that Lagrangian. The second follows from feasibility. No strong-duality assumption is needed.
+
+Over the queried prices, record
+\begin{equation}
+ \mathrm{LB}=\max\{0,\max_jg(\lambda_j)\},\qquad
+ \mathrm{UB}=F(\widehat{\mathbf m}).
+ \label{eq:bounds}
+\end{equation}
+A requested reconstruction-objective accuracy is certified when
+\begin{equation}
+ \mathrm{UB}-\mathrm{LB}
+ \le\varepsilon_{\mathrm{abs}}+
+ \varepsilon_{\mathrm{rel}}\max\{1,\mathrm{UB}\}.
+ \label{eq:gap-stop}
+\end{equation}
+A price-interval tolerance or iteration cap may also stop the algorithm, but does not by itself certify this objective accuracy. If exact local responses are feasible and satisfy
+\begin{equation}
+ \lambda\left(G(\lambda)-B\right)=0,
+ \label{eq:complementarity}
+\end{equation}
+then $g(\lambda)=F(\mathbf m(\lambda))$, which certifies a global integer optimum for that instance.
+
+In general, integer counts cause stepwise demands and can leave a nonzero duality gap. Bisection cannot recover every feasible integer combination. For illustration, after mandatory minimum allocations, suppose one optional pair costs two bandwidth units and reduces weighted KL by three, while another costs three units and reduces KL by four. A remaining budget of three units favors the second pair alone, but a common price selects the first pair whenever it selects the second. This illustrates why exact local thresholding does not automatically yield a globally optimal integer allocation. The separate dense format adds another nonconvex feature.
+
+For a KKT interpretation, linearly interpolate $D_k$ between consecutive integer counts and restrict to the sparse branch. On $x\in[j,j+1]$,
+\begin{equation}
+ \overline D_k(x)=D_k(j)-(x-j)s_{k,(j+1)}.
+ \label{eq:interpolation}
+\end{equation}
+Its slopes are nondecreasing, hence it is convex. Interior KKT stationarity for this continuous relaxation~\cite[Sec.~5.5]{boyd} gives
+\begin{equation}
+ 0\in\pi_k\partial\overline D_k(x_k)+\lambda\frac{2b}{Uc_k}.
+ \label{eq:kkt}
+\end{equation}
+At an interior integer breakpoint, this is
+\begin{equation}
+ \pi_ks_{k,(m_k)}\ge\frac{2b\lambda}{Uc_k}
+ \ge\pi_ks_{k,(m_k+1)}.
+ \label{eq:kkt-threshold}
+\end{equation}
+These conditions explain the threshold but do not make the original discrete problem convex. Accordingly, a returned feasible solution is denoted $\widehat{\mathbf m}$, not $\mathbf m^\star$ unless certified.
+
+\begin{figure}[t]
+\hrule\vspace{4pt}
+\textbf{Procedure 1: Server-coordinated price allocation}
+\vspace{3pt}
+\footnotesize
+\begin{algorithmic}[1]
+\Require $U,B,c_k,\pi_k>0$; clients' sorted scores; finite query limits and tolerances.
+\State Construct the minimum-bandwidth count vector.
+\If{its required bandwidth exceeds $B$}
+ \State \Return infeasible; do not force a positive count.
+\EndIf
+\State Initialize feasible incumbent $\widehat{\mathbf m}$; set $\mathrm{LB}=0$.
+\State Also retain Version A's vector if feasible and better.
+\If{$\sum_kw_k(d)\le B$}
+ \State \Return all-dense counts and~\eqref{eq:final-allocation}.
+\EndIf
+\State Query exact client responses at $\lambda=0$.
+\State Update bounds and the best feasible incumbent.
+\If{the zero-price response is feasible}
+ \State \Return its zero-distortion allocation.
+\EndIf
+\State Set $\lambda_{\mathrm{lo}}=0$, $\lambda_{\mathrm{hi}}>0$.
+\State Query and double $\lambda_{\mathrm{hi}}$ until feasible or the bracketing limit is reached; record every query.
+\If{a feasible high-price endpoint was found}
+ \For{at most $J_{\max}$ bisection steps}
+  \State Broadcast $\lambda=(\lambda_{\mathrm{lo}}+\lambda_{\mathrm{hi}})/2$.
+  \State Clients solve~\eqref{eq:local-price} by thresholding and dense comparison; report count and discarded KL.
+  \State Evaluate $G(\lambda),g(\lambda)$; update LB and incumbent.
+  \If{$G(\lambda)>B$}
+   \State $\lambda_{\mathrm{lo}}\gets\lambda$.
+  \Else
+   \State $\lambda_{\mathrm{hi}}\gets\lambda$.
+  \EndIf
+  \State Stop on~\eqref{eq:gap-stop}, price tolerance, or query limit.
+ \EndFor
+\EndIf
+\State Optionally improve the incumbent by feasible additions or dense switches; recheck exact payloads.
+\State \Return $\widehat m_k,\widehat r_k,\widehat B_k$, UB, LB, query count, and termination status.
+\end{algorithmic}
+\vspace{4pt}\hrule
+\caption{Price coordination for unrestricted integer retention. The feasible incumbent is preserved even if the price-search limit is reached. No second optimization method is required by this procedure.}
+\label{fig:algorithm}
+\end{figure}
+
+\subsection{Feasible Refinement and Computational Cost}
+Procedure~1 may be followed by a bounded refinement that adds affordable posterior pairs according to~\eqref{eq:priority}, and checks switches to the dense format using their actual bandwidth difference. Accept only feasible changes that do not increase the reconstruction objective. Such additions can improve the incumbent, but are not a global-optimality proof and do not remove a duality gap in general. Previously valid dual bounds remain lower bounds after refinement.
+
+A complete score sort and a reverse cumulative sum cost $O(d\log d)$ time and $O(d)$ storage at each client using a comparison sort. Afterwards, a binary search in sorted scores determines the threshold count in $O(\log d)$ time; tail evaluation and dense comparison are constant-time. Each price query uses $O(K)$ server arithmetic and a small response from each client, rather than uploading every coordinate score. With $J$ price queries, reporting scales as $O(KJ)$ scalar messages. This is a computational and signaling tradeoff, not a guarantee that repeated control exchanges have negligible elapsed time.

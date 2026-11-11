@@ -1,0 +1,51 @@
+{
+  "schema": "fedkls_joint_cifar10_sensitivity_six_v1",
+  "original_scenario_sha256": "61fa0744708a75a5a5218f095a48a27bcbc07dba94b5bc264dec574a96a759cb",
+  "original_topology_sha256": "2a9e1d42a00c738a0c527fa2b1269655ecf9585491600ab248cea2ba8b977fc1",
+  "source_relpath": "scripts/configs/wireless/cifar10_scheduling_pilot_v1/scenario_fixed.yaml",
+  "baseline_upload_window_s": 58.97274041844295,
+  "cases": [
+    {
+      "case": "u170",
+      "round_target_s": 170.0,
+      "uplink_bandwidth_hz": 1000000.0,
+      "study_tag": "cifar_joint_u170_r150_v1",
+      "yaml_sha256": "36fe1f2eb94ffd1b26b7dfce372beaebf11c9329379d8f707d9f3c8a27ecb8a2"
+    },
+    {
+      "case": "u160",
+      "round_target_s": 160.0,
+      "uplink_bandwidth_hz": 1000000.0,
+      "study_tag": "cifar_joint_u160_r150_v1",
+      "yaml_sha256": "94c2f7a2045b269f23c2b25d0ab4c5179b17aa1e18ad8ce83ef2d0235f84ade1"
+    },
+    {
+      "case": "u150",
+      "round_target_s": 150.0,
+      "uplink_bandwidth_hz": 1000000.0,
+      "study_tag": "cifar_joint_u150_r150_v1",
+      "yaml_sha256": "556c548ffa64d610533f2c4425287fd3055755f05362ca7ffee6196feee7ad7c"
+    },
+    {
+      "case": "b0550",
+      "round_target_s": 180.0,
+      "uplink_bandwidth_hz": 550000.0,
+      "study_tag": "cifar_joint_b0550_r150_v1",
+      "yaml_sha256": "df6bf11092d193147ae63d6a4eb1b3a391cd0ce72b857c3880d7e9593a8faeeb"
+    },
+    {
+      "case": "b0750",
+      "round_target_s": 180.0,
+      "uplink_bandwidth_hz": 750000.0,
+      "study_tag": "cifar_joint_b0750_r150_v1",
+      "yaml_sha256": "9f060aaed4543c925dbea46243fd6a0df7854fc93807caa79043114b2ce408b5"
+    },
+    {
+      "case": "b0950",
+      "round_target_s": 180.0,
+      "uplink_bandwidth_hz": 950000.0,
+      "study_tag": "cifar_joint_b0950_r150_v1",
+      "yaml_sha256": "fffc4237a316547c3d1ec34d0bb4c28e19f2aa345a3e978f60dd6226258b86cc"
+    }
+  ]
+}

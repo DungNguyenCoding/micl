@@ -1,13 +1,13 @@
 # Locked simulation profiles
 
-**Current choice, 2026-10-26:** main paper plots use MNIST **s10 / seed 0 / N=20** and CIFAR-10 **alpha=.01 / local-data fraction 1.0 / seed 0 / N=20**, with a **dense FOLA R150 budget for each**. This choice supersedes old MLP/N100, ResNet and R120 defaults. Evidence and limits: [EVIDENCE_AND_GAPS.md](EVIDENCE_AND_GAPS.md).
+**Legacy paper choice (retained by wireless v1, 2026-11-09):** main paper plots use MNIST **s10 / seed 0 / N=20** and CIFAR-10 **alpha=.01 / local-data fraction 1.0 / seed 0 / N=20**, with a **dense FOLA R150 budget for each**. This choice supersedes old MLP/N100, ResNet and R120 defaults. Evidence and limits: [EVIDENCE_AND_GAPS.md](EVIDENCE_AND_GAPS.md).
 
 ## Main settings
 
 | Field | MNIST primary | CIFAR-10 primary |
 | --- | --- | --- |
 | Model label | CNN 16–32–FC128 | BasicCNN |
-| Config model identifier | `mnist_cnn_16_32_128` (conversation-reported; validate live factory) | `paper_basiccnn` |
+| Config model identifier | `mnist_cnn_16_32_128` (verified in supplied current factory) | `paper_basiccnn` |
 | Scalar parameter dimension d | 80,202 | 878,538 |
 | Clients / participating each round | 20 / 20 | 20 / 20 |
 | Partition | `fixed_labels`, samples_per_client=10, labels_per_client=1 | `paper_dirichlet`, dirichlet_alpha=0.01, local_data_fraction=1.0 |
@@ -43,11 +43,11 @@ For CIFAR, `local_data_fraction=1.0` means no additional per-client subsampling 
 
 The documented FOLA contract uses `lambda_scale_by_size=false`, `paper_mean_only_eval=true`, and `output.save_full_client_posteriors=false`. Full untransmitted local posteriors must not be secretly sent for a sparse run.
 
-The older inspected CIFAR template uses initial omega 0.0, aggregation epsilon 1e-5, precision_min=1e-12, precision_max=1e12, `precision_policy=floor_for_score`, and `score_precision_floor=null` (resolves to precision_min). Its augmentation is crop(32,padding=4,fill=128), horizontal flip, CIFAR AutoAugment, tensor Cutout(1,16), normalization mean/std=(.5,.5,.5); test evaluation omits stochastic augmentation. Preserve the selected live resolved configuration, not an old template's obsolete byte cap.
+The selected saved CIFAR configurations use initial omega 0.0, aggregation epsilon 1e-5, precision_min=1e-12, precision_max=1e12, `precision_policy=floor_for_score`, and `score_precision_floor=null` (resolves to precision_min). Its augmentation is crop(32,padding=4,fill=128), horizontal flip, CIFAR AutoAugment, tensor Cutout(1,16), normalization mean/std=(.5,.5,.5); test evaluation omits stochastic augmentation. Preserve the selected live resolved configuration, not an old template's obsolete byte cap.
 
-The historical MNIST baseline used initial omega 1.0, epsilon 1e-5 and precision_min=1e-8. These are **inherited documented values, not freshly verified Stage-18/22 YAML fields**. Read current resolved YAMLs before reporting all precision/numerical/runtime settings as verified.
+The selected saved MNIST configurations use initial omega1.0, epsilon1e-5 and precision_min1e-8, with strict sparse scoring. Runtime choices remain recorded in each resolved YAML; preserve them rather than reconstructing from a filename.
 
-The current MNIST CNN module is `src/bayesfl/models/mnist_cnn.py`. Its existence is recorded by the inventory, but its current body is not in the older source ZIP. Do not invent kernels, pooling, normalization or initialization from the 80,202 count. The inspected CIFAR BasicCNN is Conv(3,32,5)–ReLU–Pool(2), Conv(32,64,5)–ReLU–Pool(2), FC(1600,512)–ReLU–FC(512,10), with biases and deterministic Xavier initialization.
+The supplied current MNIST CNN module is `src/bayesfl/models/mnist_cnn.py`: Conv(1,16,5)–ReLU–Pool(2), Conv(16,32,5)–ReLU–Pool(2), FC(512,128)–ReLU–FC(128,10), convolution stride1/padding0, biased layers, no batch normalization/dropout. This is read from code, not inferred from the80202 count. The inspected CIFAR BasicCNN is Conv(3,32,5)–ReLU–Pool(2), Conv(32,64,5)–ReLU–Pool(2), FC(1600,512)–ReLU–FC(512,10), with biases and deterministic Xavier initialization.
 
 ## Training caps versus evaluation checkpoints
 
@@ -69,3 +69,17 @@ MNIST s5: N=20, exactly one class/client, seed **3**, E=5, B=5, LR=.10 constant,
 Stage-24 clipped dense FOLA s10/seed0 is a protected ablation, **not** the selected dense baseline. N=100 and other seeds remain historical or resume-sensitive research controls. No new multiseed, tuning or wireless jobs are authorized by this document.
 
 Exact outputs and candidate source YAML paths: [EXPERIMENT_REGISTRY.json](EXPERIMENT_REGISTRY.json) and [RUN_REGISTRY.md](RUN_REGISTRY.md).
+
+## Wireless v1 addendum — not a replacement for the legacy locks
+
+The actual saved primary configs and current models were inspected in `baseline_src.zip`.
+The preceding selected learning profiles remain unchanged. MNIST FOLA scoring is strict,
+initial raw omega1, no gradient clipping; CIFAR initial omega0 with score-only
+floor_for_score at1e-12 and norm10 clipping. Read the actual saved config for all other
+numeric choices. Current CIFAR R150 raw results are now recorded in RESULTS_AND_PLOTTING.md.
+
+Wireless generation inherits these learning settings but uses a new controller, integer
+counts1..d, a separate packet version and explicit modeled-time/round caps. The historical
+retention set is not an allowed-action menu. Physical bandwidth, gains, power/noise PSD,
+compute durations, deadline and control allowance remain **unlocked**; the included example
+is not a selected paper scenario. No automatic 150 FOLA /300 FedAvg equal-time comparison.

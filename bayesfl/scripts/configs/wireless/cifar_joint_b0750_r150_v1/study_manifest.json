@@ -1,0 +1,19 @@
+{
+  "schema": "wireless_study_v2",
+  "profile": "cifar10_a0p01_f1",
+  "scenario_source": "/home/micl/DungNDH/micl/bayesfl/scripts/configs/wireless/cifar10_joint_sensitivity6_v1/b0750.yaml",
+  "scenario_sha256": "9f060aaed4543c925dbea46243fd6a0df7854fc93807caa79043114b2ce408b5",
+  "scenario_status": "EXAMPLE_NOT_LOCKED",
+  "jobs": [
+    {
+      "run_name": "run_wireless_cifar_joint_b0750_r150_v1_cifar10_a0p01_f1_joint_seed0",
+      "config": "scripts/configs/wireless/cifar_joint_b0750_r150_v1/run_wireless_cifar_joint_b0750_r150_v1_cifar10_a0p01_f1_joint_seed0.yaml",
+      "gpu": 0,
+      "status": "NEW",
+      "source_resolved_config": "outputs/run_confirm_newsrc_cifar_basiccnn_a0p01_fola_cos400_n20_f1_seed0_e10_b32_lr002_lam0p01_r150_20261010_195905/resolved_config.yaml",
+      "source_sha256": "1387494aef5f01dd0aa259315544e3840ec625b93b6a36246316cad8711b0219",
+      "fingerprint": "a7fc8ee47bf3edf35efac1dabd7091e08b18cf6084b69eac08b9897adda55ed4",
+      "expected_round_cap": 150
+    }
+  ]
+}

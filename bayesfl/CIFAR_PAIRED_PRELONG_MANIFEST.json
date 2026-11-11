@@ -1,0 +1,43 @@
+{
+  "contains_only_additive_files": true,
+  "existing_dependency": "scripts/probe_cifar_same_posterior.py",
+  "files": {
+    "INSTALL_CIFAR_PAIRED_PRELONG.md": {
+      "bytes": 6359,
+      "sha256": "e9fbb291d96a8b5ed2a7fac415f68ce2ed8d6b1fb43ed67ebff560a394c39fb3"
+    },
+    "docs/wireless/CHAT_HANDOFF_PAIRED_R11.md": {
+      "bytes": 3817,
+      "sha256": "62c4d0bbb4dd97a30e39195e864ecd41d8f651c6a9da228f621cc603286ac503"
+    },
+    "docs/wireless/CIFAR_PAIRED_PRELONG_GATE.md": {
+      "bytes": 8009,
+      "sha256": "fd7c2ca8f520e710f756afe0ba5e514d2c18600bb731128279c45da2bb70e6dc"
+    },
+    "scripts/probe_cifar_paired_r11.py": {
+      "bytes": 28623,
+      "sha256": "15944fec2cfd5a79b0bfe0ee18cc78b0bd00842550a6bf5f367476eaa449585d"
+    },
+    "scripts/report_cifar_prelong_gate.py": {
+      "bytes": 10077,
+      "sha256": "0bcffc0456e9c58d864c469f8b940dd8944fc342a36322c5102ba785f1108d95"
+    },
+    "scripts/run_cifar_prelong_gate.sh": {
+      "bytes": 2821,
+      "sha256": "8b9b4d50c765232cea688dc9ee398ebe5dc59316c8157fee5e47f2af3953bf70"
+    },
+    "tests/wireless/test_paired_r11_probe.py": {
+      "bytes": 7243,
+      "sha256": "03c2f8d5ad744986ab8ffef0ae7e231403cb97853a7ad96ef94cca39cf9f6d2f"
+    },
+    "tests/wireless/test_prelong_report.py": {
+      "bytes": 3553,
+      "sha256": "69895c0279c0fa3817a55bd62946d8433a8a9ad6856321b6f08beb18e8e3bf47"
+    }
+  },
+  "launches_long_training": false,
+  "modifies_production_source": false,
+  "name": "FedKLS_CIFAR10_Paired_R11_PreLong_Gate_v1",
+  "test_evidence": "8 small synthetic tests passed in local development runtime, real server CUDA/R10/CIFAR validation pending",
+  "version": "v1"
+}

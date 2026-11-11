@@ -1,61 +1,59 @@
-# Communication accounting and budget checkpoints
+# Communication accounting: legacy bytes and wireless resources
 
-Current model: float32 means and raw precision (4+4 bytes/coordinate), a little-bit-order packed bitmap for every sparse upload, one dense shared downlink per round, and one distinct uplink per participating client. This is **modeled payload accounting**, not a measured physical multicast or wireless/AirComp implementation.
+## Legacy paper benchmark (unchanged)
 
-```text
-m = ceil(r*d)                         # same binary64 multiplication as existing encoder
-bitmap_bytes = ceil(d/8)
-C_dense_fola = 8*d*(K+1)
-C_fedavg    = 4*d*(K+1)
-C_sparse    = 8*d + K*(8*m + bitmap_bytes)
-B           = R_dense*C_dense_fola
-R_sparse    = floor(B/C_sparse)
+Float32 mean/precision pairs, dimension d, K=20, one dense modeled multicast:
+
+```
+C_dense_FOLA = 8*d*(K+1)
+C_dense_FedAvg = 4*d*(K+1)
+m = ceil(keep_ratio*d)
+C_sparse_v1 = 8*d + K*(8*m + ceil(d/8))
 ```
 
-K=20 in both primary profiles. Extra evaluation/initialization model-array traffic is zero under the recorded central-evaluation/server-local initialization convention. If participation, payload dtype, metadata accounting or auxiliary arrays change, recompute from the actual ledger instead of using these constants. GB = 10^9 bytes; disk GiB is a different unit.
+Legacy sparse v1 always carries a bitmap, even at full retention. The plotted
+Full-posterior BayesFL is the dense format, not a v1 bitmap packet at r=1.
+Initialization/central evaluation add no model transmissions in these studies.
+Budgets: MNIST R150 = 2,021,090,400 bytes; CIFAR R150 = 22,139,157,600.
+Corresponding FedAvg R300 has equal modeled array bytes, not automatically equal time.
+At .75/.5/.25/.1/.05, sparse rounds are MNIST193/278/498/950/1362 and
+CIFAR193/278/499/950/1362. GB is decimal 1e9 bytes.
 
-Dense FOLA R150 and FedAvg R300 have equal modeled bytes. Sparse endpoints are the **last whole affordable round**, so their final bytes can be slightly below B. Verify both `R*C <= B` and `(R+1)*C > B` plus the actual CSV counter. Never interpolate over missing rounds or select the best test accuracy instead of the required endpoint.
+## Wireless v2 actual model-array cost
 
+For each posterior upload:
 
+```
+bytes_v2(m) = 8*m + ceil(d/8),  1 <= m < d
+bytes_v2(d) = 8*d
+FedAvg dense upload = 4*d
+round bytes = dense multicast bytes + sum(actual per-client packet bytes)
+```
 
-## MNIST s10 (also s5)
+Counts are granted as integers, never recovered by ceil((m/d)*d). Different clients and
+rounds can have different counts/formats. Do not verify wireless cumulative bytes using
+a fixed legacy keep ratio or round*constant formula. Padded bitmap cost is operative.
+Arrived rejected packets are charged; unknown failed/undecodable replies flag incomplete
+accounting. This is a logical array boundary, not whole-message measured radio traffic.
 
+## Additional wireless ledgers
 
-Budget: **2,021,090,400 bytes = 2.021090400 GB**. d=80,202.
+Control bytes are canonical UTF-8 JSON instructions/replies, outside model-array counts.
+A declared shared control rate and per-exchange latency convert these to modeled time.
+Control reservation is subtracted from the round's upload window. Exceeding it fails;
+unused reservation becomes idle. Startup identity discovery, CSI estimation, Flower/
+network framing and retransmissions are excluded, not physically free.
 
-| Keep r | m | Bytes/round | Target round | Endpoint GB | Per-round saving |
-| --- | --- | --- | --- | --- | --- |
-| 0.75 | 60,152 | 10,466,456 | 193 | 2.020026008 | 22.3207% |
-| 0.50 | 40,101 | 7,258,296 | 278 | 2.017806288 | 46.1308% |
-| 0.25 | 20,051 | 4,050,296 | 498 | 2.017047408 | 69.9398% |
-| 0.10 | 8,021 | 2,125,496 | 950 | 2.019221200 | 84.2251% |
-| 0.05 | 4,011 | 1,483,896 | 1362 | 2.021066352 | 88.9869% |
+Time = dense multicast + max(modeled full local preparation) + modeled control + maximum
+upload duration + idle to the fixed slot boundary. Emulator wall time stays separate.
+There is no implicit clock-speedup from sparse uploads in a fixed-slot experiment;
+the main comparison is posterior/accuracy preservation within a common time resource.
 
+Fixed PSD implies data-plane transmit energy = PSD * allocated bandwidth * airtime.
+The cumulative energy field includes UL+DL only, not compute/control/circuit/idle energy.
+No noise is added to successfully decoded values. This is digital OFDMA-style modeling,
+not analog/AirComp aggregation or a physical-channel implementation.
 
-## CIFAR-10 alpha=.01, f=1.0
-
-
-Budget: **22,139,157,600 bytes = 22.139157600 GB**. d=878,538.
-
-| Keep r | m | Bytes/round | Target round | Endpoint GB | Per-round saving |
-| --- | --- | --- | --- | --- | --- |
-| 0.75 | 658,904 | 114,649,304 | 193 | 22.127315672 | 22.3214% |
-| 0.50 | 439,269 | 79,507,704 | 278 | 22.103141712 | 46.1309% |
-| 0.25 | 219,635 | 44,366,264 | 499 | 22.138765736 | 69.9404% |
-| 0.10 | 87,854 | 23,281,304 | 950 | 22.117238800 | 84.2262% |
-| 0.05 | 43,927 | 16,252,984 | 1362 | 22.136564208 | 88.9881% |
-
-
-## Do not confuse these cases
-
-The r=.25 target is **MNIST R498** but **CIFAR R499**. Their bitmap rounding and model dimensions differ.
-
-The old R120 alternative uses B=1,616,872,320 (MNIST) or 17,711,326,080 (CIFAR), FedAvg R240, and sparse targets 154, 222, 399, 760, 1089. It is not the primary current figure. Stage-22 output directory names still contain their original R150-budget targets; an R120 plot must separate the source directory target from the evaluation target.
-
-Historical unicast equations `C_dense_fola=16*K*d`, `C_sparse=K*(8*d+8*m+bitmap_bytes)` are preserved only in historical documents. Do not reuse their old 197-round keep=.5 affordability for current multicast plots.
-
-At r=1, dense FOLA sends no bitmap. A sparse-packet r=1 experiment pays K bitmap payloads and is not the same byte-cost curve, even when numerical aggregation agrees. The **Full-posterior BayesFL** legend denotes the dense baseline.
-
-Per-round savings do not mean that equal-budget endpoints spent that much less total communication. Sparse runs receive more full-model training rounds; no local FLOP, wall-clock, energy, overfitting or uncertainty-calibration benefit is established by these byte calculations alone.
-
-The file `metrics/global_metrics.csv` column `cumulative_all_array_bytes` is the endpoint record used by this project. Saved checkpoints, compressed NPZ size and JSON file size are not communication traffic. Keep any multicast migration backups and metadata; never change old byte counters by hand to make a figure fit.
+The old byte-budget controller remains unchanged. Wireless uses separate round/time
+limits and a separate fingerprint/checkpoint contract. No simultaneous strict byte cap
+is silently imposed on the dynamic allocator.

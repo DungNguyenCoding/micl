@@ -4,7 +4,7 @@
 **Run from:** the `bayesfl/` repository root  
 **Purpose:** verify the current paper's saved numerical endpoints, or export a lightweight, timestamped copy of the code, documentation, experiment configurations, and selected results for another ChatGPT conversation or computer.
 
-> **Important:** This tool **does not train models, change experiment results, import BayesFL, modify Git, or load model weights**. It is a standard-library Python utility. Its ZIP is a **research handoff**, **not** an independent backup of datasets, checkpoints, or resumable training state.
+> **Important:** This tool **does not train models, change experiment results, load training libraries, modify Git, or load model weights**. It is a standard-library Python utility; explicit wireless checks import only the standard-library BayesFL reporting module. Its ZIP is a **research handoff**, **not** an independent backup of datasets, checkpoints, or resumable training state.
 
 ## 1. Quick start
 
@@ -38,7 +38,7 @@ PY=/home/micl/anaconda3/envs/dungndh/bin/python
 
 ## 2. What `--check` actually does
 
-The tool reads `docs/EXPERIMENT_REGISTRY.json` and selects **exactly 24 runs** marked `primary_figure: true`:
+In legacy/default mode, the tool reads `docs/EXPERIMENT_REGISTRY.json` and selects **exactly 24 runs** marked `primary_figure: true`:
 
 - **MNIST:** 1 full-posterior/dense FOLA baseline, 1 FedAvg baseline, 5 FedKLS KL-selected sparse runs, and 5 random-selection controls.
 - **CIFAR-10:** the same 12-run breakdown.
@@ -302,3 +302,41 @@ Suggested message for the next chat:
 - [`../RUNBOOK.md`](../RUNBOOK.md) — current plotting, result checks, and operational commands.
 - [`../RESULTS_AND_PLOTTING.md`](../RESULTS_AND_PLOTTING.md) — experiment comparison rules and figure interpretation.
 - [`../DATA_AND_GIT.md`](../DATA_AND_GIT.md) — cross-PC requirements and Git portability.
+
+## Wireless v1 extension — explicit dynamic-result handoffs (2026-11-09)
+
+The default `--check`/`--export` still checks the 24 selected legacy paper runs. The tool
+now accepts repeatable `--wireless-run-dir` paths. Wireless accounting verifies each
+round's actual client counts, padded packet size, cumulative arrays, complete evaluations,
+fixed-slot clock and trace/checkpoint metric hashes when present. It never substitutes
+a fixed-ratio `round * constant_bytes` assertion for dynamic trajectories.
+
+```bash
+cd ~/DungNDH/micl/bayesfl || exit 1
+PY=/home/micl/anaconda3/envs/dungndh/bin/python
+"$PY" docs/tools/export_handoff.py --check \
+  --wireless-run-dir outputs/ACTUAL_WIRELESS_RUN
+"$PY" docs/tools/export_handoff.py --export \
+  --wireless-run-dir outputs/ACTUAL_WIRELESS_RUN
+```
+
+`ACTUAL_WIRELESS_RUN` must be replaced with the exact existing directory, not a wildcard.
+Repeat the flag for multiple runs. Add `--wireless-only` to skip the legacy24 requirement
+on a source copy without those outputs. That flag requires at least one explicit wireless
+run. Current code/docs/scripts/tests are still included. No automatic latest run selection.
+
+New exports contain wireless global, round and client CSVs; resolved/source configs;
+small environment/partition/summary/protocol/layout metadata; and the pinned trace when
+used. HANDOFF_CAPTURE.json adds `wireless_endpoints`; the file hash list covers all copied
+files. The count of copied files is dynamic, not permanently1553. Source text selection
+also includes .tex files so the attached wireless design can travel with the source.
+
+No new checkpoint arrays, full wireless event ledger, raw dataset or partition NPZ is
+exported. It is not a complete continuation/training backup. For wireless checks only,
+the exporter imports `bayesfl.wireless.reporting`, which uses the standard library; it
+does not load Torch, Flower or models. The old claim "never imports BayesFL" applies to
+the legacy-only path, not literally to this explicit reporting-module import.
+
+Update CHAT_HANDOFF.md and wireless/STATUS.md plus any approved scenario/results before
+exporting; the tool copies docs rather than learning chat decisions. New wireless results
+must be explicitly selected even though new source/docs are automatically copied.

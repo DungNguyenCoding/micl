@@ -1,0 +1,18 @@
+{
+  "python": "3.13.5 (main, Jul 15 2026, 20:25:40) [GCC 14.2.0]",
+  "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+  "versions": {
+    "torch": "2.10.0+cpu",
+    "torchvision": "0.25.0+cpu",
+    "numpy": "2.3.5",
+    "PyYAML": "6.0.3",
+    "pytest": "9.0.2",
+    "flwr": null,
+    "ray": null,
+    "bayesian-torch": null
+  },
+  "python_3_10_syntax_files": 142,
+  "python_3_10_runtime_executed": false,
+  "flower_ray_executed": false,
+  "cuda_executed": false
+}

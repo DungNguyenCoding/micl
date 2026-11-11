@@ -1,0 +1,799 @@
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/client.py:56-70 =====
+0056     def fit(self, parameters, config):
+0057         server_round = int(config.get("server_round", 1))
+0058         # Stable but client- and round-specific stochasticity.
+0059         seed = self.cfg.runtime.seed + 1_000_003 * self.client_id + 10_007 * server_round
+0060         seed_everything(seed)
+0061         torch.set_num_threads(max(1, int(self.cfg.runtime.torch_num_threads)))
+0062         device = resolve_device("auto")
+0063         loader, client_size = load_client_loader(
+0064             self.cfg,
+0065             self.partition_path,
+0066             self.client_id,
+0067             shuffle_seed=seed,
+0068         )
+0069         model = build_model(self.cfg).to(device)
+0070         layout = ParameterLayout.from_model(model)
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/client.py:102-146 =====
+0102             elif self.cfg.method == "fola":
+0103                 broadcast = [np.asarray(a).copy() for a in parameters] if self.cfg.sparse_enabled else parameters
+0104                 global_means, global_precs = unpack_fola(broadcast, layout)
+0105                 ndarrays_to_model(model, global_means)
+0106                 local_precs, metrics = train_fola(
+0107                     model,
+0108                     loader,
+0109                     self.cfg,
+0110                     server_round=server_round,
+0111                     device=device,
+0112                     global_mean_arrays=global_means,
+0113                     global_precision_arrays=global_precs,
+0114                     client_size=client_size,
+0115                     average_client_size=self.average_client_size,
+0116                 )
+0117                 local_means = model_to_ndarrays(model)
+0118                 updated = pack_fola(local_means, local_precs)
+0119                 if self.cfg.sparse_enabled:
+0120                     updated, packet_metadata = compress_update(
+0121                         broadcast, updated, layout, self.cfg,
+0122                         round_id=server_round, client_id=self.client_id,
+0123                         base_snapshot_id=str(config["base_snapshot_id"]),
+0124                     )
+0125                     metrics.update(packet_metadata)
+0126                 metrics.update(update_norms(local_means, global_means))
+0127                 metrics.update(
+0128                     fola_posterior_summary(
+0129                         local_means,
+0130                         local_precs,
+0131                         precision_min=self.cfg.fola.precision_min,
+0132                     )
+0133                 )
+0134             else:  # pragma: no cover
+0135                 raise ValueError(self.cfg.method)
+0136 
+0137             metrics = {
+0138                 **metrics,
+0139                 "client_id": int(self.client_id),
+0140                 "num_examples": float(client_size),
+0141                 "server_round": float(server_round),
+0142             }
+0143             return updated, client_size, metrics
+0144         finally:
+0145             del model
+0146             release_cuda_memory()
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/server.py:63-105 =====
+0063     if cfg.sparse_enabled:
+0064         # The uploaded deterministic architectures have no persistent buffers.
+0065         # Do not silently drop future BatchNorm running statistics or aliased
+0066         # distinct parameter objects from the sparse coordinate manifest.
+0067         if list(initial_model.named_buffers()):
+0068             raise ValueError("Sparse transport requires an explicit buffer policy for this new model")
+0069         storages = [p.untyped_storage().data_ptr() for p in initial_model.parameters()]
+0070         if len(set(storages)) != len(storages):
+0071             raise ValueError("Aliased distinct parameter storage needs a dedicated sparse layout adapter")
+0072     state = RunState(cfg, layout, initial_arrays, run_dir,
+0073                      partition_sha256=partition_metadata["sha256"], resume=resume)
+0074     initial_arrays = state.current
+0075     if resume:
+0076         save_resolved_config(cfg, run_dir)
+0077     test_loader = load_test_loader(cfg)
+0078     evaluator = CentralEvaluator(cfg, test_loader, run_dir, logger=logger, state=state)
+0079     strategy = ResearchStrategy(
+0080         cfg=cfg,
+0081         layout=layout,
+0082         initial_arrays=initial_arrays,
+0083         run_dir=run_dir,
+0084         logger=logger,
+0085         state=state,
+0086     )
+0087     strategy.evaluate_fn = lambda rnd, arrays, _config: evaluator.evaluate(rnd, arrays)
+0088 
+0089     average_client_size = float(partition_metadata["mean_size"])
+0090 
+0091     def client_fn(context: Context):
+0092         client_id = int(context.node_config["partition-id"])
+0093         return BayesFLNumPyClient(
+0094             client_id=client_id,
+0095             cfg=cfg,
+0096             partition_path=partition_path,
+0097             average_client_size=average_client_size,
+0098         ).to_client()
+0099 
+0100     client_app = ClientApp(client_fn=client_fn)
+0101 
+0102     def server_fn(context: Context):
+0103         return ServerAppComponents(
+0104             server=BudgetServer(client_manager=SimpleClientManager(), strategy=strategy),
+0105             config=ServerConfig(num_rounds=cfg.training.rounds),
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/config.py:140-189 =====
+0140 @dataclass
+0141 class CompressionConfig:
+0142     # Dense defaults leave old YAMLs and baseline training unchanged.
+0143     selection_rule: str = "dense"  # dense | kl_global_local | kl_local_global | random
+0144     keep_ratio: float = 1.0
+0145     # Keep raw float32 precision/omega on the wire to preserve the baseline.
+0146     covariance_representation: str = "precision"
+0147     # A true finite Gaussian requires positive precision. CIFAR's raw zero
+0148     # omega needs the explicitly selected score-only surrogate below.
+0149     precision_policy: str = "strict"  # strict | floor_for_score
+0150     score_precision_floor: Optional[float] = None  # None -> fola.precision_min
+0151 
+0152 
+0153 @dataclass
+0154 class CommunicationConfig:
+0155     max_communication_bytes: Optional[int] = None
+0156     budget_metric: str = "cumulative_all_array_bytes"
+0157     # unicast preserves the historical logical accounting.  multicast models
+0158     # one shared server broadcast per round while keeping all client uplinks.
+0159     downlink_mode: str = "unicast"  # unicast | multicast
+0160     # False preserves legacy sampling for existing YAMLs. Matched new configs
+0161     # select True; client IDs are resolved by a scalar-only get_properties call.
+0162     deterministic_client_schedule: bool = False
+0163 
+0164 
+0165 @dataclass
+0166 class ExperimentConfig:
+0167     run_name: str
+0168     method: str
+0169     data: DataConfig
+0170     federation: FederationConfig
+0171     model: ModelConfig
+0172     training: TrainingConfig
+0173     bbb: BBBConfig = field(default_factory=BBBConfig)
+0174     fola: FOLAConfig = field(default_factory=FOLAConfig)
+0175     runtime: RuntimeConfig = field(default_factory=RuntimeConfig)
+0176     output: OutputConfig = field(default_factory=OutputConfig)
+0177 
+0178     compression: CompressionConfig = field(default_factory=CompressionConfig)
+0179     communication: CommunicationConfig = field(default_factory=CommunicationConfig)
+0180 
+0181     @property
+0182     def sparse_enabled(self) -> bool:
+0183         return self.method == "fola" and self.compression.selection_rule != "dense"
+0184 
+0185     @property
+0186     def method_id(self) -> str:
+0187         if self.sparse_enabled:
+0188             return "fola_sparse_" + self.compression.selection_rule
+0189         return self.method + "_dense" if self.method in {"fola", "fedavg"} else self.method
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/config.py:215-243 =====
+0215         c, comm = self.compression, self.communication
+0216         comm.downlink_mode = comm.downlink_mode.lower()
+0217         if c.selection_rule not in {"dense", "kl_global_local", "kl_local_global", "random"}:
+0218             raise ValueError("Invalid compression.selection_rule")
+0219         if c.selection_rule != "dense" and self.method != "fola":
+0220             raise ValueError("Communication sparsification is implemented only for FOLA")
+0221         if not math.isfinite(c.keep_ratio) or not 0 < c.keep_ratio <= 1:
+0222             raise ValueError("compression.keep_ratio must be in (0, 1]")
+0223         if c.covariance_representation != "precision":
+0224             raise ValueError("This baseline-preserving protocol transmits raw precision, not variance")
+0225         if c.precision_policy not in {"strict", "floor_for_score"}:
+0226             raise ValueError("precision_policy must be strict or floor_for_score")
+0227         if not math.isfinite(self.score_precision_floor) or self.score_precision_floor <= 0:
+0228             raise ValueError("Score precision floor must be finite and positive")
+0229         if self.sparse_enabled and c.precision_policy == "strict" and self.fola.initial_precision <= 0:
+0230             raise ValueError(
+0231                 "Zero initial omega is not a finite Gaussian. Preserve the baseline by explicitly "
+0232                 "setting compression.precision_policy: floor_for_score (see SPARSE_README.md)."
+0233             )
+0234         if self.sparse_enabled and self.output.save_full_client_posteriors:
+0235             raise ValueError("Dense server-side client snapshots would defeat sparse transport; disable them")
+0236         if comm.budget_metric not in {"cumulative_all_array_bytes", "cumulative_train_total_array_bytes"}:
+0237             raise ValueError("Only strict all-array or training-array budgets are supported")
+0238         if comm.downlink_mode not in {"unicast", "multicast"}:
+0239             raise ValueError("communication.downlink_mode must be unicast or multicast")
+0240         if comm.max_communication_bytes is not None:
+0241             b = comm.max_communication_bytes
+0242             if isinstance(b, bool) or not isinstance(b, int) or b < 0:
+0243                 raise ValueError("max_communication_bytes must be a nonnegative integer or null")
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/config.py:342-361 =====
+0342 def load_config(path: str | Path) -> ExperimentConfig:
+0343     path = Path(path)
+0344     with path.open("r", encoding="utf-8") as handle:
+0345         raw = yaml.safe_load(handle) or {}
+0346     cfg = ExperimentConfig(
+0347         run_name=str(raw.get("run_name", path.stem)),
+0348         method=str(raw.get("method", "fedavg")),
+0349         data=_make_section(DataConfig, raw.get("data")),
+0350         federation=_make_section(FederationConfig, raw.get("federation")),
+0351         model=_make_section(ModelConfig, raw.get("model")),
+0352         training=_make_section(TrainingConfig, raw.get("training")),
+0353         bbb=_make_section(BBBConfig, raw.get("bbb")),
+0354         fola=_make_section(FOLAConfig, raw.get("fola")),
+0355         runtime=_make_section(RuntimeConfig, raw.get("runtime")),
+0356         output=_make_section(OutputConfig, raw.get("output")),
+0357         compression=_make_section(CompressionConfig, raw.get("compression")),
+0358         communication=_make_section(CommunicationConfig, raw.get("communication")),
+0359     )
+0360     cfg.validate()
+0361     return cfg
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/posterior/sparse.py:88-131 =====
+0088 def keep_count(d: int, ratio: float) -> int:
+0089     if isinstance(d, bool) or not isinstance(d, Integral) or d <= 0:
+0090         raise ValueError("d must be a positive integer")
+0091     if not math.isfinite(ratio) or not 0 < ratio <= 1:
+0092         raise ValueError("keep ratio must be in (0,1]")
+0093     # Python binary64 product followed by ceil, shared by codec and budgeting.
+0094     return min(int(d), math.ceil(float(ratio) * int(d)))
+0095 
+0096 
+0097 def diagonal_kl(mu_p, var_p, mu_q, var_q) -> np.ndarray:
+0098     """Per-coordinate KL(P || Q), evaluated in float64, never a training loss."""
+0099     mp, vp, mq, vq = (np.asarray(a, dtype=np.float64) for a in (mu_p, var_p, mu_q, var_q))
+0100     if mp.ndim != 1 or mp.size == 0 or any(a.shape != mp.shape for a in (vp, mq, vq)):
+0101         raise ValueError("KL requires nonempty aligned vectors")
+0102     if any(not np.isfinite(a).all() for a in (mp, vp, mq, vq)) or np.any(vp <= 0) or np.any(vq <= 0):
+0103         raise ValueError("KL requires finite means and finite strictly positive variances")
+0104     with np.errstate(over="raise", divide="raise", invalid="raise"):
+0105         s = np.log(vp) - np.log(vq)
+0106         score = 0.5 * (np.expm1(s) - s + (mp - mq) ** 2 / vq)
+0107     if not np.isfinite(score).all() or np.any(score < -1e-10):
+0108         raise FloatingPointError("Invalid Gaussian KL score")
+0109     return np.maximum(score, 0.0)
+0110 
+0111 
+0112 def score_variance(precision: np.ndarray, policy: str, floor: float) -> tuple[np.ndarray, float]:
+0113     p = np.asarray(precision, dtype=np.float64)
+0114     if not np.isfinite(p).all() or np.any(p < 0):
+0115         raise ValueError("Invalid raw precision")
+0116     if policy == "strict":
+0117         if np.any(p <= 0):
+0118             raise ValueError("A finite Gaussian KL cannot be computed from zero raw precision")
+0119         changed = 0.0
+0120     elif policy == "floor_for_score":
+0121         if not math.isfinite(floor) or floor <= 0:
+0122             raise ValueError("Invalid score-only floor")
+0123         changed = float(np.mean(p < floor))
+0124         p = np.maximum(p, floor)
+0125     else:
+0126         raise ValueError("Unknown scoring precision policy")
+0127     with np.errstate(over="raise", divide="raise", invalid="raise"):
+0128         var = 1.0 / p
+0129     if not np.isfinite(var).all() or np.any(var <= 0):
+0130         raise ValueError("Scoring variances cannot be represented in float64")
+0131     return var, changed
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/posterior/sparse.py:140-170 =====
+0140 def select_mask(scores: np.ndarray | None, d: int, m: int, *, rng=None) -> np.ndarray:
+0141     if not isinstance(m, Integral) or isinstance(m, bool) or not 0 <= m <= d:
+0142         raise ValueError("m must be an integer in [0,d]")
+0143     mask = np.zeros(d, dtype=bool)
+0144     if scores is None:
+0145         if rng is None:
+0146             raise ValueError("Random selection needs a dedicated generator")
+0147         mask[rng.choice(d, size=m, replace=False)] = True
+0148     else:
+0149         scores = np.asarray(scores, dtype=np.float64)
+0150         if scores.shape != (d,) or not np.isfinite(scores).all() or np.any(scores < 0):
+0151             raise ValueError("Invalid selection scores")
+0152         # Linear-time partition; ties match sorting by (-score, global index).
+0153         if m == d:
+0154             mask[:] = True
+0155         elif m > 0:
+0156             threshold = np.partition(scores, d - m)[d - m]
+0157             mask[scores > threshold] = True
+0158             ties = np.flatnonzero(scores == threshold)
+0159             mask[ties[:m - int(mask.sum())]] = True
+0160     return mask
+0161 
+0162 
+0163 def encode_packet(local_mu: np.ndarray, local_precision: np.ndarray, mask: np.ndarray) -> list[np.ndarray]:
+0164     validate_raw(local_mu, local_precision)
+0165     if mask.dtype != np.bool_ or mask.shape != local_mu.shape:
+0166         raise ValueError("Mask must be an aligned boolean vector")
+0167     # Boolean indexing is ascending coordinate order, never score order.
+0168     arrays = [np.packbits(mask, bitorder=BITORDER),
+0169               np.ascontiguousarray(local_mu[mask]), np.ascontiguousarray(local_precision[mask])]
+0170     assert sum(a.nbytes for a in arrays) == 8 * int(mask.sum()) + (mask.size + 7) // 8
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/posterior/sparse.py:174-244 =====
+0174 def compress_update(global_arrays, local_arrays, layout, cfg: ExperimentConfig, *, round_id: int,
+0175                     client_id: int, base_snapshot_id: str) -> tuple[list[np.ndarray], dict]:
+0176     start = time.perf_counter()
+0177     if cfg.compression.selection_rule not in RULES:
+0178         raise ValueError("Sparse upload requires an explicit selection rule")
+0179     if snapshot_id(global_arrays, layout, round_id) != base_snapshot_id:
+0180         raise ValueError("Broadcast snapshot does not match the fit instruction")
+0181     global_mu, global_p = posterior_vectors(global_arrays, layout)
+0182     local_mu, local_p = posterior_vectors(local_arrays, layout)
+0183     if cfg.fola.mode != "paper_reference" and (np.any(global_p <= 0) or np.any(local_p <= 0)):
+0184         raise ValueError("online_recurrence requires positive precision")
+0185     gv, gfrac = score_variance(global_p, cfg.compression.precision_policy, cfg.score_precision_floor)
+0186     lv, lfrac = score_variance(local_p, cfg.compression.precision_policy, cfg.score_precision_floor)
+0187     rule = cfg.compression.selection_rule
+0188     scores = None
+0189     if rule == "kl_global_local":
+0190         scores = diagonal_kl(global_mu, gv, local_mu, lv)
+0191     elif rule == "kl_local_global":
+0192         scores = diagonal_kl(local_mu, lv, global_mu, gv)
+0193     d = global_mu.size
+0194     m = keep_count(d, cfg.compression.keep_ratio)
+0195     mask = select_mask(scores, d, m, rng=dedicated_rng(cfg.runtime.seed, client_id, round_id))
+0196     packet = encode_packet(local_mu, local_p, mask)
+0197     metadata = dict(protocol=PROTOCOL, round_id=int(round_id), client_id=int(client_id),
+0198                     base_snapshot_id=base_snapshot_id, layout_id=layout_manifest(layout)["layout_id"],
+0199                     covariance_representation="precision", d=int(d), m=int(m),
+0200                     selection_rule=rule, score_dtype="float64", bitmap_policy="always",
+0201                     precision_policy=cfg.compression.precision_policy,
+0202                     score_precision_floor=cfg.score_precision_floor,
+0203                     keep_ratio_requested=cfg.compression.keep_ratio, keep_ratio_actual=m / d,
+0204                     score_global_floored_fraction=gfrac, score_local_floored_fraction=lfrac,
+0205                     selection_time_seconds=time.perf_counter() - start)
+0206     return packet, metadata
+0207 
+0208 
+0209 def decode_packet(arrays: Sequence[np.ndarray], metadata: Mapping, *, global_arrays,
+0210                   layout: ParameterLayout, cfg: ExperimentConfig, round_id: int,
+0211                   client_id: int, base_snapshot_id: str) -> tuple[list[np.ndarray], np.ndarray]:
+0212     """Reconstruct exclusively from the packet and immutable broadcast snapshot."""
+0213     d = dimension(layout)
+0214     expected = dict(protocol=PROTOCOL, round_id=int(round_id), client_id=int(client_id),
+0215                     base_snapshot_id=base_snapshot_id, layout_id=layout_manifest(layout)["layout_id"],
+0216                     covariance_representation="precision", d=d,
+0217                     m=keep_count(d, cfg.compression.keep_ratio),
+0218                     selection_rule=cfg.compression.selection_rule, score_dtype="float64",
+0219                     bitmap_policy="always", precision_policy=cfg.compression.precision_policy,
+0220                     score_precision_floor=cfg.score_precision_floor)
+0221     for key, value in expected.items():
+0222         if key not in metadata or metadata[key] != value:
+0223             raise ValueError(f"Invalid sparse metadata {key}: expected {value!r}")
+0224     for key in ("round_id", "client_id", "d", "m"):
+0225         if isinstance(metadata[key], bool) or not isinstance(metadata[key], Integral):
+0226             raise ValueError(f"{key} must be an integer")
+0227     if len(arrays) != 3:
+0228         raise ValueError("Sparse packets contain exactly bitmap/means/raw precisions")
+0229     bitmap, values, precs = arrays
+0230     if bitmap.dtype != np.uint8 or bitmap.ndim != 1 or bitmap.size != (d + 7) // 8:
+0231         raise ValueError("Invalid packed bitmap storage")
+0232     bits = np.unpackbits(bitmap, bitorder=BITORDER)
+0233     if np.any(bits[d:]):
+0234         raise ValueError("Nonzero bitmap padding")
+0235     mask = bits[:d].astype(bool)
+0236     m = int(mask.sum())
+0237     if m != expected["m"] or values.shape != (m,) or precs.shape != (m,):
+0238         raise ValueError("Bitmap cardinality/value lengths do not match the round")
+0239     validate_raw(values, precs)
+0240     if cfg.fola.mode != "paper_reference" and np.any(precs <= 0):
+0241         raise ValueError("online_recurrence packet has nonpositive precision")
+0242     mu, precision = posterior_vectors(global_arrays, layout)  # copies, never local untransmitted state
+0243     mu[mask], precision[mask] = values, precs
+0244     return pack_fola(unflatten(mu, layout), unflatten(precision, layout)), mask
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:26-41 =====
+0026 def config_fingerprint(cfg: ExperimentConfig) -> str:
+0027     data = cfg.to_dict()
+0028     # Round cap and byte budget may be extended on a clean completed-round
+0029     # resume.  downlink_mode is accounting-only: switching an existing CIFAR
+0030     # trajectory from repeated-unicast accounting to modeled multicast must not
+0031     # invalidate its optimization-state fingerprint.  The ledger itself is
+0032     # still checked separately and must be migrated consistently.
+0033     data["training"].pop("rounds")
+0034     # Backwards compatible: old checkpoints had no paper00_strict flag.
+0035     # Include it only when enabled, so new paper-faithful runs have
+0036     # a distinct and immutable resume fingerprint.
+0037     if not data["training"].get("paper00_strict", False):
+0038         data["training"].pop("paper00_strict", None)
+0039     data["communication"].pop("max_communication_bytes")
+0040     data["communication"].pop("downlink_mode", None)
+0041     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:163-185 =====
+0163     def next_round_cost(self) -> int:
+0164         k = int(self.cfg.federation.clients_per_round)
+0165         dense_message = array_bytes(self.current)
+0166         per_upload = (
+0167             8 * keep_count(self.d, self.cfg.compression.keep_ratio)
+0168             + (self.d + 7) // 8
+0169             if self.cfg.sparse_enabled
+0170             else dense_message
+0171         )
+0172         down_total = (
+0173             dense_message
+0174             if self.cfg.communication.downlink_mode == "multicast"
+0175             else k * dense_message
+0176         )
+0177         return int(down_total + k * per_upload)
+0178 
+0179     def stop_reason(self) -> str:
+0180         if self.round_id >= self.cfg.training.rounds:
+0181             return "max_rounds"
+0182         limit = self.cfg.communication.max_communication_bytes
+0183         if limit is not None and self.budget_used + self.next_round_cost() > limit:
+0184             return "communication_budget"
+0185         return "running"
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:187-208 =====
+0187     def prepare_round(self, round_id: int, recipients, arrays, *, serialized_tensor_bytes: int | None = None) -> dict:
+0188         if self.pending_round is not None or round_id != self.round_id + 1:
+0189             raise ValueError("Rounds must be sequential and the preceding round completed")
+0190         if self.stop_reason() != "running":
+0191             raise RuntimeError(f"Cannot dispatch a round after {self.stop_reason()}")
+0192         recipients = [str(cid) for cid in recipients]
+0193         if len(recipients) != self.cfg.federation.clients_per_round or len(set(recipients)) != len(recipients):
+0194             raise ValueError("Expected the configured number of distinct recipients")
+0195         if len(arrays) != len(self.current) or any(
+0196             a.dtype != b.dtype or a.shape != b.shape or not np.array_equal(a, b)
+0197             for a, b in zip(arrays, self.current)
+0198         ):
+0199             raise ValueError("Flower broadcast differs from the current committed global state")
+0200         self.broadcast = [np.asarray(a).copy() for a in arrays]
+0201         for a in self.broadcast:
+0202             a.setflags(write=False)
+0203         self.base_snapshot_id = snapshot_id(self.broadcast, self.layout, round_id, representation=self._layout_representation)
+0204         self.pending_round, self._recipients, self._received = round_id, set(recipients), set()
+0205         self._round_start = time.perf_counter()
+0206         self._cost_before = self.budget_used
+0207         self._predicted_cost = self.next_round_cost()
+0208         components = payload_components(arrays, method=self.cfg.method, tensor_count=self.layout.size)
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:245-276 =====
+0245     def receive_packet(self, *, round_id: int, recipient_id, arrays, metrics: dict,
+0246                        num_examples: int, expected_client_id: int | None = None,
+0247                        serialized_tensor_bytes: int | None = None):
+0248         # Charge actual received arrays BEFORE protocol validation. Rejected data
+0249         # has consumed logical communication even though it cannot be aggregated.
+0250         components = payload_components(arrays, method=self.cfg.method, sparse_upload=self.cfg.sparse_enabled,
+0251                                         tensor_count=self.layout.size)
+0252         mid = self.ledger.record(round_id=round_id, client_id=recipient_id, direction="uplink", phase="fit",
+0253                                  components=components, serialized_tensor_bytes=serialized_tensor_bytes,
+0254                                  accounting_kind=self.accounting_kind,
+0255                                  layout_id=self.layout_id, d=self.d,
+0256                                  m=keep_count(self.d, self.cfg.compression.keep_ratio) if self.cfg.sparse_enabled else self.d)
+0257         try:
+0258             if self.pending_round != round_id or str(recipient_id) not in self._recipients:
+0259                 raise ValueError("Reply is not from this round's dispatched recipient set")
+0260             if str(recipient_id) in self._received:
+0261                 raise ValueError("Duplicate client reply")
+0262             cid_raw = metrics.get("client_id")
+0263             if isinstance(cid_raw, bool) or not isinstance(cid_raw, (int, float, np.number)) or not np.isfinite(cid_raw) or int(cid_raw) != cid_raw:
+0264                 raise ValueError("Invalid client identity")
+0265             cid = int(cid_raw)
+0266             if not 0 <= cid < self.cfg.federation.num_clients:
+0267                 raise ValueError("Client ID out of range")
+0268             if expected_client_id is not None and cid != expected_client_id:
+0269                 raise ValueError("Client identity differs from its registered partition ID")
+0270             if isinstance(num_examples, bool) or not isinstance(num_examples, (int, np.integer)) or num_examples <= 0:
+0271                 raise ValueError("num_examples must be a positive local dataset size")
+0272             if self.cfg.sparse_enabled:
+0273                 reconstructed, mask = decode_packet(
+0274                     arrays, metrics, global_arrays=self.broadcast, layout=self.layout, cfg=self.cfg,
+0275                     round_id=round_id, client_id=cid, base_snapshot_id=self.base_snapshot_id,
+0276                 )
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:291-329 =====
+0291     def finish_round(self, aggregated, *, masks, counts, client_metrics):
+0292         if self.pending_round is None or self._received != self._recipients:
+0293             raise RuntimeError("Cannot finish a partial round")
+0294         output = [np.asarray(a).copy() for a in aggregated]
+0295         if self.cfg.sparse_enabled:
+0296             union = np.logical_or.reduce(masks)
+0297             omitted = ~union
+0298             # The uploaded paper_reference reducer divides by omega + epsilon.
+0299             # Even an all-prior coordinate would otherwise shrink. Restore those
+0300             # entries exactly; touched coordinates retain the original reducer.
+0301             if omitted.any():
+0302                 from bayesfl.posterior.packing import unpack_fola, pack_fola
+0303                 means, precs = unpack_fola(output, self.layout)
+0304                 mu, precision = flatten(means, self.layout), flatten(precs, self.layout)
+0305                 old_mu, old_precision = posterior_vectors(self.broadcast, self.layout)
+0306                 mu[omitted], precision[omitted] = old_mu[omitted], old_precision[omitted]
+0307                 output = pack_fola(unflatten(mu, self.layout), unflatten(precision, self.layout))
+0308             posterior_vectors(output, self.layout)
+0309         actual_cost = self.budget_used - self._cost_before
+0310         if actual_cost != self._predicted_cost:
+0311             raise RuntimeError(f"Observed round payload {actual_cost} differs from reserved {self._predicted_cost}")
+0312         if self.cfg.communication.max_communication_bytes is not None and self.budget_used > self.cfg.communication.max_communication_bytes:
+0313             raise RuntimeError("Array-payload budget exceeded")
+0314         self.round_id = int(self.pending_round)
+0315         self.current = output
+0316         steps = sum(int(m.get("local_steps", 0)) for m in client_metrics)
+0317         seen = sum(int(n) * self.cfg.training.local_epochs for n in counts)
+0318         self.cumulative_local_steps += steps
+0319         self.cumulative_examples_seen += seen
+0320         self.last_round_stats = dict(
+0321                                      num_download_recipients=len(self._recipients),
+0322                                      num_downlink_transmissions=(1 if self.cfg.communication.downlink_mode == "multicast" else len(self._recipients)),
+0323                                      num_upload_replies=len(self._received), num_aggregated_clients=len(counts),
+0324                                      local_training_steps=steps, local_examples_seen=seen,
+0325                                      selection_time_seconds=sum(float(m.get("selection_time_seconds", 0)) for m in client_metrics),
+0326                                      round_wall_time_seconds=time.perf_counter() - self._round_start)
+0327         self.pending_round = None
+0328         self.broadcast = None
+0329         return self.current
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/experiment_state.py:361-394 =====
+0361     def save_resume(self, evaluation: dict | None = None) -> None:
+0362         if self.pending_round is not None:
+0363             raise RuntimeError("Only completed, evaluated rounds can be committed")
+0364         if evaluation is not None:
+0365             self.last_evaluation = {k: float(v) for k, v in evaluation.items()
+0366                                     if isinstance(v, (int, float, np.number)) and np.isfinite(v)}
+0367         root = self.run_dir / "resume"
+0368         root.mkdir(parents=True, exist_ok=True)
+0369         stem = f"round_{self.round_id:06d}"
+0370         arrays_path = root / (stem + ".npz")
+0371         tmp = root / (stem + ".npz.tmp")
+0372         with tmp.open("wb") as f:
+0373             np.savez_compressed(f, **{f"array_{i:04d}": a for i, a in enumerate(self.current)})
+0374         tmp.replace(arrays_path)
+0375         state = dict(version=1, round_id=self.round_id, array_count=len(self.current),
+0376                      config_fingerprint=config_fingerprint(self.cfg), partition_sha256=self.partition_sha256,
+0377                      layout_id=self.layout_id, state_snapshot_id=snapshot_id(self.current, self.layout, self.round_id, representation=self._layout_representation),
+0378                      ledger=self.ledger.state(), cumulative_local_steps=self.cumulative_local_steps,
+0379                      cumulative_examples_seen=self.cumulative_examples_seen, last_round_stats=self.last_round_stats,
+0380                      last_evaluation=self.last_evaluation,
+0381                      rng_policy="baseline per-client/per-round reseed; separate SHA256 mask/schedule streams",
+0382                      experiment_seed=self.cfg.runtime.seed,
+0383                      optimizer_state_policy="fresh local optimizer each fit, as in supplied baseline",
+0384                      deterministic_client_schedule=self.cfg.communication.deterministic_client_schedule,
+0385                      downlink_mode=self.cfg.communication.downlink_mode,
+0386                      accounting_kind=self.accounting_kind)
+0387         atomic_json(root / (stem + ".json"), state)
+0388         atomic_json(root / "latest.json", dict(state_file=stem + ".json", arrays_file=stem + ".npz"))
+0389         # Retain latest and previous committed generations, not a second full
+0390         # archive of every global model. Scheduled baseline checkpoints remain.
+0391         generations = sorted(root.glob("round_*.npz"))
+0392         for old in generations[:-2]:
+0393             old.unlink()
+0394             old.with_suffix(".json").unlink(missing_ok=True)
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/posterior/aggregation.py:10-50 =====
+0010 def aggregate_fola(clients: Sequence[Sequence[np.ndarray]], weights: Sequence[float],
+0011                    *, layout: ParameterLayout, cfg: ExperimentConfig) -> list[np.ndarray]:
+0012     means_by_client = []
+0013     precs_by_client = []
+0014     for client in clients:
+0015         means, precs = unpack_fola(client, layout)
+0016         means_by_client.append(means)
+0017         precs_by_client.append(precs)
+0018 
+0019     global_means: list[np.ndarray] = []
+0020     global_precs: list[np.ndarray] = []
+0021     for param_idx in range(layout.size):
+0022         means = [m[param_idx] for m in means_by_client]
+0023         precs = [p[param_idx] for p in precs_by_client]
+0024 
+0025         if cfg.fola.mode == "paper_reference":
+0026             # Released CIFAR implementation:
+0027             #   omega_S = sum pi_n omega_n
+0028             #   mu_S = sum pi_n omega_n mu_n / (omega_S + eps)
+0029             denom = np.zeros_like(precs[0], dtype=np.float64)
+0030             numer = np.zeros_like(means[0], dtype=np.float64)
+0031             for mu_n, omega_n, weight in zip(means, precs, weights):
+0032                 omega64 = np.asarray(omega_n, dtype=np.float64)
+0033                 w = float(weight)
+0034                 denom += w * omega64
+0035                 numer += w * omega64 * np.asarray(mu_n, dtype=np.float64)
+0036             mu = numer / (denom + float(cfg.fola.aggregation_epsilon))
+0037             precision = denom
+0038             global_means.append(mu.astype(means[0].dtype, copy=False))
+0039             global_precs.append(precision.astype(precs[0].dtype, copy=False))
+0040         else:
+0041             mu, precision = gaussian_product(
+0042                 means,
+0043                 precs,
+0044                 weights,
+0045                 precision_min=cfg.fola.precision_min,
+0046                 precision_max=cfg.fola.precision_max,
+0047             )
+0048             global_means.append(mu)
+0049             global_precs.append(precision)
+0050     return pack_fola(global_means, global_precs)
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/communication.py:1-6 =====
+0001 """Logical message-boundary array accounting, not physical network traffic.
+0002 
+0003 Final ndarray.nbytes determines the payload. Serialized tensor bytes are
+0004 reported separately (e.g. Flower Parameters.tensors including NumPy headers).
+0005 Control/metrics envelopes, retries/partial messages not observed by the API,
+0006 transport framing and local copies are not guessed or counted as wire traffic.
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/communication.py:34-85 =====
+0034 def core_round_bytes(
+0035     d: int,
+0036     k: int,
+0037     *,
+0038     sparse: bool = False,
+0039     m: int | None = None,
+0040     method: str = "fola",
+0041     downlink_mode: str = "unicast",
+0042 ) -> dict:
+0043     """Return modeled per-round logical array bytes.
+0044 
+0045     Defaults reproduce the historical dense/sparse FOLA repeated-unicast
+0046     accounting.  In ``multicast`` mode the common server broadcast is charged
+0047     exactly once, while every client-specific upload is still charged.
+0048 
+0049     FOLA communicates mean+precision (8 bytes/coordinate, float32+float32).
+0050     FedAvg communicates one float32 model vector (4 bytes/coordinate).
+0051     """
+0052     if any(isinstance(x, bool) or not isinstance(x, Integral) for x in (d, k)) or d <= 0 or k < 0:
+0053         raise ValueError("Require integer d>0 and k>=0")
+0054     method = str(method).lower()
+0055     downlink_mode = str(downlink_mode).lower()
+0056     if method not in {"fola", "fedavg"}:
+0057         raise ValueError("core_round_bytes supports method=fola or fedavg")
+0058     if downlink_mode not in {"unicast", "multicast"}:
+0059         raise ValueError("downlink_mode must be unicast or multicast")
+0060     if sparse and method != "fola":
+0061         raise ValueError("Sparse coordinate transport is implemented only for FOLA")
+0062 
+0063     per_dense_message = (8 if method == "fola" else 4) * int(d)
+0064     down = per_dense_message * (1 if downlink_mode == "multicast" else int(k))
+0065 
+0066     if sparse:
+0067         if isinstance(m, bool) or not isinstance(m, Integral) or not 0 <= m <= d:
+0068             raise ValueError("Sparse cost requires an integer 0<=m<=d")
+0069         per_upload = 8 * int(m) + (int(d) + 7) // 8
+0070     else:
+0071         per_upload = per_dense_message
+0072     up = int(k) * per_upload
+0073     return dict(down_bytes=down, up_bytes=up, total_bytes=down + up)
+0074 
+0075 
+0076 def payload_components(arrays, *, method: str, sparse_upload: bool = False, tensor_count: int = 0) -> dict:
+0077     total = array_bytes(arrays)
+0078     if sparse_upload and len(arrays) == 3:
+0079         bitmap, mean, cov = (int(a.nbytes) for a in arrays)
+0080     elif method == "fola" and len(arrays) == 2 * tensor_count:
+0081         bitmap, mean, cov = 0, array_bytes(arrays[:tensor_count]), array_bytes(arrays[tensor_count:])
+0082     else:
+0083         bitmap, mean, cov = 0, total, 0
+0084     return dict(mean_bytes=mean, covariance_bytes=cov, bitmap_bytes=bitmap,
+0085                 auxiliary_array_bytes=0, array_payload_bytes=total)
+
+===== baseline_src.zip :: bayesfl/src/bayesfl/communication.py:164-175 =====
+0164     def record(self, *, round_id: int, client_id, direction: str, phase: str,
+0165                components: dict, serialized_tensor_bytes: int | None = None,
+0166                attempt_id: int = 0, status: str | None = None,
+0167                accounting_kind: str = "logical_payload", **metadata) -> str:
+0168         mid = f"{phase}:{int(round_id)}:{client_id}:{direction}:{int(attempt_id)}"
+0169         self._append(dict(event_type="transfer", round_id=int(round_id), model_version=int(round_id),
+0170                           client_id=str(client_id), message_id=mid, attempt_id=int(attempt_id),
+0171                           direction=direction, phase=phase,
+0172                           status=status or ("dispatched" if direction == "downlink" else "received"),
+0173                           accounting_kind=str(accounting_kind), serialized_tensor_bytes=serialized_tensor_bytes,
+0174                           serialized_message_bytes=None, **components, **metadata))
+0175         return mid
+
+===== baseline_src.zip :: bayesfl/docs/tools/export_handoff.py:24-28 =====
+0024 
+0025 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
+0026 TEXT_SUFFIXES = {'.py', '.sh', '.yaml', '.yml', '.json', '.md', '.txt', '.toml', '.ini', '.cfg'}
+0027 EXCLUDED_PARTS = {'.git', '__pycache__', '.pytest_cache', '.venv', 'venv', 'node_modules'}
+0028 ROOT_FILES = ('README.md', 'AGENTS.md', 'SPARSE_README.md', 'IMPLEMENTATION_REPORT.md',
+
+===== baseline_src.zip :: bayesfl/docs/tools/export_handoff.py:160-205 =====
+0160         if p.is_file():
+0161             files[name] = p
+0162     for base in ('src', 'scripts', 'tests', 'docs'):
+0163         folder = safe_path(root, base)
+0164         if not folder.is_dir():
+0165             fail(f'Missing expected repository directory: {folder}')
+0166         for current, dirs, names in os.walk(folder, followlinks=False):
+0167             dirs[:] = sorted(d for d in dirs if d not in EXCLUDED_PARTS)
+0168             for d in dirs:
+0169                 if (Path(current)/d).is_symlink():
+0170                     fail(f'Export refuses symlinked directory: {Path(current)/d}')
+0171             for name in sorted(names):
+0172                 p = Path(current)/name
+0173                 rel = p.relative_to(root).as_posix()
+0174                 is_fixture = rel.startswith('tests/fixtures/') and p.suffix == '.npz'
+0175                 if p.suffix not in TEXT_SUFFIXES and not is_fixture:
+0176                     continue
+0177                 safe_path(root, rel)
+0178                 if p.stat().st_size > 20*1024*1024:
+0179                     fail(f'Unexpectedly large text/fixture; review before sharing: {rel}')
+0180                 files[rel] = p
+0181     for run in registry['runs']:
+0182         if not run['primary_figure']:
+0183             continue
+0184         directory = safe_path(root, run['relative_output'])
+0185         required = ('metrics/global_metrics.csv', 'resolved_config.yaml')
+0186         optional = ('source_config.yaml', 'partition_metadata.json', 'run_summary.json',
+0187                     'environment.json', 'environment.txt', 'communication/layout_manifest.json',
+0188                     'communication/protocol.json')
+0189         for name in required + optional:
+0190             rel = run['relative_output']+'/'+name
+0191             p = safe_path(root, rel)
+0192             if p.is_file():
+0193                 files[rel] = p
+0194             elif name in required:
+0195                 fail(f'Cannot create provenance export: required file missing: {rel}')
+0196     for p in sorted(safe_path(root, 'outputs/partitions').glob('*.json')):
+0197         rel = p.relative_to(root).as_posix()
+0198         safe_path(root, rel)
+0199         files[rel] = p
+0200     return files
+0201 
+0202 
+0203 def export(root: Path, registry: dict, results: list[dict]) -> Path:
+0204     for rel in ('src/bayesfl/main.py', 'scripts/_run_gpu_queue.sh',
+0205                 'scripts/plot_ieee_multicast_results_mnist_s10_stage22.py'):
+
+===== baseline_src.zip :: bayesfl/docs/tools/export_handoff.py:250-269 =====
+0250 def main() -> int:
+0251     parser = argparse.ArgumentParser(description=__doc__)
+0252     parser.add_argument('--root', type=Path, default=DEFAULT_ROOT)
+0253     mode = parser.add_mutually_exclusive_group()
+0254     mode.add_argument('--check', action='store_true', help='Read/print endpoints only (default).')
+0255     mode.add_argument('--export', action='store_true', help='Check and create a NEW lightweight ZIP beside the repo.')
+0256     parser.add_argument('--accuracy-unit', choices=('fraction','percent'), default='fraction',
+0257                         help='Explicit stored CSV accuracy unit; never inferred from an individual value.')
+0258     args = parser.parse_args()
+0259     root = args.root.expanduser().resolve()
+0260     path = safe_path(root, 'docs/EXPERIMENT_REGISTRY.json')
+0261     registry = json.loads(stable_read(path))
+0262     selected = [r for r in registry['runs'] if r['primary_figure']]
+0263     if len(selected) != 24:
+0264         fail(f'Expected 24 explicitly registered primary runs; found {len(selected)}')
+0265     results = [read_endpoint(root, r, registry['profiles'], args.accuracy_unit) for r in selected]
+0266     print_results(results)
+0267     if args.export:
+0268         export(root, registry, results)
+0269     return 0
+
+===== baseline_src.zip :: bayesfl/.gitignore:1-57 =====
+0001 # Python
+0002 __pycache__/
+0003 *.py[cod]
+0004 .pytest_cache/
+0005 *.egg-info/
+0006 build/
+0007 dist/
+0008 .venv/
+0009 
+0010 # Datasets
+0011 data/
+0012 
+0013 # Logs
+0014 logs/*.log
+0015 
+0016 # Experiment outputs
+0017 # Ignore everything in outputs/ by default
+0018 outputs/*
+0019 
+0020 # Keep plots
+0021 !outputs/plots/
+0022 !outputs/plots/**
+0023 !outputs/plots/.gitkeep
+0024 
+0025 # Keep reusable partitions
+0026 !outputs/partitions/
+0027 !outputs/partitions/**
+0028 !outputs/partitions/.gitkeep
+0029 
+0030 # Keep FULL simulation results only
+0031 # Any output directory whose run_name starts with "run"
+0032 !outputs/run*/
+0033 !outputs/run*/**
+0034 
+0035 # ==========================================
+0036 # Large archives
+0037 # ==========================================
+0038 *.zip
+0039 *.tar.gz
+0040 
+0041 # ==========================================
+0042 # Model weights and checkpoints
+0043 # ==========================================
+0044 *.pt
+0045 *.pth
+0046 *.ckpt
+0047 
+0048 /outputs/**/checkpoints/
+0049 /outputs/**/resume/
+0050 /outputs/**/posterior/
+0051 
+0052 # ==========================================
+0053 # Large experiment logs
+0054 # ==========================================
+0055 /outputs/**/communication/events.jsonl
+0056 /outputs/**/metrics/client_metrics.csv
+0057 /outputs/**/metrics/round_train_metrics.csv

@@ -1,0 +1,7 @@
+
+WIRELESS RESULTS — exact recorded endpoints; times are modeled, not GPU wall time
+Method / policy / selector                        Round     Acc %      Seconds     Array GB   Ctrl bytes         Tx J
+fola / joint / kl_global_local                        3    51.111      3.00000     0.000002       367479  19796.63334
+fola / equal_bandwidth / kl_global_local              3    51.111      3.00000     0.000002        35244  19882.71308
+Endpoints have the same modeled time; verify matched scenario/partition/training before causal claims.
+PASS: variable per-client packet sizes and completed evaluations verified.

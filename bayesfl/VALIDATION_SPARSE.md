@@ -1,9 +1,15 @@
-# Sparse validation — historical results and current obligations
+# Sparse / wireless validation boundary
 
-The original sparse-delivery checks are preserved at [history/VALIDATION_SPARSE.md](docs/history/pre_refresh_20261026/VALIDATION_SPARSE.md). They reported baseline 23 passed/4 skipped and modified 110 passed/5 skip reports in a CPU authoring environment, plus synthetic protocol/accounting/resume checks. They explicitly did not exercise the full target CUDA/Flower/Ray stack.
+The original sparse-v1 implementation and original tests are retained. Current executed
+results for the legacy-plus-wireless tree are in
+[docs/wireless/VALIDATION.md](docs/wireless/VALIDATION.md).
 
-Those counts are historical evidence, not a fresh result for the later CNN, strict-FedAvg, multicast and cleanup state. User-supplied dataset trajectories establish that specific experiments ran; they do not replace regression tests or prove a universally faithful paper reproduction.
+New tests exercise integer payloads, threshold/dense alternatives, feasible incumbents,
+packets/prior fill, phase caching, actual local trainers, clean resume, failure accounting,
+actual CNN central evaluation on synthetic data, generator preservation and dynamic exports.
+The optional real Flower adapter test is not a fake local replacement and was skipped
+when Flower was absent. It must pass on the target runtime before dataset queues.
 
-After an actual implementation change, inspect current tests and check: KL direction and numerical policy; exact-cardinality random/top-score selection; bitmap ordering/padding; packet identity/round/layout checks; no hidden local state; omission reconstruction; all-omitted exact preservation; dense/full-retention numerical consistency; multicast byte limits; checkpoint/ledger/partition consistency; and resume versus uninterrupted behavior. Preserve existing regression fixtures rather than silently updating expected results to make tests pass.
-
-A source change that affects clipping, precision, initialization, aggregation, mask RNG or schedule requires explicit experiment provenance. Do not reuse a published accuracy as if it came from the modified code. Current runbook and evidence limits are in [docs/RUNBOOK.md](docs/RUNBOOK.md) and [docs/EVIDENCE_AND_GAPS.md](docs/EVIDENCE_AND_GAPS.md).
+No new wireless accuracy, convergence superiority, global integer optimum or GPU
+throughput measurement is inferred from synthetic checks. Original historical sparse
+validation text is archived under docs/history/pre_refresh_20261026/.

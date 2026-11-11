@@ -44,6 +44,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--precision-policy", choices=["strict", "floor_for_score"])
     parser.add_argument("--max-communication-bytes", type=int)
     parser.add_argument("--downlink-mode", choices=["unicast", "multicast"])
+    parser.add_argument("--max-modeled-time-seconds", type=float, help="Wireless-only total modeled time cap; may extend on clean resume")
     parser.add_argument("--resume", type=Path, help="Resume an existing run directory at its latest completed evaluated round")
     return parser.parse_args()
 
@@ -71,6 +72,16 @@ def main() -> None:
         max_communication_bytes=args.max_communication_bytes,
         downlink_mode=args.downlink_mode,
     )
+
+    if args.max_modeled_time_seconds is not None:
+        if not cfg.wireless_enabled:
+            raise ValueError("--max-modeled-time-seconds is only valid for wireless runs")
+        cfg.wireless.total_time_budget_s = args.max_modeled_time_seconds
+        cfg.validate()
+    if cfg.wireless_enabled:
+        from bayesfl.wireless.runner import run_experiment
+        run_experiment(cfg, config_path=config_path, resume=args.resume)
+        return
 
     if args.resume is None:
         run_dir, log_path = create_run_paths(cfg)

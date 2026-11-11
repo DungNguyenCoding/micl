@@ -1,0 +1,77 @@
+{
+  "kind": "documentation-only pre-implementation review",
+  "production_wireless_implementation": false,
+  "inspected_source_scripts_tests_verified_unchanged": 1166,
+  "files": [
+    {
+      "path": "docs/wireless/DECISIONS_AND_OPEN_ITEMS.md",
+      "sha256": "b72dd64a21f2e761f3344f9834b5565ad7ebc85f24da5080282babb31d12842d",
+      "bytes": 4086
+    },
+    {
+      "path": "docs/wireless/DESIGN_REVIEW.md",
+      "sha256": "6dde981a5c3654e95bbc6d5b07c1132712c1927dd896e94c1051981063c64ba5",
+      "bytes": 15425
+    },
+    {
+      "path": "docs/wireless/IMPLEMENTATION_PLAN.md",
+      "sha256": "34eb594131c9f1a0f5a524a6bff0e47f97e7ceed49711f70c02b6d4e648fb5ef",
+      "bytes": 16264
+    },
+    {
+      "path": "docs/wireless/README.md",
+      "sha256": "492ab209cc367de57dad7ebff1be5adf4cac65722c492bf14b5ee16739cc2425",
+      "bytes": 3665
+    },
+    {
+      "path": "docs/wireless/SOURCE_AUDIT.md",
+      "sha256": "eaae5c74b911123237a73417ddea915afe5ac2190c1ac4ce2edda48bd9c4dc52",
+      "bytes": 5257
+    },
+    {
+      "path": "docs/wireless/VALIDATION_PLAN.md",
+      "sha256": "1436fbad6a28bfbeb1a20e803e8ebcfca2d97515eb2658d1992db5675e802e11",
+      "bytes": 7229
+    },
+    {
+      "path": "docs/wireless/evidence/baseline_primary_endpoints.txt",
+      "sha256": "ab9ba53c81c154ec6d6f388bdc8ddf2d1215d45886f1798b7890bbc3b79271e4",
+      "bytes": 2045
+    },
+    {
+      "path": "docs/wireless/evidence/baseline_pytest.txt",
+      "sha256": "dc544211ce28ed6aad4c83744d274da41f30c7109d49d7c4ca911ba224ed1664",
+      "bytes": 845
+    },
+    {
+      "path": "docs/wireless/evidence/baseline_source_excerpts.txt",
+      "sha256": "28e58d83e510ccd0a6330285bb9e9c8d91a38e70c9a36eecdb5b38306ceecadd",
+      "bytes": 45459
+    },
+    {
+      "path": "docs/wireless/evidence/primary_configuration_audit.json",
+      "sha256": "296a496287d848b15983aed0f6e539446ecdc6e1d4eacd479d784679f6f199b6",
+      "bytes": 108877
+    },
+    {
+      "path": "docs/wireless/evidence/proposal_sources.txt",
+      "sha256": "d854c91e31dde34cd42c897bb1effcccbb3c950959d95f7ca60c5f1fc24240f0",
+      "bytes": 90149
+    },
+    {
+      "path": "docs/wireless/evidence/review_checks.json",
+      "sha256": "d4f7f8fedb5a38537eec9374bed61b54d53925b367726701d07dc470c3ce9f71",
+      "bytes": 910
+    },
+    {
+      "path": "docs/wireless/evidence/review_checks.py",
+      "sha256": "fe1a00cdf5573c858f6cf49200b5606220a813643129602f0de0c4c1d83afb88",
+      "bytes": 4847
+    },
+    {
+      "path": "docs/wireless/evidence/source_manifest.json",
+      "sha256": "083236170934172d25176413e72419a32186de9e60361bff2c016451f6994c2f",
+      "bytes": 3460
+    }
+  ]
+}

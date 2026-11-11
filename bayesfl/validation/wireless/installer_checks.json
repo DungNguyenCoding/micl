@@ -1,0 +1,15 @@
+{
+  "checks": [
+    "preview_read_only",
+    "confirmation_required",
+    "apply",
+    "exact_backups_and_output_untouched",
+    "verify_and_idempotence",
+    "local_change_refusal",
+    "prior_review_overlay_supported",
+    "changed_trainer_guard",
+    "symlink_refusal"
+  ],
+  "passed": 9,
+  "scope": "temporary repositories; no target-server installation performed"
+}

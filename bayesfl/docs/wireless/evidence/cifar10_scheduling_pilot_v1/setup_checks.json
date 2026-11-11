@@ -1,0 +1,56 @@
+{
+  "checks": {
+    "production_config_validation": "PASS",
+    "actual_partition_resource_calculation_and_count_bytes": "PASS",
+    "equal_and_joint_generators_preserve_locked_learning": "PASS",
+    "reject_PSD_cap_violation": "PASS",
+    "reject_no_upload_window": "PASS",
+    "reject_topology_gain_mismatch": "PASS",
+    "partition_bytes_unchanged": "PASS"
+  },
+  "scope": "Resource/configuration checks only, no dataset training, Flower/Ray or CUDA run by this package",
+  "setup_status": "PROPOSED_ENGINEERING_PILOT_NOT_LOCKED",
+  "production_source": "BayesFL_Wireless_Full_Source_v1.zip",
+  "sources": [
+    {
+      "name": "00_SchedulingFL.pdf",
+      "sha256": "c82f62c9eaaa3e5c5e1020116a1ece062992ea2e75c4787003f0afece5935f0e"
+    },
+    {
+      "name": "07_AirCompWirelessFederatedLearning.pdf",
+      "sha256": "6e43e880006dd1c48ed37f0588436e91d05b4536cdb9fc1d9ef3b8f34fc19120"
+    },
+    {
+      "name": "BayesFL_Wireless_Full_Source_v1.zip",
+      "sha256": "e4ded6dc2067c5db71e10d641ee1d65ca0cc475ccdca6f4e2011cf9881c60861"
+    }
+  ],
+  "result": {
+    "multicast_seconds": 3.867259581557058,
+    "upload_window_seconds": 58.97274041844295,
+    "preparation_barrier": 87.16,
+    "equal_keep_counts": [
+      367601,
+      474780,
+      710253,
+      823703,
+      337191,
+      322852,
+      373678,
+      350713,
+      387346,
+      319853,
+      336797,
+      878538,
+      330623,
+      735099,
+      350686,
+      528378,
+      329789,
+      387843,
+      461645,
+      418730
+    ],
+    "array_bytes_per_round": 82923630
+  }
+}

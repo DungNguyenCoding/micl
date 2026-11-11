@@ -1,0 +1,176 @@
+# CIFAR-10 engineering pilot. Paper-supported radio scales + explicitly assumed timing.
+# Not a reproduced paper experiment or a measured device profile. Requires --allow-example.
+# Preserve identical scenario for equal_bandwidth and joint; do not change only one policy.
+status: EXAMPLE_NOT_LOCKED
+scenario_id: cifar10_scheduling_pilot_v1
+provenance:
+  purpose: CIFAR-10 equal-bandwidth then joint-KL pilot; not final paper settings
+  paper_00: 500 m disk; LTE path loss; 1 MHz; -174 dBm/Hz; nominal 24 dBm device and
+    46 dBm BS powers
+  adaptation: Fixed uplink PSD = 0.251188643150958 W / entire 1 MHz. Equal-share device
+    power = 0.0125594321575479 W (10.9897 dBm), not 24 dBm.
+  paper_07: Rayleigh block fading is reserved for a subsequent separately audited
+    sensitivity, not enabled in this fixed-gain pilot.
+  unsupported_by_papers:
+  - 180 s target
+  - 30 s control reservation
+  - 1 Mbit/s control rate
+  - 1 ms exchange latency
+  - 1 ms/(sample epoch) compute
+  - 0.1 s scoring
+  - seed-0 topology
+  topology_file: topology.json
+wireless:
+  enabled: true
+  backend: flower
+  policy: equal_bandwidth
+  uplink_bandwidth_hz: 1000000.0
+  downlink_bandwidth_hz: 1000000.0
+  round_target_s: 180.0
+  total_time_budget_s: null
+  control_reserve_s: 30.0
+  control_rate_bps: 1000000.0
+  control_exchange_latency_s: 0.001
+  rpc_timeout_s: 3600.0
+  channel:
+    mode: fixed
+    seed: 0
+    path_gains:
+    - 4.899364596462921e-12
+    - 2.4635088937531964e-11
+    - 8.518567076736542e-10
+    - 4.695011028186721e-09
+    - 3.0947901736654714e-12
+    - 2.4911870204435724e-12
+    - 5.36992361760074e-12
+    - 3.796549580186012e-12
+    - 6.599482561960496e-12
+    - 2.380585120654482e-12
+    - 3.076393104660904e-12
+    - 1.3783159182384805e-07
+    - 2.8021009051381673e-12
+    - 1.2379569285246275e-09
+    - 3.794995506521575e-12
+    - 5.519606636079879e-11
+    - 2.7669622183077896e-12
+    - 6.64915031930857e-12
+    - 2.02147937292965e-11
+    - 1.0591484653268602e-11
+    uplink_psd_w_hz:
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    - 2.51188643150958e-07
+    downlink_psd_w_hz: 3.9810717055349735e-05
+    noise_psd_w_hz: 3.981071705534986e-21
+    reciprocal_fading: true
+    trace_csv: null
+    client_power_cap_w:
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+    - 0.251188643150958
+  compute:
+    seconds_per_sample_epoch:
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    - 0.001
+    fixed_seconds:
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 0.0
+    score_seconds:
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+    - 0.1
+  solver:
+    initial_price: 1.0
+    max_bracket_queries: 48
+    max_bisection_queries: 64
+    price_atol: 0.0
+    price_rtol: 1.0e-12
+    gap_atol: 1.0e-10
+    gap_rtol: 1.0e-06
